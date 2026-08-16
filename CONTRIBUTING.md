@@ -3,10 +3,6 @@
 **Language / Idioma:** [English](#english) · [Español](#español)
 
 > **Contact / Contacto:** `sebas_saeu@hotmail.com`
-> This is a placeholder. The author must replace it with a working address
-> before the repository is made public.
-> Es un marcador de posición. El autor debe sustituirlo por una dirección
-> real antes de publicar el repositorio.
 
 ---
 
@@ -247,7 +243,7 @@ behaviour change, performance work that preserves semantics, tooling and CI.
 1. **Open a discussion issue first.** Use the SWIP issue template
    (`.github/ISSUE_TEMPLATE/swip.md`). Cheap to do, and it prevents someone
    writing a full proposal for an idea already ruled out.
-2. **Write the SWIP** as `gips/SWIP-XXXX-short-title.md`, where `XXXX` is the
+2. **Write the SWIP** as `swips/SWIP-XXXX-short-title.md`, where `XXXX` is the
    issue number, zero-padded. Use the template below.
 3. **Open a PR** containing the SWIP file only. Implementation goes in a
    separate PR so the design can be argued without the diff in the way.
@@ -624,7 +620,7 @@ preserva la semántica, herramientas y CI.
 1. **Abre primero un issue de discusión.** Usa la plantilla SWIP
    (`.github/ISSUE_TEMPLATE/swip.md`). Cuesta poco y evita que alguien escriba
    una propuesta completa de una idea ya descartada.
-2. **Escribe la SWIP** en `gips/SWIP-XXXX-titulo-corto.md`, donde `XXXX` es el
+2. **Escribe la SWIP** en `swips/SWIP-XXXX-titulo-corto.md`, donde `XXXX` es el
    número del issue con ceros a la izquierda. Usa la plantilla de más abajo.
 3. **Abre un PR** que contenga solo el archivo de la SWIP. La implementación va
    en un PR aparte, para poder discutir el diseño sin el diff de por medio.

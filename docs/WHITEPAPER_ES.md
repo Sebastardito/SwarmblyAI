@@ -1225,4 +1225,4 @@ Si funciona, el resultado no es una forma más barata de comprar lo que ya se ve
 
 ---
 
-*Versión del documento 1.4, 14 de agosto de 2026. Documento complementario en inglés: `WHITEPAPER_EN.md`. Especificación del protocolo: `SPEC_ES.md`. Implementación de referencia y banco de pruebas del impuesto de coherencia: `swarmbly_v0/`. Registro de arte previo: `publication/PRIOR_ART.md`.*
+*Versión del documento 1.4, 14 de agosto de 2026. Documento complementario en inglés: `WHITEPAPER_EN.md`. Especificación del protocolo: `SPEC_ES.md`. Implementación de referencia y banco de pruebas del impuesto de coherencia: `swarmbly_v0/`. Registro público fechado: Zenodo `10.5281/zenodo.21940473`, `10.5281/zenodo.21956743`, `10.5281/zenodo.21957088`, y este repositorio en el tag `v1`.*

@@ -1225,4 +1225,4 @@ If it does work, the result is not a cheaper way to buy what is already sold. It
 
 ---
 
-*Document version 1.4, 14 August 2026. Spanish-language companion: `WHITEPAPER_ES.md`. Protocol specification: `SPEC_EN.md`. Reference implementation and coherence-tax harness: `swarmbly_v0/`. Prior-art log: `publication/PRIOR_ART.md`.*
+*Document version 1.4, 14 August 2026. Spanish-language companion: `WHITEPAPER_ES.md`. Protocol specification: `SPEC_EN.md`. Reference implementation and coherence-tax harness: `swarmbly_v0/`. Dated public record: Zenodo `10.5281/zenodo.21940473`, `10.5281/zenodo.21956743`, `10.5281/zenodo.21957088`, and this repository at tag `v1`.*

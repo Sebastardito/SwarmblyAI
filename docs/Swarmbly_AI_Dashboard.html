@@ -409,11 +409,11 @@ tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--s1)}
   <th><span lang-es>Razón</span><span lang-en>Reason</span></th></tr></thead><tbody id="uc"></tbody></table>
 </section>
 
-<!-- ============ RESOLUCIONES ============ -->
+<!-- ============ REVIEW OUTCOMES ============ -->
 <section id="resoluciones">
 <h2><span lang-es>Resoluciones de la revisión: 16 de 16 cerrados</span><span lang-en>Review resolutions: 16 of 16 closed</span></h2>
-<p class="lede" lang-es>Cada punto de <span class="k">DISCUSION_PUNTOS.md</span>, con la decisión del autor y el resultado. Dos puntos no se cerraron a favor de nadie: produjeron elementos divulgados nuevos que ninguna de las dos partes tenía al empezar.</p>
-<p class="lede" lang-en>Every point from <span class="k">DISCUSION_PUNTOS.md</span>, with the author's decision and the outcome. Two points closed in nobody's favour: they produced new disclosed elements that neither party had at the start.</p>
+<p class="lede" lang-es>Cada punto de la revisión crítica interna, con la decisión del autor y el resultado. Dos puntos no se cerraron a favor de nadie: produjeron elementos divulgados nuevos que ninguna de las dos partes tenía al empezar.</p>
+<p class="lede" lang-en>Every point from the internal critical review, with the author's decision and the outcome. Two points closed in nobody's favour: they produced new disclosed elements that neither party had at the start.</p>
 <div class="filters">
   <button data-f="all" aria-pressed="true" onclick="filt('all',this)"><span lang-es>Todos</span><span lang-en>All</span> (16)</button>
   <button data-f="acc" aria-pressed="false" onclick="filt('acc',this)">✅ <span lang-es>Aceptado</span><span lang-en>Accepted</span> (4)</button>
@@ -464,8 +464,8 @@ tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--s1)}
 <!-- ============ ACCIONES ============ -->
 <section id="acciones">
 <h2><span lang-es>Acciones antes de publicar, por orden</span><span lang-en>Actions before publishing, in order</span></h2>
-<p class="lede" lang-es>El orden no es cosmético: los dos primeros se encarecen o se vuelven irreversibles si se posponen. Detalle completo en <span class="k">publication/ARXIV_SUBMISSION.md</span> La sección 1.</p>
-<p class="lede" lang-en>The order is not cosmetic: the first two become expensive or irreversible if deferred. Full detail in <span class="k">publication/ARXIV_SUBMISSION.md</span> Section 1.</p>
+<p class="lede" lang-es>Estado al 16 de agosto de 2026: publicado en GitHub y Zenodo. Lo que queda abierto es experimental, no editorial.</p>
+<p class="lede" lang-en>State as of 16 August 2026: published on GitHub and Zenodo. What remains open is experimental, not editorial.</p>
 <table><thead><tr>
   <th style="width:44px">#</th>
   <th style="width:32%"><span lang-es>Acción</span><span lang-en>Action</span></th>
@@ -492,8 +492,8 @@ tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--s1)}
 </section>
 
 <footer>
-  <p lang-es>Panel generado el 14 de agosto de 2026 a partir de <span class="k">docs/WHITEPAPER_EN.md</span> v1.4, <span class="k">docs/SPEC_EN.md</span> v0.2 rev. 2, <span class="k">docs/RESOLUCIONES.md</span> y la implementación de referencia <span class="k">swarmbly_v0/</span> (178 pruebas en verde, 1 omitida). Documento del whitepaper bajo CC BY 4.0; código y especificación bajo AGPL-3.0-or-later. Este proyecto publica sus propias limitaciones: sección 12 del whitepaper y la sección de limitaciones de este panel forman parte del entregable, no de un apéndice.</p>
-  <p lang-en>Dashboard generated 14 August 2026 from <span class="k">docs/WHITEPAPER_EN.md</span> v1.4, <span class="k">docs/SPEC_EN.md</span> v0.2 rev. 2, <span class="k">docs/RESOLUCIONES.md</span> and the reference implementation <span class="k">swarmbly_v0/</span> (178 tests green, 1 skipped). Whitepaper text under CC BY 4.0; code and specification under AGPL-3.0-or-later. This project publishes its own limitations: Section 12 of the whitepaper and the limitations section of this dashboard are part of the deliverable, not an appendix.</p>
+  <p lang-es>Panel generado el 16 de agosto de 2026 a partir de <span class="k">docs/WHITEPAPER_EN.md</span> v1.4, <span class="k">docs/SPEC_EN.md</span> v0.2 rev. 2 y la implementación de referencia <span class="k">swarmbly_v0/</span> (198 pruebas en verde, 1 omitida). Documento del whitepaper bajo CC BY 4.0; código y especificación bajo AGPL-3.0-or-later. Este proyecto publica sus propias limitaciones: sección 12 del whitepaper y la sección de limitaciones de este panel forman parte del entregable, no de un apéndice.</p>
+  <p lang-en>Dashboard generated 16 August 2026 from <span class="k">docs/WHITEPAPER_EN.md</span> v1.4, <span class="k">docs/SPEC_EN.md</span> v0.2 rev. 2 and the reference implementation <span class="k">swarmbly_v0/</span> (198 tests green, 1 skipped). Whitepaper text under CC BY 4.0; code and specification under AGPL-3.0-or-later. This project publishes its own limitations: Section 12 of the whitepaper and the limitations section of this dashboard are part of the deliverable, not an appendix.</p>
 </footer>
 </div>
 
@@ -669,24 +669,26 @@ const LIM=[
   {es:"Quien controla la lista blanca controla el enjambre, de modo que la gobernanza del registro pasa a ser una función crítica de seguridad. El TLS mutuo autentica una identidad, no el modelo detrás de ella. Y un enjambre que baja <em>k</em> a 1 renuncia al mapa de confianza junto con la redundancia adversarial que ya no necesita.",en:"Whoever controls the membership whitelist controls the swarm, so registry governance becomes a security-critical function. Mutual TLS authenticates an identity, not the model behind it. And a swarm that lowers <em>k</em> to 1 gives up the confidence map along with the adversarial redundancy it no longer needs."}]
 ];
 const ACT=[
- [1,{es:"Búsqueda de disponibilidad de marca «Swarmbly»",en:"Trademark clearance search for “Swarmbly”"},"crit",
-  {es:"<strong>Antes de cualquier anuncio público.</strong> Marca y efecto red están acoplados; posponerla es la única acción de esta lista que se encarece drásticamente.",en:"<strong>Before any public announcement.</strong> Brand and network effect are coupled; deferring it is the one action on this list that becomes drastically more expensive."}],
- [2,{es:"Decidir el periodo de gracia de patentes",en:"Decide the patent grace period"},"crit",
-  {es:"Irreversible tras el primer push público. La intención declarada es defensiva (sección 13): divulgar para que nadie —incluido el autor— pueda patentarlo. Si esa intención no ha cambiado, regístrese la decisión y adelante.",en:"Irreversible after the first public push. The declared intent is defensive (Section 13): disclose so that nobody, including the author, can patent it. If that intent has not changed, record the decision and proceed."}],
- [3,{es:"Sustituir los tokens <span class=\"k\">REEMPLAZAR</span> restantes",en:"Replace the remaining <span class=\"k\">REEMPLAZAR</span> tokens"},"warn",
-  {es:"Un DOI falso en un <span class=\"k\">CITATION.cff</span> publicado es peor que un campo ausente. Barrido: <span class=\"k\">grep -rn REEMPLAZAR .</span>",en:"A fake DOI in a published <span class=\"k\">CITATION.cff</span> is worse than an absent field. Sweep: <span class=\"k\">grep -rn REEMPLAZAR .</span>"}],
- [4,{es:"Completar las referencias APA marcadas ⚠",en:"Complete the ⚠-flagged APA references"},"warn",
-  {es:"Se dejaron visiblemente incompletas en vez de inventarlas, que es lo correcto en un borrador y lo incorrecto al publicar: una divulgación habilitante cuyas citas no se pueden resolver es arte previo más débil. Expandir también los «et al.».",en:"They were left visibly incomplete rather than invented, which is right in a draft and wrong at publication: an enabling disclosure whose citations cannot be resolved is weaker prior art. Expand every “et al.” as well."}],
- [5,{es:"Lectura final de sección 12",en:"Final read of Section 12"},"warn",
-  {es:"Confirmar que el reequilibrio de la v1.2 no perdió ninguna limitación por el camino, y que sección 1.4 sigue nombrando las cuatro cosas que no se reclaman, cada una apuntando a su entrada en sección 12.",en:"Confirm the v1.2 rebalancing lost no limitation along the way, and that Section 1.4 still names all four non-claims, each pointing at its sección 12 entry."}],
- [6,{es:"Unificar la cadena de versión y título",en:"Unify the version and title strings"},"warn",
-  {es:"El whitepaper todavía se estampa «Version 1.0» y <span class=\"k\">.zenodo.json</span> / <span class=\"k\">CITATION.cff</span> dicen <span class=\"k\">1.0.0</span>; el título del paper y el de los metadatos tampoco coinciden. Una cadena, en los tres sitios.",en:"The whitepaper still stamps “Version 1.0” and <span class=\"k\">.zenodo.json</span> / <span class=\"k\">CITATION.cff</span> say <span class=\"k\">1.0.0</span>; the paper's title and the metadata title do not match either. One string, in all three places."}],
- [7,{es:"Publicar: repo + Zenodo + arXiv (cs.DC)",en:"Publish: repo + Zenodo + arXiv (cs.DC)"},"good",
-  {es:"El repo y el DOI de Zenodo son capas de arte previo independientes que no dependen de la cola de moderación de arXiv. No se retrasan esperando a arXiv.",en:"The repo and the Zenodo DOI are independent prior-art layers that do not depend on arXiv's moderation queue. Do not delay them waiting for arXiv."}],
- [8,{es:"Ejecutar V0 contra modelos reales",en:"Run V0 against real models"},"good",
-  {es:"Convierte la hipótesis central en datos citables, y es la puerta F0.",en:"Turns the central hypothesis into citable data, and it is the F0 gate."}]
+ [1,{es:"V3c contra conjuntos con verdad de referencia",en:"V3c against ground-truth datasets"},"crit",
+  {es:"El único experimento que zanja si el mapa de confianza vale los 17–20 puntos de calidad que cuesta el consenso. La primera medición usó un juez que aceptó el 93,3 % de todo, así que no distingue «el acuerdo no predice la corrección» de «el juez no discrimina». Todo lo demás sobre E16 es especulación hasta que exista.",en:"The one experiment that settles whether the confidence map is worth the 17–20 quality points consensus costs. The first measurement used a judge that accepted 93.3 % of everything, so it cannot separate “agreement does not predict correctness” from “the judge does not discriminate”. Everything else about E16 is speculation until this exists."}],
+ [2,{es:"Reparar o sustituir el segundo instrumento de coherencia",en:"Repair or replace the second coherence instrument"},"crit",
+  {es:"La rejilla de entidades excluyó 96 de 96 celdas: su línea base monolítica va de 0,000 a 0,114, por debajo del suelo en que una razón deja de ser un estadístico. Un solo proxy mecánico en funcionamiento es evidencia más delgada de la que este diseño merece.",en:"The entity grid excluded 96 of 96 cells: its monolithic baseline ranges from 0.000 to 0.114, below the floor at which a ratio stops being a statistic. One working mechanical proxy is thinner evidence than this design deserves."}],
+ [3,{es:"Completar las 18 referencias APA marcadas ⚠",en:"Complete the 18 ⚠-flagged APA references"},"crit",
+  {es:"Se dejaron visiblemente incompletas en vez de inventarlas, que es lo correcto en un borrador y lo incorrecto ya publicado: una divulgación habilitante cuyas citas no se pueden resolver es arte previo más débil. Expandir también los «et al.».",en:"They were left visibly incomplete rather than invented, which is right in a draft and wrong once published: an enabling disclosure whose citations cannot be resolved is weaker prior art. Expand every “et al.” as well."}],
+ [4,{es:"Búsqueda de marca: EE. UU. limpio, resto abierto",en:"Trademark search: US clear, the rest open"},"warn",
+  {es:"El barrido de eliminación en EE. UU. salió limpio y por eso el nombre se fijó antes de publicar. Siguen abiertos EUIPO, la base global de la OMPI, CIPO y el WHOIS de los dominios, además de la revisión de un abogado antes de presentar cualquier solicitud.",en:"The US knockout sweep came back clear, which is why the name was fixed before publication. Still open: EUIPO, the WIPO global brand database, CIPO, and WHOIS on the domains, plus an attorney review before any application is filed."}],
+ [5,{es:"arXiv (cs.DC): diferido, no bloqueado",en:"arXiv (cs.DC): deferred, not blocked"},"warn",
+  {es:"La sumisión se intentó y se detuvo en «no está avalado para este archivo». El aval es el filtro antispam de arXiv para quien envía por primera vez a una categoría, no una revisión de calidad. Nada del arte previo depende de ello: los tres DOI de Zenodo y el repositorio son registros fechados independientes.",en:"The submission was attempted and stopped at “you are not endorsed for this archive”. Endorsement is arXiv's spam filter for first-time submitters to a category, not a quality review. No part of the prior-art position depends on it: the three Zenodo DOIs and the repository are independent dated records."}],
+ [6,{es:"Publicado: repositorio + Zenodo (3 DOI) + tag v1",en:"Published: repository + Zenodo (3 DOIs) + tag v1"},"good",
+  {es:"15 de agosto de 2026. Tres registros de Zenodo fechados de forma independiente y el repositorio público en el tag <span class=\"k\">v1</span>. El más antiguo de los tres es el registro de tercero más temprano.",en:"15 August 2026. Three independently dated Zenodo records and the public repository at tag <span class=\"k\">v1</span>. The earliest of the three is the earliest third-party record."}],
+ [7,{es:"Periodo de gracia de patentes: decidido y ejecutado",en:"Patent grace period: decided and executed"},"good",
+  {es:"La intención defensiva se mantuvo. El autor no reclama patentes sobre las técnicas divulgadas y las coloca en el dominio público a efectos de patentabilidad; la declaración está en el README y en los metadatos de Zenodo, no solo en una nota interna.",en:"The defensive intent held. The author asserts no patent claims over the disclosed techniques and places them in the public domain for patenting purposes; the statement is in the README and in the Zenodo metadata, not only in an internal note."}],
+ [8,{es:"V0 y V3c contra modelos reales: hecho",en:"V0 and V3c against real models: done"},"good",
+  {es:"Tres familias servidas localmente. El impuesto de coherencia decrece de forma monótona con ρ (24,1 → 13,7 %), el criterio de abandono se cumple en tres categorías y en dos el impuesto es negativo. El acuerdo entre réplicas no predice la calidad juzgada, y eso también se publicó.",en:"Three families served locally. The coherence tax falls monotonically in ρ (24.1 → 13.7 %), the abandonment criterion is met in three categories and in two the tax is negative. Inter-replica agreement does not predict judged quality, and that was published too."}],
+ [9,{es:"Corpus de prompts: deixis eliminada y protegida por pruebas",en:"Prompt corpus: deixis removed and guarded by tests"},"good",
+  {es:"Tres prompts apuntaban a material que no estaba en el archivo, lo que costó las doce celdas de uno de ellos. Ahora nombran su corpus en vez de señalarlo, y <span class=\"k\">tests/test_prompt_corpus.py</span> impide que el fallo vuelva.",en:"Three prompts pointed at material that was not in the file, which cost one of them all twelve of its cells. They now name their corpus instead of pointing at it, and <span class=\"k\">tests/test_prompt_corpus.py</span> stops the failure recurring."}]
 ];
-const URG={crit:{es:"Bloqueante",en:"Blocking"},warn:{es:"Antes de publicar",en:"Pre-publication"},good:{es:"Siguiente",en:"Next"}};
+const URG={crit:{es:"Abierto",en:"Open"},warn:{es:"Parcial",en:"Partial"},good:{es:"Hecho",en:"Done"}};
 const BIB=[
  ["P2P",{es:"Inferencia y entrenamiento descentralizado P2P",en:"Decentralized P2P inference and training"}],
  ["NET",{es:"Realidad de red: ancho de banda, latencia, interconexión",en:"Network reality: bandwidth, latency, interconnect"}],

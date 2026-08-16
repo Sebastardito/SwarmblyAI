@@ -1,5 +1,9 @@
 # Swarmbly AI
 
+[![DOI (software)](https://zenodo.org/badge/DOI/10.5281/zenodo.21956743.svg)](https://doi.org/10.5281/zenodo.21956743)
+[![DOI (paper)](https://zenodo.org/badge/DOI/10.5281/zenodo.21957088.svg)](https://doi.org/10.5281/zenodo.21957088)
+[![Licence: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
+
 **A decentralized inference protocol that fragments the *problem*, not the *model*.**
 
 Swarmbly dispatches semantic micro-tasks to volunteer nodes running complete small language models (SLMs, 1–8B), and reassembles the answers on the client with an orchestrator SLM — using genome shotgun assembly (reads, contigs, overlap, scaffolding, consensus) as its design vocabulary.
@@ -12,6 +16,7 @@ Existing peer-to-peer inference systems split the **model**: layers or tensors l
 - **Critical analysis and red team:** [`docs/`](docs/README.md) — the project publishes its own audit alongside its claims.
 - **Annotated bibliography:** [`docs/REFERENCES.md`](docs/REFERENCES.md)
 - **Licence:** AGPL-3.0-or-later. Network use triggers clause 13 — see [`NOTICE`](NOTICE).
+- **Cite this:** the artifact as [`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743), the paper as [`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088). Machine-readable metadata in [`CITATION.cff`](CITATION.cff).
 
 ---
 
@@ -43,7 +48,7 @@ That price is what this repository measures first.
 
 ---
 
-**Why "Swarmbly"?** *Swarm* and *assembly*. The swarm is the easy half — running many models at once is a scheduling problem, and scheduling was solved decades ago. The assembly is the hard half: a swarm produces fragments, and turning fragments into one coherent answer is where quality is lost and where this design can fail. The name puts the difficult part in the word. Full reasoning, including what the name deliberately does *not* claim: [`docs/NAMING.md`](docs/NAMING.md).
+**Why "Swarmbly"?** *Swarm* and *assembly*. The swarm is the easy half — running many models at once is a scheduling problem, and scheduling was solved decades ago. The assembly is the hard half: a swarm produces fragments, and turning fragments into one coherent answer is where quality is lost and where this design can fail. The name puts the difficult part in the word.
 
 ## V0 — the coherence-tax harness
 
@@ -188,9 +193,25 @@ swarmbly_v0/        V0 harness: privacy (tier routing), router, planner, packing
 tests/             pytest suite
 prompts/           labelled prompt set (category, expected_decomposable) — doubles as router eval
 docs/              whitepaper, protocol spec, analysis, references
-publication/       arXiv / Zenodo / IP.com prior-art materials
 .github/           SWIP proposal template, PR template
 ```
+
+## Prior art and patents
+
+This is a **defensive publication**. The techniques described here — semantic
+fragmentation of a request, the context budget *S*, the coverage model
+`c ≥ ln(1/ε)/(1−p)`, two-level assembly with cross-family consensus, and
+privacy-tier routing — are disclosed publicly and in enabling detail so that
+they remain free for anyone to implement.
+
+**The author asserts no patent claims over the disclosed techniques and places
+them in the public domain for patenting purposes.**
+
+The disclosure is dated by three independent Zenodo records —
+[`10.5281/zenodo.21940473`](https://doi.org/10.5281/zenodo.21940473),
+[`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743),
+[`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088) — and by
+this repository at tag `v1`.
 
 ## Contributing
 

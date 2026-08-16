@@ -30,7 +30,7 @@ specification **v0.2 revision 2** · reference implementation **V0**.
 | You want the full argument for the design | `WHITEPAPER_EN.md` |
 | You are going to implement a node or a client | `SPEC_EN.md` |
 | You want to see the numbers | the dashboard, `Swarmbly_AI_Dashboard.html` |
-| You want the reasoning, the alternatives, and the open questions | the master analysis document |
+| You want the reasoning, the alternatives, and the open questions | `WHITEPAPER_EN.md` Sections 5.4, 11 and 12 — where the design is argued against itself |
 | You want to know where an idea came from | `REFERENCES.md` |
 | You want to contribute | `../CONTRIBUTING.md` |
 | You want to know who controls this | `../GOVERNANCE.md` |
@@ -47,8 +47,7 @@ The case for Swarmbly: why fragmenting the *problem* is a different and better
 bet than fragmenting the *model*, what the shotgun-assembly analogy buys, the
 architecture at a level a reader can hold in their head, the failure and threat
 model, and what has and has not been demonstrated. This is the document
-submitted to arXiv (see `../publication/ARXIV_SUBMISSION.md`) and the one to
-cite. Read it first.
+submitted to arXiv and the one to cite. Read it first.
 
 *El planteamiento de Swarmbly: por qué fragmentar el problema es una apuesta
 distinta y mejor que fragmentar el modelo, qué aporta la analogía del
@@ -77,26 +76,6 @@ los nodos, comportamiento ante errores y timeouts, y versionado. Escrita para
 que se pueda construir una implementación independiente sin leer el código de
 referencia; si no se puede, es un fallo de la especificación, no de quien la
 lee.*
-
-### Master analysis documents — the reasoning
-
-**`Swarmbly_AI_Master_Document_EN.md`** · **`Swarmbly_AI_Documento_Maestro_ES.md`**
-(also distributed as `.pdf`)
-
-The long-form working document behind the whitepaper: the full analysis, the
-design alternatives that were considered and rejected and why, the comparison
-against Petals and the rest of the distributed-inference landscape, the
-governance and publication reasoning, and the open questions. The whitepaper is
-the conclusion; this is the work. Read it when you want to know *why* a
-decision went the way it did, or before proposing that it go the other way.
-
-*El documento de trabajo extenso que hay detrás del whitepaper: el análisis
-completo, las alternativas de diseño que se consideraron y se descartaron y por
-qué, la comparación con Petals y el resto del panorama de inferencia
-distribuida, el razonamiento de gobernanza y publicación, y las preguntas
-abiertas. El whitepaper es la conclusión; esto es el trabajo. Léelo cuando
-quieras saber* por qué *una decisión salió como salió, o antes de proponer que
-salga al revés.*
 
 ### References — the bibliography
 
@@ -143,7 +122,7 @@ request.*
 
 ## Related documents outside `docs/`
 
-These live in the repository root or in `publication/`, and are listed here so
+These live in the repository root, and are listed here so
 this page is a complete index.
 
 | File | What it is |
@@ -156,14 +135,7 @@ this page is a complete index.
 | `../TRADEMARK.md` | Trademark policy. Marks are **not** registered; statement of intent |
 | `../CITATION.cff` | Machine-readable citation metadata (CFF 1.2.0) |
 | `../.zenodo.json` | Zenodo deposition metadata |
-| `../publication/ARXIV_SUBMISSION.md` | arXiv submission checklist: cs.DC primary, endorsement, licence choice, metadata, ordering |
-| `../publication/IPCOM_DISCLOSURE.md` | Defensive-publication disclosure formatted for IP.com / InnovationQ |
-| `../publication/PRIOR_ART.md` | EN/ES. Prior-art strategy, the enablement problem, the three-layer stack, and the dated log |
-| `../publication/GITHUB_READY.md` | Pre-push state of the repository: what is verified, what is deliberately blank, and the exact first-push sequence |
-| `NAMING.md` | EN/ES. Why the project is called Swarmbly, and what the name deliberately does not claim |
 | `RESULTS_V0_V3C.md` | First measurements against real models: the corrected coherence-tax curve, the go/no-go verdict, and the V3c agreement result |
-| `../.github/ISSUE_TEMPLATE/swip.md` | Swarmbly Improvement Proposal template |
-| `../.github/PULL_REQUEST_TEMPLATE.md` | PR checklist, including DCO and measurement |
 
 ---
 
@@ -180,7 +152,9 @@ this page is a complete index.
   `.pdf` next to a `.md` is a build artifact; edit the `.md`.
 - **Version numbers are stated in each document's header** and must agree with
   `../CITATION.cff` and `../.zenodo.json`. Divergence across those three
-  records weakens the prior-art chain — see `../publication/PRIOR_ART.md` Section 6.
+  records weakens the prior-art chain: the dated record is the set of Zenodo
+  DOIs and the `v1` tag, and a title that drifts between them is a title a
+  reader cannot follow.
 
 ---
 

@@ -2,10 +2,11 @@
 # Citation File Format (CFF) 1.2.0
 # https://citation-file-format.github.io/
 #
-# PLACEHOLDERS THE AUTHOR MUST REPLACE BEFORE PUBLICATION are marked with
-# the token REEMPLAZAR. Search this file for "REEMPLAZAR" and resolve every
-# hit. Fields that cannot yet be known (DOIs, ORCID) are commented out where
-# leaving an invalid value would break CFF validation, and are flagged below.
+# No placeholder values remain in this file. Fields that cannot yet be known
+# are commented out rather than filled with something unresolvable: an
+# invalid DOI in a published citation record is worse than an absent one.
+# As of 16 August 2026 the only such field is the arXiv identifier, which
+# waits on endorsement for cs.DC.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -61,11 +62,25 @@ authors:
 
 repository-code: "https://github.com/Sebastardito/Swarmbly-AI"
 url: "https://github.com/Sebastardito/Swarmbly-AI"
-# ^ Sebastardito: substitute the actual GitHub owner (user or organization)
-#   once the repository is created. Repo name is fixed: Swarmbly-AI.
 
-# doi: "10.5281/zenodo.REEMPLAZAR"   # REEMPLAZAR — Zenodo mints this on the
-#   first archived release. Uncomment and fill after the Zenodo deposition.
+# Software DOI: the Zenodo record minted from the GitHub `v1` release, which
+# carries the deposited archive rather than a reference to it. Cite this one
+# for the artifact; cite `preferred-citation.doi` below for the argument.
+doi: "10.5281/zenodo.21956743"
+
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21956743"
+    description: "Zenodo archive of the GitHub v1 release (the software artifact)"
+  - type: doi
+    value: "10.5281/zenodo.21957088"
+    description: "Zenodo preprint of the whitepaper (the paper)"
+  - type: doi
+    value: "10.5281/zenodo.21940473"
+    description: "Earliest Zenodo deposit of this work; retained because it is the earliest third-party dated record"
+  - type: url
+    value: "https://github.com/Sebastardito/Swarmbly-AI/releases/tag/v1"
+    description: "The disclosing release, commit ceb40143faea544ddd795be7efa60542013437b2"
 
 keywords:
   - "distributed inference"
@@ -90,21 +105,44 @@ contact:
     email: "sebas_saeu@hotmail.com"
 
 references:
-  - type: software
+  - type: conference-paper
     title: "Petals: Collaborative Inference and Fine-tuning of Large Models"
     abstract: >-
       Referenced as the closest prior system in the distributed-inference
       space. Petals shards a single large model across participants; Swarmbly
-      is contrasted against it because it shards the problem instead. Listed
-      here for orientation; the authoritative bibliography with full author
-      lists and identifiers is REFERENCES.md in this project.
+      is contrasted against it because it shards the problem instead. The
+      authoritative bibliography, with key figures and the reasoning behind
+      each entry, is REFERENCES.md in this project.
     authors:
-      - name: "The Petals project contributors"
+      - given-names: "Alexander"
+        family-names: "Borzunov"
+      - given-names: "Dmitry"
+        family-names: "Baranchuk"
+      - given-names: "Tim"
+        family-names: "Dettmers"
+      - given-names: "Max"
+        family-names: "Ryabinin"
+      - given-names: "Younes"
+        family-names: "Belkada"
+      - given-names: "Artem"
+        family-names: "Chumachenko"
+      - given-names: "Pavel"
+        family-names: "Samygin"
+      - given-names: "Colin"
+        family-names: "Raffel"
+    year: 2023
+    collection-title: "Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 3: System Demonstrations)"
+    url: "https://aclanthology.org/2023.acl-demo.54/"
+    identifiers:
+      - type: other
+        value: "arXiv:2209.01188"
+        description: "arXiv preprint identifier"
     notes: >-
-      REEMPLAZAR — replace with the complete, verified bibliographic entry
-      (full author list, year, venue, DOI/arXiv ID) taken from REFERENCES.md.
-      Not filled in here because inventing bibliographic detail is worse than
-      leaving it explicitly blank.
+      Cited as prior art, not as a dependency. The full-length follow-up
+      (arXiv:2312.08361) carries the measurements this project relies on most:
+      2.29 steps/s at 1 Gbit/s and under 5 ms RTT falling to 1.57 steps/s at
+      100 Mbit/s and 100 ms RTT, which is roughly 31 percent of throughput lost
+      to the network alone.
 
 preferred-citation:
   type: article
@@ -130,19 +168,16 @@ preferred-citation:
       email: "sebas_saeu@hotmail.com"
   year: 2026
   month: 8
-  # --- Identifiers: all REEMPLAZAR ---------------------------------------
-  # `doi` below is a PLACEHOLDER and is deliberately obvious. It is NOT a
-  # resolvable DOI. Replace it with the DOI issued by arXiv (arXiv assigns
-  # DOIs of the form 10.48550/arXiv.YYMM.NNNNN) or by Zenodo, whichever is
-  # used as the canonical record for the paper. Delete the field entirely if
-  # no DOI has been minted yet — a fake DOI in a published CITATION.cff is
-  # worse than an absent one.
-  # doi: "10.48550/arXiv.YYMM.NNNNN"   # UNCOMMENT and fill after arXiv assigns it.
-  # Deliberately absent rather than fake: an unresolvable DOI in a published
-  # CITATION.cff is worse than no DOI at all.
-  # journal: "REEMPLAZAR"          # not applicable while it is a preprint
-  # url: "https://arxiv.org/abs/REEMPLAZAR"   # REEMPLAZAR after submission
+  # Paper DOI: the Zenodo preprint record, which carries the whitepaper's full
+  # academic title. An arXiv DOI (10.48550/arXiv.YYMM.NNNNN) will be added
+  # alongside it if and when the submission clears endorsement; it replaces
+  # nothing, because the Zenodo record is already the citable one.
+  doi: "10.5281/zenodo.21957088"
+  url: "https://doi.org/10.5281/zenodo.21957088"
+  # journal: not applicable while it is a preprint
   notes: >-
-    Preprint. Intended submission venue: arXiv, primary category cs.DC. See
-    publication/ARXIV_SUBMISSION.md for the submission checklist and for which
-    facts were verified and which the author must confirm on arxiv.org.
+    Preprint, deposited on Zenodo 2026-08-14. Intended additional venue: arXiv,
+    primary category cs.DC — deferred, because a first-time submitter to that
+    archive requires endorsement and none had been obtained at time of
+    publication. The prior-art position does not depend on arXiv: the Zenodo
+    DOIs and the public repository are independent dated records.
