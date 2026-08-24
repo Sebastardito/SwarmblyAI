@@ -71,6 +71,7 @@ __all__ = [
     "grade_unit",
     "grade_units",
     "is_echo",
+    "returns_input_value",
 ]
 
 
@@ -188,6 +189,34 @@ def is_echo(given: str, source: str) -> bool:
         return False
     covered = len(source_tokens & set(given_tokens)) / len(source_tokens)
     return covered >= ECHO_COVERAGE
+
+
+def returns_input_value(given: str, source: str, expected: str) -> bool:
+    """Did the model hand back one of the item's own numbers instead of a result?
+
+    The short cousin of :func:`is_echo`, and the one that cost the most. On 24
+    August a worker answered ``[05] 30000 m`` to an item whose source line was
+    ``[05] 30000 m`` and whose answer was ``30``: it restated the input rather
+    than converting it. Two tokens is far below the length at which
+    :func:`is_echo` will call something a restatement, so the item was graded
+    **wrong**, and ``unit_conversion`` came back at 3.5 % against 80 %
+    unfragmented.
+
+    Numeric only, and deliberately narrow: the value must appear in the item and
+    must differ from the expected answer. When the two coincide -- an item whose
+    result happens to equal one of its inputs -- the answer is simply correct and
+    is left alone.
+    """
+    if not source:
+        return False
+    got = _as_number(given)
+    want = _as_number(expected)
+    if got is None or want is None or abs(got - want) <= max(abs(want) * 1e-6, 1e-9):
+        return False
+    source_numbers = {
+        n for n in (_as_number(tok) for tok in _NUM_RE.findall(source)) if n is not None
+    }
+    return any(abs(got - n) <= max(abs(n) * 1e-6, 1e-9) for n in source_numbers)
 
 
 def grade_answer(given: str, expected: str, mode: str = "exact_norm") -> bool | None:
@@ -356,8 +385,10 @@ def grade_unit(
             expected = str(entry.get("expected", ""))
             mode = str(entry.get("mode", default_mode))
             source = str(entry.get("source", ""))
-        if is_echo(answer, source):
-            # Unanswered, not wrong. See is_echo.
+        if is_echo(answer, source) or (
+            mode == "numeric" and returns_input_value(answer, source, expected)
+        ):
+            # Unanswered, not wrong. See is_echo and returns_input_value.
             graded.append(GradedItem(item_id, answer, expected, mode, None, echoed=True))
             continue
         graded.append(GradedItem(item_id, answer, expected, mode, grade_answer(answer, expected, mode)))

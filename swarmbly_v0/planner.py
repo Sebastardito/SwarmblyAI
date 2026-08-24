@@ -45,7 +45,19 @@ _LENGTH_RE = re.compile(r"\b(\d{2,5})\s*(word|token)s?\b", re.I)
 _FORBID_RE = re.compile(
     r"(?:do not use|don't use|avoid(?: using)?|never mention|without using)\s+([^.;\n]{3,80})", re.I
 )
-_ENUM_SPLIT_RE = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+", re.M)
+_ENUM_SPLIT_RE = re.compile(r"^\s*(?:[-*•]|\d+[.)]|[\[(]\d{1,3}[\])])\s*", re.M)
+"""Bullet, ``1.``/``1)``, or a bracketed ``[01]``/``(01)`` item label.
+
+The bracketed form was missing until 24 August 2026, and its absence is what
+made the enumerated-batch case fail. A prompt of ten ``[NN]`` items split into
+one unit, fell through to sentence packing, and produced fragments where the
+task holding the data held no operation -- workers echoed ``30000 m`` back
+instead of converting it -- while four of the ten items appeared in no fragment
+at all.
+"""
+
+_ITEM_LABEL_RE = re.compile(r"^\s*[\[(]?(\d{1,3})[\]).:]\s+", re.M)
+"""Start of an enumerated item, used to find where the item block begins and ends."""
 
 _FORMAT_CUES: tuple[tuple[str, str], ...] = (
     ("json", r"\bjson\b|\bschema\b"),
@@ -171,6 +183,94 @@ def suggest_n_tasks(prompt: str, minimum: int = 2, maximum: int = 16) -> int:
     return max(minimum, min(round(count_tokens(prompt) / 60) or minimum, maximum))
 
 
+_SHORT_FORMAT_DIRECTIVE = (
+    "Give one line per item, as [NN] followed by the value alone. "
+    "Answer only the items listed here."
+)
+"""Compressed stand-in for the prompt's format block, attached to every fragment.
+
+The full block runs to sixty tokens and would be paid ``N`` times, since every
+fragment needs it. Mandatory per-packet content is exactly what raises the
+reachable ``rho`` floor -- ``rho_floor = (sum|task_i| + N*|header_i|) / |P|`` --
+so the long form would push the low end of the sweep out of reach. The
+directive also drops the word "answer" as a literal, which the models copied
+into their replies on 24 August: 8.8 % of fragmented items came back as
+"answer Osaka", right content graded wrong.
+"""
+
+
+def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int) -> list[str]:
+    """Partition an enumerated batch by item, not by text.
+
+    Every fragment gets the preamble, a contiguous and disjoint slice of the
+    items, and a short format directive. Two invariants hold and are asserted by
+    ``tests/test_item_partition.py``: **every item appears in exactly one
+    fragment**, and **every fragment carries the operation**.
+
+    The preamble is duplicated across fragments and that is a real cost, paid in
+    the ``rho`` floor: mandatory per-packet content is counted ``N`` times. It is
+    the right trade anyway. A fragment without the operation cannot do the task
+    at any ``rho``, which is not a worse floor but a wrong answer.
+    """
+    preamble, items, _postamble = parts
+    n = max(1, min(int(n_tasks), len(items)))
+
+    groups: list[list[str]] = [[] for _ in range(n)]
+    for index, item in enumerate(items):
+        groups[index * n // len(items)].append(item)
+
+    head = preamble.strip()
+    segments: list[str] = []
+    for group in groups:
+        body = "\n".join(group)
+        segments.append(f"{head}\n\n{body}\n\n{_SHORT_FORMAT_DIRECTIVE}".strip())
+
+    # N is the independent variable of the sweep and must be honoured exactly;
+    # when there are fewer items than tasks the tail fragments would be empty,
+    # so the item count caps N and the caller sees the smaller number.
+    return segments
+
+
+def split_enumerated(prompt: str) -> tuple[str, list[str], str] | None:
+    """Split an enumerated batch into ``(preamble, items, postamble)``.
+
+    An enumerated prompt has three parts and they are not interchangeable. The
+    **preamble** states the operation ("convert each length from metres to
+    kilometres"); the **items** carry the data; the **postamble** states the
+    output format. Only the items are divisible. The preamble must travel with
+    every fragment, because a worker holding data and no operation cannot do the
+    task -- on 24 August such a worker restated its input and the item was
+    graded wrong, which is how ``unit_conversion`` fell from 80 % unfragmented
+    to 3.5 % fragmented.
+
+    Returns ``None`` when the prompt is not an enumerated batch, which leaves
+    the general segmenter in charge. The bar is deliberately low -- three
+    labelled items -- because the failure this prevents is severe and the cost
+    of treating a two-item prompt as prose is not.
+    """
+    matches = list(_ITEM_LABEL_RE.finditer(prompt or ""))
+    if len(matches) < 3:
+        return None
+
+    preamble = prompt[: matches[0].start()].strip()
+    items: list[str] = []
+    for i, m in enumerate(matches):
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(prompt)
+        items.append(prompt[m.start():end].strip())
+
+    # The last item's block runs to the end of the prompt and so swallows any
+    # trailing format instructions. Cut it back at the first blank line: an
+    # answer sheet's items are single lines, and boilerplate is what follows.
+    tail = items[-1]
+    if "\n\n" in tail:
+        body, _, rest = tail.partition("\n\n")
+        items[-1] = body.strip()
+        postamble = rest.strip()
+    else:
+        postamble = ""
+    return preamble, items, postamble
+
+
 def _segment(prompt: str, n_tasks: int) -> list[str]:
     """Split ``prompt`` into exactly ``n_tasks`` non-empty units of work.
 
@@ -182,6 +282,10 @@ def _segment(prompt: str, n_tasks: int) -> list[str]:
     sweep. ``N`` is always honoured exactly -- the sweep needs ``N`` to be the
     independent variable, not a suggestion.
     """
+    enumerated = split_enumerated(prompt)
+    if enumerated is not None:
+        return _segment_enumerated(enumerated, n_tasks)
+
     units = [u.strip() for u in _ENUM_SPLIT_RE.split(prompt) if u.strip()]
     if len(units) < n_tasks:
         units = [s for s in split_sentences(prompt) if s.strip()]

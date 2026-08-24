@@ -66,8 +66,11 @@ LEVELS = (1, 2, 3)
 OUT = Path(__file__).resolve().parent.parent / "prompts" / "ground_truth.json"
 
 FORMAT_RULE = (
-    "Answer every item on its own line, formatted exactly as \"[NN] answer\" with the square "
-    "brackets, where NN is the item number as given. Emit the answer only: no working, no "
+    # No literal placeholder word here. The earlier rule read 'formatted exactly as "[NN] answer"'
+    # and models copied the word: 8.8 % of fragmented items came back as "answer Osaka", the right
+    # content graded wrong for its wrapper.
+    "Give one line per item. Begin the line with the item number in square brackets, exactly as "
+    "given, then a single space, then the value. Emit the value only: no working, no "
     "restatement of the item, no units unless the item asks for them, and no commentary before "
     "or after the list. Items are independent: the answer to one must not depend on the answer "
     "to any other, and you must not reconcile them against each other."
