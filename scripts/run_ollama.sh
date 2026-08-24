@@ -5,7 +5,14 @@
 #   ./scripts/run_ollama.sh smoke     ~5 min    does the wiring hold?
 #   ./scripts/run_ollama.sh v0        ~2-4 h    the coherence-tax curve (H1)
 #   ./scripts/run_ollama.sh v3c       ~2-3 h    agreement vs judged quality (V3c)
-#   ./scripts/run_ollama.sh all       ~5-7 h    both, sequentially
+#   ./scripts/run_ollama.sh v3c-gt    ~1-2 h    agreement vs GROUND TRUTH (V3c proper)
+#   ./scripts/run_ollama.sh all       ~5-7 h    v0 + v3c, sequentially
+#
+# Run v3c-gt before v3c if you only have time for one. The v3c tier grades with
+# a peer-class judge, which is the instrument that made the 14 August result
+# uninterpretable: it accepted 93.3 % of everything, so the correlation could
+# not appear whether or not the signal was there. v3c-gt grades against an
+# answer key instead, which is what Section 11.4 actually specifies.
 #
 # Everything is written under results/<tier>-<timestamp>/. Nothing is deleted.
 #
@@ -124,6 +131,45 @@ run_v0() {
   echo "  -> $out/report.html"
 }
 
+run_v3c_gt() {
+  local out="results/v3c-gt-$STAMP"
+  bold ""
+  bold "== V3c against ground truth — does agreement predict CORRECTNESS? =="
+  echo "  The experiment Section 11.4 specifies, and the one the 14 August run"
+  echo "  was not. There the verdict came from a peer-class judge that accepted"
+  echo "  93.3 % of everything, so r = -0.030 could not distinguish 'agreement"
+  echo "  does not predict correctness' from 'the judge cannot tell'. Here the"
+  echo "  verdict comes from prompts/ground_truth.json — an answer key, graded"
+  echo "  mechanically by swarmbly_v0.grading. No model in the verdict."
+  echo ""
+  echo "  Read the summary in this order:"
+  echo "    truth_calibration.pooled.flagging  — flag the lowest-agreement items."
+  echo "                                         lift near 1.0 means the flag is"
+  echo "                                         no better than random, and that"
+  echo "                                         result retires the confidence map."
+  echo "    truth_calibration.pooled.auc       — 0.5 means no signal. Read this"
+  echo "                                         before pearson_r, because accuracy"
+  echo "                                         will not be near 50 %."
+  echo "    truth_calibration.by_category      — pooling can manufacture a signal"
+  echo "                                         when easy items both agree more"
+  echo "                                         and are more often right."
+  echo "    truth_calibration.grading          — the denominators. If"
+  echo "                                         units_with_no_label is close to"
+  echo "                                         units_total the models ignored the"
+  echo "                                         output format and nothing else in"
+  echo "                                         the block means anything."
+  echo "  Output: $out  (see ground_truth_items.csv for every graded item)"
+  mkdir -p "$out"
+  python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/ground_truth.json \
+    --rho 1.5 --n 4 --k 1,3,5 \
+    --candidates 2 --seed 0 \
+    --out "$out" 2>&1 | tee "$out/run.log" || true
+  echo "  -> $out/report.html"
+  echo "  -> $out/summary.json  (truth_calibration)"
+}
+
 run_v3c() {
   local out="results/v3c-$STAMP"
   bold ""
@@ -158,8 +204,9 @@ case "$TIER" in
     ;;
   v0)  run_v0 ;;
   v3c) run_v3c ;;
+  v3c-gt) run_v3c_gt ;;
   all) run_v0; run_v3c ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | all" ;;
 esac
 
 bold ""

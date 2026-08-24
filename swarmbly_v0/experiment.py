@@ -44,6 +44,7 @@ from .consensus import (
     Replica,
     consensus,
 )
+from .grading import grade_units
 from .metrics import (
     ERROR_CLASSES,
     TauCalibration,
@@ -72,11 +73,15 @@ __all__ = [
     "write_unit_csv",
     "read_unit_rows",
     "agreement_quality_correlation",
+    "agreement_truth_calibration",
     "summarize",
     "make_calibration_pairs",
     "CSV_COLUMNS",
     "UNIT_CSV_COLUMNS",
     "UNIT_CSV_NAME",
+    "TRUTH_CSV_NAME",
+    "TRUTH_CSV_COLUMNS",
+    "write_truth_csv",
     "AGREEMENT_BINS",
 ]
 
@@ -127,6 +132,21 @@ CSV_COLUMNS: list[str] = [
 ] + [f"err_{cls}" for cls in ERROR_CLASSES]
 
 UNIT_CSV_NAME = "agreement_units.csv"
+
+TRUTH_CSV_NAME = "ground_truth_items.csv"
+"""Per-item sidecar for the V3c ground-truth calibration.
+
+Written only when the corpus carries answer keys, so a coherence-tax run does
+not gain an empty file. One row per *item occurrence*, each carrying the
+agreement of the unit it appeared in -- items are the observations, agreement is
+the predictor.
+"""
+
+TRUTH_CSV_COLUMNS: tuple[str, ...] = (
+    "prompt_id", "category", "condition", "rho_target", "n_tasks", "k", "task_id",
+    "unit_index", "item_id", "label", "agreement", "judge_score", "accepted",
+    "mode", "expected", "given", "correct", "graded", "unknown_item",
+)
 """Sidecar written next to ``results.csv`` holding one row per consensus unit.
 
 The sweep CSV is one row per *condition*; the agreement-vs-quality calibration
@@ -163,6 +183,19 @@ class PromptSpec:
     category: str
     expected_decomposable: bool
     text: str
+    key: Mapping[str, Any] | None = None
+    """Answer key, present only in the ground-truth corpus.
+
+    When this is set the sweep grades units against it (see
+    :mod:`swarmbly_v0.grading`) *in addition to* judging them, so one run yields
+    both the judge-based calibration and the ground-truth one. That is
+    deliberate: the difference between the two numbers is the measurement of how
+    much the peer-class judge was distorting the V3c result.
+    """
+
+    @property
+    def has_ground_truth(self) -> bool:
+        return bool(self.key)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PromptSpec":
@@ -171,6 +204,7 @@ class PromptSpec:
             category=str(data["category"]),
             expected_decomposable=bool(data["expected_decomposable"]),
             text=str(data["prompt"]).strip(),
+            key=data.get("key") or None,
         )
 
 
@@ -340,6 +374,49 @@ def _unit_records(
                 "accepted": bool(unit.accepted),
             })
     return records
+
+
+def _truth_records(
+    spec: PromptSpec,
+    row: Mapping[str, Any],
+    results: Sequence[tuple[str, "ConsensusResult"]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Grade consensus units against the prompt's answer key.
+
+    Returns ``(records, report)``. The report carries the denominators -- how
+    many units held no parsable item label, how many answers were
+    unintelligible -- without which the accuracy in the records cannot be read
+    honestly. Empty for a prompt with no key, which is every prompt in the
+    coherence-tax corpus.
+    """
+    if not spec.has_ground_truth:
+        return [], {}
+
+    records: list[dict[str, Any]] = []
+    totals = {"units_total": 0, "units_with_no_label": 0, "items_seen": 0,
+              "items_graded": 0, "items_correct": 0, "items_unintelligible": 0,
+              "items_unknown_id": 0}
+    for task_id, result in results:
+        graded, report = grade_units(result.units, spec.key or {})
+        for rec in graded:
+            records.append({
+                "prompt_id": spec.prompt_id,
+                "category": spec.category,
+                "condition": row.get("condition", "fragmented"),
+                "rho_target": row.get("rho_target", ""),
+                "n_tasks": row.get("n_tasks", ""),
+                "k": result.k,
+                "task_id": task_id,
+                **rec,
+            })
+        d = report.as_dict()
+        for field_name in totals:
+            totals[field_name] += int(d.get(field_name) or 0)
+    totals["accuracy"] = (
+        round(totals["items_correct"] / totals["items_graded"], 6)
+        if totals["items_graded"] else None
+    )
+    return records, totals
 
 
 def run_monolithic(
@@ -514,6 +591,10 @@ def run_fragmented(
     _fill_metric_row(row, assembly.text, plan, gamma, embedder,
                      assembly.fragment_sentence_offsets, selected_texts)
     row["_unit_records"] = _unit_records(spec, row, consensus_results)
+    truth_records, truth_report = _truth_records(spec, row, consensus_results)
+    if truth_records or truth_report:
+        row["_truth_records"] = truth_records
+        row["_truth_report"] = truth_report
 
     if baseline:
         row["coherence_tax_booook"] = _relative_tax(
@@ -745,6 +826,29 @@ def write_csv(rows: Sequence[dict[str, Any]], path: str | Path) -> Path:
         for row in rows:
             writer.writerow({col: row.get(col, "") for col in CSV_COLUMNS})
     write_unit_csv(rows, target.with_name(UNIT_CSV_NAME))
+    write_truth_csv(rows, target.with_name(TRUTH_CSV_NAME))
+    return target
+
+
+def write_truth_csv(rows: Sequence[dict[str, Any]], path: str | Path) -> Path | None:
+    """Write the per-item ground-truth sidecar. ``None`` when the corpus has no keys.
+
+    This is the audit surface for the V3c calibration: every graded item with
+    its expected answer, the text it was graded against, and the agreement of
+    the unit it came from. The headline AUC is a summary of this file, and a
+    reader who distrusts the summary can recompute it from here.
+    """
+    records = [record for row in rows for record in row.get("_truth_records", [])]
+    if not records:
+        return None
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with open(target, "w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=TRUTH_CSV_COLUMNS, extrasaction="ignore")
+        writer.writeheader()
+        for record in records:
+            writer.writerow({col: ("" if record.get(col) is None else record.get(col, ""))
+                             for col in TRUTH_CSV_COLUMNS})
     return target
 
 
@@ -785,6 +889,74 @@ def read_unit_rows(path: str | Path) -> list[dict[str, Any]]:
                     record[key] = 0
             out.append(record)
     return out
+
+
+def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """The V3c ground-truth block, or nothing at all.
+
+    Absent rather than empty when the corpus has no answer keys: a coherence-tax
+    run should not carry a calibration section full of nulls that a reader has to
+    decide how to interpret.
+
+    Section 11.4 asks for calibration curves *per task category*, so the block
+    carries one calibration per category next to the pooled one. The pooled
+    number can look like a signal purely because easy categories both agree more
+    and are more often right; the per-category split is what separates that
+    artefact from a real effect.
+    """
+    records = [r for row in rows for r in row.get("_truth_records", [])]
+    reports = [row.get("_truth_report") for row in rows if row.get("_truth_report")]
+    if not records and not reports:
+        return {}
+
+    grading_report = {"units_total": 0, "units_with_no_label": 0, "items_seen": 0,
+                      "items_graded": 0, "items_correct": 0, "items_unintelligible": 0,
+                      "items_unknown_id": 0}
+    for row in rows:
+        rep = row.get("_truth_report") or {}
+        for field_name in grading_report:
+            grading_report[field_name] += int(rep.get(field_name) or 0)
+
+    by_category: dict[str, list[Mapping[str, Any]]] = {}
+    by_k: dict[int, list[Mapping[str, Any]]] = {}
+    for rec in records:
+        by_category.setdefault(str(rec.get("category", "")), []).append(rec)
+        try:
+            by_k.setdefault(int(rec.get("k", 1)), []).append(rec)
+        except (TypeError, ValueError):
+            pass
+
+    if not records:
+        # The corpus had keys and nothing came back gradable. That is a result --
+        # small models ignoring the output format -- and it has to be visible,
+        # not an absent file the reader has to notice for themselves.
+        return {"truth_calibration": {
+            "pooled": agreement_truth_calibration([]),
+            "by_category": {},
+            "by_k": {},
+            "grading": grading_report,
+            "note": (
+                "No item label was parsable in any unit, so nothing could be graded. This is a "
+                "finding about output-format compliance, not a missing measurement: see "
+                "units_with_no_label against units_total. The calibration cannot be computed and "
+                "is reported as absent rather than as zero."
+            ),
+        }}
+
+    return {"truth_calibration": {
+        "pooled": agreement_truth_calibration(records),
+        "by_category": {cat: agreement_truth_calibration(recs)
+                        for cat, recs in sorted(by_category.items())},
+        "by_k": {str(k): agreement_truth_calibration(recs)
+                 for k, recs in sorted(by_k.items())},
+        "grading": grading_report,
+        "note": (
+            "Verdicts come from prompts/ground_truth.json, not from a judge. Read auc before "
+            "pearson_r when accuracy is far from 50 percent, and read flagging before either: "
+            "lift near 1.0 means flagging the lowest-agreement items is no better than flagging "
+            "at random, which is the result that would retire the confidence map."
+        ),
+    }}
 
 
 def agreement_quality_correlation(
@@ -838,6 +1010,144 @@ def agreement_quality_correlation(
             "n_units": len(members),
             "acceptability_rate": round(rate, 6) if rate is not None else None,
         })
+    return result
+
+
+def agreement_truth_calibration(
+    records: Sequence[Mapping[str, Any]],
+    bins: Sequence[float] = AGREEMENT_BINS,
+    flag_rates: Sequence[float] = (0.10, 0.20, 0.30),
+) -> dict[str, Any]:
+    """Does agreement predict *correctness* -- the V3c question, against truth.
+
+    :func:`agreement_quality_correlation` answers the same question against a
+    judge, and in the run of 14 August 2026 the judge accepted 93.3 % of
+    everything, leaving the correlation uninterpretable. This function takes
+    records graded by :mod:`swarmbly_v0.grading`, where the verdict comes from
+    an answer key instead of a model.
+
+    Three statistics, because the pre-registered one is not the decisive one.
+
+    * ``pearson_r`` -- the point-biserial correlation Section 11.4 committed to
+      reporting. Reported first because it was promised first, not because it is
+      the most informative.
+
+    * ``auc`` -- the probability that a randomly chosen correct item carries
+      higher agreement than a randomly chosen incorrect one, ties counted as
+      half. Scale-free, insensitive to how lopsided accuracy is, and 0.5 exactly
+      when agreement carries no information. This is the number to read when
+      accuracy is far from 50 %, which is precisely the condition that made the
+      judge-based measurement unreadable.
+
+    * ``flagging`` -- what the confidence map is actually *for*. Flag the lowest
+      ``rate`` share of items by agreement and ask how many errors that catches
+      (recall) and how much of what it caught was really an error (precision).
+      A confidence map that costs 17 to 20 points of quality has to earn that
+      back here, in errors surfaced, not in a correlation coefficient.
+
+    ``lift`` states the same thing as a ratio a reader can argue with: precision
+    divided by the base error rate. At 1.0 the flag is picking items at random.
+
+    Args:
+        records: Graded records carrying ``agreement`` (float) and ``correct``
+            (bool). Records with either missing, or with ``correct`` None
+            (unintelligible answers), are excluded and counted -- an
+            unintelligible answer is not evidence about agreement.
+        bins: Bin edges over ``[0, 1]`` for the calibration curve.
+        flag_rates: Share of items to flag, lowest agreement first.
+
+    Returns:
+        A dict with the three statistics, the denominators behind them, and the
+        exclusion counts. Every rate is ``None`` rather than 0.0 when its
+        denominator is empty, so an absent measurement never reads as a zero.
+    """
+    usable: list[tuple[float, int]] = []
+    excluded_no_agreement = 0
+    excluded_unintelligible = 0
+
+    for rec in records:
+        correct = rec.get("correct")
+        agreement = rec.get("agreement")
+        if correct is None:
+            excluded_unintelligible += 1
+            continue
+        if agreement is None:
+            excluded_no_agreement += 1
+            continue
+        usable.append((float(agreement), 1 if correct else 0))
+
+    n = len(usable)
+    n_correct = sum(y for _, y in usable)
+    n_wrong = n - n_correct
+    result: dict[str, Any] = {
+        "n_items": n,
+        "n_correct": n_correct,
+        "n_wrong": n_wrong,
+        "accuracy": round(n_correct / n, 6) if n else None,
+        "mean_agreement": round(sum(x for x, _ in usable) / n, 6) if n else None,
+        "excluded_unintelligible": excluded_unintelligible,
+        "excluded_no_agreement": excluded_no_agreement,
+        "pearson_r": None,
+        "auc": None,
+        "bins": [],
+        "flagging": [],
+    }
+    if n == 0:
+        return result
+
+    xs = np.asarray([x for x, _ in usable], dtype=np.float64)
+    ys = np.asarray([y for _, y in usable], dtype=np.float64)
+    if xs.std() > 1e-12 and ys.std() > 1e-12:
+        result["pearson_r"] = round(float(np.corrcoef(xs, ys)[0, 1]), 6)
+
+    # AUC by rank (Mann-Whitney U), ties at half. Undefined without both classes.
+    if n_correct and n_wrong:
+        order = np.argsort(xs, kind="mergesort")
+        ranks = np.empty(n, dtype=np.float64)
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and xs[order[j + 1]] == xs[order[i]]:
+                j += 1
+            ranks[order[i:j + 1]] = (i + j) / 2.0 + 1.0
+            i = j + 1
+        rank_sum_correct = float(ranks[ys == 1].sum())
+        u = rank_sum_correct - n_correct * (n_correct + 1) / 2.0
+        result["auc"] = round(u / (n_correct * n_wrong), 6)
+
+    edges = list(bins)
+    for low, high in zip(edges, edges[1:]):
+        members = [y for x, y in usable if low <= x < high]
+        result["bins"].append({
+            "low": round(low, 4),
+            "high": round(min(high, 1.0), 4),
+            "midpoint": round((low + min(high, 1.0)) / 2, 4),
+            "n_items": len(members),
+            "accuracy": round(sum(members) / len(members), 6) if members else None,
+        })
+
+    base_error = n_wrong / n
+    ordered = sorted(usable, key=lambda pair: pair[0])
+    for rate in flag_rates:
+        cut = int(round(rate * n))
+        if cut <= 0 or not n_wrong:
+            result["flagging"].append({
+                "flag_rate": rate, "n_flagged": cut,
+                "errors_caught": None, "recall": None, "precision": None, "lift": None,
+            })
+            continue
+        flagged = ordered[:cut]
+        caught = sum(1 for _, y in flagged if y == 0)
+        precision = caught / cut
+        result["flagging"].append({
+            "flag_rate": rate,
+            "n_flagged": cut,
+            "errors_caught": caught,
+            "recall": round(caught / n_wrong, 6),
+            "precision": round(precision, 6),
+            "lift": round(precision / base_error, 6) if base_error > 0 else None,
+        })
+
     return result
 
 
@@ -1013,6 +1323,7 @@ def summarize(
         "category_curve": category_curve,
         "consensus_curve": consensus_curve,
         "agreement_quality_correlation": agreement_quality_correlation(units),
+        **_truth_summary(rows),
         "by_rho_n": [
             {"rho": rho, "n_tasks": n, "coherence_tax_booook": round(_mean(values), 6)}
             for (rho, n), values in sorted(by_rho_n.items())

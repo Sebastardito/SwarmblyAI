@@ -1,0 +1,455 @@
+{
+  "_about": "Ground-truth corpus for the V3c agreement calibration specified in Section 11.4 of the whitepaper. Each prompt is a batch of independent items with a canonical answer, so that k replicas of one micro-task can be aligned and each aligned unit graded against a key by swarmbly_v0.grading -- no judge, no embeddings, no model in the verdict.",
+  "_why_ground_truth": "The calibration of 14 August 2026 reported r = -0.030 between agreement and judged acceptability and could not interpret it, because the judge accepted 93.3 % of everything and the dependent variable had no variance. That measurement leaves the confidence map unsupported rather than refuted. This corpus replaces the judge with an answer key.",
+  "_difficulty_note": "Difficulty is mixed on purpose. Field extraction is near-free, two-step arithmetic and date offsets are hard for a 2-3B model. The point is to keep accuracy away from both ceiling and floor, because a dependent variable with no variance is what made the previous attempt unreadable -- repeating that with accuracy would be the same error.",
+  "_enclosure_note": "Unlike prompts.json, every prompt here encloses its data. There the rule is the opposite: a prompt names a corpus it does not enclose, to stay inside the token band the coherence-tax sweep needs. Here there has to be a fact of the matter, so the facts travel with the question. Do not merge the two files.",
+  "_format": "Answers are keyed as [NN]. swarmbly_v0.grading.extract_items parses them, tolerating (07) and 07. as well. A unit with no parsable label is counted as unlabelled and reported, never dropped silently.",
+  "_generator": "scripts/make_ground_truth.py, seed 20260816, 20 items per prompt",
+  "prompts": [
+    {
+      "id": "gt_arith_orders",
+      "category": "arithmetic_two_step",
+      "expected_decomposable": true,
+      "prompt": "For each consignment below, give the number of units that remain available for dispatch: multiply the crate count by the units per crate, then subtract the units removed for inspection. Give an integer.\n\n[01] 37 crates of pump seals, 17 units per crate, 68 units removed for inspection\n[02] 7 crates of valve kits, 17 units per crate, 68 units removed for inspection\n[03] 29 crates of filter packs, 21 units per crate, 63 units removed for inspection\n[04] 32 crates of valve kits, 12 units per crate, 12 units removed for inspection\n[05] 15 crates of relay boards, 18 units per crate, 36 units removed for inspection\n[06] 29 crates of filter packs, 15 units per crate, 75 units removed for inspection\n[07] 14 crates of pump seals, 10 units per crate, 10 units removed for inspection\n[08] 26 crates of relay boards, 23 units per crate, 23 units removed for inspection\n[09] 17 crates of gasket sets, 16 units per crate, 16 units removed for inspection\n[10] 20 crates of gasket sets, 8 units per crate, 8 units removed for inspection\n[11] 32 crates of valve kits, 16 units per crate, 80 units removed for inspection\n[12] 33 crates of gasket sets, 15 units per crate, 75 units removed for inspection\n[13] 30 crates of gasket sets, 13 units per crate, 13 units removed for inspection\n[14] 22 crates of cable reels, 23 units per crate, 115 units removed for inspection\n[15] 30 crates of cable reels, 8 units per crate, 16 units removed for inspection\n[16] 15 crates of cable reels, 21 units per crate, 42 units removed for inspection\n[17] 10 crates of filter packs, 24 units per crate, 48 units removed for inspection\n[18] 31 crates of valve kits, 13 units per crate, 65 units removed for inspection\n[19] 20 crates of cable reels, 23 units per crate, 115 units removed for inspection\n[20] 30 crates of pump seals, 21 units per crate, 21 units removed for inspection\n\nAnswer every item, one per line, formatted exactly as \"[NN] answer\" where NN is the item number as given. Emit the answer only: no working, no units unless the item asks for them, no commentary before or after the list. Items are independent: the answer to one must not depend on the answer to any other, and you must not reconcile them against each other.",
+      "key": {
+        "01": {
+          "expected": "561",
+          "mode": "numeric"
+        },
+        "02": {
+          "expected": "51",
+          "mode": "numeric"
+        },
+        "03": {
+          "expected": "546",
+          "mode": "numeric"
+        },
+        "04": {
+          "expected": "372",
+          "mode": "numeric"
+        },
+        "05": {
+          "expected": "234",
+          "mode": "numeric"
+        },
+        "06": {
+          "expected": "360",
+          "mode": "numeric"
+        },
+        "07": {
+          "expected": "130",
+          "mode": "numeric"
+        },
+        "08": {
+          "expected": "575",
+          "mode": "numeric"
+        },
+        "09": {
+          "expected": "256",
+          "mode": "numeric"
+        },
+        "10": {
+          "expected": "152",
+          "mode": "numeric"
+        },
+        "11": {
+          "expected": "432",
+          "mode": "numeric"
+        },
+        "12": {
+          "expected": "420",
+          "mode": "numeric"
+        },
+        "13": {
+          "expected": "377",
+          "mode": "numeric"
+        },
+        "14": {
+          "expected": "391",
+          "mode": "numeric"
+        },
+        "15": {
+          "expected": "224",
+          "mode": "numeric"
+        },
+        "16": {
+          "expected": "273",
+          "mode": "numeric"
+        },
+        "17": {
+          "expected": "192",
+          "mode": "numeric"
+        },
+        "18": {
+          "expected": "338",
+          "mode": "numeric"
+        },
+        "19": {
+          "expected": "345",
+          "mode": "numeric"
+        },
+        "20": {
+          "expected": "609",
+          "mode": "numeric"
+        }
+      },
+      "notes": "Two-step integer arithmetic. Hard for a 2-3B model; the source of the low end of the accuracy range."
+    },
+    {
+      "id": "gt_unit_convert",
+      "category": "unit_conversion",
+      "expected_decomposable": true,
+      "prompt": "Convert each length below from metres to kilometres. Give the value to exactly three decimal places, with no unit symbol.\n\n[01] 4048 m\n[02] 6077 m\n[03] 2486 m\n[04] 6281 m\n[05] 4965 m\n[06] 2161 m\n[07] 8319 m\n[08] 8297 m\n[09] 128 m\n[10] 9796 m\n[11] 5634 m\n[12] 4883 m\n[13] 6070 m\n[14] 1330 m\n[15] 1649 m\n[16] 5693 m\n[17] 5513 m\n[18] 1434 m\n[19] 2941 m\n[20] 8722 m\n\nAnswer every item, one per line, formatted exactly as \"[NN] answer\" where NN is the item number as given. Emit the answer only: no working, no units unless the item asks for them, no commentary before or after the list. Items are independent: the answer to one must not depend on the answer to any other, and you must not reconcile them against each other.",
+      "key": {
+        "01": {
+          "expected": "4.048",
+          "mode": "numeric"
+        },
+        "02": {
+          "expected": "6.077",
+          "mode": "numeric"
+        },
+        "03": {
+          "expected": "2.486",
+          "mode": "numeric"
+        },
+        "04": {
+          "expected": "6.281",
+          "mode": "numeric"
+        },
+        "05": {
+          "expected": "4.965",
+          "mode": "numeric"
+        },
+        "06": {
+          "expected": "2.161",
+          "mode": "numeric"
+        },
+        "07": {
+          "expected": "8.319",
+          "mode": "numeric"
+        },
+        "08": {
+          "expected": "8.297",
+          "mode": "numeric"
+        },
+        "09": {
+          "expected": "0.128",
+          "mode": "numeric"
+        },
+        "10": {
+          "expected": "9.796",
+          "mode": "numeric"
+        },
+        "11": {
+          "expected": "5.634",
+          "mode": "numeric"
+        },
+        "12": {
+          "expected": "4.883",
+          "mode": "numeric"
+        },
+        "13": {
+          "expected": "6.070",
+          "mode": "numeric"
+        },
+        "14": {
+          "expected": "1.330",
+          "mode": "numeric"
+        },
+        "15": {
+          "expected": "1.649",
+          "mode": "numeric"
+        },
+        "16": {
+          "expected": "5.693",
+          "mode": "numeric"
+        },
+        "17": {
+          "expected": "5.513",
+          "mode": "numeric"
+        },
+        "18": {
+          "expected": "1.434",
+          "mode": "numeric"
+        },
+        "19": {
+          "expected": "2.941",
+          "mode": "numeric"
+        },
+        "20": {
+          "expected": "8.722",
+          "mode": "numeric"
+        }
+      },
+      "notes": "Single-step conversion with a fixed precision. Medium difficulty; the precision rule is what most failures come from."
+    },
+    {
+      "id": "gt_date_offset",
+      "category": "date_arithmetic",
+      "expected_decomposable": true,
+      "prompt": "For each shipment below, give the arrival date: the shipping date plus the transit days. Answer in ISO 8601 form, YYYY-MM-DD.\n\n[01] shipped 2026-07-23, transit 41 days\n[02] shipped 2026-02-28, transit 32 days\n[03] shipped 2026-02-02, transit 91 days\n[04] shipped 2026-06-02, transit 41 days\n[05] shipped 2026-03-20, transit 75 days\n[06] shipped 2026-06-16, transit 61 days\n[07] shipped 2026-05-28, transit 24 days\n[08] shipped 2026-01-26, transit 29 days\n[09] shipped 2026-03-18, transit 52 days\n[10] shipped 2026-10-01, transit 41 days\n[11] shipped 2026-09-17, transit 80 days\n[12] shipped 2026-11-04, transit 44 days\n[13] shipped 2026-08-13, transit 26 days\n[14] shipped 2026-04-28, transit 90 days\n[15] shipped 2026-09-14, transit 89 days\n[16] shipped 2026-02-16, transit 76 days\n[17] shipped 2026-10-03, transit 50 days\n[18] shipped 2026-11-12, transit 94 days\n[19] shipped 2026-05-08, transit 79 days\n[20] shipped 2026-05-11, transit 90 days\n\nAnswer every item, one per line, formatted exactly as \"[NN] answer\" where NN is the item number as given. Emit the answer only: no working, no units unless the item asks for them, no commentary before or after the list. Items are independent: the answer to one must not depend on the answer to any other, and you must not reconcile them against each other.",
+      "key": {
+        "01": {
+          "expected": "2026-09-02",
+          "mode": "date_iso"
+        },
+        "02": {
+          "expected": "2026-04-01",
+          "mode": "date_iso"
+        },
+        "03": {
+          "expected": "2026-05-04",
+          "mode": "date_iso"
+        },
+        "04": {
+          "expected": "2026-07-13",
+          "mode": "date_iso"
+        },
+        "05": {
+          "expected": "2026-06-03",
+          "mode": "date_iso"
+        },
+        "06": {
+          "expected": "2026-08-16",
+          "mode": "date_iso"
+        },
+        "07": {
+          "expected": "2026-06-21",
+          "mode": "date_iso"
+        },
+        "08": {
+          "expected": "2026-02-24",
+          "mode": "date_iso"
+        },
+        "09": {
+          "expected": "2026-05-09",
+          "mode": "date_iso"
+        },
+        "10": {
+          "expected": "2026-11-11",
+          "mode": "date_iso"
+        },
+        "11": {
+          "expected": "2026-12-06",
+          "mode": "date_iso"
+        },
+        "12": {
+          "expected": "2026-12-18",
+          "mode": "date_iso"
+        },
+        "13": {
+          "expected": "2026-09-08",
+          "mode": "date_iso"
+        },
+        "14": {
+          "expected": "2026-07-27",
+          "mode": "date_iso"
+        },
+        "15": {
+          "expected": "2026-12-12",
+          "mode": "date_iso"
+        },
+        "16": {
+          "expected": "2026-05-03",
+          "mode": "date_iso"
+        },
+        "17": {
+          "expected": "2026-11-22",
+          "mode": "date_iso"
+        },
+        "18": {
+          "expected": "2027-02-14",
+          "mode": "date_iso"
+        },
+        "19": {
+          "expected": "2026-07-26",
+          "mode": "date_iso"
+        },
+        "20": {
+          "expected": "2026-08-09",
+          "mode": "date_iso"
+        }
+      },
+      "notes": "Month-boundary arithmetic. Hard for small models and unambiguous to grade."
+    },
+    {
+      "id": "gt_field_lookup",
+      "category": "field_extraction",
+      "expected_decomposable": true,
+      "prompt": "For each record below, give the destination city and nothing else. Copy it exactly as written in the record.\n\n[01] ref F7062 | destination Osaka | customs returned | weight 602 kg\n[02] ref F1416 | destination Valparaiso | customs in transit | weight 534 kg\n[03] ref F7647 | destination Nairobi | customs held | weight 515 kg\n[04] ref H6602 | destination Saskatoon | customs cleared | weight 774 kg\n[05] ref A8494 | destination Quito | customs cleared | weight 892 kg\n[06] ref C3135 | destination Tromso | customs inspected | weight 536 kg\n[07] ref F1040 | destination Tromso | customs cleared | weight 888 kg\n[08] ref A7074 | destination Quito | customs held | weight 756 kg\n[09] ref H8086 | destination Quito | customs in transit | weight 574 kg\n[10] ref B7223 | destination Quito | customs in transit | weight 503 kg\n[11] ref D8766 | destination Osaka | customs inspected | weight 77 kg\n[12] ref G8187 | destination Lisbon | customs held | weight 738 kg\n[13] ref G6722 | destination Tromso | customs in transit | weight 332 kg\n[14] ref F7214 | destination Valparaiso | customs inspected | weight 885 kg\n[15] ref G7010 | destination Valparaiso | customs in transit | weight 585 kg\n[16] ref G4670 | destination Osaka | customs returned | weight 894 kg\n[17] ref C2922 | destination Saskatoon | customs held | weight 877 kg\n[18] ref E6557 | destination Nairobi | customs inspected | weight 519 kg\n[19] ref E9158 | destination Lisbon | customs returned | weight 634 kg\n[20] ref B3607 | destination Nairobi | customs inspected | weight 235 kg\n\nAnswer every item, one per line, formatted exactly as \"[NN] answer\" where NN is the item number as given. Emit the answer only: no working, no units unless the item asks for them, no commentary before or after the list. Items are independent: the answer to one must not depend on the answer to any other, and you must not reconcile them against each other.",
+      "key": {
+        "01": {
+          "expected": "Osaka",
+          "mode": "exact_norm"
+        },
+        "02": {
+          "expected": "Valparaiso",
+          "mode": "exact_norm"
+        },
+        "03": {
+          "expected": "Nairobi",
+          "mode": "exact_norm"
+        },
+        "04": {
+          "expected": "Saskatoon",
+          "mode": "exact_norm"
+        },
+        "05": {
+          "expected": "Quito",
+          "mode": "exact_norm"
+        },
+        "06": {
+          "expected": "Tromso",
+          "mode": "exact_norm"
+        },
+        "07": {
+          "expected": "Tromso",
+          "mode": "exact_norm"
+        },
+        "08": {
+          "expected": "Quito",
+          "mode": "exact_norm"
+        },
+        "09": {
+          "expected": "Quito",
+          "mode": "exact_norm"
+        },
+        "10": {
+          "expected": "Quito",
+          "mode": "exact_norm"
+        },
+        "11": {
+          "expected": "Osaka",
+          "mode": "exact_norm"
+        },
+        "12": {
+          "expected": "Lisbon",
+          "mode": "exact_norm"
+        },
+        "13": {
+          "expected": "Tromso",
+          "mode": "exact_norm"
+        },
+        "14": {
+          "expected": "Valparaiso",
+          "mode": "exact_norm"
+        },
+        "15": {
+          "expected": "Valparaiso",
+          "mode": "exact_norm"
+        },
+        "16": {
+          "expected": "Osaka",
+          "mode": "exact_norm"
+        },
+        "17": {
+          "expected": "Saskatoon",
+          "mode": "exact_norm"
+        },
+        "18": {
+          "expected": "Nairobi",
+          "mode": "exact_norm"
+        },
+        "19": {
+          "expected": "Lisbon",
+          "mode": "exact_norm"
+        },
+        "20": {
+          "expected": "Nairobi",
+          "mode": "exact_norm"
+        }
+      },
+      "notes": "Near-free for any model that reads the record. Anchors the high end of the accuracy range so the sweep is not floor-bound."
+    },
+    {
+      "id": "gt_threshold_check",
+      "category": "threshold_decision",
+      "expected_decomposable": true,
+      "prompt": "For each pallet below, answer whether its weight exceeds the 500 kg single-pallet limit. Answer exactly \"true\" or \"false\".\n\n[01] pallet P870, 547 kg\n[02] pallet S306, 418 kg\n[03] pallet T968, 463 kg\n[04] pallet Q317, 387 kg\n[05] pallet U672, 419 kg\n[06] pallet R332, 581 kg\n[07] pallet Q954, 450 kg\n[08] pallet T550, 582 kg\n[09] pallet R117, 401 kg\n[10] pallet U550, 527 kg\n[11] pallet S972, 585 kg\n[12] pallet U490, 558 kg\n[13] pallet Q423, 415 kg\n[14] pallet P278, 610 kg\n[15] pallet T598, 469 kg\n[16] pallet S960, 437 kg\n[17] pallet U249, 410 kg\n[18] pallet S414, 419 kg\n[19] pallet T995, 498 kg\n[20] pallet Q161, 401 kg\n\nAnswer every item, one per line, formatted exactly as \"[NN] answer\" where NN is the item number as given. Emit the answer only: no working, no units unless the item asks for them, no commentary before or after the list. Items are independent: the answer to one must not depend on the answer to any other, and you must not reconcile them against each other.",
+      "key": {
+        "01": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "02": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "03": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "04": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "05": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "06": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "07": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "08": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "09": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "10": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "11": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "12": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "13": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "14": {
+          "expected": "true",
+          "mode": "boolean"
+        },
+        "15": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "16": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "17": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "18": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "19": {
+          "expected": "false",
+          "mode": "boolean"
+        },
+        "20": {
+          "expected": "false",
+          "mode": "boolean"
+        }
+      },
+      "notes": "Comparison against one fixed threshold, with values clustered near it so guessing does not pay."
+    }
+  ]
+}

@@ -207,11 +207,11 @@ they remain free for anyone to implement.
 **The author asserts no patent claims over the disclosed techniques and places
 them in the public domain for patenting purposes.**
 
-The disclosure is dated by three independent Zenodo records —
-[`10.5281/zenodo.21940473`](https://doi.org/10.5281/zenodo.21940473),
-[`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743),
-[`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088) — and by
-this repository at tag `v1`.
+The disclosure is dated by two independent Zenodo records —
+[`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743) for the
+artifact and
+[`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088) for the
+paper — and by this repository at tag `v1`.
 
 ## Contributing
 

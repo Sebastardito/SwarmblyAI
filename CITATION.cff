@@ -75,9 +75,6 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.21957088"
     description: "Zenodo preprint of the whitepaper (the paper)"
-  - type: doi
-    value: "10.5281/zenodo.21940473"
-    description: "Earliest Zenodo deposit of this work; retained because it is the earliest third-party dated record"
   - type: url
     value: "https://github.com/Sebastardito/Swarmbly-AI/releases/tag/v1"
     description: "The disclosing release, commit ceb40143faea544ddd795be7efa60542013437b2"
