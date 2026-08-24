@@ -36,7 +36,8 @@ from .textutil import (
     truncate_tokens,
 )
 
-__all__ = ["global_contract", "plan", "summarize_fragment", "suggest_n_tasks"]
+__all__ = ["BASELINE_FORMAT_DIRECTIVE", "global_contract", "plan",
+           "split_enumerated", "summarize_fragment", "suggest_n_tasks"]
 
 _AUDIENCE_RE = re.compile(
     r"\bfor (?:an?|the)?\s*([a-z][a-z \-]{3,40}?)(?:\s+audience)?\s*(?:[.,;]|$)", re.I
@@ -187,6 +188,24 @@ _SHORT_FORMAT_DIRECTIVE = (
     "Give one line per item, as [NN] followed by the value alone. "
     "Answer only the items listed here."
 )
+
+BASELINE_FORMAT_DIRECTIVE = (
+    "Give one line per item, as [NN] followed by the value alone."
+)
+"""The same format contract, minus the clause that only makes sense per packet.
+
+The baseline exists to isolate *fragmentation*, so everything else must be held
+equal -- and the answer format is not "everything else", it is the thing the
+grader reads. On 24 August it was not held equal: fragments carried
+``_SHORT_FORMAT_DIRECTIVE`` and the baseline carried nothing, so the baseline
+answered in sentences, the ``any_of`` grader required equality, and the control
+scored zero. Two independent defects, but they compounded in the same direction
+and produced an inverted result, which is the failure mode a control is supposed
+to prevent rather than cause.
+
+"Answer only the items listed here" is dropped because the baseline is given all
+the items; keeping it would be a different instruction, not the same one.
+"""
 """Compressed stand-in for the prompt's format block, attached to every fragment.
 
 The full block runs to sixty tokens and would be paid ``N`` times, since every

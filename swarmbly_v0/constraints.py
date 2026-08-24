@@ -57,6 +57,7 @@ __all__ = [
     "CONSTRAINT_KINDS",
     "check_numeric_fidelity",
     "derived_aggregates",
+    "is_source_table_row",
     "ConstraintResult",
     "CompositionReport",
     "paragraphs_of",
@@ -236,7 +237,36 @@ def grade_text(text: str, constraints: Iterable[Mapping[str, Any]]) -> Compositi
 # numeric fidelity: per-sentence ground truth for grounded prose
 # --------------------------------------------------------------------------- #
 
-_NUM = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+_NUM = re.compile(r"(?<![A-Za-z0-9])-?\d[\d,]*(?:\.\d+)?(?![A-Za-z0-9])")
+"""A figure, and not the digits inside an identifier.
+
+The lookarounds are the whole point. Without them ``G4667`` -- a reference code
+copied correctly out of the very table the summary was given -- yields the
+"figure" 4667, which appears in no row and in no aggregate, so the sentence is
+scored a fabrication. In the run of 24 August this hit 31 of the 62 graded
+grounded-prose units and drove that corpus to an accuracy of 1.6 %, which then
+inverted its AUC to 0.21. Reference codes are the one thing a summary of a
+manifest is most likely to quote.
+"""
+
+_TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
+
+
+def is_source_table_row(text: str) -> bool:
+    """Is this unit a row of the input table rather than a sentence about it?
+
+    A model handed a table and asked for prose sometimes reproduces the table.
+    That is a real failure and worth counting -- but it is a failure of
+    *instruction-following*, not of numeric fidelity: the figures in a copied row
+    are, by construction, exactly the given ones. Grading such a row on fidelity
+    puts the wrong name on the defect and, worse, pollutes the only corpus in
+    this run where agreement and correctness were both supposed to vary.
+
+    In the run of 24 August, 47 of 62 graded grounded-prose units were table
+    rows. They are excluded from the fidelity records and counted separately, so
+    the number that disappears from the accuracy reappears as a named behaviour.
+    """
+    return bool(_TABLE_ROW.match(text or ""))
 
 
 def derived_aggregates(values: Sequence[float]) -> set[float]:

@@ -515,3 +515,81 @@ def test_no_correct_answer_in_the_corpus_reads_as_an_echo(corpus: dict) -> None:
     for spec in corpus["prompts"]:
         for item_id, entry in spec["key"].items():
             assert not is_echo(entry["expected"], entry["source"]), f"{spec['id']}/{item_id}"
+
+
+# --------------------------------------------------------------------------- #
+# any_of: the defect that inverted the baseline on 24 August 2026
+# --------------------------------------------------------------------------- #
+
+def test_a_correct_verdict_stated_in_a_sentence_is_not_graded_wrong() -> None:
+    """The exact string the monolithic baseline produced, fifty times over.
+
+    ``any_of`` required equality, the baseline was never given the format
+    directive the fragments carry, and so every verbose-but-correct answer was
+    scored False. The control arm reported 0/50 against a fragmented arm at 66 %,
+    which is not a small error: it reverses the finding.
+    """
+    key = "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit"
+    assert grade_answer("pallet R752, 251 kg under", key, "any_of") is True
+    assert grade_answer("under", key, "any_of") is True
+
+
+def test_the_antonym_trap_is_not_reopened_by_the_loosening() -> None:
+    """A wrong answer must not become right on the way to fixing a right one.
+
+    The two halves of this corpus are antonyms whose phrasings nest: ``over`` is
+    a substring of ``not over``. Plain substring matching would score the
+    under-answer as over. Longest-alternative-first plus the negation guard is
+    what keeps both directions honest.
+    """
+    over = "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit"
+    under = "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit"
+    assert grade_answer("pallet R752, 251 kg not over the limit", over, "any_of") is False
+    assert grade_answer("pallet R752, 251 kg not over the limit", under, "any_of") is True
+    assert grade_answer("251 kg under", over, "any_of") is False
+
+
+def test_an_accepted_word_inside_another_word_does_not_count() -> None:
+    """Whole tokens only: ``overdue`` is not ``over``, ``nothing`` is not ``no``."""
+    over = "over|above|exceeds"
+    assert grade_answer("the paperwork is overdue", over, "any_of") is False
+    negative = "no|it does not|incorrect|false"
+    assert grade_answer("nothing was recorded", negative, "any_of") is False
+    assert grade_answer("No, customs held.", negative, "any_of") is True
+
+
+def test_an_empty_answer_is_still_unintelligible_not_wrong() -> None:
+    assert grade_answer("   ", "over|above", "any_of") is None
+
+
+def test_the_baseline_is_asked_for_the_same_answer_shape_as_the_fragments() -> None:
+    """The confound behind the grading bug, fixed at the source.
+
+    Two defects pointed the same way: the grader punished prose, and only the
+    baseline was left free to write it. Fixing the grader alone would leave the
+    conditions answering different questions.
+    """
+    from swarmbly_v0.experiment import PromptSpec, SweepConfig, run_monolithic
+    from swarmbly_v0.planner import BASELINE_FORMAT_DIRECTIVE
+
+    seen: list[str] = []
+
+    class _Recorder:
+        name = "recorder"
+        def generate(self, prompt: str, **kwargs: object) -> str:
+            seen.append(prompt)
+            return "[01] under"
+        def embed(self, texts):  # pragma: no cover - unused here
+            return [[1.0, 0.0] for _ in texts]
+
+    backend = _Recorder()
+    spec = PromptSpec(
+        prompt_id="p", category="over_under", expected_decomposable=True, text=(
+            "For each pallet say whether it is over or under the 500 kg limit.\n"
+            "[01] pallet R752, 251 kg\n[02] pallet P993, 618 kg\n"
+            "[03] pallet Q385, 184 kg\n"),
+        key={"01": {"expected": "under|below", "mode": "any_of"}},
+    )
+    run_monolithic(spec, backend, backend, SweepConfig(rhos=(1.5,), ns=(2,), ks=(1,)))
+    assert seen, "the baseline never called the backend"
+    assert BASELINE_FORMAT_DIRECTIVE in seen[0]

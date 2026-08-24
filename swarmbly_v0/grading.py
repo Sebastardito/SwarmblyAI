@@ -109,6 +109,71 @@ def normalise_text(value: str) -> str:
     return _WS_RE.sub(" ", text).strip()
 
 
+_NEGATORS = frozenset({
+    "not", "no", "never", "isnt", "arent", "wasnt", "werent",
+    "doesnt", "dont", "didnt", "cannot", "cant", "without", "neither", "nor",
+})
+"""Words that invert the alternative immediately after them.
+
+Needed because ``any_of`` keys in this corpus come in antonym pairs -- the
+``under`` set and the ``over`` set -- and one member is a substring of a phrasing
+of the other. Without this guard, "not over the limit" would satisfy a key
+expecting ``over``, which is the single most damaging kind of grading error:
+a wrong answer scored right.
+"""
+
+
+def _contains_accepted_phrase(got_n: str, accepted: set[str]) -> bool:
+    """Does the answer *state* one of the accepted alternatives?
+
+    Why this exists at all
+    ----------------------
+
+    ``any_of`` originally required the whole normalised answer to equal one of
+    the alternatives. That is correct only when every condition in the run is
+    told to answer tersely, and in the run of 24 August only the fragmented
+    condition was: its packets carry a format directive, the monolithic baseline
+    does not. So the baseline answered "pallet R752, 251 kg under" -- the right
+    verdict, stated in a sentence -- and was graded wrong, fifty times out of
+    fifty. The baseline scored 0 % against a fragmented condition scoring 66 %,
+    and the comparison the whole experiment exists to make came out *inverted*.
+
+    A right answer graded wrong is the error that has cost this project most, and
+    an error that lands on one condition only is worse than noise: it is a
+    result. So the comparison is loosened, but not to substring matching, which
+    would trade this failure for the opposite one --
+
+    Rules, in order:
+
+    * whole *token* sequences only, so ``over`` does not match inside ``overdue``
+      and ``no`` does not match inside ``nothing``;
+    * longest alternative first, so ``not over`` is tried before ``over`` and
+      wins the position it occupies;
+    * an alternative immediately preceded by a negator does not count, unless
+      the alternative itself begins with that negator.
+
+    What this deliberately does not do is judge. It asks whether the answer
+    contains the accepted phrase as a phrase; it has no opinion about the rest of
+    the sentence, and an answer that states both members of an antonym pair
+    ("not under -- over") is scored on the one that is not negated.
+    """
+    tokens = got_n.split()
+    if not tokens:
+        return False
+    for alternative in sorted(accepted, key=len, reverse=True):
+        want = alternative.split()
+        if not want:
+            continue
+        span = len(want)
+        for i in range(len(tokens) - span + 1):
+            if tokens[i:i + span] != want:
+                continue
+            negated = i > 0 and tokens[i - 1] in _NEGATORS and want[0] not in _NEGATORS
+            if not negated:
+                return True
+    return False
+
+
 def _as_number(value: str) -> float | None:
     """Last number in ``value``, or ``None``.
 
@@ -278,7 +343,9 @@ def grade_answer(given: str, expected: str, mode: str = "exact_norm") -> bool | 
             for part in str(expected).split(ANY_OF_SEPARATOR)
             if part.strip()
         }
-        return got_n in accepted
+        if got_n in accepted:
+            return True
+        return _contains_accepted_phrase(got_n, accepted)
 
     got_n, want_n = normalise_text(given), normalise_text(expected)
     if not got_n:

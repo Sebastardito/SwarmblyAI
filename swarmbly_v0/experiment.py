@@ -46,7 +46,7 @@ from .consensus import (
     segment_units,
 )
 from .composition_trace import build_trace, render_trace
-from .constraints import check_numeric_fidelity
+from .constraints import check_numeric_fidelity, is_source_table_row
 from .grading import grade_units
 from .metrics import (
     ERROR_CLASSES,
@@ -59,7 +59,8 @@ from .metrics import (
     seam_error_taxonomy,
 )
 from .packing import build_monolithic_prompt, build_packets, packing_floor
-from .planner import requested_paragraphs, global_contract, plan as build_plan, summarize_fragment
+from .planner import (BASELINE_FORMAT_DIRECTIVE, requested_paragraphs, global_contract,
+                      plan as build_plan, split_enumerated, summarize_fragment)
 from .router import DEFAULT_THRESHOLD, evaluate_router, is_decomposable
 from .schema import Contract, Fragment, Plan
 from .textutil import count_tokens, split_sentences
@@ -431,13 +432,19 @@ def _numeric_records(
     """
     allowed = [float(v) for v in (spec.numeric_facts or {}).get("allowed", [])]
     records: list[dict[str, Any]] = []
-    n_units = n_graded = n_correct = n_no_figures = 0
+    n_units = n_graded = n_correct = n_no_figures = n_table_rows = 0
 
     for task_id, result in results:
         for index, unit in enumerate(result.units):
             n_units += 1
-            verdict = check_numeric_fidelity(unit.text, allowed)
-            if verdict is None:
+            # A reproduced table row is not prose and its figures are trivially
+            # faithful; grading it here would name the defect wrongly and inflate
+            # the denominator with units that cannot discriminate.
+            copied = is_source_table_row(unit.text)
+            verdict = None if copied else check_numeric_fidelity(unit.text, allowed)
+            if copied:
+                n_table_rows += 1
+            elif verdict is None:
                 n_no_figures += 1
             else:
                 n_graded += 1
@@ -453,13 +460,15 @@ def _numeric_records(
                 "accepted": bool(unit.accepted), "mode": "numeric_fidelity",
                 "expected": "figures from the table or an aggregate of it",
                 "given": unit.text[:200], "correct": verdict,
-                "graded": verdict is not None, "unknown_item": False, "echoed": False,
+                "graded": verdict is not None, "unknown_item": False,
+                "echoed": copied,
             })
 
     return records, {
         "units_total": n_units, "units_with_no_label": 0, "items_seen": n_units,
         "items_graded": n_graded, "items_correct": n_correct,
-        "items_unintelligible": n_no_figures, "items_echoed": 0, "items_unknown_id": 0,
+        "items_unintelligible": n_no_figures, "items_echoed": n_table_rows,
+        "items_unknown_id": 0,
         "accuracy": round(n_correct / n_graded, 6) if n_graded else None,
     }
 
@@ -526,6 +535,12 @@ def run_monolithic(
     """
     gamma = contract or global_contract(spec.text, backend)
     prompt = build_monolithic_prompt(gamma, spec.text)
+    # Hold the answer format equal across conditions. Only the partition is the
+    # independent variable; the shape the answer is asked for is not, and when it
+    # differed the baseline answered in prose, the grader required a bare value,
+    # and the control scored zero against a fragmented condition scoring 66 %.
+    if spec.has_ground_truth and split_enumerated(spec.text):
+        prompt = f"{prompt}\n\n{BASELINE_FORMAT_DIRECTIVE}"
     text = backend.generate(prompt, max_tokens=gamma.target_length_tokens)
 
     row = _base_row(spec, config, backend)
@@ -1151,8 +1166,22 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             ),
         }}
 
+    pooled = agreement_truth_calibration(fragmented)
+    stratified = stratified_auc(fragmented, key="category")
+    pooled_auc, strat_auc = pooled.get("auc"), stratified.get("auc")
+    stratified["confounded"] = (
+        pooled_auc is not None and strat_auc is not None
+        and abs(pooled_auc - strat_auc) > 0.05
+    )
+    stratified["note"] = (
+        "Pairs counted within a category only. When this differs from the pooled AUC, the "
+        "pooled figure is separating categories rather than right answers from wrong ones, "
+        "and the stratified figure is the one that answers the V3c question."
+    )
+
     return {"truth_calibration": {
-        "pooled": agreement_truth_calibration(fragmented),
+        "pooled": pooled,
+        "stratified_by_category": stratified,
         "by_category": {cat: agreement_truth_calibration(recs)
                         for cat, recs in sorted(by_category.items())},
         "by_level": {lvl: agreement_truth_calibration(recs)
@@ -1374,6 +1403,71 @@ def agreement_truth_calibration(
         })
 
     return result
+
+
+def stratified_auc(
+    records: Sequence[Mapping[str, Any]],
+    key: str = "category",
+) -> dict[str, Any]:
+    """AUC counting only pairs drawn from the *same* stratum.
+
+    The pooled AUC answers "does higher agreement mean more likely correct?"
+    across every item in the run at once. When the run mixes populations with
+    different base rates *and* different agreement levels, that question has a
+    cheap wrong answer available: rank the populations, not the items.
+
+    The run of 24 August is the worked example. Grounded prose sat at mean
+    agreement 0.65 with almost nothing correct; the item corpora sat at 0.95+
+    with roughly two answers in three correct. Pooled, agreement separates
+    correct from incorrect at AUC 0.72 -- and every bit of that separation is the
+    gap *between* the two corpora. Within them, the same records give 0.49, 0.53
+    and 0.66: chance, chance, and slightly better than chance.
+
+    So this function pools the pairs, not the items: every correct/incorrect pair
+    it counts comes from one stratum, and a difference between populations can no
+    longer be read as a difference between right and wrong answers. Reported
+    beside the pooled figure rather than instead of it, with ``confounded`` set
+    when they disagree by more than 0.05 -- the reader is owed both numbers and
+    the fact that they diverged.
+
+    Returns:
+        ``auc``, the ``n_pairs`` behind it, the per-stratum breakdown, and
+        ``strata_dropped`` for strata holding only one class, which contribute no
+        pairs and are counted so their absence is visible.
+    """
+    by_stratum: dict[str, list[tuple[float, int]]] = {}
+    for rec in records:
+        correct, agreement = rec.get("correct"), rec.get("agreement")
+        if correct is None or agreement is None:
+            continue
+        by_stratum.setdefault(str(rec.get(key, "")), []).append(
+            (float(agreement), 1 if correct else 0))
+
+    concordant = 0.0
+    total_pairs = 0
+    per_stratum: dict[str, Any] = {}
+    dropped: list[str] = []
+    for name, pairs in sorted(by_stratum.items()):
+        pos = [x for x, y in pairs if y == 1]
+        neg = [x for x, y in pairs if y == 0]
+        if not pos or not neg:
+            dropped.append(name)
+            continue
+        agree = sum(1.0 if p > q else 0.5 if p == q else 0.0 for p in pos for q in neg)
+        n_pairs = len(pos) * len(neg)
+        concordant += agree
+        total_pairs += n_pairs
+        per_stratum[name] = {
+            "auc": round(agree / n_pairs, 6), "n_pairs": n_pairs,
+            "n_correct": len(pos), "n_wrong": len(neg),
+        }
+
+    return {
+        "auc": round(concordant / total_pairs, 6) if total_pairs else None,
+        "n_pairs": total_pairs,
+        "by_stratum": per_stratum,
+        "strata_dropped": dropped,
+    }
 
 
 def _mean(values: Iterable[float]) -> float:

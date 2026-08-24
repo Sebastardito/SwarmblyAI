@@ -465,3 +465,81 @@ def test_the_http_path_still_carries_the_knob_in_the_body() -> None:
     assert backend.generate("hello", max_tokens=61) == "ok"
     assert captured["payload"]["options"] == {"num_predict": 61}
     assert captured["payload"]["max_tokens"] == 61
+
+
+# --------------------------------------------------------------------------- #
+# numeric fidelity: the two defects that invalidated the grounded corpus
+# --------------------------------------------------------------------------- #
+
+def test_a_reference_code_is_not_read_as_a_figure() -> None:
+    """``G4667`` is an identifier, not the number four thousand six hundred.
+
+    The sentence below is the real one from the run of 24 August, and it was
+    scored a fabrication because the regex pulled 4667 out of the ref code -- a
+    code copied correctly from the table it was summarising. Thirty-one of the
+    sixty-two graded units were hit this way, which took that corpus to 1.6 %
+    accuracy and turned its AUC upside down.
+    """
+    from swarmbly_v0.constraints import check_numeric_fidelity
+    allowed = [830.0, 375.0, 210.0]
+    said = 'The first shipment, "cable reels G4667", travels to Cebu at 830 kg.'
+    assert check_numeric_fidelity(said, allowed) is True
+    assert check_numeric_fidelity("It weighs 4667 kg.", allowed) is False
+
+
+def test_a_copied_table_row_is_counted_as_such_not_as_a_fabrication() -> None:
+    """Reproducing the table is a real failure -- of a different constraint.
+
+    Its figures are the given ones by construction, so grading it on fidelity
+    would both mislabel the defect and fill the denominator with units that
+    cannot discriminate. Forty-seven of sixty-two graded units were table rows.
+    """
+    from swarmbly_v0.constraints import is_source_table_row
+    assert is_source_table_row("| C8362 | Cebu | 210 kg | filter packs |")
+    assert is_source_table_row("| --- | --- | --- | --- |")
+    assert not is_source_table_row("The heaviest consignment is 840 kg.")
+
+
+def test_the_grounded_prompts_forbid_reproducing_the_table(corpus: dict) -> None:
+    grounded = [p for p in corpus["prompts"] if p["id"].startswith("grounded")]
+    assert grounded
+    for prompt in grounded:
+        assert "do not reproduce the table" in prompt["prompt"]
+
+
+def test_a_pooled_auc_that_only_separates_categories_is_reported_as_confounded() -> None:
+    """The Simpson's-paradox guard, built from the shape of the 24 August run.
+
+    Two populations: one with low agreement and no correct answers, one with high
+    agreement and mostly correct ones. Pooled, agreement looks strongly
+    predictive. Within each category it predicts nothing at all -- and the second
+    reading is the one the confidence map lives or dies by.
+    """
+    from swarmbly_v0.experiment import agreement_truth_calibration, stratified_auc
+
+    records = (
+        [{"category": "items", "agreement": 0.95, "correct": True} for _ in range(20)]
+        + [{"category": "items", "agreement": 0.96, "correct": False} for _ in range(10)]
+        + [{"category": "prose", "agreement": 0.60, "correct": False} for _ in range(30)]
+        + [{"category": "prose", "agreement": 0.61, "correct": True} for _ in range(2)]
+    )
+    pooled = agreement_truth_calibration(records)
+    strat = stratified_auc(records, key="category")
+
+    assert pooled["auc"] > 0.65, "the pooled figure should look predictive"
+    assert strat["auc"] < 0.55, "within a category it predicts nothing"
+    assert strat["by_stratum"]["items"]["n_pairs"] == 200
+    assert abs(pooled["auc"] - strat["auc"]) > 0.05
+
+
+def test_a_stratum_holding_one_class_is_dropped_and_counted() -> None:
+    from swarmbly_v0.experiment import stratified_auc
+
+    out = stratified_auc(
+        [{"category": "a", "agreement": 0.9, "correct": True},
+         {"category": "a", "agreement": 0.4, "correct": False},
+         {"category": "b", "agreement": 0.5, "correct": False},
+         {"category": "b", "agreement": 0.7, "correct": False}],
+        key="category")
+    assert out["strata_dropped"] == ["b"]
+    assert out["n_pairs"] == 1
