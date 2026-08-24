@@ -232,3 +232,156 @@ def test_a_compliant_model_scores_full_marks_through_the_real_pipeline() -> None
     assert trace is not None, "no composition trace was produced for a composition prompt"
     assert trace.report.n_paragraphs == 2
     assert trace.duplicated == [], "a compliant text was reported as repeating itself"
+
+
+# --------------------------------------------------------------------------- #
+# the three defects the 24 August traces located
+# --------------------------------------------------------------------------- #
+
+def test_the_requested_paragraph_count_is_read_from_the_prompt() -> None:
+    """A prompt that states the shape of its answer must have it honoured.
+
+    Planning three fragments for a two-paragraph answer guarantees a structural
+    failure no context budget can repair: at k=1 the run produced four
+    paragraphs, one per fragment, and at k>=3 it produced one, because consensus
+    joined the units with a space.
+    """
+    from swarmbly_v0.planner import requested_paragraphs
+
+    assert requested_paragraphs("Write exactly two paragraphs, separated by a blank line.") == 2
+    assert requested_paragraphs("exactly 3 paragraphs") == 3
+    assert requested_paragraphs("write a few paragraphs") is None
+    assert requested_paragraphs("exactly twenty paragraphs") is None, "implausible counts ignored"
+
+
+def test_every_composition_states_its_paragraph_count(corpus: dict) -> None:
+    from swarmbly_v0.planner import requested_paragraphs
+    for spec in corpus["prompts"]:
+        constraints = spec.get("constraints") or []
+        if not constraints:
+            continue
+        wanted = next(c["count"] for c in constraints if c["kind"] == "paragraph_count")
+        assert requested_paragraphs(spec["prompt"]) == wanted, (
+            f"{spec['id']}: the prompt does not state the count its constraint enforces, so the "
+            "planner cannot honour it"
+        )
+
+
+def test_fragments_are_joined_by_a_paragraph_break_when_one_was_asked_for() -> None:
+    """The join is the whole difference between two paragraphs and one."""
+    from swarmbly_v0.assembler import select_then_splice
+    from swarmbly_v0.backends import HashEmbedder, MockBackend
+    from swarmbly_v0.planner import global_contract
+    from swarmbly_v0.schema import Fragment
+
+    backend, embedder = MockBackend(seed=0), HashEmbedder()
+    contract = global_contract("Write exactly two paragraphs about harbours.", backend)
+    fragments = [
+        Fragment(task_id="t0", candidates=["First paragraph text here."], order=0, packet_tokens=10),
+        Fragment(task_id="t1", candidates=["Second paragraph text here."], order=1, packet_tokens=10),
+    ]
+    spaced = select_then_splice(fragments, contract, backend, 0.5, embedder=embedder)
+    broken = select_then_splice(fragments, contract, backend, 0.5, embedder=embedder,
+                                paragraph_join=True)
+
+    assert "\n\n" not in spaced.text
+    assert "\n\n" in broken.text
+    assert len(paragraphs_of(broken.text)) == 2
+
+
+def test_the_ollama_length_knob_is_sent_only_to_ollama() -> None:
+    """`max_tokens` is accepted and ignored by Ollama's OpenAI-compatible shim.
+
+    Every fragment on 24 August was dispatched with max_tokens=61 and came back
+    with 91 to 177 tokens, so the assembled compositions ran 1.5x to 2.3x over
+    and failed the length constraint in every fragmented condition. The knob
+    Ollama honours is `options.num_predict`, and the OpenAI API rejects
+    unrecognised top-level fields, so it is sent by endpoint detection.
+    """
+    import inspect
+
+    from swarmbly_v0 import backends
+
+    source = inspect.getsource(backends)
+    assert "num_predict" in source, "the Ollama length knob is not sent at all"
+    assert "_is_ollama" in source, "num_predict must be gated on the endpoint"
+
+
+# --------------------------------------------------------------------------- #
+# grounded prose: the first corpus where both variables can vary at once
+# --------------------------------------------------------------------------- #
+
+def test_numeric_fidelity_separates_a_cited_figure_from_an_invented_one() -> None:
+    """The per-sentence ground truth that grounded prose makes possible.
+
+    Item corpora gave correctness with no spread in agreement -- 260 of 280
+    items at exactly 1.0. Compositions gave spread in agreement with no truth
+    below the whole text. A sentence summarising an enclosed table has both.
+    """
+    from swarmbly_v0.constraints import check_numeric_fidelity, derived_aggregates
+
+    rows = [420.0, 610.0, 180.0, 905.0]
+    allowed = sorted(set(rows) | derived_aggregates(rows))
+
+    assert check_numeric_fidelity("The heaviest was 905 kg.", allowed) is True
+    assert check_numeric_fidelity("The four consignments total 2115 kg.", allowed) is True
+    assert check_numeric_fidelity("Roughly 700 kg were delayed.", allowed) is False
+    # No figure is neither right nor wrong here; counting it either way would
+    # move the accuracy toward whichever verdict was chosen.
+    assert check_numeric_fidelity("Cargo was rescheduled overnight.", allowed) is None
+
+
+def test_a_summary_may_total_and_average_without_being_called_a_fabricator() -> None:
+    """Summarising is aggregating. Scoring the aggregate as invented would be
+    the same class of error as every other right-answer-graded-wrong in this project."""
+    from swarmbly_v0.constraints import derived_aggregates
+
+    values = [10.0, 20.0, 30.0]
+    aggregates = derived_aggregates(values)
+    assert 60.0 in aggregates      # total
+    assert 3.0 in aggregates       # count
+    assert 30.0 in aggregates      # heaviest
+    assert 20.0 in aggregates      # mean
+    assert derived_aggregates([]) == set()
+
+
+def test_the_grounded_prompts_carry_their_own_allowed_figures(corpus: dict) -> None:
+    grounded = [p for p in corpus["prompts"] if p.get("numeric_facts")]
+    assert grounded, "no grounded-prose prompts in the corpus"
+    for spec in grounded:
+        allowed = spec["numeric_facts"]["allowed"]
+        assert allowed, f"{spec['id']}: no allowed figures"
+        # Every weight printed in the table must be sayable without being called
+        # a fabrication, or the prompt is unanswerable.
+        import re
+        printed = {float(m) for m in re.findall(r"(\d+) kg", spec["prompt"])}
+        missing = sorted(printed - {float(v) for v in allowed})
+        assert not missing, f"{spec['id']}: table figures absent from allowed: {missing}"
+
+
+def test_grounded_units_are_graded_with_their_agreement_attached() -> None:
+    """The pairing is the whole point: a predictor and a verdict on the same unit."""
+    from swarmbly_v0.experiment import _numeric_records, load_prompts
+
+    spec = next(s for s in load_prompts(str(CORPUS)) if s.is_grounded)
+
+    class _U:
+        def __init__(self, text, agreement):
+            self.text, self.agreement = text, agreement
+            self.label, self.judge_score, self.accepted = "MEDIUM", 0.5, True
+
+    class _R:
+        k = 3
+        units = [_U("The heaviest consignment was 905 kg.", 0.9),
+                 _U("About 700 kg remained on the quay.", 0.3),
+                 _U("The backlog cleared overnight.", 0.7)]
+
+    allowed = list(spec.numeric_facts["allowed"])
+    _R.units[0] = _U(f"The heaviest consignment was {int(max(allowed))} kg.", 0.9)
+
+    records, report = _numeric_records(spec, {"condition": "fragmented"}, [("t0", _R())])
+    assert len(records) == 3
+    assert [r["correct"] for r in records] == [True, False, None]
+    assert [r["agreement"] for r in records] == [0.9, 0.3, 0.7]
+    assert report["items_graded"] == 2
+    assert report["items_unintelligible"] == 1, "a sentence with no figure must be counted, not dropped"

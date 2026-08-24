@@ -55,6 +55,8 @@ from .textutil import count_tokens, split_sentences
 
 __all__ = [
     "CONSTRAINT_KINDS",
+    "check_numeric_fidelity",
+    "derived_aggregates",
     "ConstraintResult",
     "CompositionReport",
     "paragraphs_of",
@@ -228,3 +230,51 @@ def grade_text(text: str, constraints: Iterable[Mapping[str, Any]]) -> Compositi
         n_sentences=len([s for s in split_sentences(text) if s.strip()]),
         n_tokens=count_tokens(text),
     )
+
+
+# --------------------------------------------------------------------------- #
+# numeric fidelity: per-sentence ground truth for grounded prose
+# --------------------------------------------------------------------------- #
+
+_NUM = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+
+
+def derived_aggregates(values: Sequence[float]) -> set[float]:
+    """Figures a summary may legitimately state that are not rows in the table.
+
+    A summary of a table is allowed to total it, count it, and name its
+    extremes; that is what summarising *is*. Without this set every correct
+    aggregate would be scored as a fabrication, which is the same class of error
+    -- a right answer graded wrong -- that has cost this project most.
+    """
+    if not values:
+        return set()
+    total = float(sum(values))
+    out = {total, float(len(values)), float(max(values)), float(min(values))}
+    mean = total / len(values)
+    out.update({mean, round(mean, 1), round(mean), float(int(mean))})
+    return out
+
+
+def check_numeric_fidelity(text: str, allowed: Sequence[float]) -> bool | None:
+    """Does every figure in ``text`` come from the data it was given?
+
+    The per-sentence ground truth that grounded prose makes possible, and the
+    reason this corpus exists. Item corpora gave correctness with no spread in
+    agreement; compositions gave spread in agreement with no correctness at the
+    unit level. A sentence summarising an enclosed table has both: its agreement
+    is scored by consensus, and its figures either appear in the table -- or are
+    an aggregate of it -- or were invented.
+
+    Returns ``None`` for a sentence containing no figure at all. Such a sentence
+    is not correct or incorrect on this measure; counting it either way would
+    silently move the accuracy toward whichever verdict was chosen.
+    """
+    found = [
+        float(m.group(0).replace(",", ""))
+        for m in _NUM.finditer(text or "")
+    ]
+    if not found:
+        return None
+    permitted = {round(float(v), 4) for v in allowed}
+    return all(round(v, 4) in permitted for v in found)

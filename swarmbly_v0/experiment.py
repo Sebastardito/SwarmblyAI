@@ -46,6 +46,7 @@ from .consensus import (
     segment_units,
 )
 from .composition_trace import build_trace, render_trace
+from .constraints import check_numeric_fidelity
 from .grading import grade_units
 from .metrics import (
     ERROR_CLASSES,
@@ -58,7 +59,7 @@ from .metrics import (
     seam_error_taxonomy,
 )
 from .packing import build_monolithic_prompt, build_packets, packing_floor
-from .planner import global_contract, plan as build_plan, summarize_fragment
+from .planner import requested_paragraphs, global_contract, plan as build_plan, summarize_fragment
 from .router import DEFAULT_THRESHOLD, evaluate_router, is_decomposable
 from .schema import Contract, Fragment, Plan
 from .textutil import count_tokens, split_sentences
@@ -197,6 +198,14 @@ class PromptSpec:
     expected_decomposable: bool
     text: str
     key: Mapping[str, Any] | None = None
+    numeric_facts: Mapping[str, Any] | None = None
+    """Figures a grounded summary may legitimately state.
+
+    Present on the grounded-prose prompts. Each consensus unit is a sentence
+    with an agreement score; its figures either come from the enclosed table, or
+    are an aggregate of it, or were invented. That pairs a predictor with spread
+    against a verdict with spread, which no earlier corpus managed at once.
+    """
     constraints: Sequence[Mapping[str, Any]] | None = None
     """Mechanical checks for a composition prompt, graded by :mod:`swarmbly_v0.constraints`.
 
@@ -222,6 +231,10 @@ class PromptSpec:
     def is_composition(self) -> bool:
         return bool(self.constraints)
 
+    @property
+    def is_grounded(self) -> bool:
+        return bool(self.numeric_facts)
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PromptSpec":
         return cls(
@@ -231,6 +244,7 @@ class PromptSpec:
             text=str(data["prompt"]).strip(),
             key=data.get("key") or None,
             constraints=data.get("constraints") or None,
+            numeric_facts=data.get("numeric_facts") or None,
         )
 
 
@@ -402,6 +416,54 @@ def _unit_records(
     return records
 
 
+def _numeric_records(
+    spec: PromptSpec,
+    row: Mapping[str, Any],
+    results: Sequence[tuple[str, "ConsensusResult"]],
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Grade each consensus unit of a grounded summary for numeric fidelity.
+
+    One record per unit, carrying that unit's agreement next to whether its
+    figures came from the data. A unit with no figure is recorded with
+    ``correct`` None and counted: it is neither right nor wrong on this measure,
+    and folding it into either verdict would move the accuracy toward whichever
+    was chosen.
+    """
+    allowed = [float(v) for v in (spec.numeric_facts or {}).get("allowed", [])]
+    records: list[dict[str, Any]] = []
+    n_units = n_graded = n_correct = n_no_figures = 0
+
+    for task_id, result in results:
+        for index, unit in enumerate(result.units):
+            n_units += 1
+            verdict = check_numeric_fidelity(unit.text, allowed)
+            if verdict is None:
+                n_no_figures += 1
+            else:
+                n_graded += 1
+                n_correct += int(verdict)
+            records.append({
+                "prompt_id": spec.prompt_id, "category": spec.category, "level": 3,
+                "condition": row.get("condition", "fragmented"),
+                "rho_target": row.get("rho_target", ""), "n_tasks": row.get("n_tasks", ""),
+                "k": result.k, "task_id": task_id, "unit_index": index,
+                "item_id": "", "label": unit.label,
+                "agreement": round(float(unit.agreement), 6),
+                "judge_score": round(float(unit.judge_score), 6),
+                "accepted": bool(unit.accepted), "mode": "numeric_fidelity",
+                "expected": "figures from the table or an aggregate of it",
+                "given": unit.text[:200], "correct": verdict,
+                "graded": verdict is not None, "unknown_item": False, "echoed": False,
+            })
+
+    return records, {
+        "units_total": n_units, "units_with_no_label": 0, "items_seen": n_units,
+        "items_graded": n_graded, "items_correct": n_correct,
+        "items_unintelligible": n_no_figures, "items_echoed": 0, "items_unknown_id": 0,
+        "accuracy": round(n_correct / n_graded, 6) if n_graded else None,
+    }
+
+
 def _truth_records(
     spec: PromptSpec,
     row: Mapping[str, Any],
@@ -415,6 +477,8 @@ def _truth_records(
     honestly. Empty for a prompt with no key, which is every prompt in the
     coherence-tax corpus.
     """
+    if spec.is_grounded:
+        return _numeric_records(spec, row, results)
     if not spec.has_ground_truth:
         return [], {}
 
@@ -554,7 +618,15 @@ def run_fragmented(
     That is also why ``rho`` is not free: the summaries are the tokens.
     """
     gamma = contract or global_contract(spec.text, backend)
-    plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=gamma)
+
+    # A prompt that demands "exactly two paragraphs" has stated the shape of its
+    # own answer. Planning three fragments for it guarantees a structural failure
+    # the context budget cannot repair, so the stated count wins over the sweep's
+    # N for composition prompts and the fragments are joined by paragraph breaks
+    # rather than spaces.
+    wanted_paragraphs = requested_paragraphs(spec.text) if spec.is_composition else None
+    effective_n = wanted_paragraphs if wanted_paragraphs else n_tasks
+    plan = build_plan(spec.text, backend, n_tasks=effective_n, contract=gamma)
 
     per_task_target = max(24, round(gamma.target_length_tokens / max(len(plan.tasks), 1)))
     packing_contract = replace(gamma, target_length_tokens=per_task_target)
@@ -621,7 +693,8 @@ def run_fragmented(
     rho_achieved = packet_tokens_total / max(count_tokens(spec.text), 1)
 
     assembly = select_then_splice(
-        fragments, gamma, backend, tau_sem, plan=plan, embedder=embedder
+        fragments, gamma, backend, tau_sem, plan=plan, embedder=embedder,
+        paragraph_join=bool(wanted_paragraphs),
     )
 
     row = _base_row(spec, config, backend)

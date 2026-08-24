@@ -104,6 +104,7 @@ def select_then_splice(
     plan: Plan | None = None,
     embedder: Any | None = None,
     window_tokens: int = DEFAULT_WINDOW_TOKENS,
+    paragraph_join: bool = False,
 ) -> Assembly:
     """Assemble fragments into one answer, bridging only where the seam is bad.
 
@@ -208,7 +209,12 @@ def select_then_splice(
         sentence_cursor += len(split_sentences(text))
         previous_task = fragment.task_id
 
-    assembled = " ".join(pieces)
+    # A composition that asked for N paragraphs was planned as N fragments, one
+    # per paragraph, so the join has to be a paragraph break. Splicing them with
+    # a space produced a single block: on 24 August every k>=3 composition came
+    # back as one paragraph where two were required, and the paragraph_count
+    # constraint failed for a reason that had nothing to do with the models.
+    assembled = ("\n\n" if paragraph_join else " ").join(pieces)
     total_sentences = len(split_sentences(assembled))
     offsets = [min(o, max(total_sentences - 1, 0)) for o in offsets]
 

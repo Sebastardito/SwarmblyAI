@@ -231,6 +231,38 @@ def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int) -> list
     return segments
 
 
+_PARA_REQUEST_RE = re.compile(
+    r"\bexactly\s+(one|two|three|four|five|six|\d{1,2})\s+paragraphs?\b", re.IGNORECASE)
+
+_NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6}
+
+
+def requested_paragraphs(prompt: str) -> int | None:
+    """The paragraph count a prompt demands, when it demands one.
+
+    A prompt that says "write exactly two paragraphs" has stated the shape of
+    its own answer, and the plan should honour it: two fragments, one paragraph
+    each, joined by a paragraph break. Planning three fragments for a two
+    paragraph answer guarantees a structural failure no amount of context budget
+    can repair -- on 24 August every fragmented composition failed
+    ``paragraph_count``, at k=1 by producing four paragraphs and at k>=3 by
+    producing one.
+
+    Returns ``None`` when no count is stated, which leaves N to the sweep.
+    """
+    m = _PARA_REQUEST_RE.search(prompt or "")
+    if not m:
+        return None
+    token = m.group(1).lower()
+    value = _NUMBER_WORDS.get(token)
+    if value is None:
+        try:
+            value = int(token)
+        except ValueError:
+            return None
+    return value if 1 <= value <= 12 else None
+
+
 def split_enumerated(prompt: str) -> tuple[str, list[str], str] | None:
     """Split an enumerated batch into ``(preamble, items, postamble)``.
 

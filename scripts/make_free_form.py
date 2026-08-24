@@ -46,6 +46,10 @@ import json
 import random
 from pathlib import Path
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from swarmbly_v0.constraints import derived_aggregates  # noqa: E402
+
 SEED = 20260825
 OUT = Path(__file__).resolve().parent.parent / "prompts" / "free_form.json"
 
@@ -180,6 +184,68 @@ def composition(topic_id: str, instruction: str, terms: list[str], forbidden: st
     }
 
 
+def grounded(rng: random.Random, topic_id: str, subject: str, terms: list[str]) -> dict:
+    """Two paragraphs summarising an enclosed table -- prose with per-sentence truth.
+
+    The synthesis the first four runs argued their way to. Item corpora gave
+    correctness with no spread in agreement: 260 of 280 items came back at
+    exactly 1.0, because a model that gets "30" right emits the same string as
+    every other model that gets it right. Compositions gave the opposite --
+    agreement spread across every bin, mean 0.610, labels 50/27/47 -- but no
+    ground truth below the level of the whole text.
+
+    A summary of a table has both. Consensus scores the agreement of each
+    sentence; the sentence's figures either appear in the table, or are an
+    aggregate of it, or were invented. Two variables with variance at the same
+    time, which is what V3c has needed since the first run.
+    """
+    rows, weights = [], []
+    for i in range(1, 7):
+        weight = rng.randrange(120, 960, 5)
+        weights.append(float(weight))
+        rows.append(f"  {rng.choice('ABCDEFGH')}{rng.randint(1000, 9999)} | "
+                    f"{rng.choice(CITIES)} | {weight} kg | {rng.choice(GOODS)}")
+    allowed = sorted(set(weights) | derived_aggregates(weights))
+    return {
+        "id": topic_id,
+        "category": "grounded_prose",
+        "level": 3,
+        "expected_decomposable": True,
+        "prompt": (
+            f"{subject}\n\n"
+            "  ref | destination | weight | goods\n" + "\n".join(rows) + "\n\n"
+            "Write exactly two paragraphs, separated by a blank line, each between 60 and 140 "
+            f"words. Mention each of these once and only once: {', '.join(terms)}. "
+            "Every figure you state must come from the table above or be an arithmetic aggregate "
+            "of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate "
+            "and do not round to a figure the table does not support. Do not repeat any sentence "
+            "or phrase."
+        ),
+        "constraints": [
+            {"id": "paragraphs", "kind": "paragraph_count", "count": 2},
+            {"id": "length", "kind": "words_per_paragraph", "min": 60, "max": 140},
+            *[{"id": f"mentions_{x.split()[0].lower()}", "kind": "must_mention", "term": x}
+              for x in terms],
+            {"id": "no_repeated_sentence", "kind": "no_repeated_sentence"},
+            {"id": "no_repeated_phrase", "kind": "no_repeated_ngram", "size": 8},
+        ],
+        "numeric_facts": {
+            "allowed": allowed,
+            "note": (
+                "Table values plus the aggregates a summary may legitimately state. A sentence "
+                "whose figures all fall in this set is correct on this measure; one that states "
+                "any other figure invented it. A sentence with no figure is graded None -- not "
+                "correct and not incorrect -- because counting it either way would move the "
+                "accuracy toward whichever verdict was chosen."
+            ),
+        },
+        "notes": (
+            "Grounded prose: per-sentence numeric ground truth paired with per-sentence "
+            "agreement. The first corpus in which both variables can vary at once."
+        ),
+    }
+
+
 COMPOSITIONS = [
     composition(
         "comp_harbour",
@@ -200,6 +266,14 @@ def main() -> None:
     rng = random.Random(SEED)
     prompts = [f(rng, level) for f in (over_under, field_name, rule_check) for level in (1, 2)]
     prompts.extend(COMPOSITIONS)
+    prompts.extend([
+        grounded(rng, "grounded_manifest",
+                 "Summarise the consignment table below for a duty manager.",
+                 ["heaviest consignment", "total weight"]),
+        grounded(rng, "grounded_backlog",
+                 "Summarise the backlog table below for the morning stand-up.",
+                 ["average weight", "number of consignments"]),
+    ])
     n_items = sum(len(p.get("key", {})) for p in prompts)
     n_constraints = sum(len(p.get("constraints", [])) for p in prompts)
     payload = {

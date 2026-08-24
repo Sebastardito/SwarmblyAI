@@ -589,6 +589,120 @@
         }
       ],
       "notes": "Composition graded by swarmbly_v0.constraints. No judge and no key: every check is a fact about the string. The repetition checks are the ones the coherence tax cannot make, because each duplicated passage is locally fluent."
+    },
+    {
+      "id": "grounded_manifest",
+      "category": "grounded_prose",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the consignment table below for a duty manager.\n\n  ref | destination | weight | goods\n  C3286 | Saskatoon | 375 kg | valve kits\n  G4667 | Cebu | 830 kg | cable reels\n  D1416 | Nairobi | 840 kg | pump seals\n  C8362 | Cebu | 210 kg | filter packs\n  C2217 | Quito | 370 kg | valve kits\n  C9894 | Cebu | 410 kg | gasket sets\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention each of these once and only once: heaviest consignment, total weight. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Do not repeat any sentence or phrase.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_heaviest",
+          "kind": "must_mention",
+          "term": "heaviest consignment"
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total weight"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          6.0,
+          210.0,
+          370.0,
+          375.0,
+          410.0,
+          505.0,
+          505.8,
+          505.8333333333333,
+          506,
+          830.0,
+          840.0,
+          3035.0
+        ],
+        "note": "Table values plus the aggregates a summary may legitimately state. A sentence whose figures all fall in this set is correct on this measure; one that states any other figure invented it. A sentence with no figure is graded None -- not correct and not incorrect -- because counting it either way would move the accuracy toward whichever verdict was chosen."
+      },
+      "notes": "Grounded prose: per-sentence numeric ground truth paired with per-sentence agreement. The first corpus in which both variables can vary at once."
+    },
+    {
+      "id": "grounded_backlog",
+      "category": "grounded_prose",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the backlog table below for the morning stand-up.\n\n  ref | destination | weight | goods\n  H9671 | Osaka | 245 kg | pump seals\n  A1692 | Osaka | 555 kg | valve kits\n  F3203 | Valparaiso | 805 kg | pump seals\n  D6818 | Tromso | 930 kg | gasket sets\n  A2664 | Lisbon | 665 kg | gasket sets\n  G4379 | Saskatoon | 800 kg | gasket sets\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention each of these once and only once: average weight, number of consignments. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Do not repeat any sentence or phrase.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_average",
+          "kind": "must_mention",
+          "term": "average weight"
+        },
+        {
+          "id": "mentions_number",
+          "kind": "must_mention",
+          "term": "number of consignments"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          6.0,
+          245.0,
+          555.0,
+          665.0,
+          666.0,
+          666.6666666666666,
+          666.7,
+          667,
+          800.0,
+          805.0,
+          930.0,
+          4000.0
+        ],
+        "note": "Table values plus the aggregates a summary may legitimately state. A sentence whose figures all fall in this set is correct on this measure; one that states any other figure invented it. A sentence with no figure is graded None -- not correct and not incorrect -- because counting it either way would move the accuracy toward whichever verdict was chosen."
+      },
+      "notes": "Grounded prose: per-sentence numeric ground truth paired with per-sentence agreement. The first corpus in which both variables can vary at once."
     }
   ]
 }

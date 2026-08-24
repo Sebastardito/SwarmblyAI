@@ -803,6 +803,14 @@ class OpenAICompatBackend:
 
     def __post_init__(self) -> None:
         self.base_url = self.base_url.rstrip("/")
+        self._is_ollama = any(
+            marker in str(self.base_url).lower() for marker in ("11434", "ollama")
+        )
+        """Whether to send ``options.num_predict`` alongside ``max_tokens``.
+
+        Detected from the endpoint rather than configured, because the field is
+        harmless to Ollama and fatal to the OpenAI API.
+        """
         try:
             from openai import OpenAI  # type: ignore[import-not-found]
 
@@ -901,6 +909,15 @@ class OpenAICompatBackend:
             "max_tokens": max_tokens,
             "seed": int(kw.get("seed", self.seed)) + int(kw.get("variant", 0)),
         }
+        # Ollama's OpenAI-compatible shim accepts `max_tokens` and does not act
+        # on it; the knob it honours is `options.num_predict`. On 24 August every
+        # fragment was dispatched with max_tokens=61 and came back with 91 to 177
+        # tokens, so the assembled compositions ran 1.5x to 2.3x over length and
+        # failed the length constraint in every fragmented condition. Sent only
+        # to endpoints that look like Ollama, because the OpenAI API rejects
+        # unrecognised top-level fields.
+        if self._is_ollama:
+            payload["options"] = {"num_predict": max_tokens}
         if self._client is not None:  # pragma: no cover - needs the SDK
             try:
                 completion = self._client.chat.completions.create(**payload)
