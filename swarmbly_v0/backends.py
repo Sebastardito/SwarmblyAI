@@ -910,21 +910,29 @@ class OpenAICompatBackend:
             "seed": int(kw.get("seed", self.seed)) + int(kw.get("variant", 0)),
         }
         # Ollama's OpenAI-compatible shim accepts `max_tokens` and does not act
-        # on it; the knob it honours is `options.num_predict`. On 24 August every
-        # fragment was dispatched with max_tokens=61 and came back with 91 to 177
-        # tokens, so the assembled compositions ran 1.5x to 2.3x over length and
-        # failed the length constraint in every fragmented condition. Sent only
-        # to endpoints that look like Ollama, because the OpenAI API rejects
-        # unrecognised top-level fields.
-        if self._is_ollama:
-            payload["options"] = {"num_predict": max_tokens}
+        # on it; the knob it honours is `options.num_predict`. Fragments
+        # dispatched with max_tokens=61 came back with 91 to 177 tokens, so the
+        # assembled compositions ran 1.5x to 2.3x over length and failed the
+        # length constraint in every fragmented condition.
+        #
+        # It has to be delivered differently on each path. The raw HTTP path puts
+        # it in the request body. The SDK path cannot: `create()` validates its
+        # keyword arguments and raises TypeError on anything it does not know, so
+        # the field travels in `extra_body`, which exists for exactly this. Only
+        # the HTTP body was exercised before, which is why this surfaced at run
+        # time instead of in the tests.
+        extra: dict[str, Any] = {"options": {"num_predict": max_tokens}} if self._is_ollama else {}
+
         if self._client is not None:  # pragma: no cover - needs the SDK
             try:
-                completion = self._client.chat.completions.create(**payload)
+                completion = self._client.chat.completions.create(
+                    **payload, **({"extra_body": extra} if extra else {})
+                )
                 return (completion.choices[0].message.content or "").strip()
             except Exception as exc:
                 raise BackendUnavailable(f"openai SDK call failed: {exc}") from exc
-        data = self._post("/chat/completions", payload)
+
+        data = self._post("/chat/completions", {**payload, **extra})
         try:
             return str(data["choices"][0]["message"]["content"]).strip()
         except (KeyError, IndexError, TypeError) as exc:  # pragma: no cover - network path

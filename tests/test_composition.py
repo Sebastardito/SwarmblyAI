@@ -385,3 +385,83 @@ def test_grounded_units_are_graded_with_their_agreement_attached() -> None:
     assert [r["agreement"] for r in records] == [0.9, 0.3, 0.7]
     assert report["items_graded"] == 2
     assert report["items_unintelligible"] == 1, "a sentence with no figure must be counted, not dropped"
+
+
+# --------------------------------------------------------------------------- #
+# the SDK dispatch path, which the first version of the length fix broke
+# --------------------------------------------------------------------------- #
+
+def _server_backend(base_url: str):
+    from swarmbly_v0.backends import OpenAICompatBackend
+    return OpenAICompatBackend(base_url=base_url, model="m")
+
+
+class _StrictClient:
+    """Stands in for the OpenAI SDK, which validates its keyword arguments.
+
+    `Completions.create()` raises TypeError on anything it does not recognise.
+    The first version of the length fix put `options` in the payload and passed
+    the payload through as keywords, which worked against the raw HTTP path and
+    failed against the SDK at run time -- the tests only exercised the body.
+    """
+
+    ALLOWED = {"model", "messages", "temperature", "max_tokens", "seed", "extra_body"}
+
+    def __init__(self) -> None:
+        self.seen: dict = {}
+        self.chat = self
+
+    @property
+    def completions(self):
+        return self
+
+    def create(self, **kwargs):
+        unknown = set(kwargs) - self.ALLOWED
+        if unknown:
+            raise TypeError(f"create() got an unexpected keyword argument {sorted(unknown)[0]!r}")
+        self.seen = kwargs
+
+        class _M:
+            content = "ok"
+
+        class _C:
+            message = _M()
+
+        return type("R", (), {"choices": [_C()]})()
+
+
+def test_the_length_knob_reaches_ollama_through_the_sdk_without_breaking_it() -> None:
+    backend = _server_backend("http://localhost:11434/v1")
+    client = _StrictClient()
+    backend._client = client
+
+    assert backend.generate("hello", max_tokens=61) == "ok"
+    assert "options" not in client.seen, "options must not be a top-level keyword argument"
+    assert client.seen["extra_body"] == {"options": {"num_predict": 61}}
+
+
+def test_a_non_ollama_endpoint_gets_no_extra_body_at_all() -> None:
+    """The OpenAI API rejects unrecognised fields, so nothing extra may be sent."""
+    backend = _server_backend("https://api.openai.com/v1")
+    client = _StrictClient()
+    backend._client = client
+
+    backend.generate("hello", max_tokens=61)
+    assert "extra_body" not in client.seen
+    assert "options" not in client.seen
+
+
+def test_the_http_path_still_carries_the_knob_in_the_body() -> None:
+    """Two paths, two delivery mechanisms; both must be exercised."""
+    backend = _server_backend("http://localhost:11434/v1")
+    backend._client = None
+    captured: dict = {}
+
+    def _fake_post(path, payload):
+        captured.update({"path": path, "payload": payload})
+        return {"choices": [{"message": {"content": "ok"}}]}
+
+    backend._post = _fake_post  # type: ignore[method-assign]
+    assert backend.generate("hello", max_tokens=61) == "ok"
+    assert captured["payload"]["options"] == {"num_predict": 61}
+    assert captured["payload"]["max_tokens"] == 61
