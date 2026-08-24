@@ -9,6 +9,7 @@ whichever subset happened to parse.
 
 from __future__ import annotations
 
+import collections
 import json
 from pathlib import Path
 
@@ -366,3 +367,151 @@ def test_sidecar_csv_is_written_only_when_there_is_something_in_it(tmp_path) -> 
     # None must render as empty, never as the string "None" -- a reader loading this
     # into a dataframe would get a literal that silently is not null.
     assert "None" not in lines[2]
+
+
+# --------------------------------------------------------------------------- #
+# the segmentation failure that cost the 24 August run its control category
+# --------------------------------------------------------------------------- #
+
+def test_line_granularity_keeps_a_label_with_its_answer() -> None:
+    """Regression for the defect that made the first ground-truth run unreadable.
+
+    A reply of "1. Osaka" splits at the full stop under sentence granularity into
+    "1." and "Osaka" -- a label holding no answer, then an answer belonging to
+    nobody. In the run of 24 August that produced 73 % empty answers in
+    ``field_extraction``, the control category no model should fail, and 43 % of
+    all units came back unlabelled. When one line is one answer, splitting
+    inside it destroys the observation rather than localising it.
+    """
+    from swarmbly_v0.consensus import segment_units
+
+    reply = "1. Osaka\n2. Valparaiso\n3. Lisbon"
+    assert [u.text for u in segment_units(reply, "sentence")] == [
+        "1.", "Osaka", "2.", "Valparaiso", "3.", "Lisbon"]
+    assert [u.text for u in segment_units(reply, "line")] == [
+        "1. Osaka", "2. Valparaiso", "3. Lisbon"]
+
+
+def test_line_granularity_grades_where_sentence_granularity_loses_the_answer() -> None:
+    """The same reply, graded both ways. This is the whole bug in four lines."""
+    from swarmbly_v0.consensus import segment_units
+
+    key = {"01": {"expected": "Osaka", "mode": "exact_norm"},
+           "02": {"expected": "Valparaiso", "mode": "exact_norm"}}
+    reply = "1. Osaka\n2. Valparaiso"
+
+    _, by_sentence = grade_units(segment_units(reply, "sentence"), key)
+    _, by_line = grade_units(segment_units(reply, "line"), key)
+
+    assert by_sentence.n_correct == 0          # every answer lost to the splitter
+    assert by_sentence.units_with_no_label == 2
+    assert by_line.n_correct == 2
+    assert by_line.accuracy == 1.0
+
+
+def test_unknown_granularity_still_raises() -> None:
+    from swarmbly_v0.consensus import segment_units
+    with pytest.raises(ValueError, match="granularity must be"):
+        segment_units("x", "paragraph")
+
+
+# --------------------------------------------------------------------------- #
+# echo detection, difficulty levels, and the fragmentation-cost comparison
+# --------------------------------------------------------------------------- #
+
+def test_a_restated_item_is_unanswered_not_wrong() -> None:
+    """The 24 August run scored copied-back questions as incorrect answers.
+
+    Numeric grading took the last number in the restatement -- an input value --
+    and compared it to the key. That both deflates accuracy and fills the error
+    class the flagging metric exists to catch with items nobody attempted.
+    """
+    from swarmbly_v0.grading import is_echo
+
+    source = "[01] 37 crates of pump seals, 17 units per crate, 68 units removed for inspection"
+    assert is_echo("37 crates of pump seals, 17 units per crate, 68 units removed", source)
+    # Working shown on the way to an answer is not a restatement.
+    assert not is_echo("37 crates * 17 units/crate = 629 units", source)
+    # A bare answer never is, however short.
+    assert not is_echo("561", source)
+
+
+def test_a_correct_answer_that_appears_in_the_source_is_not_an_echo() -> None:
+    """Extraction answers are always substrings of the record they came from.
+
+    A containment test would flag every right answer in the control category, so
+    the rule is coverage of the item's content words, not containment.
+    """
+    from swarmbly_v0.grading import is_echo
+    record = "[01] ref A1234 | origin Lisbon | destination Osaka | customs held | weight 200 kg"
+    assert not is_echo("Osaka", record)
+
+
+def test_echo_is_graded_as_unintelligible_and_counted_separately() -> None:
+    source = "[01] 37 crates of pump seals, 17 units per crate, 68 units removed for inspection"
+    key = {"01": {"expected": "561", "mode": "numeric", "source": source}}
+    _, report = grade_units(
+        [_Unit("[01] 37 crates of pump seals, 17 units per crate, 68 units removed")], key)
+    assert report.n_graded == 0
+    assert report.n_echoed == 1
+    assert report.as_dict()["items_echoed"] == 1
+
+
+def test_echo_detection_is_off_without_a_source() -> None:
+    """An unverifiable suspicion is not grounds for discarding an observation."""
+    from swarmbly_v0.grading import is_echo
+    assert is_echo("anything at all, at length, with many words", "") is False
+
+
+def test_summary_reports_the_fragmentation_cost_against_the_baseline() -> None:
+    """Separates 'the model cannot do this' from 'fragmenting destroyed it'.
+
+    After 24 August returned one correct answer in sixty-four on two-step
+    arithmetic, this is the more interesting of the two questions, and the run
+    could not answer it because only the fragmented condition was graded.
+    """
+    from swarmbly_v0.experiment import _truth_summary
+    frag = [{"category": "arithmetic", "level": 1, "condition": "fragmented",
+             "k": 3, "agreement": 0.5, "correct": i < 4} for i in range(10)]
+    mono = [{"category": "arithmetic", "level": 1, "condition": "monolithic",
+             "k": 1, "agreement": None, "correct": i < 9} for i in range(10)]
+    tc = _truth_summary([{"_truth_records": frag + mono, "_truth_report": {}}])["truth_calibration"]
+    assert tc["fragmentation_cost"]["monolithic"]["accuracy"] == pytest.approx(0.9)
+    assert tc["fragmentation_cost"]["fragmented"]["accuracy"] == pytest.approx(0.4)
+    # The baseline carries no agreement, so it must not enter the calibration.
+    assert tc["pooled"]["n_items"] == 10
+
+
+def test_summary_splits_calibration_by_difficulty_level() -> None:
+    """If agreement predicts correctness anywhere, it should be mid-range."""
+    from swarmbly_v0.experiment import _truth_summary
+    recs = ([{"category": "c", "level": 1, "condition": "fragmented", "k": 3,
+              "agreement": 0.9, "correct": True}] * 6
+            + [{"category": "c", "level": 3, "condition": "fragmented", "k": 3,
+                "agreement": 0.4, "correct": False}] * 6)
+    tc = _truth_summary([{"_truth_records": recs, "_truth_report": {}}])["truth_calibration"]
+    assert set(tc["by_level"]) == {"1", "3"}
+    assert tc["by_level"]["1"]["accuracy"] == 1.0
+    assert tc["by_level"]["3"]["accuracy"] == 0.0
+
+
+def test_the_corpus_ships_three_levels_per_family(corpus: dict) -> None:
+    levels = collections.Counter(p["level"] for p in corpus["prompts"])
+    assert set(levels) == {1, 2, 3}, f"levels present: {sorted(levels)}"
+    assert len(set(levels.values())) == 1, "families must ship the same number of levels each"
+
+
+def test_every_key_entry_carries_its_source_line(corpus: dict) -> None:
+    """Without the source the grader cannot tell a restatement from an answer."""
+    for spec in corpus["prompts"]:
+        for item_id, entry in spec["key"].items():
+            assert entry.get("source"), f"{spec['id']}/{item_id}: no source line"
+            assert entry.get("level") in (1, 2, 3), f"{spec['id']}/{item_id}: no level"
+
+
+def test_no_correct_answer_in_the_corpus_reads_as_an_echo(corpus: dict) -> None:
+    """A rule that discards right answers is worse than no rule."""
+    from swarmbly_v0.grading import is_echo
+    for spec in corpus["prompts"]:
+        for item_id, entry in spec["key"].items():
+            assert not is_echo(entry["expected"], entry["source"]), f"{spec['id']}/{item_id}"

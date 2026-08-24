@@ -36,13 +36,14 @@ import numpy as np
 from .assembler import boundary_windows, select_then_splice
 from .backends import Backend, Embedder, HashEmbedder, get_backend, get_embedder, replica_backends
 from .consensus import (
+    ConsensusResult,
     DEFAULT_ACCEPT,
     DEFAULT_ALPHA_HIGH,
     DEFAULT_ALPHA_LOW,
     LABELS,
-    ConsensusResult,
     Replica,
     consensus,
+    segment_units,
 )
 from .grading import grade_units
 from .metrics import (
@@ -143,9 +144,9 @@ the predictor.
 """
 
 TRUTH_CSV_COLUMNS: tuple[str, ...] = (
-    "prompt_id", "category", "condition", "rho_target", "n_tasks", "k", "task_id",
+    "prompt_id", "category", "level", "condition", "rho_target", "n_tasks", "k", "task_id",
     "unit_index", "item_id", "label", "agreement", "judge_score", "accepted",
-    "mode", "expected", "given", "correct", "graded", "unknown_item",
+    "mode", "expected", "given", "correct", "graded", "unknown_item", "echoed",
 )
 """Sidecar written next to ``results.csv`` holding one row per consensus unit.
 
@@ -395,13 +396,15 @@ def _truth_records(
     records: list[dict[str, Any]] = []
     totals = {"units_total": 0, "units_with_no_label": 0, "items_seen": 0,
               "items_graded": 0, "items_correct": 0, "items_unintelligible": 0,
-              "items_unknown_id": 0}
+              "items_echoed": 0, "items_unknown_id": 0}
     for task_id, result in results:
         graded, report = grade_units(result.units, spec.key or {})
         for rec in graded:
+            entry = (spec.key or {}).get(str(rec.get("item_id", "")), {})
             records.append({
                 "prompt_id": spec.prompt_id,
                 "category": spec.category,
+                "level": entry.get("level", "") if isinstance(entry, dict) else "",
                 "condition": row.get("condition", "fragmented"),
                 "rho_target": row.get("rho_target", ""),
                 "n_tasks": row.get("n_tasks", ""),
@@ -466,6 +469,25 @@ def run_monolithic(
         "quality_tax_judge": 0.0,
     })
     _fill_metric_row(row, text, None, gamma, embedder)
+
+    # Grade the baseline too, when there is a key. Without this the run cannot
+    # separate "a 3B model cannot do this task" from "fragmenting it destroyed
+    # the task", and after the 24 August run -- one correct answer in
+    # sixty-four on two-step arithmetic -- that is the more interesting of the
+    # two questions. The baseline is a single reply, so its units carry no
+    # agreement; the records are excluded from the calibration by construction
+    # and counted as such.
+    if spec.has_ground_truth:
+        units = segment_units(text, "line")
+        graded, report = grade_units(units, spec.key or {})
+        row["_truth_records"] = [{
+            "prompt_id": spec.prompt_id, "category": spec.category,
+            "level": ((spec.key or {}).get(str(rec.get("item_id", "")), {}) or {}).get("level", ""),
+            "condition": "monolithic", "rho_target": 1.0, "n_tasks": 1,
+            "k": 1, "task_id": "monolithic", **rec,
+        } for rec in graded]
+        row["_truth_report"] = report.as_dict()
+
     # Retained for tau calibration; dropped by write_csv (not in CSV_COLUMNS).
     row["_text"] = text
     return row
@@ -546,6 +568,12 @@ def run_fragmented(
                     replicas, gamma, embedder, backend,
                     config.alpha_high, config.alpha_low,
                     accept_threshold=config.accept_threshold,
+                    # An answer sheet is segmented by line, not by sentence. The
+                    # run of 24 August lost 73 % of its control category because
+                    # a reply of "1. Osaka" splits at the full stop into "1." and
+                    # "Osaka": a label with no answer, then an answer with no
+                    # label. One line is one answer, so the line is the unit.
+                    granularity="line" if spec.has_ground_truth else "sentence",
                 )
                 consensus_results.append((task_id, result))
                 candidates = [result.text] if result.text.strip() else [replicas[0].text]
@@ -911,20 +939,36 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
     grading_report = {"units_total": 0, "units_with_no_label": 0, "items_seen": 0,
                       "items_graded": 0, "items_correct": 0, "items_unintelligible": 0,
-                      "items_unknown_id": 0}
+                      "items_echoed": 0, "items_unknown_id": 0}
     for row in rows:
         rep = row.get("_truth_report") or {}
         for field_name in grading_report:
             grading_report[field_name] += int(rep.get(field_name) or 0)
 
+    # The monolithic baseline is a single reply, so its units carry no agreement
+    # and it contributes nothing to a calibration. It is kept out of the pooled
+    # figures and reported on its own, because the comparison it enables --
+    # can the model do this task at all, unfragmented? -- is what separates a
+    # model failure from a fragmentation failure.
+    fragmented = [r for r in records if r.get("condition") != "monolithic"]
+    baseline = [r for r in records if r.get("condition") == "monolithic"]
+
     by_category: dict[str, list[Mapping[str, Any]]] = {}
     by_k: dict[int, list[Mapping[str, Any]]] = {}
-    for rec in records:
+    by_level: dict[str, list[Mapping[str, Any]]] = {}
+    for rec in fragmented:
         by_category.setdefault(str(rec.get("category", "")), []).append(rec)
+        by_level.setdefault(str(rec.get("level", "")), []).append(rec)
         try:
             by_k.setdefault(int(rec.get("k", 1)), []).append(rec)
         except (TypeError, ValueError):
             pass
+
+    def _accuracy(recs: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+        graded = [r for r in recs if r.get("correct") is not None]
+        n = len(graded)
+        return {"n_items": n,
+                "accuracy": round(sum(1 for r in graded if r["correct"]) / n, 6) if n else None}
 
     if not records:
         # The corpus had keys and nothing came back gradable. That is a result --
@@ -944,11 +988,28 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         }}
 
     return {"truth_calibration": {
-        "pooled": agreement_truth_calibration(records),
+        "pooled": agreement_truth_calibration(fragmented),
         "by_category": {cat: agreement_truth_calibration(recs)
                         for cat, recs in sorted(by_category.items())},
+        "by_level": {lvl: agreement_truth_calibration(recs)
+                     for lvl, recs in sorted(by_level.items())},
         "by_k": {str(k): agreement_truth_calibration(recs)
                  for k, recs in sorted(by_k.items())},
+        "fragmentation_cost": {
+            "monolithic": _accuracy(baseline),
+            "fragmented": _accuracy(fragmented),
+            "by_category": {
+                cat: {"monolithic": _accuracy([r for r in baseline if r.get("category") == cat]),
+                      "fragmented": _accuracy(recs)}
+                for cat, recs in sorted(by_category.items())},
+            "note": (
+                "Accuracy of the unfragmented baseline against the fragmented conditions, on the "
+                "same items. This is what separates 'a 3B model cannot do this task' from "
+                "'fragmenting it destroyed the task'. If the baseline is high and the fragmented "
+                "arms are low, the calibration above is measuring the damage rather than the "
+                "confidence map."
+            ),
+        },
         "grading": grading_report,
         "note": (
             "Verdicts come from prompts/ground_truth.json, not from a judge. Read auc before "

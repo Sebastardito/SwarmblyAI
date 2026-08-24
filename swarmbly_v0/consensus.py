@@ -333,12 +333,23 @@ def segment_units(text: str, granularity: str = "sentence") -> list[Unit]:
     Args:
         text: One replica's complete reply.
         granularity: ``"sentence"`` (the default; one unit per sentence, using
-            the harness' shared sentence splitter) or ``"clause"`` (sentences
+            the harness' shared sentence splitter), ``"clause"`` (sentences
             split further at semicolons, colons, em-dashes and comma +
-            coordinator). Clause granularity localises disagreement more
-            precisely at the cost of splitting single claims across columns,
-            which depresses agreement scores; sentence granularity is the
-            conservative default.
+            coordinator), or ``"line"`` (one unit per non-empty line, no
+            sentence splitting at all). Clause granularity localises
+            disagreement more precisely at the cost of splitting single claims
+            across columns, which depresses agreement scores; sentence
+            granularity is the conservative default.
+
+            ``"line"`` exists for answer sheets, where the layout *is* the
+            structure. The V3c ground-truth run of 24 August 2026 lost 73 % of
+            its control category to sentence splitting: a reply of
+            ``[01] Osaka`` was cut between the label and the answer, leaving one
+            unit holding a label with nothing after it and the next holding an
+            answer belonging to nobody. Forty-three percent of all units came
+            back unlabelled and the task no model should fail read 21 % correct.
+            When one line is one answer, splitting inside it destroys the
+            observation.
 
     Returns:
         Units in reading order, indexed from 0. Empty and whitespace-only
@@ -346,8 +357,13 @@ def segment_units(text: str, granularity: str = "sentence") -> list[Unit]:
         merged back into the preceding unit rather than becoming columns of
         their own.
     """
-    if granularity not in {"sentence", "clause"}:
-        raise ValueError(f"granularity must be 'sentence' or 'clause', got {granularity!r}")
+    if granularity not in {"sentence", "clause", "line"}:
+        raise ValueError(
+            f"granularity must be 'sentence', 'clause' or 'line', got {granularity!r}")
+
+    if granularity == "line":
+        pieces = [line.strip() for line in (text or "").splitlines() if line.strip()]
+        return [Unit(text=piece, index=i) for i, piece in enumerate(pieces)]
 
     sentences = split_sentences(text)
     if granularity == "sentence":

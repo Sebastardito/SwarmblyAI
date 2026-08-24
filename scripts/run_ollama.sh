@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 #
-# Swarmbly V0 + V3c against a local Ollama, with three model families.
+# Swarmbly V0 + V3c against a local Ollama, with five model families.
 #
 #   ./scripts/run_ollama.sh smoke     ~5 min    does the wiring hold?
 #   ./scripts/run_ollama.sh v0        ~2-4 h    the coherence-tax curve (H1)
 #   ./scripts/run_ollama.sh v3c       ~2-3 h    agreement vs judged quality (V3c)
-#   ./scripts/run_ollama.sh v3c-gt    ~1-2 h    agreement vs GROUND TRUTH (V3c proper)
+#   ./scripts/run_ollama.sh v3c-gt    ~4-6 h    agreement vs GROUND TRUTH (V3c proper)
+#                                               15 prompts x 150 items x 5 families
 #   ./scripts/run_ollama.sh all       ~5-7 h    v0 + v3c, sequentially
 #
 # Run v3c-gt before v3c if you only have time for one. The v3c tier grades with
@@ -16,12 +17,21 @@
 #
 # Everything is written under results/<tier>-<timestamp>/. Nothing is deleted.
 #
-# Why three *families* and not three sizes: agreement between replicas is only
-# evidence to the extent the replicas could have disagreed. Models sharing
-# training data share errors and will agree confidently on the same mistake, so
-# a k=3 run drawn from one family produces a high agreement score that means
-# nothing at all. The script refuses to proceed if fewer than three distinct
-# families are present.
+# Why *families* and not sizes: agreement between replicas is only evidence to
+# the extent the replicas could have disagreed. Models sharing training data
+# share errors and agree confidently on the same mistake, so a k=3 run drawn
+# from one family produces a high agreement score that means nothing at all.
+#
+# Why five and not three: the run of 24 August had three families loaded and
+# swept k up to 5, so the k=5 arm ran with two duplicated families. The
+# fingerprint is in the data -- mean agreement 0.705 at k=3 and 0.700 at k=5,
+# barely moved, which is what happens when the replicas you add are echoes of
+# the ones already there. That arm is contaminated upward and cannot be used.
+# k can never exceed the number of distinct families, so five families is the
+# floor for a k=5 sweep, not a luxury.
+#
+# The script refuses to proceed if fewer than five distinct families are
+# present, or if the highest k in a tier exceeds the family count.
 
 set -euo pipefail
 
@@ -30,10 +40,13 @@ HOST="${OLLAMA_HOST:-http://localhost:11434}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# --- the three families -----------------------------------------------------
+# --- the five families ------------------------------------------------------
 # Override with SWARMBLY_MODELS="fam:model,fam:model,fam:model" if you prefer
 # different ones. Keep them small: three models resident at once on a laptop.
-MODELS_DEFAULT="llama:llama3.2:3b,qwen:qwen2.5:3b,gemma:gemma2:2b"
+# Five distinct pretraining lineages, five organisations. Diversity of corpus is
+# what buys independent error modes; diversity of parameter count buys nothing
+# for this measurement.
+MODELS_DEFAULT="llama:llama3.2:3b,qwen:qwen2.5:3b,gemma:gemma2:2b,phi:phi3.5:3.8b,granite:granite3.1-dense:2b"
 MODELS="${SWARMBLY_MODELS:-$MODELS_DEFAULT}"
 EMBED_MODEL="${SWARMBLY_EMBED_MODEL:-nomic-embed-text}"
 PRIMARY="$(echo "$MODELS" | cut -d, -f1 | cut -d: -f2-)"
@@ -63,9 +76,11 @@ echo "  ollama:       reachable at $HOST"
 
 # distinct families
 NFAM=$(echo "$MODELS" | tr ',' '\n' | cut -d: -f1 | sort -u | wc -l | tr -d ' ')
-[ "$NFAM" -ge 3 ] || die "only $NFAM distinct families in SWARMBLY_MODELS. \
+[ "$NFAM" -ge 5 ] || die "only $NFAM distinct families in SWARMBLY_MODELS. \
 k>1 across one family measures that family's sampling variance, not the \
-disagreement between independent estimators — which is the whole point of V3c."
+disagreement between independent estimators — which is the whole point of V3c. \
+k can never exceed the family count: the v3c tiers sweep k up to 5, so five \
+distinct families is the floor."
 echo "  families:     $NFAM distinct"
 
 # pull what is missing

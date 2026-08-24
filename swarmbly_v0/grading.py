@@ -70,6 +70,7 @@ __all__ = [
     "grade_answer",
     "grade_unit",
     "grade_units",
+    "is_echo",
 ]
 
 
@@ -140,6 +141,53 @@ def _as_boolean(value: str) -> bool | None:
         if word in _FALSE_WORDS:
             return False
     return None
+
+
+ECHO_COVERAGE = 0.70
+"""Share of the item's content words an answer must repeat to count as an echo."""
+
+ECHO_MIN_TOKENS = 6
+"""Below this an answer is too short to be a restatement, whatever it covers."""
+
+
+def is_echo(given: str, source: str) -> bool:
+    """Is ``given`` a restatement of the item rather than an answer to it?
+
+    In the run of 24 August a model answered item 01 with *"37 crates of pump
+    seals, 17 units per crate, 68 units removed for inspection"* -- the question,
+    copied back. Numeric grading then took the last number it found, 68, compared
+    it to the expected 561, and scored the item **wrong**. It is not wrong. It is
+    unanswered, and the difference matters twice over: it deflates accuracy, and
+    it fills the error class that the flagging metric is trying to catch with
+    items that were never attempted.
+
+    The test is coverage, not containment. A correct answer is often a *piece* of
+    the item -- ``Osaka`` appears verbatim in the record it was extracted from --
+    so a substring test would flag the right answers as echoes. A restatement is
+    different in kind: it repeats most of the item's content words and adds
+    nothing. Short answers are exempt outright, since a handful of tokens cannot
+    be a restatement of anything.
+
+    Args:
+        given: The model's text for this item.
+        source: The item's line as it appeared in the prompt.
+
+    Returns:
+        ``True`` when the answer covers at least :data:`ECHO_COVERAGE` of the
+        item's content words and is at least :data:`ECHO_MIN_TOKENS` long.
+        ``False`` whenever ``source`` is absent -- an unverifiable suspicion is
+        not grounds for discarding an observation.
+    """
+    if not source or not given:
+        return False
+    given_tokens = normalise_text(given).split()
+    if len(given_tokens) < ECHO_MIN_TOKENS:
+        return False
+    source_tokens = set(normalise_text(source).split())
+    if not source_tokens:
+        return False
+    covered = len(source_tokens & set(given_tokens)) / len(source_tokens)
+    return covered >= ECHO_COVERAGE
 
 
 def grade_answer(given: str, expected: str, mode: str = "exact_norm") -> bool | None:
@@ -220,6 +268,7 @@ class GradedItem:
     mode: str
     correct: bool | None      # None => the answer was unintelligible in this mode
     unknown_item: bool = False   # a label the key does not contain
+    echoed: bool = False         # the item restated instead of answered
 
     @property
     def graded(self) -> bool:
@@ -251,6 +300,11 @@ class GradeReport:
         return sum(1 for i in self.items if i.correct is None and not i.unknown_item)
 
     @property
+    def n_echoed(self) -> int:
+        """Items restated rather than answered -- a subset of the unintelligible."""
+        return sum(1 for i in self.items if i.echoed)
+
+    @property
     def n_unknown_item(self) -> int:
         return sum(1 for i in self.items if i.unknown_item)
 
@@ -272,6 +326,7 @@ class GradeReport:
             "items_graded": self.n_graded,
             "items_correct": self.n_correct,
             "items_unintelligible": self.n_unintelligible,
+            "items_echoed": self.n_echoed,
             "items_unknown_id": self.n_unknown_item,
             "accuracy": round(self.accuracy, 6) if self.accuracy is not None else None,
         }
@@ -296,10 +351,15 @@ def grade_unit(
             graded.append(GradedItem(item_id, answer, "", default_mode, None, unknown_item=True))
             continue
         if isinstance(entry, str):
-            expected, mode = entry, default_mode
+            expected, mode, source = entry, default_mode, ""
         else:
             expected = str(entry.get("expected", ""))
             mode = str(entry.get("mode", default_mode))
+            source = str(entry.get("source", ""))
+        if is_echo(answer, source):
+            # Unanswered, not wrong. See is_echo.
+            graded.append(GradedItem(item_id, answer, expected, mode, None, echoed=True))
+            continue
         graded.append(GradedItem(item_id, answer, expected, mode, grade_answer(answer, expected, mode)))
     return graded
 
@@ -355,6 +415,7 @@ def grade_units(
                 "correct": item.correct,
                 "graded": item.graded,
                 "unknown_item": item.unknown_item,
+                "echoed": item.echoed,
             })
 
     return records, report
