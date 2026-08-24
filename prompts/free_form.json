@@ -1,0 +1,594 @@
+{
+  "_about": "Second V3c corpus. Short free-form answers with several accepted phrasings, plus two-paragraph compositions checked mechanically by swarmbly_v0.constraints.",
+  "_why": "The canonical-answer corpus saturated the predictor: 260 of 280 items came back at agreement exactly 1.0, the variable took four distinct values, and at k=3 it was 1.0 everywhere and carried no information. Independent models that get '30' right emit the same string. The agreement machinery exists for answers that can be phrased differently and still be right, and this corpus supplies them.",
+  "_composition_note": "The composition prompts are the workload the architecture is pitched on and have never been measured. Prose has no answer key, but it has checkable properties: paragraph count, words per paragraph, required and forbidden terms, and repetition. The repetition checks matter most -- two fragments that each introduce the subject produce a text that is locally fluent everywhere and stitched together visibly.",
+  "_accepted_sets_are_wide_on_purpose": "A correct answer graded wrong because the author did not think of that phrasing is the same class of error that cost this project three runs. When in doubt the phrasing is accepted; a grader that is too generous understates the difference between conditions, which is the safer direction to be wrong in.",
+  "_generator": "scripts/make_free_form.py, seed 20260825",
+  "prompts": [
+    {
+      "id": "ff_overunder_L1",
+      "category": "over_under",
+      "level": 1,
+      "expected_decomposable": true,
+      "prompt": "For each pallet below, say in your own words whether its weight is over or under the 500 kg limit. Answer in at most three words.\n\n[01] pallet R752, 251 kg\n[02] pallet R941, 367 kg\n[03] pallet P993, 618 kg\n[04] pallet Q385, 184 kg\n[05] pallet R197, 858 kg\n[06] pallet R931, 232 kg\n[07] pallet Q977, 874 kg\n[08] pallet S360, 340 kg\n[09] pallet U827, 356 kg\n[10] pallet S204, 273 kg\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[01] pallet R752, 251 kg"
+        },
+        "02": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[02] pallet R941, 367 kg"
+        },
+        "03": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[03] pallet P993, 618 kg"
+        },
+        "04": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[04] pallet Q385, 184 kg"
+        },
+        "05": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[05] pallet R197, 858 kg"
+        },
+        "06": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[06] pallet R931, 232 kg"
+        },
+        "07": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[07] pallet Q977, 874 kg"
+        },
+        "08": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[08] pallet S360, 340 kg"
+        },
+        "09": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[09] pallet U827, 356 kg"
+        },
+        "10": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[10] pallet S204, 273 kg"
+        }
+      },
+      "notes": "Values far from the limit. Two answer classes, many phrasings each -- which is the point: canonical answers make every correct reply identical and leave the agreement score nothing to measure."
+    },
+    {
+      "id": "ff_overunder_L2",
+      "category": "over_under",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "For each pallet below, say in your own words whether its weight is over or under the 500 kg limit. Answer in at most three words.\n\n[01] pallet U419, 528 kg\n[02] pallet S536, 482 kg\n[03] pallet U970, 508 kg\n[04] pallet T811, 469 kg\n[05] pallet T240, 467 kg\n[06] pallet R968, 499 kg\n[07] pallet U196, 521 kg\n[08] pallet R835, 510 kg\n[09] pallet R476, 509 kg\n[10] pallet R299, 523 kg\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[01] pallet U419, 528 kg"
+        },
+        "02": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[02] pallet S536, 482 kg"
+        },
+        "03": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[03] pallet U970, 508 kg"
+        },
+        "04": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[04] pallet T811, 469 kg"
+        },
+        "05": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[05] pallet T240, 467 kg"
+        },
+        "06": {
+          "expected": "under|below|within|under limit|below limit|within limit|not over|lighter|under the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[06] pallet R968, 499 kg"
+        },
+        "07": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[07] pallet U196, 521 kg"
+        },
+        "08": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[08] pallet R835, 510 kg"
+        },
+        "09": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[09] pallet R476, 509 kg"
+        },
+        "10": {
+          "expected": "over|above|exceeds|over limit|above limit|too heavy|overweight|heavier|over the limit",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[10] pallet R299, 523 kg"
+        }
+      },
+      "notes": "Values within 35 kg of the limit. Two answer classes, many phrasings each -- which is the point: canonical answers make every correct reply identical and leave the agreement score nothing to measure."
+    },
+    {
+      "id": "ff_fieldname_L1",
+      "category": "field_naming",
+      "level": 1,
+      "expected_decomposable": true,
+      "prompt": "For each record below, name the field that holds the city named at the end of the line. Answer with the field name only, in at most three words.\n\n[01] origin Quito | destination Cebu | consignee Tromso -- which field holds Cebu?\n[02] origin Quito | destination Valparaiso | consignee Tromso -- which field holds Valparaiso?\n[03] origin Cebu | destination Cebu | consignee Osaka -- which field holds Cebu?\n[04] origin Valparaiso | destination Quito | consignee Cebu -- which field holds Quito?\n[05] origin Saskatoon | destination Tromso | consignee Saskatoon -- which field holds Saskatoon?\n[06] origin Osaka | destination Saskatoon | consignee Nairobi -- which field holds Nairobi?\n[07] origin Valparaiso | destination Nairobi | consignee Valparaiso -- which field holds Valparaiso?\n[08] origin Valparaiso | destination Tromso | consignee Valparaiso -- which field holds Valparaiso?\n[09] origin Valparaiso | destination Lisbon | consignee Osaka -- which field holds Osaka?\n[10] origin Cebu | destination Lisbon | consignee Lisbon -- which field holds Lisbon?\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[01] origin Quito | destination Cebu | consignee Tromso -- which field holds Cebu?"
+        },
+        "02": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[02] origin Quito | destination Valparaiso | consignee Tromso -- which field holds Valparaiso?"
+        },
+        "03": {
+          "expected": "origin|origin city|the origin|source|from",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[03] origin Cebu | destination Cebu | consignee Osaka -- which field holds Cebu?"
+        },
+        "04": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[04] origin Valparaiso | destination Quito | consignee Cebu -- which field holds Quito?"
+        },
+        "05": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[05] origin Saskatoon | destination Tromso | consignee Saskatoon -- which field holds Saskatoon?"
+        },
+        "06": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[06] origin Osaka | destination Saskatoon | consignee Nairobi -- which field holds Nairobi?"
+        },
+        "07": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[07] origin Valparaiso | destination Nairobi | consignee Valparaiso -- which field holds Valparaiso?"
+        },
+        "08": {
+          "expected": "origin|origin city|the origin|source|from",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[08] origin Valparaiso | destination Tromso | consignee Valparaiso -- which field holds Valparaiso?"
+        },
+        "09": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[09] origin Valparaiso | destination Lisbon | consignee Osaka -- which field holds Osaka?"
+        },
+        "10": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[10] origin Cebu | destination Lisbon | consignee Lisbon -- which field holds Lisbon?"
+        }
+      },
+      "notes": "Ambiguous items are avoided: the named city appears in exactly one field. Level 2 adds an irrelevant field as distraction."
+    },
+    {
+      "id": "ff_fieldname_L2",
+      "category": "field_naming",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "For each record below, name the field that holds the city named at the end of the line. Answer with the field name only, in at most three words.\n\n[01] origin Tromso | destination Valparaiso | consignee Nairobi | weight 536 kg -- which field holds Valparaiso?\n[02] origin Saskatoon | destination Saskatoon | consignee Quito | weight 760 kg -- which field holds Saskatoon?\n[03] origin Osaka | destination Quito | consignee Quito | weight 482 kg -- which field holds Osaka?\n[04] origin Lisbon | destination Valparaiso | consignee Valparaiso | weight 89 kg -- which field holds Valparaiso?\n[05] origin Saskatoon | destination Quito | consignee Valparaiso | weight 689 kg -- which field holds Quito?\n[06] origin Quito | destination Osaka | consignee Lisbon | weight 470 kg -- which field holds Osaka?\n[07] origin Tromso | destination Quito | consignee Cebu | weight 537 kg -- which field holds Quito?\n[08] origin Cebu | destination Saskatoon | consignee Quito | weight 596 kg -- which field holds Quito?\n[09] origin Cebu | destination Nairobi | consignee Quito | weight 746 kg -- which field holds Cebu?\n[10] origin Quito | destination Lisbon | consignee Quito | weight 452 kg -- which field holds Quito?\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[01] origin Tromso | destination Valparaiso | consignee Nairobi | weight 536 kg -- which field holds Valparaiso?"
+        },
+        "02": {
+          "expected": "origin|origin city|the origin|source|from",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[02] origin Saskatoon | destination Saskatoon | consignee Quito | weight 760 kg -- which field holds Saskatoon?"
+        },
+        "03": {
+          "expected": "origin|origin city|the origin|source|from",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[03] origin Osaka | destination Quito | consignee Quito | weight 482 kg -- which field holds Osaka?"
+        },
+        "04": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[04] origin Lisbon | destination Valparaiso | consignee Valparaiso | weight 89 kg -- which field holds Valparaiso?"
+        },
+        "05": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[05] origin Saskatoon | destination Quito | consignee Valparaiso | weight 689 kg -- which field holds Quito?"
+        },
+        "06": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[06] origin Quito | destination Osaka | consignee Lisbon | weight 470 kg -- which field holds Osaka?"
+        },
+        "07": {
+          "expected": "destination|destination city|the destination|city|dest",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[07] origin Tromso | destination Quito | consignee Cebu | weight 537 kg -- which field holds Quito?"
+        },
+        "08": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[08] origin Cebu | destination Saskatoon | consignee Quito | weight 596 kg -- which field holds Quito?"
+        },
+        "09": {
+          "expected": "origin|origin city|the origin|source|from",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[09] origin Cebu | destination Nairobi | consignee Quito | weight 746 kg -- which field holds Cebu?"
+        },
+        "10": {
+          "expected": "consignee|the consignee|receiver|recipient",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[10] origin Quito | destination Lisbon | consignee Quito | weight 452 kg -- which field holds Quito?"
+        }
+      },
+      "notes": "Ambiguous items are avoided: the named city appears in exactly one field. Level 2 adds an irrelevant field as distraction."
+    },
+    {
+      "id": "ff_rulecheck_L1",
+      "category": "rule_check",
+      "level": 1,
+      "expected_decomposable": true,
+      "prompt": "For each consignment below, say whether it may ship. It may ship only if the consignment weighs less than 600 kg. Answer in at most three words, in your own words.\n\n[01] consignment of filter packs, 782 kg\n[02] consignment of gasket sets, 869 kg\n[03] consignment of cable reels, 212 kg\n[04] consignment of pump seals, 600 kg\n[05] consignment of filter packs, 393 kg\n[06] consignment of filter packs, 698 kg\n[07] consignment of cable reels, 395 kg\n[08] consignment of cable reels, 659 kg\n[09] consignment of pump seals, 858 kg\n[10] consignment of cable reels, 577 kg\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[01] consignment of filter packs, 782 kg"
+        },
+        "02": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[02] consignment of gasket sets, 869 kg"
+        },
+        "03": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[03] consignment of cable reels, 212 kg"
+        },
+        "04": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[04] consignment of pump seals, 600 kg"
+        },
+        "05": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[05] consignment of filter packs, 393 kg"
+        },
+        "06": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[06] consignment of filter packs, 698 kg"
+        },
+        "07": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[07] consignment of cable reels, 395 kg"
+        },
+        "08": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[08] consignment of cable reels, 659 kg"
+        },
+        "09": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[09] consignment of pump seals, 858 kg"
+        },
+        "10": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 1,
+          "source": "[10] consignment of cable reels, 577 kg"
+        }
+      },
+      "notes": "Level 2 conjoins two conditions. The answer is binary but its wording is not."
+    },
+    {
+      "id": "ff_rulecheck_L2",
+      "category": "rule_check",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "For each consignment below, say whether it may ship. It may ship only if the consignment weighs less than 600 kg AND its customs status is cleared. Answer in at most three words, in your own words.\n\n[01] consignment of cable reels, 748 kg, customs returned\n[02] consignment of pump seals, 621 kg, customs in transit\n[03] consignment of filter packs, 526 kg, customs cleared\n[04] consignment of cable reels, 789 kg, customs cleared\n[05] consignment of valve kits, 328 kg, customs held\n[06] consignment of filter packs, 664 kg, customs cleared\n[07] consignment of gasket sets, 484 kg, customs in transit\n[08] consignment of valve kits, 673 kg, customs cleared\n[09] consignment of valve kits, 572 kg, customs cleared\n[10] consignment of gasket sets, 708 kg, customs in transit\n\nGive one line per item. Begin the line with the item number in square brackets, exactly as given, then a single space, then your answer. Keep each answer to at most three words. Items are independent.",
+      "key": {
+        "01": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[01] consignment of cable reels, 748 kg, customs returned"
+        },
+        "02": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[02] consignment of pump seals, 621 kg, customs in transit"
+        },
+        "03": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[03] consignment of filter packs, 526 kg, customs cleared"
+        },
+        "04": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[04] consignment of cable reels, 789 kg, customs cleared"
+        },
+        "05": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[05] consignment of valve kits, 328 kg, customs held"
+        },
+        "06": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[06] consignment of filter packs, 664 kg, customs cleared"
+        },
+        "07": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[07] consignment of gasket sets, 484 kg, customs in transit"
+        },
+        "08": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[08] consignment of valve kits, 673 kg, customs cleared"
+        },
+        "09": {
+          "expected": "yes|it does|correct|true|affirmative|it is",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[09] consignment of valve kits, 572 kg, customs cleared"
+        },
+        "10": {
+          "expected": "no|it does not|incorrect|false|negative|it is not",
+          "mode": "any_of",
+          "level": 2,
+          "source": "[10] consignment of gasket sets, 708 kg, customs in transit"
+        }
+      },
+      "notes": "Level 2 conjoins two conditions. The answer is binary but its wording is not."
+    },
+    {
+      "id": "comp_harbour",
+      "category": "composition",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a small harbour schedules cargo when a storm closes the outer channel.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention each of these once and only once: tide window, berth, manifest. Do not use the word \"obviously\" anywhere. Do not repeat any sentence or phrase: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_tide",
+          "kind": "must_mention",
+          "term": "tide window"
+        },
+        {
+          "id": "mentions_berth",
+          "kind": "must_mention",
+          "term": "berth"
+        },
+        {
+          "id": "mentions_manifest",
+          "kind": "must_mention",
+          "term": "manifest"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "tide_once",
+          "kind": "term_once",
+          "term": "tide window"
+        }
+      ],
+      "notes": "Composition graded by swarmbly_v0.constraints. No judge and no key: every check is a fact about the string. The repetition checks are the ones the coherence tax cannot make, because each duplicated passage is locally fluent."
+    },
+    {
+      "id": "comp_archive",
+      "category": "composition",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a municipal archive decides which paper records to digitise first.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention each of these once and only once: retention period, condition survey, reading room. Do not use the word \"clearly\" anywhere. Do not repeat any sentence or phrase: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_retention",
+          "kind": "must_mention",
+          "term": "retention period"
+        },
+        {
+          "id": "mentions_condition",
+          "kind": "must_mention",
+          "term": "condition survey"
+        },
+        {
+          "id": "mentions_reading",
+          "kind": "must_mention",
+          "term": "reading room"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "retention_once",
+          "kind": "term_once",
+          "term": "retention period"
+        }
+      ],
+      "notes": "Composition graded by swarmbly_v0.constraints. No judge and no key: every check is a fact about the string. The repetition checks are the ones the coherence tax cannot make, because each duplicated passage is locally fluent."
+    },
+    {
+      "id": "comp_relay",
+      "category": "composition",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a mountain relay station keeps a radio link open through a winter outage.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention each of these once and only once: battery bank, line of sight, duty cycle. Do not use the word \"simply\" anywhere. Do not repeat any sentence or phrase: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_battery",
+          "kind": "must_mention",
+          "term": "battery bank"
+        },
+        {
+          "id": "mentions_line",
+          "kind": "must_mention",
+          "term": "line of sight"
+        },
+        {
+          "id": "mentions_duty",
+          "kind": "must_mention",
+          "term": "duty cycle"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "battery_once",
+          "kind": "term_once",
+          "term": "battery bank"
+        }
+      ],
+      "notes": "Composition graded by swarmbly_v0.constraints. No judge and no key: every check is a fact about the string. The repetition checks are the ones the coherence tax cannot make, because each duplicated passage is locally fluent."
+    }
+  ]
+}

@@ -80,7 +80,10 @@ __all__ = [
 # style is not what is under test.
 ITEM_LABEL_RE = re.compile(r"(?:^|[\s>*\-])[\[\(]?(\d{1,3})[\]\).:]\s*", re.MULTILINE)
 
-MATCH_MODES = ("exact_norm", "numeric", "date_iso", "boolean")
+MATCH_MODES = ("exact_norm", "numeric", "date_iso", "boolean", "any_of")
+
+ANY_OF_SEPARATOR = "|"
+"""Separates the accepted phrasings in an ``any_of`` key entry."""
 
 _TRUE_WORDS = {"true", "yes", "y", "t", "si", "s", "verdadero", "cierto", "1"}
 _FALSE_WORDS = {"false", "no", "n", "f", "falso", "incorrecto", "0"}
@@ -259,6 +262,23 @@ def grade_answer(given: str, expected: str, mode: str = "exact_norm") -> bool | 
         if got is None or want is None:
             return None
         return got == want
+
+    if mode == "any_of":
+        # Several phrasings, all correct. This is the mode the confidence map
+        # actually needs: where a correct answer can be *said differently*,
+        # independent models stop emitting identical strings and the agreement
+        # score has something to measure. On the canonical-answer corpus of
+        # 24 August, 260 of 280 items came back at agreement exactly 1.0 -- not
+        # because the models were confident but because "30" has one spelling.
+        got_n = normalise_text(given)
+        if not got_n:
+            return None
+        accepted = {
+            normalise_text(part)
+            for part in str(expected).split(ANY_OF_SEPARATOR)
+            if part.strip()
+        }
+        return got_n in accepted
 
     got_n, want_n = normalise_text(given), normalise_text(expected)
     if not got_n:

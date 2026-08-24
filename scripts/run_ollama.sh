@@ -7,6 +7,7 @@
 #   ./scripts/run_ollama.sh v3c       ~2-3 h    agreement vs judged quality (V3c)
 #   ./scripts/run_ollama.sh v3c-gt    ~4-6 h    agreement vs GROUND TRUTH (V3c proper)
 #                                               15 prompts x 150 items x 5 families
+#   ./scripts/run_ollama.sh v3c-ff    ~2-3 h    free-form answers + composition
 #   ./scripts/run_ollama.sh all       ~5-7 h    v0 + v3c, sequentially
 #
 # Run v3c-gt before v3c if you only have time for one. The v3c tier grades with
@@ -146,6 +147,50 @@ run_v0() {
   echo "  -> $out/report.html"
 }
 
+run_v3c_ff() {
+  local out="results/v3c-ff-$STAMP"
+  bold ""
+  bold "== V3c on free-form answers, and the first composition measurement =="
+  echo "  The ground-truth run of 24 August fixed the pipeline -- fragmented"
+  echo "  accuracy 68.6 % against 76.8 % unfragmented, control at 100 % in both --"
+  echo "  and then saturated the predictor instead: 260 of 280 items came back at"
+  echo "  agreement exactly 1.0, four distinct values in all, and at k=3 the"
+  echo "  agreement was 1.0 everywhere and carried no information whatsoever."
+  echo "  Independent models that get '30' right emit the same string."
+  echo ""
+  echo "  This corpus supplies answers that can be phrased differently and still"
+  echo "  be right, which is what the agreement machinery was built for, plus"
+  echo "  three two-paragraph compositions -- the workload the architecture is"
+  echo "  actually pitched on, and which has never been measured."
+  echo ""
+  echo "  Read in this order:"
+  echo "    composition.by_condition        -- constraint scores, fragmented vs"
+  echo "                                       monolithic. Counted from the text,"
+  echo "                                       never judged."
+  echo "    repeated_sentences_cross_task   -- two workers writing the same"
+  echo "                                       sentence. The signature failure of"
+  echo "                                       assembly, and invisible to a"
+  echo "                                       transition-based coherence score"
+  echo "                                       because each copy reads well."
+  echo "    truth_calibration.pooled.auc    -- and check mean_agreement first: if"
+  echo "                                       it is near 1.0 again the predictor"
+  echo "                                       saturated and the AUC means little."
+  echo "    composition_traces.md           -- the generated text with its"
+  echo "                                       construction: which micro-task wrote"
+  echo "                                       which sentence, the seams, and every"
+  echo "                                       repetition located."
+  echo "  Output: $out"
+  mkdir -p "$out"
+  python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/free_form.json \
+    --rho 1.5 --n 3 --k 1,3,5 \
+    --candidates 2 --seed 0 \
+    --out "$out" 2>&1 | tee "$out/run.log" || true
+  echo "  -> $out/composition_traces.md"
+  echo "  -> $out/summary.json"
+}
+
 run_v3c_gt() {
   local out="results/v3c-gt-$STAMP"
   bold ""
@@ -220,8 +265,9 @@ case "$TIER" in
   v0)  run_v0 ;;
   v3c) run_v3c ;;
   v3c-gt) run_v3c_gt ;;
+  v3c-ff) run_v3c_ff ;;
   all) run_v0; run_v3c ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | all" ;;
 esac
 
 bold ""

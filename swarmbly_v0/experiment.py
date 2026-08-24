@@ -45,6 +45,7 @@ from .consensus import (
     consensus,
     segment_units,
 )
+from .composition_trace import build_trace, render_trace
 from .grading import grade_units
 from .metrics import (
     ERROR_CLASSES,
@@ -81,6 +82,8 @@ __all__ = [
     "UNIT_CSV_COLUMNS",
     "UNIT_CSV_NAME",
     "TRUTH_CSV_NAME",
+    "TRACE_NAME",
+    "write_traces",
     "TRUTH_CSV_COLUMNS",
     "write_truth_csv",
     "AGREEMENT_BINS",
@@ -134,6 +137,15 @@ CSV_COLUMNS: list[str] = [
 
 UNIT_CSV_NAME = "agreement_units.csv"
 
+TRACE_NAME = "composition_traces.md"
+"""Human-readable construction record for the composition prompts.
+
+Written only when the corpus has constraint sets. It is the artefact a reader
+opens: the generated text, which micro-task wrote each sentence, the seams and
+their similarities, and any sentence written twice -- with the tasks that wrote
+it. A score says whether the text passed; this says how it was built.
+"""
+
 TRUTH_CSV_NAME = "ground_truth_items.csv"
 """Per-item sidecar for the V3c ground-truth calibration.
 
@@ -185,6 +197,14 @@ class PromptSpec:
     expected_decomposable: bool
     text: str
     key: Mapping[str, Any] | None = None
+    constraints: Sequence[Mapping[str, Any]] | None = None
+    """Mechanical checks for a composition prompt, graded by :mod:`swarmbly_v0.constraints`.
+
+    Present instead of ``key`` on the composition prompts: prose has no answer
+    key, but it has facts -- paragraph count, words per paragraph, required and
+    forbidden terms, and above all repetition, which is what assembly from
+    fragments produces and monolithic generation almost never does.
+    """
     """Answer key, present only in the ground-truth corpus.
 
     When this is set the sweep grades units against it (see
@@ -198,6 +218,10 @@ class PromptSpec:
     def has_ground_truth(self) -> bool:
         return bool(self.key)
 
+    @property
+    def is_composition(self) -> bool:
+        return bool(self.constraints)
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PromptSpec":
         return cls(
@@ -206,6 +230,7 @@ class PromptSpec:
             expected_decomposable=bool(data["expected_decomposable"]),
             text=str(data["prompt"]).strip(),
             key=data.get("key") or None,
+            constraints=data.get("constraints") or None,
         )
 
 
@@ -477,6 +502,9 @@ def run_monolithic(
     # two questions. The baseline is a single reply, so its units carry no
     # agreement; the records are excluded from the calibration by construction
     # and counted as such.
+    if spec.is_composition:
+        row["_trace"] = build_trace(spec.prompt_id, "monolithic", text, spec.constraints or [])
+
     if spec.has_ground_truth:
         units = segment_units(text, "line")
         graded, report = grade_units(units, spec.key or {})
@@ -618,6 +646,14 @@ def run_fragmented(
     selected_texts = [assembly.selected[f.task_id] for f in fragments]
     _fill_metric_row(row, assembly.text, plan, gamma, embedder,
                      assembly.fragment_sentence_offsets, selected_texts)
+    if spec.is_composition:
+        row["_trace"] = build_trace(
+            spec.prompt_id, f"fragmented k={k}", assembly.text, spec.constraints or [],
+            order=assembly.order,
+            offsets=assembly.fragment_sentence_offsets,
+            seams=assembly.seams,
+        )
+
     row["_unit_records"] = _unit_records(spec, row, consensus_results)
     truth_records, truth_report = _truth_records(spec, row, consensus_results)
     if truth_records or truth_report:
@@ -855,6 +891,18 @@ def write_csv(rows: Sequence[dict[str, Any]], path: str | Path) -> Path:
             writer.writerow({col: row.get(col, "") for col in CSV_COLUMNS})
     write_unit_csv(rows, target.with_name(UNIT_CSV_NAME))
     write_truth_csv(rows, target.with_name(TRUTH_CSV_NAME))
+    write_traces(rows, target.with_name(TRACE_NAME))
+    return target
+
+
+def write_traces(rows: Sequence[dict[str, Any]], path: str | Path) -> Path | None:
+    """Write the composition traces. ``None`` when the corpus has no compositions."""
+    traces = [row["_trace"] for row in rows if row.get("_trace") is not None]
+    if not traces:
+        return None
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(render_trace(traces), encoding="utf-8")
     return target
 
 
@@ -917,6 +965,49 @@ def read_unit_rows(path: str | Path) -> list[dict[str, Any]]:
                     record[key] = 0
             out.append(record)
     return out
+
+
+def _composition_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Constraint scores by condition, and the repetition count that separates them.
+
+    ``repeated_sentences_cross_task`` is the number that matters. A sentence
+    written twice by *one* worker is a model tic; the same sentence written by
+    two different workers is the architecture failing to tell them about each
+    other, and it is invisible to a coherence score computed on transitions
+    because each copy reads perfectly well where it sits.
+    """
+    traces = [row["_trace"] for row in rows if row.get("_trace") is not None]
+    if not traces:
+        return {}
+
+    by_condition: dict[str, list[Any]] = {}
+    for trace in traces:
+        by_condition.setdefault(trace.condition, []).append(trace)
+
+    def _summarise(group: Sequence[Any]) -> dict[str, Any]:
+        scored = [t.report.score for t in group if t.report.score is not None]
+        cross = sum(1 for t in group for d in t.duplicated if d["cross_task"])
+        return {
+            "n_compositions": len(group),
+            "mean_constraint_score": round(sum(scored) / len(scored), 6) if scored else None,
+            "constraints_failed": sorted({f.constraint_id for t in group for f in t.report.failed}),
+            "repeated_sentences": sum(len(t.duplicated) for t in group),
+            "repeated_sentences_cross_task": cross,
+            "mean_paragraphs": round(
+                sum(t.report.n_paragraphs for t in group) / len(group), 3) if group else None,
+        }
+
+    return {"composition": {
+        "by_condition": {cond: _summarise(group) for cond, group in sorted(by_condition.items())},
+        "trace_file": TRACE_NAME,
+        "note": (
+            "Constraint scores are counted from the text, not judged. Compare the fragmented "
+            "conditions against monolithic: a lower score under fragmentation is the cost of "
+            "assembly, and repeated_sentences_cross_task localises it -- two workers writing the "
+            "same sentence is the architecture failing to tell them about each other, and a "
+            "transition-based coherence score cannot see it because each copy reads well in place."
+        ),
+    }}
 
 
 def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -1385,6 +1476,7 @@ def summarize(
         "consensus_curve": consensus_curve,
         "agreement_quality_correlation": agreement_quality_correlation(units),
         **_truth_summary(rows),
+        **_composition_summary(rows),
         "by_rho_n": [
             {"rho": rho, "n_tasks": n, "coherence_tax_booook": round(_mean(values), 6)}
             for (rho, n), values in sorted(by_rho_n.items())
