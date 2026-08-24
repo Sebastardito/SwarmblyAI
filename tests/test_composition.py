@@ -543,3 +543,65 @@ def test_a_stratum_holding_one_class_is_dropped_and_counted() -> None:
         key="category")
     assert out["strata_dropped"] == ["b"]
     assert out["n_pairs"] == 1
+
+
+def test_the_grounded_baseline_is_graded_so_its_accuracy_can_be_attributed() -> None:
+    """Without a control, the grounded corpus measures nothing attributable.
+
+    It was the one corpus built so that correctness would vary, and on 24 August
+    it was the only one scored in the fragmented arms alone -- the gate asked for
+    an answer key and a grounded prompt carries allowed figures instead. Its
+    27.3 % could have been the cost of assembly or a 2B model's ceiling, and the
+    run had no way to say which.
+    """
+    from swarmbly_v0.experiment import PromptSpec, SweepConfig, run_monolithic
+
+    class _Summariser:
+        name = "summariser"
+        def generate(self, prompt: str, **kwargs: object) -> str:
+            return ("The heaviest consignment is 830 kg. "
+                    "The six consignments total 3035 kg. "
+                    "One line weighs 999 kg.")
+        def embed(self, texts):
+            return [[1.0, 0.0] for _ in texts]
+
+    backend = _Summariser()
+    spec = PromptSpec(
+        prompt_id="g", category="grounded_prose", expected_decomposable=True,
+        text="Summarise the table for a duty manager.",
+        numeric_facts={"allowed": [375.0, 830.0, 840.0, 210.0, 370.0, 410.0, 3035.0]},
+    )
+    row = run_monolithic(spec, backend, backend, SweepConfig(rhos=(1.5,), ns=(2,), ks=(1,)))
+
+    records = row.get("_truth_records") or []
+    assert records, "the grounded baseline produced no gradable record"
+    assert all(r["condition"] == "monolithic" for r in records)
+    verdicts = [r["correct"] for r in records if r["correct"] is not None]
+    assert verdicts.count(True) == 2 and verdicts.count(False) == 1, verdicts
+    # A single reply agrees with nothing, so it must not enter a calibration.
+    assert all(r["agreement"] == 0.0 for r in records)
+
+
+def test_flagging_lift_is_reported_inside_each_category_too() -> None:
+    """The other half of the guard the AUC already had.
+
+    Same synthetic shape as the AUC test: pooled, the low-agreement category
+    looks like a flag that catches errors; inside each category the flag is doing
+    nothing. Leaving flagging unguarded while guarding the AUC would have shipped
+    an honest 0.56 next to a misleading 1.88.
+    """
+    from swarmbly_v0.experiment import agreement_truth_calibration, stratified_flagging
+
+    records = (
+        [{"category": "items", "agreement": 0.90 + i * 0.001, "correct": i % 3 != 0}
+         for i in range(30)]
+        + [{"category": "prose", "agreement": 0.50 + i * 0.001, "correct": False}
+           for i in range(30)]
+    )
+    pooled = agreement_truth_calibration(records)["flagging"][0]
+    strat = stratified_flagging(records)[0]
+
+    assert pooled["lift"] > strat["lift"], (pooled["lift"], strat["lift"])
+    assert set(strat["by_stratum"]) == {"items", "prose"}
+    # A category where everything is wrong cannot beat its own base rate.
+    assert strat["by_stratum"]["prose"]["lift"] == 1.0

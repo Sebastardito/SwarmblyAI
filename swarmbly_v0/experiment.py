@@ -417,6 +417,34 @@ def _unit_records(
     return records
 
 
+@dataclass(frozen=True)
+class _MonolithicUnit:
+    """One sentence of the baseline, shaped like a consensus unit.
+
+    The baseline is a single reply, so nothing about it was agreed with anything:
+    ``agreement`` is 0.0 and stays out of every calibration by construction, the
+    same way the item-corpus baseline already does. What it contributes is the
+    *accuracy* denominator -- the number that separates "assembly broke this"
+    from "the model could never do it".
+    """
+
+    index: int
+    text: str
+    label: str = ""
+    agreement: float = 0.0
+    judge_score: float = 0.0
+    accepted: bool = True
+
+
+@dataclass(frozen=True)
+class _MonolithicConsensus:
+    """A one-replica stand-in for ConsensusResult, so the baseline and the
+    fragmented arms are scored by exactly the same function."""
+
+    units: Sequence[_MonolithicUnit]
+    k: int = 1
+
+
 def _numeric_records(
     spec: PromptSpec,
     row: Mapping[str, Any],
@@ -584,7 +612,24 @@ def run_monolithic(
     if spec.is_composition:
         row["_trace"] = build_trace(spec.prompt_id, "monolithic", text, spec.constraints or [])
 
-    if spec.has_ground_truth:
+    if spec.is_grounded:
+        # Grounded prose was graded in the fragmented arms only, because the gate
+        # here asked for a key and a grounded prompt carries allowed figures
+        # instead. So the one corpus built to make correctness vary had no
+        # control: its 27.3 % on 24 August could not be told apart from a 2B
+        # model simply being unable to summarise a table without inventing a
+        # number. The baseline is scored on the same units, by the same code.
+        baseline_units = [
+            _MonolithicUnit(index, sentence)
+            for index, sentence in enumerate(
+                s.strip() for s in split_sentences(text) if s.strip())
+        ]
+        records, report = _numeric_records(
+            spec, {"condition": "monolithic", "rho_target": 1.0, "n_tasks": 1},
+            [("monolithic", _MonolithicConsensus(baseline_units))])
+        row["_truth_records"] = records
+        row["_truth_report"] = report
+    elif spec.has_ground_truth:
         units = segment_units(text, "line")
         graded, report = grade_units(units, spec.key or {})
         row["_truth_records"] = [{
@@ -1178,6 +1223,17 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "pooled figure is separating categories rather than right answers from wrong ones, "
         "and the stratified figure is the one that answers the V3c question."
     )
+    stratified["flagging"] = stratified_flagging(fragmented, key="category")
+    lifts = [
+        s["lift"] for row in stratified["flagging"]
+        for s in row["by_stratum"].values() if s.get("lift") is not None
+    ]
+    stratified["flagging_note"] = (
+        "Flagging lift computed inside each category against that category's own base error "
+        "rate. Read by_stratum before the pooled lift: a confidence map that earns its cost in "
+        "one category out of four is a narrower claim than the pooled figure makes it look."
+        + (f" Per-category lift ranges {min(lifts):.2f} to {max(lifts):.2f}." if lifts else "")
+    )
 
     return {"truth_calibration": {
         "pooled": pooled,
@@ -1468,6 +1524,62 @@ def stratified_auc(
         "by_stratum": per_stratum,
         "strata_dropped": dropped,
     }
+
+
+def stratified_flagging(
+    records: Sequence[Mapping[str, Any]],
+    key: str = "category",
+    flag_rates: Sequence[float] = (0.10, 0.20, 0.30),
+) -> list[dict[str, Any]]:
+    """Flagging lift computed *inside* each category, then pooled by weight.
+
+    The AUC was guarded against the pooling artifact before the flagging was, and
+    half a guard is worse than none: on 25 August the stratified AUC came back an
+    honest 0.56 while the pooled flagging beside it still advertised a lift of
+    1.88 at a 10 % flag rate. Within categories that same run gives 0.63, 0.92,
+    1.13 and 2.93 -- three categories at or below chance and one carrying the
+    entire effect.
+
+    So the same discipline: flag the lowest-agreement share *of each category*,
+    against *that category's* base error rate, and pool the counts afterwards.
+    A reader can then see whether the confidence map works generally or works in
+    one place, which is a different claim and a much smaller one.
+    """
+    by_stratum: dict[str, list[tuple[float, int]]] = {}
+    for rec in records:
+        correct, agreement = rec.get("correct"), rec.get("agreement")
+        if correct is None or agreement is None:
+            continue
+        by_stratum.setdefault(str(rec.get(key, "")), []).append(
+            (float(agreement), 1 if correct else 0))
+
+    out: list[dict[str, Any]] = []
+    for rate in flag_rates:
+        flagged = caught = expected = 0
+        per_stratum: dict[str, Any] = {}
+        for name, pairs in sorted(by_stratum.items()):
+            n = len(pairs)
+            n_wrong = sum(1 for _, y in pairs if y == 0)
+            cut = int(round(rate * n))
+            if cut <= 0 or not n_wrong:
+                continue
+            hits = sum(1 for _, y in sorted(pairs, key=lambda p: p[0])[:cut] if y == 0)
+            flagged += cut
+            caught += hits
+            # What flagging at random inside this category would have caught.
+            expected += cut * (n_wrong / n)
+            per_stratum[name] = {"n_flagged": cut, "errors_caught": hits,
+                                 "precision": round(hits / cut, 6),
+                                 "lift": round((hits / cut) / (n_wrong / n), 6)}
+        out.append({
+            "flag_rate": rate,
+            "n_flagged": flagged,
+            "errors_caught": caught,
+            "precision": round(caught / flagged, 6) if flagged else None,
+            "lift": round(caught / expected, 6) if expected > 0 else None,
+            "by_stratum": per_stratum,
+        })
+    return out
 
 
 def _mean(values: Iterable[float]) -> float:
