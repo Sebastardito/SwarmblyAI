@@ -244,55 +244,45 @@ def dependency_chain(rng: random.Random) -> list[dict]:
     computes it, so a run can say *which* step the chain broke at rather than
     only that the final figure was wrong.
 
-    The arithmetic is deliberately simple. The measurement is whether a value
-    survives being carried across a packet boundary, not whether a 3B model can
-    multiply.
+    The arithmetic is deliberately simple, and the first draft was not simple
+    enough. It put a percentage reduction at step 2 and a percentage increase at
+    step 5, and the run of 25 August scored those two steps at **3.6 % and
+    0.0 %** against 58 % and 51 % for the division and addition around them. Two
+    of eight steps were unanswerable by these models regardless of what the
+    packet contained -- and sitting at positions 2 and 5 they poisoned every step
+    downstream, which is most of the chain.
+
+    That makes a corpus a bad instrument for the question it exists to ask. A
+    carry can only be measured by whether a *carriable* value survives a packet
+    boundary; a step the model could not compute while holding the entire prompt
+    says nothing about carrying. So every operation here is now one the 2-4B
+    class demonstrably performs -- add, subtract, multiply by a small integer,
+    divide with no remainder -- and the rebate is nudged so step 3's division
+    comes out whole without introducing a rounding rule.
+
+    Two invariants, both enforced by tests rather than by hope: the chain is
+    strictly linear, step i naming step i-1, and no two intermediates coincide.
+    A repeated value would let a model that merely echoes an earlier step score a
+    later one right by accident, which is precisely the reading that would make a
+    broken carry look like a working one.
     """
     out = []
     for name in ("ardent", "northwind", "meridian", "kestrel"):
-        units = rng.choice(range(40, 90, 2))
-        price = rng.choice(range(12, 40, 2))
-        rate = rng.choice((10, 20, 25))
-        weeks = rng.choice((3, 4, 5))
-        fee = rng.choice(range(50, 200, 25))
+        steps = None
+        for _attempt in range(400):
+            candidate = _chain_steps(rng)
+            values = [value for _, value in candidate]
+            if len(set(values)) == len(values):
+                steps = candidate
+                break
+        if steps is None:  # pragma: no cover - 400 draws without a clean chain
+            raise RuntimeError(f"could not build a collision-free chain for {name}")
 
-        gross = units * price
-        discount = gross * rate // 100
-        net = gross - discount
-        weekly = net // weeks
-        final = weekly + fee
-
-        surcharge = rng.choice((5, 10, 15))
-        depots_n = rng.choice((3, 4, 6))
-        reserve = rng.choice(range(20, 90, 10))
-
-        loaded = final + final * surcharge // 100
-        per_depot = loaded // depots_n
-        answer = per_depot - reserve
-
-        steps = [
-            (f"Multiply {units} units by the unit price of {price} to get the gross value.",
-             gross),
-            (f"Reduce the gross value from step 1 by {rate} percent to get the net value.",
-             net),
-            (f"Divide the net value from step 2 by {weeks} weeks, rounding down, to get "
-             f"the weekly figure.", weekly),
-            (f"Add the fixed handling fee of {fee} to the weekly figure from step 3 to get "
-             f"the loaded weekly figure.", final),
-            (f"Increase the loaded weekly figure from step 4 by {surcharge} percent, "
-             f"rounding down, to get the surcharged figure.", loaded),
-            (f"Divide the surcharged figure from step 5 across {depots_n} depots, rounding "
-             f"down, to get the per-depot figure.", per_depot),
-            (f"Subtract the reserve of {reserve} from the per-depot figure in step 6 to get "
-             f"the per-depot allocation.", answer),
-            (f"Multiply the per-depot allocation from step 7 back across {depots_n} depots "
-             f"to get the total allocation.", answer * depots_n),
-        ]
         body = "\n".join(f"  [{i:02d}] {text}" for i, (text, _) in enumerate(steps, 1))
         prompt = (
             f"Work through the {name.title()} costing chain below, one step at a time. "
-            f"Every figure given is exact; do not round except where a step says to, and "
-            f"round down when it does.\n\n"
+            f"Every figure given is exact and every division comes out whole; no step "
+            f"requires rounding.\n\n"
             f"{body}\n\n"
             f"Each step uses the numeric result of the step before it, so you must carry "
             f"every intermediate value forward explicitly. Give one line per step, as [NN] "
@@ -309,11 +299,54 @@ def dependency_chain(rng: random.Random) -> list[dict]:
                              "source": text}
                 for i, (text, value) in enumerate(steps, 1)
             },
-            "notes": ("Depth 8. Step i is unanswerable without step i-1, so a partition "
-                      "that puts them in different packets must either carry the "
-                      "intermediate or fail. Which step fails is the measurement."),
+            "notes": ("Depth 8, strictly linear, every intermediate distinct. Step i is "
+                      "unanswerable without step i-1, so a partition that puts them in "
+                      "different packets must either carry the value or fail. Which step "
+                      "fails is the measurement."),
         })
     return out
+
+
+def _chain_steps(rng: random.Random) -> list[tuple[str, int]]:
+    """One candidate chain: eight linear steps, exact arithmetic throughout."""
+    weeks = rng.choice((2, 4, 5))
+    depots_n = rng.choice((2, 3, 4))
+    price = rng.choice(range(6, 20, 2))
+    units = rng.choice(range(20, 90))
+    fee = rng.choice(range(50, 200, 25))
+    uplift = rng.choice(range(20, 120, 20))
+    reserve = rng.choice(range(10, 50, 10))
+
+    gross = units * price
+    rebate = rng.choice(range(10, 60, 10))
+    rebate += (gross - rebate) % weeks  # keeps step 3 exact, no rounding rule
+
+    net = gross - rebate
+    weekly = net // weeks
+    final = weekly + fee
+    loaded = final + uplift
+    fleet = loaded * depots_n
+    allocation = fleet - reserve
+
+    return [
+        (f"Multiply {units} units by the unit price of {price} to get the gross value.",
+         gross),
+        (f"Subtract the fixed rebate of {rebate} from the gross value in step 1 to get "
+         f"the net value.", net),
+        (f"Divide the net value from step 2 by {weeks} weeks to get the weekly figure. "
+         f"The division is exact.", weekly),
+        (f"Add the fixed handling fee of {fee} to the weekly figure from step 3 to get "
+         f"the loaded weekly figure.", final),
+        (f"Add the fixed uplift of {uplift} to the loaded weekly figure from step 4 to "
+         f"get the surcharged figure.", loaded),
+        (f"Multiply the surcharged figure from step 5 by the {depots_n} depots to get "
+         f"the fleet figure.", fleet),
+        (f"Subtract the reserve of {reserve} from the fleet figure in step 6 to get the "
+         f"allocation.", allocation),
+        (f"Add the rebate of {rebate} back to the allocation from step 7 to get the "
+         f"total.", allocation + rebate),
+    ]
+
 
 
 def main() -> int:

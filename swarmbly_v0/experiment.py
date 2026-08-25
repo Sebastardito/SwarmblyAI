@@ -28,6 +28,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
@@ -170,7 +171,7 @@ the predictor.
 """
 
 TRUTH_CSV_COLUMNS: tuple[str, ...] = (
-    "prompt_id", "category", "level", "condition", "rho_target", "n_tasks", "k", "task_id",
+    "prompt_id", "category", "level", "condition", "typed_carry", "rho_target", "n_tasks", "k", "task_id",
     "unit_index", "item_id", "label", "agreement", "judge_score", "accepted",
     "mode", "expected", "given", "correct", "graded", "unknown_item", "echoed", "claim",
 )
@@ -185,6 +186,7 @@ keeps both files readable on their own.
 
 UNIT_CSV_COLUMNS: list[str] = [
     "prompt_id",
+    "typed_carry",
     "category",
     "condition",
     "rho_target",
@@ -430,6 +432,7 @@ def _unit_records(
         for index, unit in enumerate(result.units):
             records.append({
                 "prompt_id": spec.prompt_id,
+                "typed_carry": row.get("typed_carry", ""),
                 "category": spec.category,
                 "condition": row.get("condition", "fragmented"),
                 "rho_target": row.get("rho_target", ""),
@@ -508,6 +511,7 @@ def _numeric_records(
             records.append({
                 "prompt_id": spec.prompt_id, "category": spec.category, "level": 3,
                 "condition": row.get("condition", "fragmented"),
+                "typed_carry": row.get("typed_carry", ""),
                 "rho_target": row.get("rho_target", ""), "n_tasks": row.get("n_tasks", ""),
                 "k": result.k, "task_id": task_id, "unit_index": index,
                 "item_id": "", "label": unit.label,
@@ -530,10 +534,43 @@ def _numeric_records(
     }
 
 
+_TASK_ITEM_RE = re.compile(r"[\[(]?(\d{1,3})[\]).:]\s+")
+
+
+def task_item_scope(plan: Any) -> dict[str, set[str]]:
+    """Which item ids each task was actually asked for.
+
+    Without this the grader credits a fragment for every item it names, and the
+    typed carry hands a successor its predecessors' answers formatted exactly
+    like answer lines -- ``[01]=480 [02]=428 [03]=107 [04]=257``. A fragment
+    responsible for items 5 to 8 that restates its inputs is then graded on eight
+    items and scores eight, four of them free and correct by construction because
+    a carried value *is* the answer. Measured: 8 records and 8 correct where the
+    key holds 4 for that packet, against 5 and 5 for the untyped arm.
+
+    That inflates ``carry_effect.accuracy_delta`` -- the headline the carry arm
+    exists to produce -- in the carry's favour regardless of whether the carry
+    changed any reasoning. It is the "379 items against a key of 150" artifact
+    returning in a form the earlier gate does not catch, and it is only visible
+    at all because the scope is recoverable from the task text.
+
+    Returns an empty mapping when no task names an item, which is every prose
+    corpus, so the caller can filter unconditionally.
+    """
+    scope: dict[str, set[str]] = {}
+    for task in getattr(plan, "tasks", []) or []:
+        text = getattr(task, "instruction", "") or ""
+        found = {m.group(1).zfill(2) for m in _TASK_ITEM_RE.finditer(text)}
+        if found:
+            scope[str(task.task_id)] = found
+    return scope
+
+
 def _truth_records(
     spec: PromptSpec,
     row: Mapping[str, Any],
     results: Sequence[tuple[str, "ConsensusResult"]],
+    scope: Mapping[str, set[str]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Grade consensus units against the prompt's answer key.
 
@@ -554,6 +591,10 @@ def _truth_records(
               "items_echoed": 0, "items_unknown_id": 0}
     for task_id, result in results:
         graded, report = grade_units(result.units, spec.key or {})
+        allowed = (scope or {}).get(str(task_id))
+        if allowed is not None:
+            graded = [rec for rec in graded
+                      if str(rec.get("item_id", "")).zfill(2) in allowed]
         for rec in graded:
             entry = (spec.key or {}).get(str(rec.get("item_id", "")), {})
             records.append({
@@ -561,6 +602,7 @@ def _truth_records(
                 "category": spec.category,
                 "level": entry.get("level", "") if isinstance(entry, dict) else "",
                 "condition": row.get("condition", "fragmented"),
+                "typed_carry": row.get("typed_carry", ""),
                 "rho_target": row.get("rho_target", ""),
                 "n_tasks": row.get("n_tasks", ""),
                 "k": result.k,
@@ -665,8 +707,8 @@ def run_monolithic(
         row["_truth_records"] = [{
             "prompt_id": spec.prompt_id, "category": spec.category,
             "level": ((spec.key or {}).get(str(rec.get("item_id", "")), {}) or {}).get("level", ""),
-            "condition": "monolithic", "rho_target": 1.0, "n_tasks": 1,
-            "k": 1, "task_id": "monolithic", **rec,
+            "condition": "monolithic", "typed_carry": "", "rho_target": 1.0,
+            "n_tasks": 1, "k": 1, "task_id": "monolithic", **rec,
         } for rec in graded]
         row["_truth_report"] = report.as_dict()
 
@@ -721,7 +763,10 @@ def run_fragmented(
     # the partition, and conflating them froze N at the prompt's paragraph count
     # -- the sweep asked for 2, 4, 8, 16 and every cell came back at 6.
     wanted_paragraphs = requested_paragraphs(spec.text) if spec.is_composition else None
-    plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=gamma)
+    # A composition's own format block IS its contract; only an answer sheet's
+    # postamble is boilerplate that may be replaced by the compressed directive.
+    plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=gamma,
+                      answer_sheet=spec.has_ground_truth)
 
     per_task_target = max(24, round(gamma.target_length_tokens / max(len(plan.tasks), 1)))
     packing_contract = replace(gamma, target_length_tokens=per_task_target)
@@ -734,6 +779,12 @@ def run_fragmented(
     packet_tokens_total = 0
     order_index = {tid: i for i, tid in enumerate(plan.topological_order())}
     consensus_results: list[tuple[str, ConsensusResult]] = []
+    # Grading and consensus are different questions and need different inputs.
+    # `consensus_results` is what the agreement sidecar is *about*, so a k=1 unit
+    # -- which agrees with nothing and carries no confidence band -- must stay out
+    # of it or it arrives with a blank label. `single_results` carries the same
+    # units to the grader, which only needs the text and the item label.
+    single_results: list[tuple[str, Any]] = []
 
     for level in plan.topological_levels():
         packing = build_packets(packing_contract, plan, rho_target, summaries)
@@ -777,6 +828,24 @@ def run_fragmented(
                     backend.generate(packet.text, max_tokens=per_task_target, variant=v)
                     for v in range(max(1, config.n_candidates))
                 ]
+                # k=1 has no consensus, and until now it also produced no
+                # per-item records at all -- so the fragmented arm was graded
+                # only at k=3 while the monolithic baseline is a single
+                # generation at k=1. Every accuracy comparison in the run was
+                # therefore fragmentation *plus consensus* against monolithic,
+                # with the two axes inseparable, and the coherence tax headline
+                # (taken from k=1) came from the half of the grid the accuracy
+                # did not. A single generation is segmented and graded the same
+                # way the baseline is; agreement is 0.0 because one reply agrees
+                # with nothing, which keeps it out of every calibration by
+                # construction exactly as the baseline's records are.
+                units = segment_units(
+                    candidates[0], "line" if spec.has_ground_truth else "sentence")
+                single_results.append((task_id, _MonolithicConsensus([
+                    _MonolithicUnit(index=i, text=getattr(u, "text", str(u)),
+                                    label=getattr(u, "label", ""))
+                    for i, u in enumerate(units)
+                ])))
             fragments.append(
                 Fragment(task_id=task_id, candidates=candidates,
                          order=order_index.get(task_id, len(fragments)),
@@ -858,7 +927,8 @@ def run_fragmented(
         )
 
     row["_unit_records"] = _unit_records(spec, row, consensus_results)
-    truth_records, truth_report = _truth_records(spec, row, consensus_results)
+    truth_records, truth_report = _truth_records(
+        spec, row, consensus_results or single_results, scope=task_item_scope(plan))
     if truth_records or truth_report:
         row["_truth_records"] = truth_records
         row["_truth_report"] = truth_report
@@ -982,6 +1052,33 @@ def make_calibration_pairs(
 # --------------------------------------------------------------------------
 
 
+def _answer_budget(spec: PromptSpec, default_tokens: int) -> int:
+    """How long the answer is allowed to be, read from what the prompt demands.
+
+    A flat budget cannot serve a corpus whose prompts ask for different lengths.
+    The V5 long_prose briefs demand eight paragraphs of 70 to 130 words -- 560 to
+    1040 words -- against a default of 420 tokens, and ``count_tokens`` is
+    word-equivalent. So the baseline was cut off at 420 and each fragment got
+    ``max(24, 420/N)``: 53 tokens at N=8, for a paragraph required to be at least
+    70 words. ``paragraph_count`` and ``words_per_paragraph`` were unsatisfiable
+    in *every* arm, and the two conditions were compared on a metric neither
+    could move.
+
+    When the prompt states its own shape, that is the budget, with a margin for
+    the model to land inside the band rather than exactly on its ceiling.
+    """
+    paragraphs = words = 0
+    for spec_item in spec.constraints or []:
+        kind = str(spec_item.get("kind", ""))
+        if kind == "paragraph_count":
+            paragraphs = max(paragraphs, int(spec_item.get("count", 0)))
+        elif kind == "words_per_paragraph":
+            words = max(words, int(spec_item.get("max", 0)))
+    if paragraphs and words:
+        return max(default_tokens, int(paragraphs * words * 1.2))
+    return default_tokens
+
+
 def run_sweep(
     prompts: Sequence[PromptSpec],
     config: SweepConfig | None = None,
@@ -1001,7 +1098,8 @@ def run_sweep(
 
     contracts = {
         spec.prompt_id: global_contract(
-            spec.text, engine, target_length_tokens=cfg.answer_tokens
+            spec.text, engine,
+            target_length_tokens=_answer_budget(spec, cfg.answer_tokens),
         )
         for spec in used_prompts
     }
@@ -1806,13 +1904,47 @@ def fragment_size_curve(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """
     baselines = {str(r.get("prompt_id")): r for r in rows
                  if r.get("condition") == "monolithic"}
+
+    # Fix every axis that is not N. The curve is this project's declared primary
+    # result and it was averaging rho, k, the editor and the carry into each
+    # point -- 320 cells where the grid holds 20 prompts x 2 rho x 2 k x 2 editor
+    # x 2 carry x 1 N. The run script's own guidance says to compare tax across N
+    # *within one rho, never across*, and `summarize` refuses to average k for
+    # the same reason. A curve that pools all four is not comparable to either.
+    fragmented = [r for r in rows if str(r.get("condition", "")) == "fragmented"
+                  and not r.get("typed_carry")]
+    # An axis absent from the rows is not filtered on: a caller passing rows
+    # without rho or k means those axes do not vary, not that they are all zero.
+    rhos = sorted({float(r["rho_target"]) for r in fragmented
+                   if isinstance(r.get("rho_target"), (int, float))})
+    ks = sorted({int(r["k"]) for r in fragmented if str(r.get("k", "")).isdigit()})
+
+    # Prefer a rho at which *every* N is reachable. The packing floor grows with
+    # N -- the preamble is paid N times -- so the lowest swept rho is the one
+    # most likely to be below the floor at the finest partition, and a cell below
+    # its floor overshoots rho_target. Slicing there would build the curve out of
+    # cells whose actual rho rises with N, making the trend partly an artifact of
+    # the very axis it holds fixed.
+    def _all_reachable(rho: float) -> bool:
+        cells = [r for r in fragmented if _close(r.get("rho_target"), rho)]
+        return bool(cells) and all(
+            str(r.get("rho_reachable", "")).lower() in ("true", "1") for r in cells)
+
+    reachable_rhos = [rho for rho in rhos if _all_reachable(rho)]
+    slice_rho = (reachable_rhos[0] if reachable_rhos else (rhos[0] if rhos else None))
+    slice_k = ks[0] if ks else None
+    fragmented = [
+        r for r in fragmented
+        if (slice_rho is None or _close(r.get("rho_target"), slice_rho))
+        and (slice_k is None or str(r.get("k")) == str(slice_k))
+    ]
+
     by_n: dict[int, list[Mapping[str, Any]]] = {}
-    for row in rows:
-        if str(row.get("condition", "")).startswith("fragmented"):
-            try:
-                by_n.setdefault(int(row["n_tasks"]), []).append(row)
-            except (KeyError, TypeError, ValueError):
-                continue
+    for row in fragmented:
+        try:
+            by_n.setdefault(int(row["n_tasks"]), []).append(row)
+        except (KeyError, TypeError, ValueError):
+            continue
 
     # N is capped by the number of divisible units a prompt has -- six aspects,
     # seven chain steps, twenty table rows -- so the high-N points are made of
@@ -1880,6 +2012,12 @@ def fragment_size_curve(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
     return {
         "points": points,
+        "slice": {"rho_target": slice_rho, "k": slice_k,
+                  "condition": "fragmented", "typed_carry": False,
+                  "every_n_reachable": bool(reachable_rhos)},
+        "rhos_available": rhos,
+        "rhos_fully_reachable": reachable_rhos,
+        "ks_available": ks,
         "common_categories": sorted(common),
         "tax_monotone_in_n": _monotone("tax_balanced"),
         "tax_common_monotone_in_n": _monotone("tax_common"),
@@ -1889,6 +2027,9 @@ def fragment_size_curve(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             "tokens_per_fragment is the baseline prompt's token count divided by N -- one "
             "fragment's share of the problem. Read tax_balanced and accuracy_balanced: the "
             "pooled columns beside them weight whichever category contributed most cells. "
+            "Every axis but N is fixed, and `slice` names the cell: the lowest rho, the "
+            "lowest k, no editor, no typed carry. Pooling them would average conditions the "
+            "rest of this file refuses to average. "
             "planner_constant_tokens_per_task is what suggest_n_tasks currently assumes and "
             "has never been validated; this curve is what would validate or replace it. "
             "When comparable_across_n is false the points are made of different prompt "
@@ -1915,8 +2056,12 @@ def editor_effect(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     editing, and the arm is contaminated rather than good.
     """
     def _key(row: Mapping[str, Any]) -> tuple:
+        # typed_carry belongs in the key. Without it two rows collapse onto one
+        # and the last wins, so with both arms running the editor was measured on
+        # 160 of 320 pairs -- all of them typed -- and reported `n_pairs: 160` as
+        # though that were the whole grid.
         return (str(row.get("prompt_id")), row.get("rho_target"),
-                row.get("n_tasks"), row.get("k"))
+                row.get("n_tasks"), row.get("k"), bool(row.get("typed_carry")))
 
     plain = {_key(r): r for r in rows if r.get("condition") == "fragmented"}
     edited = {_key(r): r for r in rows if r.get("condition") == "fragmented+editor"}
@@ -2162,6 +2307,14 @@ def summarize(
             when summarising rows that came back from disk.
     """
     fragmented_all = [r for r in rows if r.get("condition") == "fragmented"]
+    # The tax headline already refuses to average k, on the stated grounds that a
+    # mean of k=1 and k=3 "belongs to neither". The carry is the same kind of
+    # axis and was not guarded: with both arms running, every tax figure was the
+    # midpoint of a broken chain and a repaired one. Restrict to the untyped arm,
+    # which is the condition every earlier run was measured in, and say so.
+    carries_present = sorted({bool(r.get("typed_carry")) for r in fragmented_all})
+    if len(carries_present) > 1:
+        fragmented_all = [r for r in fragmented_all if not r.get("typed_carry")]
 
     def _f(row: Mapping[str, Any], key: str, default: float = 0.0) -> float:
         value = row.get(key, default)
@@ -2315,6 +2468,19 @@ def summarize(
         "best_overall": best_overall,
         "best_category_cell": best_cell,
         "fragment_size_curve": fragment_size_curve(rows),
+        "falsifiable_go_no_go": {
+            f"{cat}@rho={rho}": falsifiable_go_no_go(fragmented_all, category=cat, rho=rho)
+            for cat in sorted({str(r.get("category", "")) for r in fragmented_all})
+            for rho in sorted({float(r["rho_target"]) for r in fragmented_all
+                               if isinstance(r.get("rho_target"), (int, float))})
+        },
+        "falsifiable_go_no_go_note": (
+            "Every cell is reported because a run cannot know which one was declared in "
+            "advance -- but declaring afterwards is not declaring, and n_cells_examined in "
+            "each entry states how many chances were available. A pass here counts only for "
+            "a cell named before the run. Computed on the same slice as the tax headline: "
+            "the untyped arm, no editor, headline k."
+        ),
         "editor_effect": editor_effect(rows),
         "carry_effect": carry_effect(rows),
         "go_no_go": {

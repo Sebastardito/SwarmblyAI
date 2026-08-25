@@ -250,14 +250,50 @@ inverted its AUC to 0.21. Reference codes are the one thing a summary of a
 manifest is most likely to quote.
 """
 
-_TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
-
 _AGGREGATE_RE = re.compile(
     r"\b(total|totals|totalling|sum|summed|altogether|combined|aggregate|"
     r"heaviest|lightest|largest|smallest|highest|lowest|maximum|minimum|"
     r"average|averages|mean|median|overall|in all|across all|every consignment)\b",
     re.IGNORECASE,
 )
+
+_MIN_TABLE_FIELDS = 3
+
+
+def is_source_table_row(text: str) -> bool:
+    """Is this unit a row of the input table rather than a sentence about it?
+
+    A model handed a table and asked for prose sometimes reproduces the table.
+    That is a real failure and worth counting -- but it is a failure of
+    *instruction-following*, not of numeric fidelity: the figures in a copied row
+    are, by construction, exactly the given ones. Grading such a row on fidelity
+    puts the wrong name on the defect and fills the denominator with units that
+    cannot discriminate.
+
+    The first version was a regex requiring outer pipes, ``^\\s*\\|.*\\|\\s*$``,
+    and the corpus emits ``  C1523 | Trieste | 845 kg | bearing sets`` with none.
+    So the exclusion never fired on the corpus it was written for: a worker that
+    restated its rows had every figure "from the table" by construction and
+    landed in the accuracy *numerator* as correct, while the same behaviour
+    written with markdown pipes was excluded from the denominator. Which of the
+    two a unit got depended on the model's pipe style, and the k=3 arm draws from
+    five families -- so one behaviour was scored two ways by family, and
+    ``items_echoed`` read near zero throughout.
+
+    A row is a line whose pipe-separated fields number at least three and none of
+    which is a sentence. Prose that happens to contain a pipe is not a row.
+    """
+    line = (text or "").strip()
+    if "|" not in line:
+        return False
+    fields = [f.strip() for f in line.strip("|").split("|")]
+    if len(fields) < _MIN_TABLE_FIELDS:
+        return False
+    # A table cell is a value or a short label, never a sentence. Requiring every
+    # field to be terse is what separates a copied row from a line of prose that
+    # happens to use a pipe.
+    return all(f and count_tokens(f) <= 4 and not f.endswith((".", "!", "?"))
+               for f in fields)
 
 
 def asserts_an_aggregate(text: str) -> bool:
@@ -287,22 +323,6 @@ def asserts_an_aggregate(text: str) -> bool:
     return bool(_AGGREGATE_RE.search(text or ""))
 
 
-def is_source_table_row(text: str) -> bool:
-    """Is this unit a row of the input table rather than a sentence about it?
-
-    A model handed a table and asked for prose sometimes reproduces the table.
-    That is a real failure and worth counting -- but it is a failure of
-    *instruction-following*, not of numeric fidelity: the figures in a copied row
-    are, by construction, exactly the given ones. Grading such a row on fidelity
-    puts the wrong name on the defect and, worse, pollutes the only corpus in
-    this run where agreement and correctness were both supposed to vary.
-
-    In the run of 24 August, 47 of 62 graded grounded-prose units were table
-    rows. They are excluded from the fidelity records and counted separately, so
-    the number that disappears from the accuracy reappears as a named behaviour.
-    """
-    return bool(_TABLE_ROW.match(text or ""))
-
 
 def derived_aggregates(values: Sequence[float]) -> set[float]:
     """Figures a summary may legitimately state that are not rows in the table.
@@ -317,7 +337,20 @@ def derived_aggregates(values: Sequence[float]) -> set[float]:
     total = float(sum(values))
     out = {total, float(len(values)), float(max(values)), float(min(values))}
     mean = total / len(values)
-    out.update({mean, round(mean, 1), round(mean), float(int(mean))})
+    # Both one-decimal roundings. Python rounds half to even, so a mean of 560.25
+    # gives 560.2 and a model writing the equally correct 560.3 was graded a
+    # fabricator -- the "right answer graded wrong" class this module's own
+    # docstring calls the costliest error in the project. Two of the V5 tables
+    # have means ending in .25.
+    out.update({mean, round(mean, 1), round(mean + 0.05, 1), round(mean - 0.05, 1),
+                round(mean), float(int(mean))})
+    # Any count of a subgroup. The prompt licenses "a count", and "four
+    # consignments exceed 800 kg" is one -- but only the total row count was
+    # allowed, so a correct subgroup count condemned the whole sentence, since
+    # check_numeric_fidelity requires *every* figure in it to be permitted. The
+    # counts are bounded by the row count and sit far below the smallest weight
+    # in these tables, so admitting them cannot excuse an invented quantity.
+    out.update(float(i) for i in range(len(values) + 1))
     return out
 
 

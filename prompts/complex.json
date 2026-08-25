@@ -1,6 +1,6 @@
 {
   "_seed": 20260826,
-  "_length_note": "Canonical tokens per prompt: min 255, max 375, mean 327. Long on purpose. The fragment-size sweep needs prompts big enough that N in (2,4,8,16) produces fragments spanning roughly 25 to 350 tokens, and the earlier corpora at 124-160 tokens could not reach the upper half of that range at all.",
+  "_length_note": "Canonical tokens per prompt: min 240, max 375, mean 324. Long on purpose. The fragment-size sweep needs prompts big enough that N in (2,4,8,16) produces fragments spanning roughly 25 to 350 tokens, and the earlier corpora at 124-160 tokens could not reach the upper half of that range at all.",
   "_corpus_note": "Every figure a correct answer may state is enclosed in its prompt, which is the opposite of prompts.json and is what makes per-figure grading possible here. Three shapes -- long_prose, table_summary, dependency_chain -- because the claim under test is that the effective fragment is a semantic unit rather than a token count, and a semantic unit differs by shape: a topic, a row group, a step. dependency_chain is the only one whose units are ordered, and the prediction is that it degrades fastest in N.",
   "prompts": [
     {
@@ -403,6 +403,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           145.0,
           260.0,
@@ -470,6 +490,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           135.0,
           215.0,
@@ -483,7 +523,9 @@
           380.0,
           410.0,
           430.0,
+          436.9,
           437.0,
+          437.1,
           525.0,
           535.0,
           580.0,
@@ -538,6 +580,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           230.0,
           245.0,
@@ -606,6 +668,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           130.0,
           170.0,
@@ -620,6 +702,7 @@
           560,
           560.2,
           560.25,
+          560.3,
           600.0,
           620.0,
           650.0,
@@ -676,6 +759,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           130.0,
           315.0,
@@ -684,6 +787,7 @@
           540.0,
           625.0,
           674.0,
+          674.7,
           674.75,
           674.8,
           675,
@@ -746,6 +850,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           190.0,
           240.0,
@@ -814,6 +938,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           135.0,
           165.0,
@@ -827,6 +971,7 @@
           340.0,
           360.0,
           454.0,
+          454.7,
           454.75,
           454.8,
           455,
@@ -885,6 +1030,26 @@
       ],
       "numeric_facts": {
         "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
           20.0,
           120.0,
           210.0,
@@ -898,6 +1063,7 @@
           604,
           604.2,
           604.25,
+          604.3,
           720.0,
           725.0,
           730.0,
@@ -920,232 +1086,232 @@
       "category": "dependency_chain",
       "level": 3,
       "expected_decomposable": true,
-      "prompt": "Work through the Ardent costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 70 units by the unit price of 14 to get the gross value.\n  [02] Reduce the gross value from step 1 by 10 percent to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 5 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "prompt": "Work through the Ardent costing chain below, one step at a time. Every figure given is exact and every division comes out whole; no step requires rounding.\n\n  [01] Multiply 80 units by the unit price of 6 to get the gross value.\n  [02] Subtract the fixed rebate of 52 from the gross value in step 1 to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Add the fixed uplift of 20 to the loaded weekly figure from step 4 to get the surcharged figure.\n  [06] Multiply the surcharged figure from step 5 by the 2 depots to get the fleet figure.\n  [07] Subtract the reserve of 10 from the fleet figure in step 6 to get the allocation.\n  [08] Add the rebate of 52 back to the allocation from step 7 to get the total.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
       "key": {
         "01": {
-          "expected": "980",
+          "expected": "480",
           "mode": "numeric",
           "level": 1,
-          "source": "Multiply 70 units by the unit price of 14 to get the gross value."
+          "source": "Multiply 80 units by the unit price of 6 to get the gross value."
         },
         "02": {
-          "expected": "882",
+          "expected": "428",
           "mode": "numeric",
           "level": 2,
-          "source": "Reduce the gross value from step 1 by 10 percent to get the net value."
+          "source": "Subtract the fixed rebate of 52 from the gross value in step 1 to get the net value."
         },
         "03": {
-          "expected": "220",
+          "expected": "107",
           "mode": "numeric",
           "level": 3,
-          "source": "Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure."
+          "source": "Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact."
         },
         "04": {
-          "expected": "370",
+          "expected": "257",
           "mode": "numeric",
           "level": 4,
           "source": "Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure."
         },
         "05": {
-          "expected": "388",
+          "expected": "277",
           "mode": "numeric",
           "level": 5,
-          "source": "Increase the loaded weekly figure from step 4 by 5 percent, rounding down, to get the surcharged figure."
+          "source": "Add the fixed uplift of 20 to the loaded weekly figure from step 4 to get the surcharged figure."
         },
         "06": {
-          "expected": "129",
+          "expected": "554",
           "mode": "numeric",
           "level": 6,
-          "source": "Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure."
+          "source": "Multiply the surcharged figure from step 5 by the 2 depots to get the fleet figure."
         },
         "07": {
-          "expected": "69",
+          "expected": "544",
           "mode": "numeric",
           "level": 7,
-          "source": "Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation."
+          "source": "Subtract the reserve of 10 from the fleet figure in step 6 to get the allocation."
         },
         "08": {
-          "expected": "207",
+          "expected": "596",
           "mode": "numeric",
           "level": 8,
-          "source": "Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation."
+          "source": "Add the rebate of 52 back to the allocation from step 7 to get the total."
         }
       },
-      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+      "notes": "Depth 8, strictly linear, every intermediate distinct. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the value or fail. Which step fails is the measurement."
     },
     {
       "id": "chain_northwind",
       "category": "dependency_chain",
       "level": 3,
       "expected_decomposable": true,
-      "prompt": "Work through the Northwind costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 70 units by the unit price of 14 to get the gross value.\n  [02] Reduce the gross value from step 1 by 25 percent to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 100 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "prompt": "Work through the Northwind costing chain below, one step at a time. Every figure given is exact and every division comes out whole; no step requires rounding.\n\n  [01] Multiply 60 units by the unit price of 14 to get the gross value.\n  [02] Subtract the fixed rebate of 20 from the gross value in step 1 to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact.\n  [04] Add the fixed handling fee of 100 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Add the fixed uplift of 80 to the loaded weekly figure from step 4 to get the surcharged figure.\n  [06] Multiply the surcharged figure from step 5 by the 2 depots to get the fleet figure.\n  [07] Subtract the reserve of 10 from the fleet figure in step 6 to get the allocation.\n  [08] Add the rebate of 20 back to the allocation from step 7 to get the total.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
       "key": {
         "01": {
-          "expected": "980",
+          "expected": "840",
           "mode": "numeric",
           "level": 1,
-          "source": "Multiply 70 units by the unit price of 14 to get the gross value."
+          "source": "Multiply 60 units by the unit price of 14 to get the gross value."
         },
         "02": {
-          "expected": "735",
+          "expected": "820",
           "mode": "numeric",
           "level": 2,
-          "source": "Reduce the gross value from step 1 by 25 percent to get the net value."
+          "source": "Subtract the fixed rebate of 20 from the gross value in step 1 to get the net value."
         },
         "03": {
-          "expected": "183",
+          "expected": "205",
           "mode": "numeric",
           "level": 3,
-          "source": "Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure."
+          "source": "Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact."
         },
         "04": {
-          "expected": "283",
+          "expected": "305",
           "mode": "numeric",
           "level": 4,
           "source": "Add the fixed handling fee of 100 to the weekly figure from step 3 to get the loaded weekly figure."
         },
         "05": {
-          "expected": "325",
+          "expected": "385",
           "mode": "numeric",
           "level": 5,
-          "source": "Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure."
+          "source": "Add the fixed uplift of 80 to the loaded weekly figure from step 4 to get the surcharged figure."
         },
         "06": {
-          "expected": "81",
+          "expected": "770",
           "mode": "numeric",
           "level": 6,
-          "source": "Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure."
+          "source": "Multiply the surcharged figure from step 5 by the 2 depots to get the fleet figure."
         },
         "07": {
-          "expected": "21",
+          "expected": "760",
           "mode": "numeric",
           "level": 7,
-          "source": "Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation."
+          "source": "Subtract the reserve of 10 from the fleet figure in step 6 to get the allocation."
         },
         "08": {
-          "expected": "84",
+          "expected": "780",
           "mode": "numeric",
           "level": 8,
-          "source": "Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation."
+          "source": "Add the rebate of 20 back to the allocation from step 7 to get the total."
         }
       },
-      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+      "notes": "Depth 8, strictly linear, every intermediate distinct. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the value or fail. Which step fails is the measurement."
     },
     {
       "id": "chain_meridian",
       "category": "dependency_chain",
       "level": 3,
       "expected_decomposable": true,
-      "prompt": "Work through the Meridian costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 80 units by the unit price of 34 to get the gross value.\n  [02] Reduce the gross value from step 1 by 10 percent to get the net value.\n  [03] Divide the net value from step 2 by 3 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 10 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 50 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "prompt": "Work through the Meridian costing chain below, one step at a time. Every figure given is exact and every division comes out whole; no step requires rounding.\n\n  [01] Multiply 81 units by the unit price of 12 to get the gross value.\n  [02] Subtract the fixed rebate of 32 from the gross value in step 1 to get the net value.\n  [03] Divide the net value from step 2 by 5 weeks to get the weekly figure. The division is exact.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Add the fixed uplift of 100 to the loaded weekly figure from step 4 to get the surcharged figure.\n  [06] Multiply the surcharged figure from step 5 by the 3 depots to get the fleet figure.\n  [07] Subtract the reserve of 20 from the fleet figure in step 6 to get the allocation.\n  [08] Add the rebate of 32 back to the allocation from step 7 to get the total.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
       "key": {
         "01": {
-          "expected": "2720",
+          "expected": "972",
           "mode": "numeric",
           "level": 1,
-          "source": "Multiply 80 units by the unit price of 34 to get the gross value."
+          "source": "Multiply 81 units by the unit price of 12 to get the gross value."
         },
         "02": {
-          "expected": "2448",
+          "expected": "940",
           "mode": "numeric",
           "level": 2,
-          "source": "Reduce the gross value from step 1 by 10 percent to get the net value."
+          "source": "Subtract the fixed rebate of 32 from the gross value in step 1 to get the net value."
         },
         "03": {
-          "expected": "816",
+          "expected": "188",
           "mode": "numeric",
           "level": 3,
-          "source": "Divide the net value from step 2 by 3 weeks, rounding down, to get the weekly figure."
+          "source": "Divide the net value from step 2 by 5 weeks to get the weekly figure. The division is exact."
         },
         "04": {
-          "expected": "966",
+          "expected": "338",
           "mode": "numeric",
           "level": 4,
           "source": "Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure."
         },
         "05": {
-          "expected": "1062",
+          "expected": "438",
           "mode": "numeric",
           "level": 5,
-          "source": "Increase the loaded weekly figure from step 4 by 10 percent, rounding down, to get the surcharged figure."
+          "source": "Add the fixed uplift of 100 to the loaded weekly figure from step 4 to get the surcharged figure."
         },
         "06": {
-          "expected": "265",
+          "expected": "1314",
           "mode": "numeric",
           "level": 6,
-          "source": "Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure."
+          "source": "Multiply the surcharged figure from step 5 by the 3 depots to get the fleet figure."
         },
         "07": {
-          "expected": "215",
+          "expected": "1294",
           "mode": "numeric",
           "level": 7,
-          "source": "Subtract the reserve of 50 from the per-depot figure in step 6 to get the per-depot allocation."
+          "source": "Subtract the reserve of 20 from the fleet figure in step 6 to get the allocation."
         },
         "08": {
-          "expected": "860",
+          "expected": "1326",
           "mode": "numeric",
           "level": 8,
-          "source": "Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation."
+          "source": "Add the rebate of 32 back to the allocation from step 7 to get the total."
         }
       },
-      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+      "notes": "Depth 8, strictly linear, every intermediate distinct. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the value or fail. Which step fails is the measurement."
     },
     {
       "id": "chain_kestrel",
       "category": "dependency_chain",
       "level": 3,
       "expected_decomposable": true,
-      "prompt": "Work through the Kestrel costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 76 units by the unit price of 30 to get the gross value.\n  [02] Reduce the gross value from step 1 by 25 percent to get the net value.\n  [03] Divide the net value from step 2 by 5 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 40 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "prompt": "Work through the Kestrel costing chain below, one step at a time. Every figure given is exact and every division comes out whole; no step requires rounding.\n\n  [01] Multiply 26 units by the unit price of 18 to get the gross value.\n  [02] Subtract the fixed rebate of 32 from the gross value in step 1 to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact.\n  [04] Add the fixed handling fee of 175 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Add the fixed uplift of 60 to the loaded weekly figure from step 4 to get the surcharged figure.\n  [06] Multiply the surcharged figure from step 5 by the 3 depots to get the fleet figure.\n  [07] Subtract the reserve of 20 from the fleet figure in step 6 to get the allocation.\n  [08] Add the rebate of 32 back to the allocation from step 7 to get the total.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
       "key": {
         "01": {
-          "expected": "2280",
+          "expected": "468",
           "mode": "numeric",
           "level": 1,
-          "source": "Multiply 76 units by the unit price of 30 to get the gross value."
+          "source": "Multiply 26 units by the unit price of 18 to get the gross value."
         },
         "02": {
-          "expected": "1710",
+          "expected": "436",
           "mode": "numeric",
           "level": 2,
-          "source": "Reduce the gross value from step 1 by 25 percent to get the net value."
+          "source": "Subtract the fixed rebate of 32 from the gross value in step 1 to get the net value."
         },
         "03": {
-          "expected": "342",
+          "expected": "109",
           "mode": "numeric",
           "level": 3,
-          "source": "Divide the net value from step 2 by 5 weeks, rounding down, to get the weekly figure."
+          "source": "Divide the net value from step 2 by 4 weeks to get the weekly figure. The division is exact."
         },
         "04": {
-          "expected": "492",
+          "expected": "284",
           "mode": "numeric",
           "level": 4,
-          "source": "Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure."
+          "source": "Add the fixed handling fee of 175 to the weekly figure from step 3 to get the loaded weekly figure."
         },
         "05": {
-          "expected": "565",
+          "expected": "344",
           "mode": "numeric",
           "level": 5,
-          "source": "Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure."
+          "source": "Add the fixed uplift of 60 to the loaded weekly figure from step 4 to get the surcharged figure."
         },
         "06": {
-          "expected": "188",
+          "expected": "1032",
           "mode": "numeric",
           "level": 6,
-          "source": "Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure."
+          "source": "Multiply the surcharged figure from step 5 by the 3 depots to get the fleet figure."
         },
         "07": {
-          "expected": "148",
+          "expected": "1012",
           "mode": "numeric",
           "level": 7,
-          "source": "Subtract the reserve of 40 from the per-depot figure in step 6 to get the per-depot allocation."
+          "source": "Subtract the reserve of 20 from the fleet figure in step 6 to get the allocation."
         },
         "08": {
-          "expected": "444",
+          "expected": "1044",
           "mode": "numeric",
           "level": 8,
-          "source": "Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation."
+          "source": "Add the rebate of 32 back to the allocation from step 7 to get the total."
         }
       },
-      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+      "notes": "Depth 8, strictly linear, every intermediate distinct. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the value or fail. Which step fails is the measurement."
     }
   ]
 }

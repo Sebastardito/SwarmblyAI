@@ -41,7 +41,7 @@ __all__ = ["BASELINE_FORMAT_DIRECTIVE", "carry_values", "consumes_predecessor",
            "split_enumerated", "summarize_fragment", "suggest_n_tasks"]
 
 _AUDIENCE_RE = re.compile(
-    r"\bfor (?:an?|the)?\s*([a-z][a-z \-]{3,40}?)(?:\s+audience)?\s*(?:[.,;]|$)", re.I
+    r"\bfor (?:an?|the)?\s*([a-z][a-z \-]{3,60}?)(?:\s+audience)?\s*(?:[.,;]|$)", re.I
 )
 _LENGTH_RE = re.compile(r"\b(\d{2,5})\s*(word|token)s?\b", re.I)
 _FORBID_RE = re.compile(
@@ -83,10 +83,39 @@ def _session_id(prompt: str) -> str:
     return hashlib.blake2b(prompt.encode("utf-8"), digest_size=6).hexdigest()
 
 
+_NEGATION_WINDOW = re.compile(
+    r"(?:do not|don't|never|without|no|avoid|rather than|instead of)\s+(?:\w+\s+){0,3}$",
+    re.IGNORECASE,
+)
+
+
 def _detect(cues: Sequence[tuple[str, str]], prompt: str, default: str) -> str:
+    """First cue whose match is not inside a negation.
+
+    ``output_format`` is replicated into every packet and into the baseline
+    prompt, so a wrong value is an instruction the whole run obeys. Matching
+    without looking left produced exactly that: every ``table_summary`` prompt in
+    the V5 corpus says "do not reproduce the table, do not emit rows or pipe
+    characters" and was assigned ``output_format: table``, while every
+    ``long_prose`` prompt says "no headings, no bullet points" and was assigned
+    ``list``. The contract was telling the models to do the thing the prompt
+    forbade -- and then the graders scored them for doing it.
+    """
+    # An explicit prohibition outranks a mention. A summarisation prompt says
+    # "Summarise the manifest table below" *and* "do not reproduce the table":
+    # the first is what the input is, the second is what the output must not be,
+    # and only the second is about the format to produce.
+    forbidden = {
+        label for label, pattern in cues
+        for match in re.finditer(pattern, prompt, re.I)
+        if _NEGATION_WINDOW.search(prompt[:match.start()])
+    }
     for label, pattern in cues:
-        if re.search(pattern, prompt, re.I):
-            return label
+        if label in forbidden:
+            continue
+        for match in re.finditer(pattern, prompt, re.I):
+            if not _NEGATION_WINDOW.search(prompt[:match.start()]):
+                return label
     return default
 
 
@@ -126,7 +155,11 @@ def global_contract(
         except Exception:
             pass  # A backend hiccup must never break planning.
 
-    audience_match = _AUDIENCE_RE.search(prompt)
+    # Only the opening sentence states the audience. Searching the whole prompt
+    # captured "site to run a third shift" out of item [08] of the long_prose
+    # briefs -- a fragment of a task description presented to every packet as
+    # who the answer is for.
+    audience_match = _AUDIENCE_RE.search(sentences[0] if sentences else prompt)
     audience = (audience_match.group(1).strip() if audience_match else "a technical reader")
 
     register = _detect(_REGISTER_CUES, prompt, "formal")
@@ -219,7 +252,8 @@ into their replies on 24 August: 8.8 % of fragmented items came back as
 """
 
 
-def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int) -> list[str]:
+def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int,
+                        answer_sheet: bool = True) -> list[str]:
     """Partition an enumerated batch by item, not by text.
 
     Every fragment gets the preamble, a contiguous and disjoint slice of the
@@ -232,7 +266,7 @@ def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int) -> list
     the right trade anyway. A fragment without the operation cannot do the task
     at any ``rho``, which is not a worse floor but a wrong answer.
     """
-    preamble, items, _postamble = parts
+    preamble, items, postamble = parts
     n = max(1, min(int(n_tasks), len(items)))
 
     groups: list[list[str]] = [[] for _ in range(n)]
@@ -243,7 +277,16 @@ def _segment_enumerated(parts: tuple[str, list[str], str], n_tasks: int) -> list
     segments: list[str] = []
     for group in groups:
         body = "\n".join(group)
-        segments.append(f"{head}\n\n{body}\n\n{_SHORT_FORMAT_DIRECTIVE}".strip())
+        # An answer sheet's postamble is boilerplate and is replaced by the
+        # compressed directive. A *composition's* postamble is the contract --
+        # "exactly eight paragraphs, each between 70 and 130 words, mention X
+        # once, continuous prose" -- and replacing it deleted every constraint
+        # the run then scored the fragments against, while the monolithic
+        # baseline kept them. That is the same unequal-instruction defect that
+        # inverted the baseline on 24 August, and it invalidated long_prose in
+        # both V4 and V5.
+        tail = _SHORT_FORMAT_DIRECTIVE if answer_sheet else postamble.strip()
+        segments.append(f"{head}\n\n{body}\n\n{tail}".strip())
 
     # N is the independent variable of the sweep and must be honoured exactly;
     # when there are fewer items than tasks the tail fragments would be empty,
@@ -323,7 +366,7 @@ def split_enumerated(prompt: str) -> tuple[str, list[str], str] | None:
     return preamble, items, postamble
 
 
-def _segment(prompt: str, n_tasks: int) -> list[str]:
+def _segment(prompt: str, n_tasks: int, answer_sheet: bool = True) -> list[str]:
     """Split ``prompt`` into exactly ``n_tasks`` non-empty units of work.
 
     Enumerated prompts split on their own bullets; otherwise sentences are
@@ -336,7 +379,7 @@ def _segment(prompt: str, n_tasks: int) -> list[str]:
     """
     enumerated = split_enumerated(prompt)
     if enumerated is not None:
-        return _segment_enumerated(enumerated, n_tasks)
+        return _segment_enumerated(enumerated, n_tasks, answer_sheet=answer_sheet)
 
     units = [u.strip() for u in _ENUM_SPLIT_RE.split(prompt) if u.strip()]
     if len(units) < n_tasks:
@@ -384,6 +427,7 @@ def plan(
     n_tasks: int | None = None,
     contract: Contract | None = None,
     force_sequential: bool | None = None,
+    answer_sheet: bool = True,
 ) -> Plan:
     """Build the micro-task DAG for ``prompt``.
 
@@ -418,7 +462,7 @@ def plan(
     else:
         sequential = bool(force_sequential)
 
-    segments = _segment(prompt, count)
+    segments = _segment(prompt, count, answer_sheet=answer_sheet)
     canonical = list(gamma.canonical_entities)
 
     tasks: list[Task] = []

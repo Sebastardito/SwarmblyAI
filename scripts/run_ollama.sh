@@ -271,10 +271,13 @@ run_v4() {
   echo "  3. SHAPE. S* is claimed to be a semantic unit, not a token count, so it"
   echo "     should differ between a topic, a row group and a dependency step."
   echo ""
-  echo "  rho is swept at 2.0 and 3.0, not 1.5: the reachable floor grows with N"
-  echo "  (rho_floor = (sum|task_i| + N*|header_i|) / |P|), and at N=6 on this"
-  echo "  corpus the floor is already 1.99. Cells below their floor are flagged"
-  echo "  rho_reachable=false; compare tax across N WITHIN one rho, never across."
+  echo "  rho is swept at 3.5 and 4.5. The floor grows with N because the"
+  echo "  preamble is paid N times (rho_floor = (sum|task_i| + N*|header_i|)/|P|),"
+  echo "  and on this corpus long_prose at N=8 needs 3.41. At 2.0/3.0 a quarter"
+  echo "  of the grid sat below its own floor and overshot the target, which"
+  echo "  would have made the fragment-size trend partly an artifact of rho"
+  echo "  drifting upward exactly where the tax is highest. Compare tax across N"
+  echo "  WITHIN one rho, never across."
   echo ""
   echo "  4. THE CARRY. The first V4 run found dependency_chain costing +47.2 %"
   echo "     at the widest fragment where prose cost +5.1 % on fragments of the"
@@ -315,7 +318,7 @@ run_v4() {
   python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/complex.json \
-    --rho 2.0,3.0 --n 2,4,6,8 --k 1,3 --editor --typed-carry \
+    --rho 3.5,4.5 --n 2,4,6,8 --k 1,3 --editor --typed-carry \
     --candidates 2 --seed 0 \
     --out "$out" 2>&1 | tee "$out/run.log" || true
   echo "  -> $out/summary.json"
