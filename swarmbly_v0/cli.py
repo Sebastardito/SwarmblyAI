@@ -55,6 +55,9 @@ def build_parser() -> argparse.ArgumentParser:
                      help="comma-separated replica counts for micro-level consensus; "
                           "k>1 dispatches k complete replicas of each micro-task to "
                           "different model families (default: 1)")
+    run.add_argument("--editor", action="store_true",
+                     help="also run the post-processing editor arm, paired with each "
+                          "unedited cell (adds one condition, not one flag)")
     run.add_argument("--backend", default="mock",
                      help="mock | openai (any OpenAI-compatible endpoint)")
     run.add_argument("--embedder", default="hash",
@@ -101,6 +104,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         rhos=tuple(args.rho),
         ns=tuple(args.n),
         ks=tuple(args.k),
+        editors=(False, True) if args.editor else (False,),
         seed=args.seed,
         backend_name=args.backend,
         embedder_name=args.embedder,

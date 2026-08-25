@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
@@ -47,6 +48,7 @@ from .consensus import (
 )
 from .composition_trace import build_trace, render_trace
 from .constraints import check_numeric_fidelity, is_source_table_row
+from .editor import EditorReport, edit_assembled
 from .grading import grade_units
 from .metrics import (
     ERROR_CLASSES,
@@ -135,6 +137,14 @@ CSV_COLUMNS: list[str] = [
     "baseline_booook",
     "baseline_entity_grid",
     "baseline_judge",
+    "editor_applied",
+    "editor_reason",
+    "editor_score_before",
+    "editor_score_after",
+    "editor_gain",
+    "editor_input_tokens",
+    "editor_output_tokens",
+    "editor_calls",
 ] + [f"err_{cls}" for cls in ERROR_CLASSES]
 
 UNIT_CSV_NAME = "agreement_units.csv"
@@ -255,6 +265,14 @@ class SweepConfig:
 
     rhos: tuple[float, ...] = (1.0, 1.25, 1.5, 2.0)
     ns: tuple[int, ...] = (2, 4, 8)
+    editors: tuple[bool, ...] = (False,)
+    """Whether the post-processing editor runs, swept as a condition of its own.
+
+    A third arm rather than a flag, because the only interesting question about
+    the editor is comparative: the same prompt, the same N, the same k, assembled
+    the same way, differing only in whether one pass was made over the finished
+    answer. Sweeping it means every editor row has an unedited twin.
+    """
     ks: tuple[int, ...] = (1,)
     """Replica counts for **micro-level** assembly, swept alongside rho and N.
 
@@ -656,6 +674,7 @@ def run_fragmented(
     baseline: dict[str, Any] | None = None,
     contract: Contract | None = None,
     k: int = 1,
+    use_editor: bool = False,
 ) -> dict[str, Any]:
     """One cell of the sweep: plan, pack at ``rho_target``, generate, assemble.
 
@@ -684,9 +703,12 @@ def run_fragmented(
     # the context budget cannot repair, so the stated count wins over the sweep's
     # N for composition prompts and the fragments are joined by paragraph breaks
     # rather than spaces.
+    # N is the independent variable of the sweep and must reach the planner
+    # intact. The requested paragraph count is a property of the *answer*, not of
+    # the partition, and conflating them froze N at the prompt's paragraph count
+    # -- the sweep asked for 2, 4, 8, 16 and every cell came back at 6.
     wanted_paragraphs = requested_paragraphs(spec.text) if spec.is_composition else None
-    effective_n = wanted_paragraphs if wanted_paragraphs else n_tasks
-    plan = build_plan(spec.text, backend, n_tasks=effective_n, contract=gamma)
+    plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=gamma)
 
     per_task_target = max(24, round(gamma.target_length_tokens / max(len(plan.tasks), 1)))
     packing_contract = replace(gamma, target_length_tokens=per_task_target)
@@ -754,12 +776,39 @@ def run_fragmented(
 
     assembly = select_then_splice(
         fragments, gamma, backend, tau_sem, plan=plan, embedder=embedder,
-        paragraph_join=bool(wanted_paragraphs),
+        paragraph_join=wanted_paragraphs or False,
     )
+
+    # -- the post-processing pass, before anything is measured ---------------
+    # The editor must run here rather than after the row is filled, because the
+    # whole question it answers is what the *delivered* answer looks like. An
+    # edited answer measured with the unedited answer's numbers would be the
+    # nicest-looking bug in the file.
+    assembled_text = assembly.text
+    editor_report = None
+    if use_editor and not spec.constraints:
+        # The arm was requested and there is nothing mechanically checkable to
+        # act on -- a dependency chain has an answer key, not constraints. The
+        # pair still exists and still shows zero effect, so it is labelled rather
+        # than left blank: "not applicable" and "ran and did nothing" are
+        # different facts and the reasons histogram has to keep them apart.
+        editor_report = EditorReport(
+            text=assembled_text, applied=False,
+            reason="no constraints on this prompt")
+    elif use_editor:
+        editor_report = edit_assembled(
+            assembled_text,
+            spec.constraints,
+            backend,
+            objective=gamma.objective,
+            numeric_allowed=[float(v) for v in (spec.numeric_facts or {}).get("allowed", [])],
+            max_tokens=gamma.target_length_tokens,
+        )
+        assembled_text = editor_report.text
 
     row = _base_row(spec, config, backend)
     row.update({
-        "condition": "fragmented",
+        "condition": "fragmented+editor" if use_editor else "fragmented",
         "n_tasks": len(plan.tasks),
         "n_levels": len(plan.topological_levels()),
         "sequential_plan": plan.sequential,
@@ -776,14 +825,21 @@ def run_fragmented(
         "input_tokens": packet_tokens_total * k,
     })
     row.update(_consensus_columns(k, nodes, consensus_results))
+    row.update(editor_report.as_dict() if editor_report else _EMPTY_EDITOR_COLUMNS)
     selected_texts = [assembly.selected[f.task_id] for f in fragments]
-    _fill_metric_row(row, assembly.text, plan, gamma, embedder,
+    _fill_metric_row(row, assembled_text, plan, gamma, embedder,
                      assembly.fragment_sentence_offsets, selected_texts)
     if spec.is_composition:
+        label = f"fragmented k={k}" + (" +editor" if use_editor else "")
         row["_trace"] = build_trace(
-            spec.prompt_id, f"fragmented k={k}", assembly.text, spec.constraints or [],
-            order=assembly.order,
-            offsets=assembly.fragment_sentence_offsets,
+            spec.prompt_id, label, assembled_text, spec.constraints or [],
+            # Sentence offsets describe the *assembled* text. An editor that
+            # merged paragraphs has invalidated them, so provenance is dropped
+            # rather than reported wrongly -- a trace that misattributes a
+            # sentence is worse than a trace that admits it cannot attribute it.
+            order=None if (editor_report and editor_report.applied) else assembly.order,
+            offsets=None if (editor_report and editor_report.applied)
+            else assembly.fragment_sentence_offsets,
             seams=assembly.seams,
         )
 
@@ -813,6 +869,16 @@ def run_fragmented(
         row["baseline_entity_grid"] = ""
         row["baseline_judge"] = ""
     return row
+
+
+_EMPTY_EDITOR_COLUMNS: dict[str, Any] = {
+    "editor_applied": "", "editor_reason": "", "editor_score_before": "",
+    "editor_score_after": "", "editor_gain": "", "editor_violations_before": "",
+    "editor_violations_after": "", "editor_input_tokens": "",
+    "editor_output_tokens": "", "editor_calls": "",
+}
+"""Blank, not zero. A row where the editor did not run has no editor cost; a
+zero would read as "it ran and cost nothing", which is a different fact."""
 
 
 MIN_BASELINE: float = 0.15
@@ -955,22 +1021,25 @@ def run_sweep(
         for rho in cfg.rhos:
             for n in cfg.ns:
                 for k in cfg.ks:
-                    row = run_fragmented(
-                        spec, engine, embed, cfg, rho, n, tau,
-                        baseline=baselines[spec.prompt_id],
-                        contract=contracts[spec.prompt_id],
-                        k=k,
-                    )
-                    rows.append(row)
-                    if progress:
-                        agreement = row.get("mean_agreement", "")
-                        agreement_text = (f"agree={agreement:.3f}"
-                                          if isinstance(agreement, float) else "agree=n/a")
-                        progress(
-                            f"sweep     {spec.prompt_id:<28} rho={rho:<5} N={n:<3} k={k:<3} "
-                            f"rho_hat={row['rho_achieved']:.2f} "
-                            f"tax_booook={row['coherence_tax_booook']:+.3f} {agreement_text}"
+                    for use_editor in cfg.editors:
+                        row = run_fragmented(
+                            spec, engine, embed, cfg, rho, n, tau,
+                            baseline=baselines[spec.prompt_id],
+                            contract=contracts[spec.prompt_id],
+                            k=k,
+                            use_editor=use_editor,
                         )
+                        rows.append(row)
+                        if progress:
+                            agreement = row.get("mean_agreement", "")
+                            agreement_text = (f"agree={agreement:.3f}"
+                                              if isinstance(agreement, float) else "agree=n/a")
+                            edited = " +ed" if use_editor else "    "
+                            progress(
+                                f"sweep     {spec.prompt_id:<28} rho={rho:<5} N={n:<3} "
+                                f"k={k:<3}{edited} rho_hat={row['rho_achieved']:.2f} "
+                                f"tax_booook={row['coherence_tax_booook']:+.3f} {agreement_text}"
+                            )
 
     metadata: dict[str, Any] = {
         "backend": getattr(engine, "name", "unknown"),
@@ -990,6 +1059,7 @@ def run_sweep(
         "router_threshold": cfg.router_threshold,
         "tau_calibration": calibration.as_dict() if calibration else None,
         "harness_validation_only": getattr(engine, "name", "") == "mock",
+        "transport": str(getattr(engine, "transport", "") or cfg.backend_name),
         "transport_retries": int(getattr(engine, "retries", 0)),
         "embeddings_degraded": bool(
             getattr(engine, "embed_degraded", "")
@@ -1247,6 +1317,7 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "fragmentation_cost": {
             "monolithic": _accuracy(baseline),
             "fragmented": _accuracy(fragmented),
+            "adjusted": standardised_cost(baseline, fragmented, key="category"),
             "by_category": {
                 cat: {"monolithic": _accuracy([r for r in baseline if r.get("category") == cat]),
                       "fragmented": _accuracy(recs)}
@@ -1582,6 +1653,356 @@ def stratified_flagging(
     return out
 
 
+def standardised_cost(
+    baseline: Sequence[Mapping[str, Any]],
+    fragmented: Sequence[Mapping[str, Any]],
+    key: str = "category",
+) -> dict[str, Any]:
+    """The fragmentation cost with the category mix held equal, plus its test.
+
+    The third place the same pooling artifact turned up, and the one that was
+    reporting the headline. On 25 August the raw comparison read 79.1 % against
+    58.3 % -- but the baseline's graded items were 10 % grounded prose and the
+    fragmented arms' were 24 %, and grounded prose is by far the hardest
+    category. Part of the gap was the arms not being made of the same thing.
+
+    Two corrections, reported side by side with the raw figure rather than
+    replacing it:
+
+    * ``standardised`` weights every category equally in both arms, which on that
+      run takes the gap from 20.8 points to 15.2;
+    * ``mantel_haenszel`` gives the common odds ratio across categories and its
+      chi-square test, so the reader gets an effect size that never pools across
+      strata at all (OR 2.29, p = 0.038 -- real, and a good deal less certain
+      than the raw p = 0.003 suggested).
+
+    A category present in only one arm contributes to neither, and is named in
+    ``strata_dropped``.
+    """
+    def _tally(records: Sequence[Mapping[str, Any]]) -> dict[str, tuple[int, int]]:
+        out: dict[str, list[int]] = {}
+        for rec in records:
+            if rec.get("correct") is None:
+                continue
+            entry = out.setdefault(str(rec.get(key, "")), [0, 0])
+            entry[0] += 1 if rec["correct"] else 0
+            entry[1] += 1
+        return {k: (v[0], v[1]) for k, v in out.items()}
+
+    mono, frag = _tally(baseline), _tally(fragmented)
+    shared = sorted(set(mono) & set(frag))
+    dropped = sorted(set(mono) ^ set(frag))
+    if not shared:
+        return {"standardised": None, "mantel_haenszel": None,
+                "strata_dropped": dropped, "n_strata": 0}
+
+    mono_rate = sum(mono[s][0] / mono[s][1] for s in shared) / len(shared)
+    frag_rate = sum(frag[s][0] / frag[s][1] for s in shared) / len(shared)
+
+    num = den = observed = expected = variance = 0.0
+    per_stratum: dict[str, Any] = {}
+    for s in shared:
+        a, n1 = mono[s]
+        c, n2 = frag[s]
+        b, d = n1 - a, n2 - c
+        n = n1 + n2
+        num += a * d / n
+        den += b * c / n
+        m1 = a + c
+        observed += a
+        expected += n1 * m1 / n
+        if n > 1:
+            variance += n1 * n2 * m1 * (n - m1) / (n * n * (n - 1))
+        per_stratum[s] = {"monolithic": round(a / n1, 6), "fragmented": round(c / n2, 6),
+                          "n_monolithic": n1, "n_fragmented": n2}
+
+    chi_square = ((abs(observed - expected) - 0.5) ** 2 / variance) if variance > 0 else None
+    p_value = math.erfc(math.sqrt(chi_square / 2)) if chi_square is not None else None
+
+    return {
+        "standardised": {
+            "monolithic": round(mono_rate, 6),
+            "fragmented": round(frag_rate, 6),
+            "cost_points": round((mono_rate - frag_rate) * 100, 4),
+        },
+        "mantel_haenszel": {
+            "odds_ratio": round(num / den, 6) if den > 0 else None,
+            "chi_square": round(chi_square, 6) if chi_square is not None else None,
+            "p_value": round(p_value, 6) if p_value is not None else None,
+        },
+        "by_stratum": per_stratum,
+        "n_strata": len(shared),
+        "strata_dropped": dropped,
+        "note": (
+            "The raw comparison beside this one pools arms whose category mix differs, and the "
+            "hardest category is the one they differ on most. Read cost_points and the "
+            "Mantel-Haenszel odds ratio -- neither ever compares an item to an item of another "
+            "category. An odds ratio above 1 means the unfragmented baseline is more often right."
+        ),
+    }
+
+
+def fragment_size_curve(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Cost as a function of how much context a fragment carries.
+
+    The question this answers -- *what is the effective size of a semantic
+    fragment?* -- is the one the project had never asked directly, and re-reading
+    the V0 run says it dominates everything else measured so far: excluding a
+    degenerate category and weighting categories equally, the coherence tax runs
+    +6.7 % at ~133 tokens per fragment, +14.0 % at ~66, and +35.1 % at ~33,
+    monotone in 7 of 8 categories. Every V3c run then fixed N at 3 or 4 and swept
+    ``k`` instead, so the whole truth-calibration arc sat on one point of this
+    curve without saying so.
+
+    Two things make this function more than a groupby.
+
+    **It reports both axes.** V0 measured coherence proxies with no answer key;
+    V3c measured accuracy at a single fragment size. Neither has ever been seen
+    against the other, so "the cost of fragmentation" names two unrelated
+    numbers. Here they share a row.
+
+    **It weights categories equally.** Pooling arms whose category mix differs
+    has now produced a wrong headline three times in this file -- in the AUC, in
+    the flagging lift, and in the fragmentation cost. The mean of per-category
+    means is reported as ``tax_balanced``, and the naive pooled mean beside it,
+    so a divergence between them is visible rather than latent.
+
+    The size reported is ``prompt_tokens / n_tasks``: what one fragment's share
+    of the problem actually is, which is the quantity a planner would need to
+    choose N. ``suggest_n_tasks`` currently hardcodes one micro-task per 60
+    canonical tokens, a constant that has never been validated against anything.
+    """
+    baselines = {str(r.get("prompt_id")): r for r in rows
+                 if r.get("condition") == "monolithic"}
+    by_n: dict[int, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        if str(row.get("condition", "")).startswith("fragmented"):
+            try:
+                by_n.setdefault(int(row["n_tasks"]), []).append(row)
+            except (KeyError, TypeError, ValueError):
+                continue
+
+    # N is capped by the number of divisible units a prompt has -- six aspects,
+    # seven chain steps, twenty table rows -- so the high-N points are made of
+    # fewer prompt shapes than the low-N ones. Comparing them directly is the
+    # same pooling artifact that has produced a wrong headline three times in
+    # this file, arriving now in the curve built to replace those headlines.
+    categories_at_n = {
+        n: {str(r.get("category", "")) for r in group}
+        for n, group in by_n.items()
+    }
+    common = set.intersection(*categories_at_n.values()) if categories_at_n else set()
+
+    points: list[dict[str, Any]] = []
+    for n_tasks, group in sorted(by_n.items()):
+        sizes = [
+            float(baselines[str(r["prompt_id"])].get("input_tokens", 0)) / max(n_tasks, 1)
+            for r in group if str(r.get("prompt_id")) in baselines
+        ]
+        taxes = [float(r["coherence_tax_booook"]) for r in group
+                 if isinstance(r.get("coherence_tax_booook"), (int, float))]
+        by_category: dict[str, list[float]] = {}
+        for r in group:
+            if isinstance(r.get("coherence_tax_booook"), (int, float)):
+                by_category.setdefault(str(r.get("category", "")), []).append(
+                    float(r["coherence_tax_booook"]))
+        balanced = [sum(v) / len(v) for v in by_category.values() if v]
+
+        graded = [rec for r in group for rec in (r.get("_truth_records") or [])
+                  if rec.get("correct") is not None]
+        accuracy_by_cat: dict[str, list[int]] = {}
+        for rec in graded:
+            accuracy_by_cat.setdefault(str(rec.get("category", "")), []).append(
+                1 if rec["correct"] else 0)
+        acc_balanced = [sum(v) / len(v) for v in accuracy_by_cat.values() if v]
+
+        shared = [sum(v) / len(v) for c, v in by_category.items() if c in common and v]
+        points.append({
+            "n_tasks": n_tasks,
+            "tokens_per_fragment": round(sum(sizes) / len(sizes), 2) if sizes else None,
+            "n_cells": len(group),
+            "tax_pooled": round(sum(taxes) / len(taxes), 6) if taxes else None,
+            "tax_balanced": round(sum(balanced) / len(balanced), 6) if balanced else None,
+            "tax_common": round(sum(shared) / len(shared), 6) if shared else None,
+            # Per shape, because the claim under test is that S* is a semantic
+            # unit rather than a token count: a topic, a row group and a
+            # dependency step should not have the same effective size, and
+            # dependency_chain -- whose units are ordered -- should degrade
+            # fastest as the partition cuts between steps that carry values.
+            "tax_by_category": {c: round(sum(v) / len(v), 6)
+                                for c, v in sorted(by_category.items())},
+            "accuracy_by_category": {c: round(sum(v) / len(v), 6)
+                                     for c, v in sorted(accuracy_by_cat.items())},
+            "categories": sorted(by_category),
+            "n_categories": len(by_category),
+            "accuracy_pooled": round(sum(1 for r in graded if r["correct"]) / len(graded), 6)
+            if graded else None,
+            "accuracy_balanced": round(sum(acc_balanced) / len(acc_balanced), 6)
+            if acc_balanced else None,
+            "n_items_graded": len(graded),
+        })
+
+    def _monotone(field: str) -> bool | None:
+        values = [p[field] for p in points if p[field] is not None]
+        return all(a <= b for a, b in zip(values, values[1:])) if len(values) > 1 else None
+
+    return {
+        "points": points,
+        "common_categories": sorted(common),
+        "tax_monotone_in_n": _monotone("tax_balanced"),
+        "tax_common_monotone_in_n": _monotone("tax_common"),
+        "comparable_across_n": len({tuple(p["categories"]) for p in points}) == 1,
+        "planner_constant_tokens_per_task": 60,
+        "note": (
+            "tokens_per_fragment is the baseline prompt's token count divided by N -- one "
+            "fragment's share of the problem. Read tax_balanced and accuracy_balanced: the "
+            "pooled columns beside them weight whichever category contributed most cells. "
+            "planner_constant_tokens_per_task is what suggest_n_tasks currently assumes and "
+            "has never been validated; this curve is what would validate or replace it. "
+            "When comparable_across_n is false the points are made of different prompt "
+            "shapes -- N is capped by how many divisible units a prompt has -- and only "
+            "tax_common, restricted to the categories present at every N, compares like "
+            "with like."
+        ),
+    }
+
+
+def editor_effect(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """What the post-processing pass bought, and what it cost.
+
+    Paired by construction: the editor is swept as a condition, so every edited
+    row has an unedited twin at the same prompt, N and k, and the comparison
+    never crosses cells.
+
+    The prediction this exists to test is a *refusal*. The editor holds the
+    assembled answer and the contract, and it does not hold the source material,
+    so it can restore a dropped term, merge a duplicated definition and repair
+    the shape -- and it cannot know that 830 kg should have been 840. Constraint
+    scores should rise; item accuracy should not. ``accuracy_delta`` materially
+    above zero means the editor is answering from its own knowledge rather than
+    editing, and the arm is contaminated rather than good.
+    """
+    def _key(row: Mapping[str, Any]) -> tuple:
+        return (str(row.get("prompt_id")), row.get("rho_target"),
+                row.get("n_tasks"), row.get("k"))
+
+    plain = {_key(r): r for r in rows if r.get("condition") == "fragmented"}
+    edited = {_key(r): r for r in rows if r.get("condition") == "fragmented+editor"}
+    pairs = [(plain[key], edited[key]) for key in sorted(edited.keys() & plain.keys())]
+    if not pairs:
+        return {"n_pairs": 0, "note": "the editor arm was not run"}
+
+    applied = [e for _, e in pairs if e.get("editor_applied") is True]
+    gains = [float(e["editor_gain"]) for _, e in pairs
+             if isinstance(e.get("editor_gain"), (int, float))]
+    tokens = [float(e["editor_input_tokens"]) + float(e["editor_output_tokens"])
+              for _, e in pairs
+              if isinstance(e.get("editor_input_tokens"), (int, float))]
+    tax_delta = [float(e["coherence_tax_booook"]) - float(p["coherence_tax_booook"])
+                 for p, e in pairs
+                 if isinstance(e.get("coherence_tax_booook"), (int, float))
+                 and isinstance(p.get("coherence_tax_booook"), (int, float))]
+
+    def _accuracy(rows_side: Sequence[Mapping[str, Any]]) -> float | None:
+        graded = [rec for r in rows_side for rec in (r.get("_truth_records") or [])
+                  if rec.get("correct") is not None]
+        return (sum(1 for r in graded if r["correct"]) / len(graded)) if graded else None
+
+    acc_plain = _accuracy([p for p, _ in pairs])
+    acc_edited = _accuracy([e for _, e in pairs])
+    reasons: dict[str, int] = {}
+    for _, e in pairs:
+        reasons[str(e.get("editor_reason", ""))] = reasons.get(str(e.get("editor_reason", "")), 0) + 1
+
+    return {
+        "n_pairs": len(pairs),
+        "n_applied": len(applied),
+        "apply_rate": round(len(applied) / len(pairs), 6),
+        "mean_constraint_gain": round(sum(gains) / len(gains), 6) if gains else None,
+        "mean_tokens_per_edit": round(sum(tokens) / len(tokens), 1) if tokens else None,
+        "mean_tax_delta": round(sum(tax_delta) / len(tax_delta), 6) if tax_delta else None,
+        "accuracy_plain": round(acc_plain, 6) if acc_plain is not None else None,
+        "accuracy_edited": round(acc_edited, 6) if acc_edited is not None else None,
+        "accuracy_delta": round(acc_edited - acc_plain, 6)
+        if (acc_plain is not None and acc_edited is not None) else None,
+        "reasons": dict(sorted(reasons.items(), key=lambda kv: -kv[1])),
+        "note": (
+            "Paired: every edited row has an unedited twin at the same prompt, N and k. "
+            "mean_constraint_gain is the share of mechanical checks recovered. rho is "
+            "unchanged by construction -- the editor never sees the problem prompt -- so "
+            "mean_tokens_per_edit is reported as its own budget line rather than folded in. "
+            "accuracy_delta is a guard, not a goal: the editor has no access to the source "
+            "material, so a rise in item accuracy means it is answering rather than editing."
+        ),
+    }
+
+
+def falsifiable_go_no_go(
+    rows: Sequence[Mapping[str, Any]],
+    category: str,
+    rho: float,
+    threshold: float = 0.05,
+) -> dict[str, Any]:
+    """The pre-registered criterion, restated so that it can fail.
+
+    V0's criterion read "exists (category, rho) with relative degradation < 5 %"
+    and reported ``passed: true``. Simulating its own null -- no cell genuinely
+    different, observations shuffled between the 32 cells of n=3 -- gives
+    P(some cell under 5 %) = 100 %. It is a maximum statistic over many noisy
+    cells with no multiple-comparison control, and it would have passed on random
+    data. Its passing was never evidence.
+
+    Three changes, each of which can produce a failure:
+
+    * the cell is **named in advance** and passed in as an argument, so the
+      result cannot be chosen after seeing the data;
+    * the threshold must be cleared by the **upper bound** of a bootstrap
+      interval, not by the point estimate;
+    * ``n_cells_examined`` is reported, so a reader can see how many chances the
+      criterion had even when only one was declared.
+    """
+    cells = [r for r in rows
+             if str(r.get("condition", "")).startswith("fragmented")
+             and str(r.get("category")) == category
+             and _close(r.get("rho_target"), rho)
+             and isinstance(r.get("coherence_tax_booook"), (int, float))]
+    examined = len({(str(r.get("category")), r.get("rho_target")) for r in rows
+                    if str(r.get("condition", "")).startswith("fragmented")})
+
+    if len(cells) < 2:
+        return {"declared_cell": {"category": category, "rho": rho},
+                "passed": None, "n_observations": len(cells),
+                "n_cells_examined": examined,
+                "note": "too few observations in the declared cell to form an interval"}
+
+    values = np.asarray([float(r["coherence_tax_booook"]) for r in cells], dtype=np.float64)
+    rng = np.random.default_rng(0)
+    draws = rng.choice(values, size=(4000, values.size), replace=True).mean(axis=1)
+    lo, hi = (float(np.quantile(draws, 0.025)), float(np.quantile(draws, 0.975)))
+
+    return {
+        "declared_cell": {"category": category, "rho": rho},
+        "n_observations": int(values.size),
+        "n_cells_examined": examined,
+        "point_estimate": round(float(values.mean()), 6),
+        "ci95": [round(lo, 6), round(hi, 6)],
+        "threshold": threshold,
+        "passed": bool(hi < threshold),
+        "note": (
+            "Passes only when the upper bound of the interval clears the threshold, on a cell "
+            "named before the run. The point estimate alone is what made the old criterion "
+            "unfalsifiable; n_cells_examined states how many chances were available."
+        ),
+    }
+
+
+def _close(value: Any, target: float, tol: float = 1e-9) -> bool:
+    try:
+        return abs(float(value) - float(target)) <= tol
+    except (TypeError, ValueError):
+        return False
+
+
 def _mean(values: Iterable[float]) -> float:
     items = [v for v in values]
     return sum(items) / len(items) if items else 0.0
@@ -1762,10 +2183,21 @@ def summarize(
         ],
         "best_overall": best_overall,
         "best_category_cell": best_cell,
+        "fragment_size_curve": fragment_size_curve(rows),
+        "editor_effect": editor_effect(rows),
         "go_no_go": {
             "criterion": "exists (category, rho) with relative coherence degradation < 5%",
             "passed": bool(passing),
             "passing_cells": passing,
+            "WARNING": (
+                "This criterion cannot fail. Simulating its own null -- no cell genuinely "
+                "different, observations shuffled between cells -- gives P(some cell under 5%) "
+                "= 100%. It is a maximum statistic over many noisy cells with no "
+                "multiple-comparison control and would pass on random data. Retained only so "
+                "that runs remain comparable with the record of 14 August; read "
+                "falsifiable_go_no_go() instead, which requires the cell to be named in "
+                "advance and cleared by the upper bound of a bootstrap interval."
+            ),
         },
         "n_rows": len(rows),
         "n_fragmented_cells": len(fragmented),

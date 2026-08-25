@@ -792,6 +792,21 @@ class OpenAICompatBackend:
     """Extra attempts after the first on a transport failure. 0 disables retry."""
     retry_backoff_s: float = 1.0
     """Base of the exponential backoff. Tests set it to 0."""
+    prefer_sdk: bool = True
+    """Use the openai SDK when it is importable, else raw HTTP.
+
+    Set False to force the HTTP transport. Not a preference knob so much as a
+    determinism knob: without it, *which code path runs* depends on whether a
+    package happens to be installed in the environment, and nothing said so. A
+    suite written on a machine without the SDK exercised only the HTTP path and
+    passed; the same suite on a machine with the SDK took a different path
+    through `generate` and failed three tests, one of which was reporting that
+    the bounded retry did not fire -- because on that path it did not exist.
+
+    :attr:`transport` records which one was actually chosen, and the run metadata
+    publishes it, so a result can be attributed to the transport that produced
+    it.
+    """
     transport: str = field(default="", init=False)
     retries: int = field(default=0, init=False)
     """Transport retries consumed this run. Reported in the run metadata."""
@@ -811,13 +826,16 @@ class OpenAICompatBackend:
         Detected from the endpoint rather than configured, because the field is
         harmless to Ollama and fatal to the OpenAI API.
         """
-        try:
-            from openai import OpenAI  # type: ignore[import-not-found]
+        if self.prefer_sdk:
+            try:
+                from openai import OpenAI  # type: ignore[import-not-found]
 
-            self._client = OpenAI(base_url=self.base_url, api_key=self.api_key)
-            self.transport = "openai-sdk"
-            return
-        except Exception:
+                self._client = OpenAI(base_url=self.base_url, api_key=self.api_key)
+                self.transport = "openai-sdk"
+                return
+            except Exception:
+                self._client = None
+        else:
             self._client = None
         try:
             import httpx  # type: ignore[import-not-found]  # noqa: F401
@@ -849,11 +867,20 @@ class OpenAICompatBackend:
         transport failures are retried; a malformed response is a real error
         and is raised immediately.
         """
+        return self._retrying(path, lambda: self._post_once(path, payload))
+
+    def _retrying(self, path: str, attempt_once: Any) -> dict[str, Any]:
+        """The bounded, counted retry, applied to whatever transport is passed in.
+
+        Factored out of :meth:`_post` so the SDK path can share it. Keeping the
+        loop welded to the HTTP call meant the protection silently did not apply
+        wherever the SDK was installed, which is the only place it mattered.
+        """
         attempts = max(1, self.max_retries + 1)
         last: Exception | None = None
         for attempt in range(attempts):
             try:
-                return self._post_once(path, payload)
+                return attempt_once()
             except BackendUnavailable as exc:
                 last = exc
                 self.retries += 1
@@ -923,20 +950,37 @@ class OpenAICompatBackend:
         # time instead of in the tests.
         extra: dict[str, Any] = {"options": {"num_predict": max_tokens}} if self._is_ollama else {}
 
-        if self._client is not None:  # pragma: no cover - needs the SDK
-            try:
-                completion = self._client.chat.completions.create(
-                    **payload, **({"extra_body": extra} if extra else {})
-                )
-                return (completion.choices[0].message.content or "").strip()
-            except Exception as exc:
-                raise BackendUnavailable(f"openai SDK call failed: {exc}") from exc
-
-        data = self._post("/chat/completions", {**payload, **extra})
+        data = self._retrying("/chat/completions", lambda: self._chat_once(payload, extra))
         try:
             return str(data["choices"][0]["message"]["content"]).strip()
         except (KeyError, IndexError, TypeError) as exc:  # pragma: no cover - network path
             raise BackendUnavailable(f"unexpected response shape: {data!r}") from exc
+
+    def _chat_once(self, payload: dict[str, Any], extra: dict[str, Any]) -> dict[str, Any]:
+        """One chat attempt, by whichever transport is available.
+
+        Both transports return the same shape, so the retry above does not have
+        to know which one ran. That is the whole point: the retry used to wrap
+        only ``_post``, and the SDK path returned before ever reaching it -- so
+        on a machine *with* the openai package installed, which is every machine
+        that actually runs these sweeps against Ollama, the bounded retry this
+        class documents did not exist. A dropped socket five hours into a run
+        still killed the run.
+
+        It went unnoticed because the environment that ran the tests had no
+        openai package, took the HTTP path, and passed; the SDK branch was
+        marked ``pragma: no cover`` and was never exercised end to end.
+        """
+        if self._client is None:
+            return self._post_once("/chat/completions", {**payload, **extra})
+        try:
+            completion = self._client.chat.completions.create(
+                **payload, **({"extra_body": extra} if extra else {})
+            )
+        except Exception as exc:
+            raise BackendUnavailable(f"openai SDK call failed: {exc}") from exc
+        return {"choices": [{"message": {
+            "content": (completion.choices[0].message.content or "")}}]}
 
     def embed(self, texts: Sequence[str]) -> np.ndarray:
         """Embed via the server's ``/embeddings`` route, falling back to hashing.

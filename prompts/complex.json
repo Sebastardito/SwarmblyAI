@@ -1,0 +1,519 @@
+{
+  "_seed": 20260826,
+  "_length_note": "Canonical tokens per prompt: min 255, max 371, mean 314. Long on purpose. The fragment-size sweep needs prompts big enough that N in (2,4,8,16) produces fragments spanning roughly 25 to 350 tokens, and the earlier corpora at 124-160 tokens could not reach the upper half of that range at all.",
+  "_corpus_note": "Every figure a correct answer may state is enclosed in its prompt, which is the opposite of prompts.json and is what makes per-figure grading possible here. Three shapes -- long_prose, table_summary, dependency_chain -- because the claim under test is that the effective fragment is a semantic unit rather than a token count, and a semantic unit differs by shape: a topic, a row group, a step. dependency_chain is the only one whose units are ordered, and the prediction is that it degrades fastest in N.",
+  "prompts": [
+    {
+      "id": "long_harbour",
+      "category": "long_prose",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Write a briefing on harbour scheduling for a duty manager at a small commercial harbour. Cover each of the eight aspects below, in the order given, devoting one paragraph to each.\n\nThe site runs two shifts and keeps its own records.\n\n  [01] what tide window constrains, why it cannot be worked around, and what happens to the day's plan when it closes earlier than forecast, given that the site is staffed thinly enough that one absence changes what can be attempted at all\n  [02] how berth is allocated when demand exceeds supply, who arbitrates between competing claims, and what makes an allocation final\n  [03] what the manifest records, who reads it, how often it is reconciled against what actually happened, and what a discrepancy triggers\n  [04] how pilotage changes the ordering of work, and which decisions must be revisited once it changes rather than merely noted\n  [05] which failures are recoverable within a shift and which are not, and how that distinction is made in the moment rather than in hindsight\n  [06] what a handover to the next shift must contain for the incoming staff to act without re-deriving the day, what is safe to leave out, and where judgement rather than rule decides -- naming whose judgement and what they weigh\n  [07] what a newcomer reliably gets wrong in the first month, and which of those mistakes the process absorbs versus which one propagates\n  [08] what would have to change for the site to run a third shift, and which current practice would stop working first\n\nWrite exactly eight paragraphs separated by blank lines, each between 70 and 130 words. Mention 'tide window' exactly once and 'manifest' exactly once. Do not repeat any sentence, and do not repeat any phrase of eight words or more. Write continuous prose: no headings, no bullet points, no tables. Do not state any numeric figure at all -- this briefing is qualitative.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 8
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "tide_once",
+          "kind": "term_once",
+          "term": "tide window"
+        },
+        {
+          "id": "manifest_once",
+          "kind": "term_once",
+          "term": "manifest"
+        },
+        {
+          "id": "mentions_handover",
+          "kind": "must_mention",
+          "term": "handover"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "notes": "Eight topics, one paragraph each. The semantic unit is a topic, so N=8 should be the cheapest fragmentation and any larger N must split inside a topic. Eight rather than six so that every shape in this corpus reaches N=8 and the curve compares like with like."
+    },
+    {
+      "id": "long_archive",
+      "category": "long_prose",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Write a briefing on archive digitisation for the head of a municipal records office. Cover each of the eight aspects below, in the order given, devoting one paragraph to each.\n\nThe site runs two shifts and keeps its own records.\n\n  [01] what condition survey constrains, why it cannot be worked around, and what happens to the day's plan when it closes earlier than forecast, given that the site is staffed thinly enough that one absence changes what can be attempted at all\n  [02] how retention is allocated when demand exceeds supply, who arbitrates between competing claims, and what makes an allocation final\n  [03] what the reading room records, who reads it, how often it is reconciled against what actually happened, and what a discrepancy triggers\n  [04] how provenance changes the ordering of work, and which decisions must be revisited once it changes rather than merely noted\n  [05] which failures are recoverable within a shift and which are not, and how that distinction is made in the moment rather than in hindsight\n  [06] what a handover to the next shift must contain for the incoming staff to act without re-deriving the day, what is safe to leave out, and where judgement rather than rule decides -- naming whose judgement and what they weigh\n  [07] what a newcomer reliably gets wrong in the first month, and which of those mistakes the process absorbs versus which one propagates\n  [08] what would have to change for the site to run a third shift, and which current practice would stop working first\n\nWrite exactly eight paragraphs separated by blank lines, each between 70 and 130 words. Mention 'condition survey' exactly once and 'reading room' exactly once. Do not repeat any sentence, and do not repeat any phrase of eight words or more. Write continuous prose: no headings, no bullet points, no tables. Do not state any numeric figure at all -- this briefing is qualitative.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 8
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "condition_once",
+          "kind": "term_once",
+          "term": "condition survey"
+        },
+        {
+          "id": "reading_once",
+          "kind": "term_once",
+          "term": "reading room"
+        },
+        {
+          "id": "mentions_handover",
+          "kind": "must_mention",
+          "term": "handover"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "notes": "Eight topics, one paragraph each. The semantic unit is a topic, so N=8 should be the cheapest fragmentation and any larger N must split inside a topic. Eight rather than six so that every shape in this corpus reaches N=8 and the curve compares like with like."
+    },
+    {
+      "id": "long_relay",
+      "category": "long_prose",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Write a briefing on relay maintenance for the supervisor of a rural signalling network. Cover each of the eight aspects below, in the order given, devoting one paragraph to each.\n\nThe site runs two shifts and keeps its own records.\n\n  [01] what battery constrains, why it cannot be worked around, and what happens to the day's plan when it closes earlier than forecast, given that the site is staffed thinly enough that one absence changes what can be attempted at all\n  [02] how line fault is allocated when demand exceeds supply, who arbitrates between competing claims, and what makes an allocation final\n  [03] what the inspection round records, who reads it, how often it is reconciled against what actually happened, and what a discrepancy triggers\n  [04] how spare inventory changes the ordering of work, and which decisions must be revisited once it changes rather than merely noted\n  [05] which failures are recoverable within a shift and which are not, and how that distinction is made in the moment rather than in hindsight\n  [06] what a handover to the next shift must contain for the incoming staff to act without re-deriving the day, what is safe to leave out, and where judgement rather than rule decides -- naming whose judgement and what they weigh\n  [07] what a newcomer reliably gets wrong in the first month, and which of those mistakes the process absorbs versus which one propagates\n  [08] what would have to change for the site to run a third shift, and which current practice would stop working first\n\nWrite exactly eight paragraphs separated by blank lines, each between 70 and 130 words. Mention 'battery' exactly once and 'inspection round' exactly once. Do not repeat any sentence, and do not repeat any phrase of eight words or more. Write continuous prose: no headings, no bullet points, no tables. Do not state any numeric figure at all -- this briefing is qualitative.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 8
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "battery_once",
+          "kind": "term_once",
+          "term": "battery"
+        },
+        {
+          "id": "inspection_once",
+          "kind": "term_once",
+          "term": "inspection round"
+        },
+        {
+          "id": "mentions_handover",
+          "kind": "must_mention",
+          "term": "handover"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "notes": "Eight topics, one paragraph each. The semantic unit is a topic, so N=8 should be the cheapest fragmentation and any larger N must split inside a topic. Eight rather than six so that every shape in this corpus reaches N=8 and the curve compares like with like."
+    },
+    {
+      "id": "table_manifest",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the manifest table below for a duty manager.\n\n  ref | destination | weight | goods\n  C1523 | Trieste | 845 kg | bearing sets\n  H4808 | Antofagasta | 270 kg | relay boards\n  H3006 | Durban | 900 kg | gasket sets\n  A4962 | Valparaiso | 860 kg | gasket sets\n  B9823 | Tromso | 480 kg | cable reels\n  C5764 | Hobart | 565 kg | relay boards\n  H7110 | Cebu | 340 kg | gasket sets\n  C7987 | Lisbon | 330 kg | filter packs\n  H7737 | Saskatoon | 570 kg | relay boards\n  H2800 | Split | 620 kg | cable reels\n  C6936 | Reykjavik | 660 kg | filter packs\n  H9568 | Osaka | 145 kg | bearing sets\n  H5877 | Recife | 900 kg | valve kits\n  C1083 | Gdansk | 830 kg | filter packs\n  H8781 | Busan | 330 kg | gasket sets\n  A7769 | Nantes | 925 kg | gasket sets\n  B5330 | Ostend | 260 kg | pump seals\n  A3571 | Nairobi | 510 kg | valve kits\n  H4822 | Quito | 905 kg | relay boards\n  E3295 | Mombasa | 935 kg | relay boards\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          20.0,
+          145.0,
+          260.0,
+          270.0,
+          330.0,
+          340.0,
+          480.0,
+          510.0,
+          565.0,
+          570.0,
+          609.0,
+          620.0,
+          660.0,
+          830.0,
+          845.0,
+          860.0,
+          900.0,
+          905.0,
+          925.0,
+          935.0,
+          12180.0
+        ],
+        "total": 12180.0,
+        "heaviest_ref": "E3295"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication."
+    },
+    {
+      "id": "table_backlog",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the backlog table below for a duty manager.\n\n  ref | destination | weight | goods\n  C9133 | Antofagasta | 430 kg | filter packs\n  B9774 | Ostend | 335 kg | gasket sets\n  E4184 | Recife | 680 kg | gasket sets\n  B8341 | Saskatoon | 580 kg | valve kits\n  G3274 | Busan | 775 kg | pump seals\n  D4958 | Durban | 135 kg | bearing sets\n  E3401 | Split | 755 kg | filter packs\n  H4295 | Gdansk | 535 kg | relay boards\n  D9406 | Cebu | 800 kg | cable reels\n  A1690 | Valparaiso | 360 kg | gasket sets\n  B1301 | Nantes | 300 kg | cable reels\n  H2968 | Bergen | 525 kg | relay boards\n  D7126 | Quito | 215 kg | gasket sets\n  E4997 | Osaka | 305 kg | pump seals\n  A8162 | Lisbon | 320 kg | cable reels\n  F7161 | Mombasa | 380 kg | bearing sets\n  H2026 | Tromso | 320 kg | cable reels\n  F8017 | Trieste | 410 kg | cable reels\n  D9583 | Nairobi | 325 kg | drive belts\n  G1362 | Hobart | 255 kg | bearing sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          20.0,
+          135.0,
+          215.0,
+          255.0,
+          300.0,
+          305.0,
+          320.0,
+          325.0,
+          335.0,
+          360.0,
+          380.0,
+          410.0,
+          430.0,
+          437.0,
+          525.0,
+          535.0,
+          580.0,
+          680.0,
+          755.0,
+          775.0,
+          800.0,
+          8740.0
+        ],
+        "total": 8740.0,
+        "heaviest_ref": "D9406"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication."
+    },
+    {
+      "id": "table_dispatch",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the dispatch table below for a duty manager.\n\n  ref | destination | weight | goods\n  B3551 | Valparaiso | 860 kg | gasket sets\n  D9528 | Halifax | 730 kg | bearing sets\n  C1729 | Reykjavik | 925 kg | pump seals\n  B4237 | Saskatoon | 245 kg | pump seals\n  A2790 | Tromso | 770 kg | gasket sets\n  F1187 | Trieste | 230 kg | valve kits\n  B9027 | Osaka | 275 kg | bearing sets\n  A6203 | Mombasa | 715 kg | gasket sets\n  C6057 | Recife | 480 kg | gasket sets\n  C3175 | Ostend | 700 kg | cable reels\n  F4743 | Nantes | 415 kg | drive belts\n  H8375 | Cebu | 370 kg | filter packs\n  B8660 | Gdansk | 885 kg | bearing sets\n  F7501 | Split | 840 kg | valve kits\n  F5437 | Antofagasta | 310 kg | relay boards\n  G3351 | Bergen | 655 kg | filter packs\n  C3039 | Lisbon | 475 kg | relay boards\n  H9115 | Busan | 520 kg | relay boards\n  F2044 | Quito | 905 kg | relay boards\n  H2965 | Hobart | 655 kg | gasket sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          20.0,
+          230.0,
+          245.0,
+          275.0,
+          310.0,
+          370.0,
+          415.0,
+          475.0,
+          480.0,
+          520.0,
+          598.0,
+          655.0,
+          700.0,
+          715.0,
+          730.0,
+          770.0,
+          840.0,
+          860.0,
+          885.0,
+          905.0,
+          925.0,
+          11960.0
+        ],
+        "total": 11960.0,
+        "heaviest_ref": "C1729"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication."
+    },
+    {
+      "id": "chain_ardent",
+      "category": "dependency_chain",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Work through the Ardent costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 78 units by the unit price of 32 to get the gross value.\n  [02] Reduce the gross value from step 1 by 10 percent to get the net value.\n  [03] Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 175 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 40 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "key": {
+        "01": {
+          "expected": "2496",
+          "mode": "numeric",
+          "level": 1,
+          "source": "Multiply 78 units by the unit price of 32 to get the gross value."
+        },
+        "02": {
+          "expected": "2247",
+          "mode": "numeric",
+          "level": 2,
+          "source": "Reduce the gross value from step 1 by 10 percent to get the net value."
+        },
+        "03": {
+          "expected": "561",
+          "mode": "numeric",
+          "level": 3,
+          "source": "Divide the net value from step 2 by 4 weeks, rounding down, to get the weekly figure."
+        },
+        "04": {
+          "expected": "736",
+          "mode": "numeric",
+          "level": 4,
+          "source": "Add the fixed handling fee of 175 to the weekly figure from step 3 to get the loaded weekly figure."
+        },
+        "05": {
+          "expected": "846",
+          "mode": "numeric",
+          "level": 5,
+          "source": "Increase the loaded weekly figure from step 4 by 15 percent, rounding down, to get the surcharged figure."
+        },
+        "06": {
+          "expected": "282",
+          "mode": "numeric",
+          "level": 6,
+          "source": "Divide the surcharged figure from step 5 across 3 depots, rounding down, to get the per-depot figure."
+        },
+        "07": {
+          "expected": "242",
+          "mode": "numeric",
+          "level": 7,
+          "source": "Subtract the reserve of 40 from the per-depot figure in step 6 to get the per-depot allocation."
+        },
+        "08": {
+          "expected": "726",
+          "mode": "numeric",
+          "level": 8,
+          "source": "Multiply the per-depot allocation from step 7 back across 3 depots to get the total allocation."
+        }
+      },
+      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+    },
+    {
+      "id": "chain_northwind",
+      "category": "dependency_chain",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Work through the Northwind costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 76 units by the unit price of 20 to get the gross value.\n  [02] Reduce the gross value from step 1 by 10 percent to get the net value.\n  [03] Divide the net value from step 2 by 5 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 5 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "key": {
+        "01": {
+          "expected": "1520",
+          "mode": "numeric",
+          "level": 1,
+          "source": "Multiply 76 units by the unit price of 20 to get the gross value."
+        },
+        "02": {
+          "expected": "1368",
+          "mode": "numeric",
+          "level": 2,
+          "source": "Reduce the gross value from step 1 by 10 percent to get the net value."
+        },
+        "03": {
+          "expected": "273",
+          "mode": "numeric",
+          "level": 3,
+          "source": "Divide the net value from step 2 by 5 weeks, rounding down, to get the weekly figure."
+        },
+        "04": {
+          "expected": "423",
+          "mode": "numeric",
+          "level": 4,
+          "source": "Add the fixed handling fee of 150 to the weekly figure from step 3 to get the loaded weekly figure."
+        },
+        "05": {
+          "expected": "444",
+          "mode": "numeric",
+          "level": 5,
+          "source": "Increase the loaded weekly figure from step 4 by 5 percent, rounding down, to get the surcharged figure."
+        },
+        "06": {
+          "expected": "111",
+          "mode": "numeric",
+          "level": 6,
+          "source": "Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure."
+        },
+        "07": {
+          "expected": "51",
+          "mode": "numeric",
+          "level": 7,
+          "source": "Subtract the reserve of 60 from the per-depot figure in step 6 to get the per-depot allocation."
+        },
+        "08": {
+          "expected": "204",
+          "mode": "numeric",
+          "level": 8,
+          "source": "Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation."
+        }
+      },
+      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+    },
+    {
+      "id": "chain_meridian",
+      "category": "dependency_chain",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Work through the Meridian costing chain below, one step at a time. Every figure given is exact; do not round except where a step says to, and round down when it does.\n\n  [01] Multiply 82 units by the unit price of 28 to get the gross value.\n  [02] Reduce the gross value from step 1 by 10 percent to get the net value.\n  [03] Divide the net value from step 2 by 3 weeks, rounding down, to get the weekly figure.\n  [04] Add the fixed handling fee of 50 to the weekly figure from step 3 to get the loaded weekly figure.\n  [05] Increase the loaded weekly figure from step 4 by 10 percent, rounding down, to get the surcharged figure.\n  [06] Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure.\n  [07] Subtract the reserve of 80 from the per-depot figure in step 6 to get the per-depot allocation.\n  [08] Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation.\n\nEach step uses the numeric result of the step before it, so you must carry every intermediate value forward explicitly. Give one line per step, as [NN] followed by the value alone.",
+      "key": {
+        "01": {
+          "expected": "2296",
+          "mode": "numeric",
+          "level": 1,
+          "source": "Multiply 82 units by the unit price of 28 to get the gross value."
+        },
+        "02": {
+          "expected": "2067",
+          "mode": "numeric",
+          "level": 2,
+          "source": "Reduce the gross value from step 1 by 10 percent to get the net value."
+        },
+        "03": {
+          "expected": "689",
+          "mode": "numeric",
+          "level": 3,
+          "source": "Divide the net value from step 2 by 3 weeks, rounding down, to get the weekly figure."
+        },
+        "04": {
+          "expected": "739",
+          "mode": "numeric",
+          "level": 4,
+          "source": "Add the fixed handling fee of 50 to the weekly figure from step 3 to get the loaded weekly figure."
+        },
+        "05": {
+          "expected": "812",
+          "mode": "numeric",
+          "level": 5,
+          "source": "Increase the loaded weekly figure from step 4 by 10 percent, rounding down, to get the surcharged figure."
+        },
+        "06": {
+          "expected": "203",
+          "mode": "numeric",
+          "level": 6,
+          "source": "Divide the surcharged figure from step 5 across 4 depots, rounding down, to get the per-depot figure."
+        },
+        "07": {
+          "expected": "123",
+          "mode": "numeric",
+          "level": 7,
+          "source": "Subtract the reserve of 80 from the per-depot figure in step 6 to get the per-depot allocation."
+        },
+        "08": {
+          "expected": "492",
+          "mode": "numeric",
+          "level": 8,
+          "source": "Multiply the per-depot allocation from step 7 back across 4 depots to get the total allocation."
+        }
+      },
+      "notes": "Depth 8. Step i is unanswerable without step i-1, so a partition that puts them in different packets must either carry the intermediate or fail. Which step fails is the measurement."
+    }
+  ]
+}

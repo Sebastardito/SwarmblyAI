@@ -208,3 +208,6 @@ id_ed25519*
 secrets.*
 .secrets/
 credentials.json
+
+# Internal working record, deliberately not published.
+docs/AUDIT_V0.md

@@ -391,9 +391,9 @@ def test_grounded_units_are_graded_with_their_agreement_attached() -> None:
 # the SDK dispatch path, which the first version of the length fix broke
 # --------------------------------------------------------------------------- #
 
-def _server_backend(base_url: str):
+def _server_backend(base_url: str, **kw):
     from swarmbly_v0.backends import OpenAICompatBackend
-    return OpenAICompatBackend(base_url=base_url, model="m")
+    return OpenAICompatBackend(base_url=base_url, model="m", **kw)
 
 
 class _StrictClient:
@@ -452,16 +452,20 @@ def test_a_non_ollama_endpoint_gets_no_extra_body_at_all() -> None:
 
 
 def test_the_http_path_still_carries_the_knob_in_the_body() -> None:
-    """Two paths, two delivery mechanisms; both must be exercised."""
-    backend = _server_backend("http://localhost:11434/v1")
-    backend._client = None
+    """Two paths, two delivery mechanisms; both must be exercised.
+
+    Hooks `_post_once` rather than `_post`: the transport, not the retry that
+    wraps it. Both paths now share that retry, so a fake that replaced `_post`
+    would be testing the length knob with the reliability policy switched off.
+    """
+    backend = _server_backend("http://localhost:11434/v1", prefer_sdk=False)
     captured: dict = {}
 
     def _fake_post(path, payload):
         captured.update({"path": path, "payload": payload})
         return {"choices": [{"message": {"content": "ok"}}]}
 
-    backend._post = _fake_post  # type: ignore[method-assign]
+    backend._post_once = _fake_post  # type: ignore[method-assign]
     assert backend.generate("hello", max_tokens=61) == "ok"
     assert captured["payload"]["options"] == {"num_predict": 61}
     assert captured["payload"]["max_tokens"] == 61
@@ -605,3 +609,56 @@ def test_flagging_lift_is_reported_inside_each_category_too() -> None:
     assert set(strat["by_stratum"]) == {"items", "prose"}
     # A category where everything is wrong cannot beat its own base rate.
     assert strat["by_stratum"]["prose"]["lift"] == 1.0
+
+
+def test_the_fragmentation_cost_is_reported_with_the_category_mix_held_equal() -> None:
+    """The third appearance of one pooling artifact, this time in the headline.
+
+    Built from the shape of the 25 August run: the baseline's graded items were
+    10 % grounded prose, the fragmented arms' were 24 %, and grounded prose is
+    the hardest category by a distance. Some of the raw 20.8-point gap was the
+    two arms not being made of the same thing.
+    """
+    from swarmbly_v0.experiment import standardised_cost
+
+    def _recs(category: str, correct: int, total: int, ) -> list[dict[str, object]]:
+        return [{"category": category, "correct": i < correct} for i in range(total)]
+
+    # Identical per-category accuracy in both arms; only the mix differs.
+    baseline = _recs("easy", 18, 20) + _recs("hard", 2, 20)
+    fragmented = _recs("easy", 9, 10) + _recs("hard", 6, 60)
+
+    raw_mono = 20 / 40
+    raw_frag = 15 / 70
+    assert raw_mono - raw_frag > 0.28, "raw comparison shows a large gap"
+
+    out = standardised_cost(baseline, fragmented, key="category")
+    assert abs(out["standardised"]["cost_points"]) < 1.0, (
+        "with the mix held equal there is no cost here at all")
+    assert out["mantel_haenszel"]["odds_ratio"] == pytest.approx(1.0, abs=0.05)
+    assert out["n_strata"] == 2
+
+
+def test_a_category_present_in_only_one_arm_is_dropped_and_named() -> None:
+    from swarmbly_v0.experiment import standardised_cost
+
+    out = standardised_cost(
+        [{"category": "a", "correct": True}, {"category": "a", "correct": False}],
+        [{"category": "a", "correct": True}, {"category": "b", "correct": False}],
+        key="category")
+    assert out["strata_dropped"] == ["b"]
+    assert out["n_strata"] == 1
+
+
+def test_the_adjusted_cost_recovers_a_real_difference() -> None:
+    """The guard must not flatten a genuine effect into nothing."""
+    from swarmbly_v0.experiment import standardised_cost
+
+    baseline = [{"category": c, "correct": i < 18}
+                for c in ("x", "y") for i in range(20)]
+    fragmented = [{"category": c, "correct": i < 10}
+                  for c in ("x", "y") for i in range(20)]
+    out = standardised_cost(baseline, fragmented, key="category")
+    assert out["standardised"]["cost_points"] == pytest.approx(40.0, abs=0.1)
+    assert out["mantel_haenszel"]["odds_ratio"] > 3.0
+    assert out["mantel_haenszel"]["p_value"] < 0.01

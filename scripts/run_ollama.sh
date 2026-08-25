@@ -248,6 +248,62 @@ run_v3c() {
   echo "  -> $out/report.html"
 }
 
+run_v4() {
+  local out="results/v4-$STAMP"
+  bold ""
+  bold "== V4 — how big is a semantic fragment, and can an editor repair the seam? =="
+  echo "  Three questions in one grid, because they are the same question seen"
+  echo "  from three sides."
+  echo ""
+  echo "  1. FRAGMENT SIZE. Every run since 14 August fixed N at 3 or 4 and swept"
+  echo "     k instead, so the whole truth-calibration arc sat on one point of a"
+  echo "     curve without saying so. Re-examining the V0 run finds that curve"
+  echo "     to be its one durable result: +6.7 % at ~133 tokens per"
+  echo "     fragment, +14.0 % at ~66, +35.1 % at ~33, monotone in 7 of 8"
+  echo "     categories. It has never been measured against ACCURACY, and the"
+  echo "     corpora were too short to reach past 133 tokens. Both are fixed here."
+  echo ""
+  echo "  2. THE EDITOR. The only post-processing the protocol has ever had is"
+  echo "     bridge synthesis, and on 25 August it did harm: it repaired a seam"
+  echo "     and became a third paragraph, breaking a constraint it cannot see."
+  echo "     The editor arm is paired -- every edited cell has an unedited twin."
+  echo ""
+  echo "  3. SHAPE. S* is claimed to be a semantic unit, not a token count, so it"
+  echo "     should differ between a topic, a row group and a dependency step."
+  echo ""
+  echo "  rho is swept at 2.0 and 3.0, not 1.5: the reachable floor grows with N"
+  echo "  (rho_floor = (sum|task_i| + N*|header_i|) / |P|), and at N=6 on this"
+  echo "  corpus the floor is already 1.99. Cells below their floor are flagged"
+  echo "  rho_reachable=false; compare tax across N WITHIN one rho, never across."
+  echo ""
+  echo "  Predictions, stated before the run so they can fail:"
+  echo "    - tax and accuracy both improve monotonically with fragment size;"
+  echo "    - dependency_chain degrades fastest in N, because its units are"
+  echo "      ordered and a packet boundary cuts a carried value;"
+  echo "    - the editor raises constraint scores and does NOT raise item"
+  echo "      accuracy. It never sees the source, so a rise there means it is"
+  echo "      answering from its own knowledge and the arm is contaminated."
+  echo ""
+  echo "  Read, in order:"
+  echo "    fragment_size_curve.points      -- tax_balanced and accuracy_balanced"
+  echo "                                      against tokens_per_fragment."
+  echo "    editor_effect                   -- apply_rate, mean_constraint_gain,"
+  echo "                                      and accuracy_delta as the guard."
+  echo "    truth_calibration.by_category   -- dependency_chain by level is which"
+  echo "                                      STEP the chain broke at."
+  echo "  Output: $out"
+  [ -f prompts/complex.json ] || python3 scripts/make_complex.py
+  mkdir -p "$out"
+  python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/complex.json \
+    --rho 2.0,3.0 --n 2,4,6,8 --k 1,3 --editor \
+    --candidates 2 --seed 0 \
+    --out "$out" 2>&1 | tee "$out/run.log" || true
+  echo "  -> $out/summary.json"
+  echo "  -> $out/composition_traces.md"
+}
+
 case "$TIER" in
   smoke)
     out="results/smoke-$STAMP"
@@ -266,8 +322,9 @@ case "$TIER" in
   v3c) run_v3c ;;
   v3c-gt) run_v3c_gt ;;
   v3c-ff) run_v3c_ff ;;
+  v4) run_v4 ;;
   all) run_v0; run_v3c ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | all" ;;
 esac
 
 bold ""

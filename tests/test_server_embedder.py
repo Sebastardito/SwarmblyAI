@@ -18,17 +18,34 @@ from swarmbly_v0.backends import (
 )
 
 
-class _Unreachable(OpenAICompatBackend):
-    """A backend whose /embeddings route always fails."""
+class _HttpOnly(OpenAICompatBackend):
+    """Forces the HTTP transport so a stub on `_post_once` is actually reached.
 
-    def _post(self, path, payload):  # type: ignore[override]
+    Without this the fake is bypassed on any machine with the openai package
+    installed, and the test silently measures the SDK talking to localhost.
+    """
+
+    def __init__(self, **kw):
+        super().__init__(prefer_sdk=False, **kw)
+
+
+class _Unreachable(_HttpOnly):
+    """A backend whose /embeddings route always fails.
+
+    Stubs `_post_once`, the transport, rather than `_post`, the retry policy
+    wrapped around it. Stubbing the policy layer silently disabled the bounded
+    retry for anything these fakes drove, which is how the SDK path came to have
+    no retry at all without a single test noticing.
+    """
+
+    def _post_once(self, path, payload):  # type: ignore[override]
         raise OSError("connection refused")
 
 
-class _Working(OpenAICompatBackend):
+class _Working(_HttpOnly):
     """A backend whose /embeddings route returns two fixed vectors."""
 
-    def _post(self, path, payload):  # type: ignore[override]
+    def _post_once(self, path, payload):  # type: ignore[override]
         assert path == "/embeddings"
         n = len(payload["input"])
         return {"data": [{"embedding": [float(i + 1), 0.0, 0.0]} for i in range(n)]}
@@ -83,7 +100,7 @@ def test_run_metadata_reports_the_degradation(monkeypatch):
     from swarmbly_v0.experiment import SweepConfig, load_prompts, run_sweep
 
     class _NoEmbed(_Working):
-        def _post(self, path, payload):  # type: ignore[override]
+        def _post_once(self, path, payload):  # type: ignore[override]
             if path == "/embeddings":
                 raise OSError("404 no embeddings route")
             return {"choices": [{"message": {"content": "Alpha beta. Gamma delta epsilon."}}]}
@@ -105,9 +122,9 @@ def test_run_metadata_is_clean_when_embeddings_work():
     from swarmbly_v0.experiment import SweepConfig, load_prompts, run_sweep
 
     class _Both(_Working):
-        def _post(self, path, payload):  # type: ignore[override]
+        def _post_once(self, path, payload):  # type: ignore[override]
             if path == "/embeddings":
-                return super()._post(path, payload)
+                return super()._post_once(path, payload)
             return {"choices": [{"message": {"content": "Alpha beta. Gamma delta epsilon."}}]}
 
     prompts = load_prompts()[:2]

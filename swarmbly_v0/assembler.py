@@ -96,6 +96,50 @@ def _order_fragments(fragments: Sequence[Fragment], plan: Plan | None) -> list[F
     return ordered
 
 
+def _join(pieces: Sequence[str], paragraph_join: bool | int) -> str:
+    """Splice the fragments, inserting the requested number of paragraph breaks.
+
+    The rule this replaces tied the two together: a composition asking for P
+    paragraphs was planned as P fragments and every junction became a break.
+    That fixed a real defect -- on 24 August every k>=3 composition came back as
+    one block where two were required -- but it did so by making the number of
+    *workers* equal the number of *paragraphs*, and those are different things.
+    The cost only became visible when fragment size became the variable under
+    study: the sweep asked for N in (2, 4, 8, 16) and every cell came back at
+    N = 6, because the prompt said "exactly six paragraphs" and the planner
+    obeyed the prompt instead of the experiment.
+
+    So the two are decoupled here. ``paragraph_join`` may be:
+
+    * ``False`` -- splice with spaces, the plain case;
+    * ``True`` -- a break at every junction, the old behaviour;
+    * an integer P -- produce exactly P paragraphs, by grouping the fragments
+      into P contiguous, balanced buckets.
+
+    With N > P the extra fragments join inside a paragraph, which is what a
+    paragraph made of several workers' output should look like. With N < P the
+    breaks available are fewer than the breaks required, and the shortfall is
+    left to fail honestly rather than being papered over: a partition too coarse
+    to express the requested shape *is* a finding about the partition.
+    """
+    if not pieces:
+        return ""
+    if paragraph_join is True:
+        return "\n\n".join(pieces)
+    if not paragraph_join:
+        return " ".join(pieces)
+
+    wanted = max(1, min(int(paragraph_join), len(pieces)))
+    per_group, remainder = divmod(len(pieces), wanted)
+    groups: list[str] = []
+    cursor = 0
+    for index in range(wanted):
+        size = per_group + (1 if index < remainder else 0)
+        groups.append(" ".join(pieces[cursor:cursor + size]))
+        cursor += size
+    return "\n\n".join(g for g in groups if g)
+
+
 def select_then_splice(
     fragments: Sequence[Fragment],
     contract: Contract,
@@ -104,7 +148,7 @@ def select_then_splice(
     plan: Plan | None = None,
     embedder: Any | None = None,
     window_tokens: int = DEFAULT_WINDOW_TOKENS,
-    paragraph_join: bool = False,
+    paragraph_join: bool | int = False,
 ) -> Assembly:
     """Assemble fragments into one answer, bridging only where the seam is bad.
 
@@ -209,12 +253,7 @@ def select_then_splice(
         sentence_cursor += len(split_sentences(text))
         previous_task = fragment.task_id
 
-    # A composition that asked for N paragraphs was planned as N fragments, one
-    # per paragraph, so the join has to be a paragraph break. Splicing them with
-    # a space produced a single block: on 24 August every k>=3 composition came
-    # back as one paragraph where two were required, and the paragraph_count
-    # constraint failed for a reason that had nothing to do with the models.
-    assembled = ("\n\n" if paragraph_join else " ").join(pieces)
+    assembled = _join(pieces, paragraph_join)
     total_sentences = len(split_sentences(assembled))
     offsets = [min(o, max(total_sentences - 1, 0)) for o in offsets]
 
