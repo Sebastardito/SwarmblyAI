@@ -276,17 +276,35 @@ run_v4() {
   echo "  corpus the floor is already 1.99. Cells below their floor are flagged"
   echo "  rho_reachable=false; compare tax across N WITHIN one rho, never across."
   echo ""
+  echo "  4. THE CARRY. The first V4 run found dependency_chain costing +47.2 %"
+  echo "     at the widest fragment where prose cost +5.1 % on fragments of the"
+  echo "     same size. The cause was not fragment size. At rho = 2.0 NOT ONE"
+  echo "     packet carried a predecessor block: it was optional context, third"
+  echo "     in priority, funded from slack that ran out first, so every"
+  echo "     successor was asked to divide a number nobody had told it. The"
+  echo "     carry is now mandatory where a task text consumes a prior value,"
+  echo "     and typed -- every labelled value rather than the lead sentence."
+  echo ""
   echo "  Predictions, stated before the run so they can fail:"
   echo "    - tax and accuracy both improve monotonically with fragment size;"
-  echo "    - dependency_chain degrades fastest in N, because its units are"
-  echo "      ordered and a packet boundary cuts a carried value;"
+  echo "    - the typed carry raises dependency_chain accuracy sharply and moves"
+  echo "      long_prose not at all -- there is nothing to type in prose, so a"
+  echo "      change there means the arms differ for some other reason;"
+  echo "    - rho rises slightly under the carry. Completeness is bought, not"
+  echo "      found: three values cost more to send than one;"
   echo "    - the editor raises constraint scores and does NOT raise item"
   echo "      accuracy. It never sees the source, so a rise there means it is"
-  echo "      answering from its own knowledge and the arm is contaminated."
+  echo "      answering from its own knowledge and the arm is contaminated;"
+  echo "    - aggregate claims are wrong more often than local ones, and"
+  echo "      truth_calibration.by_claim is where a confidence map could finally"
+  echo "      have two classes that differ in correctness rather than only in"
+  echo "      agreement."
   echo ""
   echo "  Read, in order:"
   echo "    fragment_size_curve.points      -- tax_balanced and accuracy_balanced"
   echo "                                      against tokens_per_fragment."
+  echo "    carry_effect                    -- accuracy_delta_by_category first,"
+  echo "                                      then rho_delta as its price."
   echo "    editor_effect                   -- apply_rate, mean_constraint_gain,"
   echo "                                      and accuracy_delta as the guard."
   echo "    truth_calibration.by_category   -- dependency_chain by level is which"
@@ -297,7 +315,7 @@ run_v4() {
   python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/complex.json \
-    --rho 2.0,3.0 --n 2,4,6,8 --k 1,3 --editor \
+    --rho 2.0,3.0 --n 2,4,6,8 --k 1,3 --editor --typed-carry \
     --candidates 2 --seed 0 \
     --out "$out" 2>&1 | tee "$out/run.log" || true
   echo "  -> $out/summary.json"

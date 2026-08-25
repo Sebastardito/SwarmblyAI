@@ -64,11 +64,36 @@ fragments shrink. Its tax then saturates near +76 % from N=4 onward, which is
 what a broken chain looks like: once the carried value is lost, losing it again
 costs nothing more.
 
-**No S\* exists for the dependency chain in the range tested.** Making fragments
-bigger does not fix it — at the widest fragment available it is still the most
-expensive shape by an order of magnitude. That is an argument for a different
-mechanism rather than a different parameter, and it is the case for the
-dependency-axis work.
+**No S\* exists for the dependency chain in the range tested** — and the reason
+turned out not to be fragment size at all.
+
+Tracing a chain packet through the packer afterwards showed that at ρ = 2.0, the
+value this run used, **not one packet carried a predecessor block**. The block
+was optional context, third in priority behind the contract header and the length
+note, funded from whatever slack remained after the task text — and the slack ran
+out first. Every successor was handed "divide the net value from step 2" with
+nothing about what step 2 produced. The packet was unanswerable by construction.
+
+So the figures above are real but were misread when first written down. They are
+not the price of fragmenting an ordered task; they are the price of fragmenting
+it *while dropping the carry*. The saturation near +76 % from N=4 onward is the
+signature: once the carried value is gone, losing it again costs nothing more.
+
+Two changes follow, and they are separable. The carry is now **mandatory** for a
+task whose text consumes a prior value — on the same footing as the task text,
+rather than competing with the glossary for slack. And it is **typed**: every
+labelled value the fragment produced, where `summarize_fragment` kept the lead
+sentence and silently dropped the rest, so a fragment covering steps 3 to 5
+handed its successor step 3 and a list of entities.
+
+Completeness is bought rather than found: 10 tokens against 4 on a terse
+fragment. A first draft of the mechanism predicted ρ would *fall*, on the
+reasoning that a number is cheaper than prose. Measurement said otherwise — the
+prose summary is cheap precisely because it is incomplete — and the prediction
+was corrected rather than the measurement.
+
+The re-run with both changes is what settles whether an ordered chain is
+expensive at all.
 
 ## 3. The editor repairs form and does not touch fact — exactly as predicted
 

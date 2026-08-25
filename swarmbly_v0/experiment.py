@@ -47,7 +47,7 @@ from .consensus import (
     segment_units,
 )
 from .composition_trace import build_trace, render_trace
-from .constraints import check_numeric_fidelity, is_source_table_row
+from .constraints import asserts_an_aggregate, check_numeric_fidelity, is_source_table_row
 from .editor import EditorReport, edit_assembled
 from .grading import grade_units
 from .metrics import (
@@ -61,8 +61,9 @@ from .metrics import (
     seam_error_taxonomy,
 )
 from .packing import build_monolithic_prompt, build_packets, packing_floor
-from .planner import (BASELINE_FORMAT_DIRECTIVE, requested_paragraphs, global_contract,
-                      plan as build_plan, split_enumerated, summarize_fragment)
+from .planner import (BASELINE_FORMAT_DIRECTIVE, carry_values, requested_paragraphs,
+                      global_contract, plan as build_plan, split_enumerated,
+                      summarize_fragment)
 from .router import DEFAULT_THRESHOLD, evaluate_router, is_decomposable
 from .schema import Contract, Fragment, Plan
 from .textutil import count_tokens, split_sentences
@@ -137,6 +138,7 @@ CSV_COLUMNS: list[str] = [
     "baseline_booook",
     "baseline_entity_grid",
     "baseline_judge",
+    "typed_carry",
     "editor_applied",
     "editor_reason",
     "editor_score_before",
@@ -170,7 +172,7 @@ the predictor.
 TRUTH_CSV_COLUMNS: tuple[str, ...] = (
     "prompt_id", "category", "level", "condition", "rho_target", "n_tasks", "k", "task_id",
     "unit_index", "item_id", "label", "agreement", "judge_score", "accepted",
-    "mode", "expected", "given", "correct", "graded", "unknown_item", "echoed",
+    "mode", "expected", "given", "correct", "graded", "unknown_item", "echoed", "claim",
 )
 """Sidecar written next to ``results.csv`` holding one row per consensus unit.
 
@@ -265,6 +267,14 @@ class SweepConfig:
 
     rhos: tuple[float, ...] = (1.0, 1.25, 1.5, 2.0)
     ns: tuple[int, ...] = (2, 4, 8)
+    carries: tuple[bool, ...] = (False,)
+    """Whether a predecessor's labelled values travel verbatim, swept as a condition.
+
+    The dependency axis. With a prose summary the value a successor needs is
+    paraphrased and rationed; with a typed carry it is four tokens that cannot be
+    truncated away. Swept rather than switched on, so every typed cell has an
+    untyped twin at the same prompt, N and k.
+    """
     editors: tuple[bool, ...] = (False,)
     """Whether the post-processing editor runs, swept as a condition of its own.
 
@@ -508,6 +518,7 @@ def _numeric_records(
                 "given": unit.text[:200], "correct": verdict,
                 "graded": verdict is not None, "unknown_item": False,
                 "echoed": copied,
+                "claim": "aggregate" if asserts_an_aggregate(unit.text) else "local",
             })
 
     return records, {
@@ -592,6 +603,7 @@ def run_monolithic(
     row = _base_row(spec, config, backend)
     row.update({
         "condition": "monolithic",
+        "typed_carry": "",
         "n_tasks": 1,
         "n_levels": 1,
         "sequential_plan": False,
@@ -675,6 +687,7 @@ def run_fragmented(
     contract: Contract | None = None,
     k: int = 1,
     use_editor: bool = False,
+    typed_carry: bool = False,
 ) -> dict[str, Any]:
     """One cell of the sweep: plan, pack at ``rho_target``, generate, assemble.
 
@@ -769,7 +782,7 @@ def run_fragmented(
                          order=order_index.get(task_id, len(fragments)),
                          packet_tokens=packet.token_count)
             )
-            summaries[task_id] = summarize_fragment(candidates[0])
+            summaries[task_id] = summarize_fragment(candidates[0], typed=typed_carry)
 
     final_packing = build_packets(packing_contract, plan, rho_target, summaries)
     rho_achieved = packet_tokens_total / max(count_tokens(spec.text), 1)
@@ -809,6 +822,7 @@ def run_fragmented(
     row = _base_row(spec, config, backend)
     row.update({
         "condition": "fragmented+editor" if use_editor else "fragmented",
+        "typed_carry": bool(typed_carry),
         "n_tasks": len(plan.tasks),
         "n_levels": len(plan.topological_levels()),
         "sequential_plan": plan.sequential,
@@ -1022,19 +1036,21 @@ def run_sweep(
             for n in cfg.ns:
                 for k in cfg.ks:
                     for use_editor in cfg.editors:
+                      for carry in cfg.carries:
                         row = run_fragmented(
                             spec, engine, embed, cfg, rho, n, tau,
                             baseline=baselines[spec.prompt_id],
                             contract=contracts[spec.prompt_id],
                             k=k,
                             use_editor=use_editor,
+                            typed_carry=carry,
                         )
                         rows.append(row)
                         if progress:
                             agreement = row.get("mean_agreement", "")
                             agreement_text = (f"agree={agreement:.3f}"
                                               if isinstance(agreement, float) else "agree=n/a")
-                            edited = " +ed" if use_editor else "    "
+                            edited = (" +ed" if use_editor else "    ") + ("+c" if carry else "  ")
                             progress(
                                 f"sweep     {spec.prompt_id:<28} rho={rho:<5} N={n:<3} "
                                 f"k={k:<3}{edited} rho_hat={row['rho_achieved']:.2f} "
@@ -1314,6 +1330,22 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
                      for lvl, recs in sorted(by_level.items())},
         "by_k": {str(k): agreement_truth_calibration(recs)
                  for k, recs in sorted(by_k.items())},
+        "by_claim": {
+            claim: agreement_truth_calibration(
+                [r for r in fragmented if str(r.get("claim", "")) == claim])
+            for claim in ("aggregate", "local")
+            if any(str(r.get("claim", "")) == claim for r in fragmented)
+        },
+        "claim_note": (
+            "Split by whether the unit asserts something requiring sight of rows the "
+            "fragment may not hold. On 24 August aggregate claims were wrong 47.7% of the "
+            "time against 31.7% for local ones (Fisher p = 0.014), which is the first split "
+            "in this project where the two classes differ in correctness rather than only "
+            "in agreement. Six calibration attempts failed because the predictor saturated; "
+            "this is the other half a calibration needs, and reading it within each class "
+            "rather than across the mixture is what keeps it from repeating the pooling "
+            "artifact that has produced a wrong headline three times."
+        ),
         "fragmentation_cost": {
             "monolithic": _accuracy(baseline),
             "fragmented": _accuracy(fragmented),
@@ -1937,6 +1969,105 @@ def editor_effect(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
+def carry_effect(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """What a typed carry bought on the dependency axis, and what it cost in rho.
+
+    Paired: the carry is swept as a condition, so every typed cell has an untyped
+    twin at the same prompt, rho, N, k and editor setting.
+
+    V4 measured the problem this addresses. At the widest fragment the ordered
+    chain cost +47.2 % where prose cost +5.1 % and tables +3.3 % on fragments of
+    identical size, with accuracy falling monotonically 0.259 -> 0.091 and the
+    tax then saturating near +76 % -- what a broken chain looks like once the
+    carried value is gone. No fragment size in the tested range made it
+    affordable, which is why this is a mechanism rather than a parameter.
+
+    The prediction is one-sided on accuracy and explicit about its price:
+
+    * ``accuracy_delta`` should be **positive and large on dependency_chain**,
+      because the successor now receives every value its predecessor produced
+      rather than the lead sentence and an entity list;
+    * ``rho_delta`` is expected to be **slightly positive**, and is reported so
+      the trade is visible. An earlier draft predicted it would be negative on
+      the grounds that a carried number is cheaper than prose. Measurement said
+      otherwise: the prose summary is cheap precisely *because* it is
+      incomplete, keeping only the first value of however many the fragment
+      produced. Delivering three values costs more than delivering one. What the
+      carry buys is completeness, and it is worth stating that it is bought
+      rather than found.
+
+    ``accuracy_delta_by_category`` is reported because a typed carry should do
+    nothing at all where there is nothing to type. Prose fragments produce no
+    labelled items, :func:`~swarmbly_v0.planner.carry_values` returns empty, and
+    the summary falls back to prose unchanged. A gain appearing there would mean
+    the two arms differ for some reason other than the carry.
+    """
+    def _key(row: Mapping[str, Any]) -> tuple:
+        return (str(row.get("prompt_id")), row.get("rho_target"), row.get("n_tasks"),
+                row.get("k"), str(row.get("condition")))
+
+    plain = {_key(r): r for r in rows
+             if str(r.get("condition", "")).startswith("fragmented")
+             and r.get("typed_carry") is not True}
+    typed = {_key(r): r for r in rows
+             if str(r.get("condition", "")).startswith("fragmented")
+             and r.get("typed_carry") is True}
+    pairs = [(plain[key], typed[key]) for key in sorted(typed.keys() & plain.keys())]
+    if not pairs:
+        return {"n_pairs": 0, "note": "the typed-carry arm was not run"}
+
+    def _accuracy(side: Sequence[Mapping[str, Any]], category: str = "") -> float | None:
+        graded = [rec for r in side for rec in (r.get("_truth_records") or [])
+                  if rec.get("correct") is not None
+                  and (not category or str(rec.get("category")) == category)]
+        return (sum(1 for r in graded if r["correct"]) / len(graded)) if graded else None
+
+    categories = sorted({str(rec.get("category")) for _, t in pairs
+                         for rec in (t.get("_truth_records") or [])})
+    by_category: dict[str, Any] = {}
+    for category in categories:
+        before = _accuracy([p for p, _ in pairs], category)
+        after = _accuracy([t for _, t in pairs], category)
+        if before is None or after is None:
+            continue
+        by_category[category] = {
+            "accuracy_plain": round(before, 6), "accuracy_typed": round(after, 6),
+            "delta": round(after - before, 6),
+        }
+
+    def _mean_of(field: str, side: int) -> float | None:
+        values = [float(pair[side][field]) for pair in pairs
+                  if isinstance(pair[side].get(field), (int, float))]
+        return (sum(values) / len(values)) if values else None
+
+    rho_plain, rho_typed = _mean_of("rho_achieved", 0), _mean_of("rho_achieved", 1)
+    tax_plain, tax_typed = _mean_of("coherence_tax_booook", 0), _mean_of("coherence_tax_booook", 1)
+    acc_plain, acc_typed = _accuracy([p for p, _ in pairs]), _accuracy([t for _, t in pairs])
+
+    return {
+        "n_pairs": len(pairs),
+        "accuracy_plain": round(acc_plain, 6) if acc_plain is not None else None,
+        "accuracy_typed": round(acc_typed, 6) if acc_typed is not None else None,
+        "accuracy_delta": round(acc_typed - acc_plain, 6)
+        if (acc_plain is not None and acc_typed is not None) else None,
+        "accuracy_delta_by_category": by_category,
+        "rho_plain": round(rho_plain, 6) if rho_plain is not None else None,
+        "rho_typed": round(rho_typed, 6) if rho_typed is not None else None,
+        "rho_delta": round(rho_typed - rho_plain, 6)
+        if (rho_plain is not None and rho_typed is not None) else None,
+        "tax_delta": round(tax_typed - tax_plain, 6)
+        if (tax_plain is not None and tax_typed is not None) else None,
+        "note": (
+            "A typed carry replaces the extractive prose summary -- lead sentence plus "
+            "entity list -- with every labelled value the fragment produced. Read rho_delta "
+            "beside accuracy_delta: the carry buys completeness and pays a small amount of "
+            "context for it, and both halves belong in the report. Categories with no "
+            "labelled items should show no change at all: the carry falls back to prose "
+            "wherever there is nothing to type."
+        ),
+    }
+
+
 def falsifiable_go_no_go(
     rows: Sequence[Mapping[str, Any]],
     category: str,
@@ -2185,6 +2316,7 @@ def summarize(
         "best_category_cell": best_cell,
         "fragment_size_curve": fragment_size_curve(rows),
         "editor_effect": editor_effect(rows),
+        "carry_effect": carry_effect(rows),
         "go_no_go": {
             "criterion": "exists (category, rho) with relative coherence degradation < 5%",
             "passed": bool(passing),

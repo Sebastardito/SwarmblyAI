@@ -31,6 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
+from .planner import consumes_predecessor
 from .schema import Contract, Packet, Plan, Task
 from .textutil import count_tokens, truncate_tokens
 
@@ -88,6 +89,56 @@ def _predecessor_block(task: Task, summaries: Mapping[str, str]) -> str:
         return ""
     lines = "\n".join(f"- {dep}: {text}" for dep, text in relevant)
     return "[PREDECESSOR SUMMARIES]\n" + lines
+
+
+def _task_text(task: Task) -> str:
+    """Whatever this Task carries as its instruction, across field spellings."""
+    for field in ("text", "instruction", "body", "description", "prompt"):
+        value = getattr(task, field, "")
+        if value:
+            return str(value)
+    return ""
+
+
+def carry_block(task: Task, summaries: Mapping[str, str], sequential: bool) -> str:
+    """The predecessor block a dependent task may not be rationed out of.
+
+    A task that consumes a predecessor's *value* -- "divide the net value from
+    step 2" -- is unanswerable without it. Until now that block was optional
+    context, third in priority behind the contract header and the length note,
+    funded out of whatever slack remained after the task text. On the V4 chain
+    corpus at rho = 2.0 the slack ran out first and **not one packet carried it**:
+    every successor was asked to divide a number nobody had told it.
+
+    That is the real cause of V4's dependency-chain result -- +47.2 % coherence
+    tax at the widest fragment, accuracy falling to 0.091, the tax saturating near
+    +76 %. It was read as "an ordered chain is expensive to fragment". It is not.
+    The packet was unanswerable by construction, and no fragment size fixes a
+    packet that is missing the one thing it needs.
+
+    So a carry is mandatory, on the same footing as the task text. What makes
+    that affordable rather than a new tax on rho is the typed form: ``[02]=2247``
+    is four tokens where the prose summary it replaces is forty. The mechanism
+    and the budget argument are the same mechanism.
+
+    Gated on the task *text*, via
+    :func:`~swarmbly_v0.planner.consumes_predecessor`, rather than on the plan's
+    shape. ``Plan.sequential`` is true for any enumerated segmentation, an
+    independent item batch included, and forcing a predecessor's answers into
+    packets with no use for them is actively harmful: the successor restates them
+    as its own, and an enumerated corpus reported 379 graded items against a key
+    holding 150.
+
+    "Divide the net value **from step 2**" consumes a value. "[01] pallet R752,
+    251 kg" does not. So: mandatory where the text says a value is needed, absent
+    where the items are independent.
+
+    Returns the block, or "" when the task consumes nothing, or when it depends
+    on nothing yet produced.
+    """
+    if not consumes_predecessor(_task_text(task)):
+        return ""
+    return _predecessor_block(task, summaries)
 
 
 def _context_blocks(
@@ -164,6 +215,7 @@ def build_packet(
     task: Task,
     predecessor_summaries: Mapping[str, str],
     rho_budget: float,
+    sequential: bool = False,
 ) -> Packet:
     """Build one packet ``K_i`` targeting a share of the global ``rho`` budget.
 
@@ -191,17 +243,27 @@ def build_packet(
     task_block = _task_block(task)
     task_tokens = count_tokens(task_block)
 
-    budget = max(task_tokens, int(round(rho_budget * max(contract.prompt_tokens, 1))))
-    remaining = budget - task_tokens
+    # The carry is mandatory, not context: see is_carry_mandatory. It is added to
+    # the floor rather than funded from slack, so a budget too small to hold it
+    # overshoots rho_target visibly instead of silently dropping the one block
+    # that makes the task answerable.
+    carry = carry_block(task, predecessor_summaries, sequential)
+    carry_tokens = count_tokens(carry) if carry else 0
 
-    candidates = _context_blocks(contract, task, predecessor_summaries)
+    budget = max(task_tokens + carry_tokens,
+                 int(round(rho_budget * max(contract.prompt_tokens, 1))))
+    remaining = budget - task_tokens - carry_tokens
+
+    candidates = [(name, text) for name, text in
+                  _context_blocks(contract, task, predecessor_summaries)
+                  if not (carry and name == "predecessors")]
     natural_tokens = sum(count_tokens(text) for _, text in candidates if text)
     if remaining > natural_tokens:
         for i, block in enumerate(_expansion_blocks(contract, task, remaining - natural_tokens)):
             candidates.append((f"expansion_{i}", block))
 
-    included: list[str] = []
-    names: list[str] = []
+    included: list[str] = [carry] if carry else []
+    names: list[str] = ["predecessors"] if carry else []
     truncated = False
     for name, text in candidates:
         if not text:
@@ -255,9 +317,25 @@ class PackingResult:
         return self.rho_achieved - self.rho_target
 
 
-def packing_floor(contract: Contract, plan: Plan) -> float:
-    """Smallest ``rho`` reachable for this plan (tasks + markers, no context)."""
+def packing_floor(
+    contract: Contract,
+    plan: Plan,
+    summaries: Mapping[str, str] | None = None,
+) -> float:
+    """Smallest ``rho`` reachable for this plan (tasks + markers, no context).
+
+    On a sequential plan the mandatory carry is part of the floor, because it is
+    part of what a packet must contain to be answerable. Passing ``summaries``
+    gives the truthful figure once they exist; without them the floor is the
+    optimistic one, which is what a caller planning before generation can know.
+    Reporting the optimistic floor as if it were final would let a run announce
+    ``rho_reachable=true`` for a cell that then overshoots.
+    """
     total = sum(count_tokens(_task_block(task)) for task in plan.tasks)
+    if summaries and getattr(plan, "sequential", False):
+        total += sum(
+            count_tokens(carry_block(task, summaries, True)) for task in plan.tasks
+        )
     return total / max(contract.prompt_tokens, 1)
 
 
@@ -308,7 +386,9 @@ def build_packets(
         shares = [slack / n] * n
 
     packets = [
-        build_packet(contract, task, summaries, (mandatory[i] + shares[i]) / prompt_tokens)
+        build_packet(contract, task, summaries,
+                     (mandatory[i] + shares[i]) / prompt_tokens,
+                     sequential=bool(getattr(plan, "sequential", False)))
         for i, task in enumerate(plan.tasks)
     ]
 

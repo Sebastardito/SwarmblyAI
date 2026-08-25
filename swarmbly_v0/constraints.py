@@ -57,6 +57,7 @@ __all__ = [
     "CONSTRAINT_KINDS",
     "check_numeric_fidelity",
     "derived_aggregates",
+    "asserts_an_aggregate",
     "is_source_table_row",
     "ConstraintResult",
     "CompositionReport",
@@ -250,6 +251,40 @@ manifest is most likely to quote.
 """
 
 _TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
+
+_AGGREGATE_RE = re.compile(
+    r"\b(total|totals|totalling|sum|summed|altogether|combined|aggregate|"
+    r"heaviest|lightest|largest|smallest|highest|lowest|maximum|minimum|"
+    r"average|averages|mean|median|overall|in all|across all|every consignment)\b",
+    re.IGNORECASE,
+)
+
+
+def asserts_an_aggregate(text: str) -> bool:
+    """Does this claim require sight of rows the fragment may not hold?
+
+    The distinction V4 found and could not act on. Splitting graded table-summary
+    units by whether they assert a total, an average or an extreme gave 47.7 %
+    wrong against 31.7 % for claims about the rows in front of the worker --
+    Fisher exact p = 0.014 over 256 units. A worker asked for the total while
+    holding a third of the table does not decline; it invents one, and the
+    inventions are not subtle: "a total weight of 1650 kg" over twenty rows one
+    of which weighs 935.
+
+    Why this belongs in the codebase rather than in an analysis script: six
+    attempts to calibrate the confidence map failed because the predictor
+    saturated -- 0.85 to 0.96 agreement with almost no spread, so nothing could
+    discriminate. This is the first split where the two classes demonstrably
+    differ in *correctness*, which is the other half a calibration needs. Marking
+    it per record lets the calibration be computed within each class instead of
+    across a mixture, which is the pooling error that has produced a wrong
+    headline three times in this project.
+
+    Deliberately lexical. A classifier here would need its own validation and
+    would put a model back inside the measurement, which is what the mechanical
+    graders exist to avoid.
+    """
+    return bool(_AGGREGATE_RE.search(text or ""))
 
 
 def is_source_table_row(text: str) -> bool:

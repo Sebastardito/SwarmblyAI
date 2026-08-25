@@ -36,7 +36,8 @@ from .textutil import (
     truncate_tokens,
 )
 
-__all__ = ["BASELINE_FORMAT_DIRECTIVE", "global_contract", "plan",
+__all__ = ["BASELINE_FORMAT_DIRECTIVE", "carry_values", "consumes_predecessor",
+           "global_contract", "plan",
            "split_enumerated", "summarize_fragment", "suggest_n_tasks"]
 
 _AUDIENCE_RE = re.compile(
@@ -457,7 +458,85 @@ def plan(
     return Plan(prompt=prompt, tasks=tasks, sequential=sequential)
 
 
-def summarize_fragment(text: str, max_tokens: int = 40) -> str:
+_CONSUMES_RE = re.compile(
+    r"\b(?:"
+    r"from step\s+\d+|in step\s+\d+|of step\s+\d+|step\s+\d+'s|"
+    r"the previous step|the step before|the preceding step|"
+    r"you (?:derived|computed|calculated|obtained|just found)|"
+    r"the (?:result|value|figure|total|output) (?:from|of) (?:the )?(?:previous|preceding|step)"
+    r")\b", re.IGNORECASE)
+"""Does this task text consume a value another task produces?
+
+The signal that decides whether a predecessor's output is mandatory context or
+merely useful context, and it has to be read from the text rather than from the
+plan's shape. ``Plan.sequential`` is true for *any* enumerated segmentation,
+including an item batch whose items are wholly independent -- so gating on it
+forced a predecessor's answers into packets that had no use for them, and the
+successors restated those answers as their own: an enumerated corpus reported 379
+graded items against a key holding 150.
+
+"Divide the net value **from step 2**" consumes. "[01] pallet R752, 251 kg" does
+not. The distinction is in the words, so that is where it is read.
+"""
+
+
+def consumes_predecessor(task_text: str) -> bool:
+    """True when this task cannot be answered without a prior task's output."""
+    return bool(_CONSUMES_RE.search(task_text or ""))
+
+
+_CARRY_RE = re.compile(r"^\s*[\[(]?(\d{1,3})[\]).:]\s*(.+?)\s*$", re.MULTILINE)
+_CARRY_VALUE_RE = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
+
+
+def carry_values(text: str) -> dict[str, str]:
+    """The labelled values a fragment produced, keyed by item id.
+
+    A *typed carry*, as opposed to the prose summary below. The distinction is
+    the whole dependency-axis argument in one function.
+
+    On V4's chain corpus, step 3 says "divide the net value from step 2 by four".
+    What the successor needs from step 2 is the number 2247 -- and what it got
+    was :func:`summarize_fragment`'s output: a lead sentence plus an entity list,
+    forty tokens of prose, competing for a rationed context budget with the
+    glossary and the contract header. A chain whose carried value can be
+    truncated away is a chain that breaks, and V4 measured it breaking: +47.2 %
+    coherence tax at the widest fragment, where prose cost +5.1 % and tables
+    +3.3 % on fragments of identical size, with accuracy falling monotonically
+    0.259 -> 0.091 as the partition got finer.
+
+    The gain is **completeness, not cheapness** -- an earlier draft of this
+    docstring predicted that rho would fall, and measurement said otherwise.
+    :func:`summarize_fragment` is extractive: it keeps the *lead sentence* and
+    drops everything after it. A fragment that produced steps 3, 4 and 5 hands
+    its successor step 3 and an entity list. The typed carry hands over all
+    three, for 10 tokens against the prose summary's 4 on a terse fragment and
+    15 against 16 on a verbose one.
+
+    So the honest prediction is one-sided on accuracy and explicit about its
+    cost: chain accuracy should rise sharply because the successor now receives
+    the value it is told to consume, and rho may rise modestly because delivering
+    three values costs more than delivering one. A version of this that were
+    also cheaper would be better; this one is not, and reporting it as if it were
+    would misdescribe the trade.
+
+    Returns an empty mapping when the fragment has no labelled items, which is
+    every prose fragment -- so the caller can ask for a typed carry
+    unconditionally and get the prose summary wherever typing does not apply.
+    """
+    out: dict[str, str] = {}
+    for match in _CARRY_RE.finditer(text or ""):
+        item_id, body = match.group(1).zfill(2), match.group(2).strip()
+        if not body:
+            continue
+        # The *last* number in the line, for the same reason grade_answer takes
+        # it: a model that shows its work ends on the answer.
+        numbers = _CARRY_VALUE_RE.findall(body)
+        out[item_id] = numbers[-1].replace(",", "") if numbers else body
+    return out
+
+
+def summarize_fragment(text: str, max_tokens: int = 40, typed: bool = False) -> str:
     """Compress a produced fragment into a predecessor summary.
 
     This is the *other* knob on ``rho``: the summary length is what a
@@ -465,6 +544,11 @@ def summarize_fragment(text: str, max_tokens: int = 40) -> str:
     implementation is extractive (lead sentence plus the entity list), which
     keeps the harness deterministic and backend-independent.
     """
+    if typed:
+        carried = carry_values(text)
+        if carried:
+            return " ".join(f"[{item}]={value}" for item, value in sorted(carried.items()))
+
     sentences = split_sentences(text)
     if not sentences:
         return ""

@@ -74,7 +74,26 @@ TOPICS = [
      ["condition survey", "retention", "reading room", "provenance"]),
     ("relay maintenance", "the supervisor of a rural signalling network",
      ["battery", "line fault", "inspection round", "spare inventory"]),
+    ("cold-chain handover", "the night supervisor at a regional depot",
+     ["temperature log", "dock door", "seal record", "excursion window"]),
+    ("survey fieldwork", "the coordinator of a two-team field survey",
+     ["control point", "instrument drift", "field book", "reoccupation"]),
+    ("kiln scheduling", "the works manager of a small ceramics plant",
+     ["firing curve", "shelf position", "kiln log", "cooling ramp"]),
+    ("ferry rostering", "the operations lead of an island ferry service",
+     ["crew rest", "sailing slot", "roster board", "relief cover"]),
+    ("herbarium intake", "the curator of a regional herbarium",
+     ["accession", "mounting sheet", "loan register", "quarantine"]),
 ]
+"""Eight topics rather than three.
+
+V4 left long_prose and table_summary plausibly under the 5 % threshold at the
+widest fragment -- point estimates of +4.2 % and +3.1 % -- with intervals too
+wide to conclude anything: 12 observations per cell gave a 95 % CI running from
+-3.5 % to +10.3 %. Nothing about the design needs changing to settle that, only
+the count. Eight prompts per shape at two rho values and two k values is 32
+observations per cell, which shortens the interval by roughly the square root of
+that ratio."""
 
 
 def _rows(rng: random.Random, n: int) -> list[dict]:
@@ -172,7 +191,8 @@ def long_prose(rng: random.Random) -> list[dict]:
 def table_summary(rng: random.Random) -> list[dict]:
     """A twelve-row table, enclosed. The semantic unit is a row group."""
     out = []
-    for name in ("manifest", "backlog", "dispatch"):
+    for name in ("manifest", "backlog", "dispatch", "intake", "transit",
+                 "holdover", "consolidation", "clearance"):
         rows = _rows(rng, 20)
         weights = [float(r["weight"]) for r in rows]
         allowed = sorted(set(weights) | derived_aggregates(weights))
@@ -229,7 +249,7 @@ def dependency_chain(rng: random.Random) -> list[dict]:
     multiply.
     """
     out = []
-    for name in ("ardent", "northwind", "meridian"):
+    for name in ("ardent", "northwind", "meridian", "kestrel"):
         units = rng.choice(range(40, 90, 2))
         price = rng.choice(range(12, 40, 2))
         rate = rng.choice((10, 20, 25))

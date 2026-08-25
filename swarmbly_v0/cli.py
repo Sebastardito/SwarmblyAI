@@ -55,6 +55,10 @@ def build_parser() -> argparse.ArgumentParser:
                      help="comma-separated replica counts for micro-level consensus; "
                           "k>1 dispatches k complete replicas of each micro-task to "
                           "different model families (default: 1)")
+    run.add_argument("--typed-carry", action="store_true",
+                     help="also run the typed-carry arm, paired with each prose-summary "
+                          "cell: a predecessor's labelled values travel verbatim instead "
+                          "of as a rationed prose summary")
     run.add_argument("--editor", action="store_true",
                      help="also run the post-processing editor arm, paired with each "
                           "unedited cell (adds one condition, not one flag)")
@@ -105,6 +109,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         ns=tuple(args.n),
         ks=tuple(args.k),
         editors=(False, True) if args.editor else (False,),
+        carries=(False, True) if args.typed_carry else (False,),
         seed=args.seed,
         backend_name=args.backend,
         embedder_name=args.embedder,
