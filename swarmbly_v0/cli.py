@@ -211,14 +211,37 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(f"\nheadline taken from k={stats['headline_k']} "
               f"(run spans k={stats['ks_present']}); k is a separate axis and "
               "averaging it into the tax would report a number belonging to neither.")
+    # The below-floor exclusion, printed FIRST and unconditionally.
+    #
+    # `publishable()` drops rows whose rho_target sat below their own packing
+    # floor, and until this block existed it did so silently: the field went into
+    # summary.json and nothing put it on screen. An operator watching a tier
+    # finish saw a curve with rows missing and no reason given -- which is how
+    # V0's below-floor grid became a published headline in the first place. A
+    # gate the operator cannot see is a gate that gets argued with later.
+    excluded = int(stats.get("rows_excluded_below_floor") or 0)
+    if excluded:
+        print(f"\n*** {excluded} row(s) DROPPED: rho_target below the packing floor. ***")
+        print("    Below the floor every packet collapses to its bare task, so the rho")
+        print("    axis does not move and two rho labels give byte-identical cells.")
+        print("    They are in results.csv with rho_reachable=false. Nothing below")
+        print("    appears in any figure that used them.")
+
     print("\ncoherence tax (relative degradation vs monolithic), mean over prompts and N:")
     def _pct(value: float | None) -> str:
         return f"{value * 100:+7.2f}%" if isinstance(value, (int, float)) else "    n/a "
     for point in stats["curve"]:
+        # `n_cells` was computed from the start and never printed, so a mean over
+        # ONE surviving cell read exactly like a mean over forty. On the smoke
+        # tier that is the difference between "-16.67 %" and "-16.67 %, n=1".
+        n_cells = point.get("n_cells")
+        n_text = f"  [n={n_cells}]" if n_cells is not None else ""
+        thin = isinstance(n_cells, int) and 0 < n_cells < 3
         print(
             f"  rho={point['rho']:<5g} (achieved {point['rho_achieved_mean']:.2f})  "
             f"BooookScore-like {_pct(point['coherence_tax_booook'])}   "
-            f"entity-grid {_pct(point['coherence_tax_entity_grid'])}"
+            f"entity-grid {_pct(point['coherence_tax_entity_grid'])}{n_text}"
+            + ("   <- too few cells to read as a mean" if thin else "")
         )
         print(
             f"           absolute difference   "
@@ -250,17 +273,73 @@ def _cmd_run(args: argparse.Namespace) -> int:
             )
         calibration = stats["agreement_quality_correlation"]
         r_value = calibration.get("pearson_r")
-        r_text = f"{r_value:+.3f}" if isinstance(r_value, (int, float)) else "undefined"
-        print(f"  agreement vs judged quality: r = {r_text} "
-              f"over {calibration['n_units']} units "
-              f"(acceptance rate {calibration['acceptance_rate'] * 100:.1f}%)")
+        n_units = calibration.get("n_units") or 0
+        rate = calibration.get("acceptance_rate")
+        # A correlation is unreadable when the judge has almost no variance to
+        # correlate against, and "almost" starts well below SATURATION_LIMIT. On
+        # the smoke tier the judge accepted 89.4 % -- six tenths of a point under
+        # the flag -- and r = +0.224 over 47 units printed as though it meant
+        # something. It is exactly the shape of the figure this project already
+        # withdrew once. So the number is withheld, not annotated: a caveat
+        # beside a printed r does not travel with the r.
+        # Two different reasons to withhold, and they must not share a sentence.
+        # A judge at 89 % acceptance has almost no variance to correlate against;
+        # a judge at 50 % has the most variance available and simply has not been
+        # asked enough questions. Saying "that little variance" about the second
+        # is wrong, and a wrong explanation invites the reader to dismiss it.
+        saturated = bool(calibration.get("saturated")) or (
+            isinstance(rate, (int, float)) and (rate >= 0.85 or rate <= 0.15))
+        underpowered = n_units < 100
+        rate_text = (f", acceptance {rate * 100:.1f}%"
+                     if isinstance(rate, (int, float)) else "")
+        if saturated or underpowered:
+            print(f"  agreement vs judged quality: NOT MEASURED here "
+                  f"({n_units} units{rate_text})")
+            if saturated:
+                print("  The judge has almost no variance to correlate against, so a "
+                      "correlation cannot")
+                print("  appear whether or not the signal is there. This is the "
+                      "instrument that made")
+                print("  the 14 August result uninterpretable.")
+            if underpowered:
+                print("  Too few units for a correlation to mean anything, whatever "
+                      "the judge does.")
+            print("  Grade against an answer key (the v3c-gt tier), not a peer-class "
+                  "judge.")
+        else:
+            r_text = f"{r_value:+.3f}" if isinstance(r_value, (int, float)) else "undefined"
+            print(f"  agreement vs judged quality: r = {r_text} "
+                  f"over {n_units} units "
+                  f"(acceptance rate {rate * 100:.1f}%)")
         print("  agreement is not truth: models sharing training data share errors, so "
-              "this correlation must be measured, not assumed.")
+              "this correlation must be measured, not assumed. Four measurements to "
+              "date say there is nothing to find -- see docs/REVISION_2026-08-12.md.")
 
+    # The old criterion, printed as what it is.
+    #
+    # "exists (category, rho) with relative degradation < 5 %" is a maximum
+    # statistic over many noisy cells with no multiple-comparison control.
+    # Simulating its own null -- no cell genuinely different, observations
+    # shuffled between the 32 cells of n=3 -- gives P(some cell under 5 %) = 100 %.
+    # It would have passed on random data, and its passing was never evidence.
+    #
+    # It stays in summary.json so old runs remain comparable, and it is printed
+    # because deleting it would make an old run's history unreadable. But it is
+    # NOT printed as a verdict any more: a line reading "go/no-go: MET" is quoted
+    # from a terminal within the day, and this one said MET on a two-prompt smoke
+    # run that measures nothing. `falsifiable_go_no_go` is the criterion --
+    # cell named in advance, judged on the upper bound of a clustered bootstrap,
+    # with a control required to fail.
     go = stats["go_no_go"]
-    print(f"\ngo/no-go (<5% in at least one category): "
-          f"{'MET' if go['passed'] else 'NOT MET'} "
-          f"({len(go['passing_cells'])} passing cells)")
+    print(f"\n[superseded] maximum-statistic criterion (<5% in SOME category): "
+          f"{'passes' if go['passed'] else 'does not pass'} "
+          f"({len(go['passing_cells'])} passing cells) -- not a verdict.")
+    print("             This statistic passes on random data. Read "
+          "falsifiable_go_no_go in")
+    print("             summary.json instead: one cell, named before the run, "
+          "judged on the")
+    print("             upper bound of a bootstrap clustered by prompt, with a "
+          "control that must fail.")
     if metadata.get("harness_validation_only"):
         print("\n*** MockBackend: these numbers validate the harness. They are NOT "
               "evidence about real models. ***")

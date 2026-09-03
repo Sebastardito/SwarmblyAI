@@ -467,6 +467,27 @@ def render_report(
             'route, or <code>--embedder st</code>) before quoting any number from this '
             'report.</div>'
         )
+    excluded = int(stats.get("rows_excluded_below_floor") or 0)
+    if excluded:
+        # The same banner the console now prints, because this is the file that
+        # gets shared and the console output is not. `rho_reachable` was written
+        # to every row from the first run and read by nothing; a curve rendered
+        # with rows silently missing is how that happened.
+        warn += (
+            f'<div class="warn"><strong>{excluded} ROW(S) DROPPED: CONTEXT BUDGET '
+            'BELOW THE PACKING FLOOR.</strong><br>A cell measures a context budget '
+            'only if the budget exceeds the prompt&rsquo;s own <em>packing floor</em> — '
+            'what the micro-tasks and their contract headers cost before any context is '
+            'added. Below it, <code>build_packet</code> falls back to '
+            '<code>budget = max(mandatory_tokens, …)</code>, every packet collapses to '
+            'its bare task, and two different &rho; labels produce byte-identical '
+            'packets. Those rows are excluded from every figure on this page rather '
+            'than annotated, because a note beside a number does not travel with the '
+            'number. They are in <code>results.csv</code> with '
+            '<code>rho_reachable=false</code>. If the curve below looks sparse, this is '
+            'why — and if a &rho; row is missing entirely, that budget was never '
+            'measured on this corpus.</div>'
+        )
 
     curve_table = _table(
         ["rho (target)", "rho (achieved)", "coherence tax (BooookScore-like)",

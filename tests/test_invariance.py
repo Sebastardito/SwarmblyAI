@@ -309,3 +309,84 @@ def test_score_excluding_returns_none_rather_than_one_when_nothing_is_left() -> 
     report = grade_text("One paragraph.", only_excluded)
     assert report.score == 1.0
     assert report.score_excluding(("paragraph_count", "words_per_paragraph")) is None
+
+
+# --------------------------------------------------------------------------- #
+# class 5: a number reaches the operator with the condition that makes it readable
+# --------------------------------------------------------------------------- #
+
+def _mock_run(tmp_path, capsys, **kw):
+    """One real sweep through the CLI, so the console block is exercised."""
+    from swarmbly_v0.cli import main
+    args = ["run", "--backend", "mock", "--embedder", "hash",
+            "--rho", kw.get("rho", "1.0,1.5"), "--n", kw.get("n", "2"),
+            "--k", kw.get("k", "1,3"), "--max-prompts", kw.get("max_prompts", "2"),
+            "--out", str(tmp_path)]
+    assert main(args) == 0
+    return capsys.readouterr().out
+
+
+def test_the_operator_is_told_when_rows_were_dropped_below_the_floor(tmp_path, capsys):
+    """The gate that matters most was the one the operator could not see.
+
+    `publishable()` drops below-floor rows from every figure. Until this test
+    existed it did so in silence: `rows_excluded_below_floor` went into
+    summary.json and nothing put it on screen, so a tier finished with rows
+    missing from its curve and no reason given. That is how V0's below-floor grid
+    became a published headline -- `rho_reachable` was written to every row from
+    the first run and read by nothing.
+    """
+    out = _mock_run(tmp_path, capsys)
+    assert "DROPPED" in out, "the exclusion must be on screen, not only in summary.json"
+    assert "packing floor" in out
+    assert "rho_reachable=false" in out, "and it must say where to find the dropped rows"
+
+    html = (tmp_path / "report.html").read_text(encoding="utf-8")
+    assert "ROW(S) DROPPED" in html, "the shared artefact needs the banner too"
+
+
+def test_a_mean_over_one_cell_does_not_read_like_a_mean_over_forty(tmp_path, capsys):
+    """`n_cells` was computed from the first version and never printed.
+
+    On the smoke tier the whole headline survives from a single cell, and
+    "-16.67 %" read exactly like a forty-cell mean.
+    """
+    out = _mock_run(tmp_path, capsys)
+    curve_lines = [l for l in out.splitlines() if "BooookScore-like" in l and "rho=" in l]
+    assert curve_lines, "the curve did not print"
+    assert all("[n=" in line for line in curve_lines), "every curve point must carry its n"
+    assert any("too few cells" in line for line in curve_lines), \
+        "a curve point built from one or two cells must say so"
+
+
+def test_the_superseded_criterion_is_not_printed_as_a_verdict(tmp_path, capsys):
+    """"go/no-go: MET" is a line that gets quoted from a terminal within the day.
+
+    The maximum-statistic criterion -- "exists (category, rho) under 5 %" -- has
+    P(pass) = 100 % under its own null. It said MET on a two-prompt smoke run
+    that measures nothing. It stays visible so an old run's history stays
+    readable, and it is labelled rather than presented as a result.
+    """
+    out = _mock_run(tmp_path, capsys)
+    assert "[superseded]" in out
+    assert "not a verdict" in out
+    assert "passes on random data" in out
+    assert "falsifiable_go_no_go" in out, "the reader must be pointed at the real one"
+    # The old headline shape must be gone: no bare "go/no-go: MET".
+    assert "go/no-go (<5% in at least one category): MET" not in out
+
+
+def test_a_correlation_is_withheld_for_the_right_stated_reason(tmp_path, capsys):
+    """Two reasons to withhold, and they must not share a sentence.
+
+    A judge at 89 % acceptance has almost no variance to correlate against. A
+    judge at 50 % has the most variance available and simply has not been asked
+    enough questions. Saying "that little variance" about the second is wrong,
+    and a wrong explanation invites the reader to dismiss the withholding.
+    """
+    out = _mock_run(tmp_path, capsys)
+    assert "NOT MEASURED here" in out, "no r may be printed on a thin sample"
+    assert "Too few units" in out, "and the reason given must be the true one"
+    assert "almost no variance" not in out, \
+        "acceptance was 50 % -- variance was maximal, so that is the wrong reason"
+    assert "answer key" in out, "and it must name the tier that would settle it"

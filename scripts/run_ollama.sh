@@ -103,11 +103,28 @@ echo "  families:     $NFAM distinct"
 # which is the signature of adding echoes rather than estimators, and the arm had
 # to be discarded after the fact. `n_families_mean` recorded the truth in a
 # column no gate read.
-case "$TIER" in
-  v3c|v3c-gt|v3c-ff|all) TIER_MAX_K=5 ;;
-  tables-dev|tables-final|v4) TIER_MAX_K=3 ;;
-  *) TIER_MAX_K=1 ;;
-esac
+#
+# Derived from the tier's own --k list, not hand-copied. The first version of
+# this check hard-coded a table and got `smoke` wrong on its first run: smoke
+# sweeps `--k 1,3` and the table said 1, so the gate printed "max k here: 1"
+# while k=3 was dispatched. With five families loaded nothing was contaminated,
+# but the check would not have caught a family shortage on the one tier an
+# operator runs first to find out whether anything is wrong. A gate that reads a
+# table beside the thing it guards drifts from it; this one greps the invocation.
+TIER_MAX_K=$(awk -v tier="$TIER" '
+  $0 ~ "^run_" tier_fn "\\(\\)" { infn = 1 }
+  infn && /--k /  { for (i = 1; i <= NF; i++) if ($i == "--k") { print $(i+1); exit } }
+' tier_fn="$(echo "$TIER" | tr '-' '_')" "$0" 2>/dev/null \
+  | tr ',' '\n' | sort -rn | head -1)
+# The case tiers (smoke) and any tier whose --k could not be read fall back to
+# the largest k any tier in this script sweeps. Failing SAFE here means demanding
+# MORE families than needed, which costs a disk pull; failing open would mean
+# running a contaminated k arm, which costs a retracted result.
+if ! [ "${TIER_MAX_K:-}" -ge 1 ] 2>/dev/null; then
+  TIER_MAX_K=$(grep -o -- '--k [0-9,]*' "$0" | awk '{print $2}' | tr ',' '\n' \
+               | sort -rn | head -1)
+  TIER_MAX_K="${TIER_MAX_K:-5}"
+fi
 [ "$NFAM" -ge "$TIER_MAX_K" ] || die "tier '$TIER' sweeps k up to $TIER_MAX_K but \
 only $NFAM distinct families are available. select_diverse_nodes would repeat a \
 family to fill k, and replicas drawn from one lineage share their errors: they \
@@ -606,8 +623,25 @@ case "$TIER" in
       --rho 1.0,1.5 --n 2 --k 1,3 --max-prompts 2 \
       --out "$out" 2>&1 | tee "$out/run.log"
     bold ""
-    bold "Smoke run finished. If the numbers above look sane, run:"
-    echo "  ./scripts/run_ollama.sh all"
+    bold "Smoke run finished. It proved the wiring; it measured nothing."
+    echo ""
+    echo "  Two prompts at N=2 on a corpus whose packing floor is 1.42-1.68, swept"
+    echo "  at rho 1.0 and 1.5. Most of that grid is BELOW its own floor, so expect"
+    echo "  dropped rows and a curve built from one or two cells. That is the gate"
+    echo "  working, not a fault."
+    echo ""
+    bold "  Next, in this order:"
+    echo "    bash scripts/run_ollama.sh tables-dev              ~1 h   fits tau on 8 prompts"
+    echo "    bash scripts/run_ollama.sh tables-final --tau <T>  ~2 h   the declared verdict, 16 held out"
+    echo ""
+    echo "  Those two are what a claim rests on: one hypothesis, a cell named before"
+    echo "  the run, and a control required to fail."
+    echo ""
+    echo "  NOT 'all' yet. It runs v0, whose rho sweep (1.0-2.0) sits almost entirely"
+    echo "  below the packing floor -- 13 of 96 cells were reachable -- so it will now"
+    echo "  produce empty curves by design. That is why V0's published result was"
+    echo "  withdrawn. Redefine its grid above the floor (>=2.7 at N=8) before"
+    echo "  spending hours on it. See docs/REVISION_2026-08-12.md section 7."
     ;;
   v0)  run_v0 || true ;;
   v3c) run_v3c || true ;;
