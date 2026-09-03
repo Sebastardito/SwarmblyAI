@@ -29,19 +29,44 @@ The design rests on one falsifiable claim: **the more shared context each fragme
 | | |
 |---|---|
 | Cell, named before the run | `table_summary`, ρ = 3.5, N = 2, k = 1 |
-| Coherence tax | **+3.26 %** |
-| 95 % CI (bootstrap clustered by prompt) | **[−0.02 %, +6.93 %]** |
+| Coherence tax | **+2.30 %** |
+| 95 % CI (bootstrap clustered by prompt) | **[−2.05 %, +7.49 %]** |
 | Criterion | upper bound below 5 % |
-| Verdict | **NOT MET**, by 1.93 points on the upper bound |
+| Verdict | **NOT MET**, short by 2.49 points on the upper bound |
 | Corpus | 16 prompts, held out — the threshold was fitted on a separate 8 |
-| Control (N = 8, must fail) | +17.6 % — behaved |
+| Control (N = 8, k = 1, must fail) | +16.23 %, CI [+11.33 %, +20.28 %] — behaved |
+| Rows excluded below the packing floor | 0 |
 
 The point estimate is under 5 %. The interval is not, and the criterion was
 written against the interval precisely so that a favourable point estimate could
-not carry it. The median prompt effect is +1.16 % and **8 of 16 prompts are at or
-below zero** — at N = 2 this workload is close to free on about half the corpus
-and clearly not on the rest, which is a more useful finding than a mean. Full
-result: [`docs/RESULTS_TABLES_FINAL.md`](docs/RESULTS_TABLES_FINAL.md).
+not carry it. **The criterion is not met and is not being rewritten.**
+
+**The mean is the wrong statistic here, and that is the new finding.** The median
+prompt effect is **exactly 0.00 %**, and **11 of 16 prompts are at or below
+zero** — six negative, five exactly zero. The mean is *manufactured* by two
+prompts: `tbl24_outturn` (+28.50 %) and `tbl24_bonded` (+23.08 %) sum to +0.516
+against a total of +0.368, **140 % of it**. Remove those two and the mean over
+the remaining fourteen is **−1.06 %** — fragmenting into two is very slightly
+*better* than not fragmenting. The honest description is therefore: **on 11 of 16
+table-summarisation prompts, splitting the work in two was free; on two of them
+it was expensive.**
+
+Those same two prompts are the **only two where N = 2 is worse than N = 8**
+(outturn: +28.50 % vs +13.57 %; bonded: +23.08 % vs +14.00 %). More fragments
+*helping* is not what a coherence-tax story predicts, so this looks like a
+partition-quality failure rather than a cost of fragmentation. That is a clue,
+and it is explicitly **not** tested here.
+
+None of that clears the bar. A threshold criterion asks "is the average cost
+acceptable?", which is the wrong question for a routing protocol — the router
+decides per request, so a bimodal cost with an identifiable boundary is worth
+more than a low uniform one, because it is routable. It is an *additional*
+finding, not a rescue of the criterion: the bar the project set for itself has
+not been cleared. And with a between-prompt variance this size, 16 prompts
+arithmetically cannot bring a 9.5-point interval under a 5-point threshold
+whatever the true effect is; widening the corpus is a prerequisite for
+re-testing, not a way of getting a better answer. Full result:
+[`docs/RESULTS_TABLES_FINAL_CORRECTED.md`](docs/RESULTS_TABLES_FINAL_CORRECTED.md).
 
 **An earlier version of this section reported a coherence tax falling 24.1 % →
 13.7 % across ρ and said the prediction held. That result is withdrawn.** Two

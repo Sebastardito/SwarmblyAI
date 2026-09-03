@@ -44,19 +44,32 @@ contra una celda nombrada antes de la ejecución. **El criterio no se alcanzó.*
 | | |
 |---|---|
 | Celda, nombrada de antemano | `table_summary`, ρ = 3,5, N = 2, k = 1 |
-| Calidad perdida por fragmentar | **+3,26 %** |
-| IC del 95 %, bootstrap agrupado por prompt | **[−0,02 %, +6,93 %]** |
+| Calidad perdida por fragmentar | **+2,30 %** |
+| IC del 95 %, bootstrap agrupado por prompt | **[−2,05 %, +7,49 %]** |
 | Criterio | el *límite superior* debe quedar por debajo del 5 % |
-| Veredicto | **NO ALCANZADO**, por 1,93 puntos |
+| Veredicto | **NO ALCANZADO**, le faltan 2,49 puntos |
 | Corpus | 16 prompts reservados |
-| Control (N = 8, obligado a fallar) | +17,6 % — se comportó |
+| Control (N = 8, k = 1, obligado a fallar) | +16,23 %, IC [+11,33 %, +20,28 %] — se comportó |
 
 La estimación puntual queda cómodamente por debajo del 5 %. El intervalo no, y
 el criterio se escribió contra el intervalo justamente para que una estimación
-puntual favorable no pudiera sostenerlo por sí sola. La distribución es el
-hallazgo más útil: el prompt mediano pierde 1,16 % y **8 de 16 prompts no
-pierden nada**. Con dos fragmentos, esta carga de trabajo es casi gratis en
-aproximadamente la mitad del corpus y claramente no lo es en el resto.
+puntual favorable no pudiera sostenerlo por sí sola. El criterio no se alcanzó y
+no se va a reescribir.
+
+La distribución es el hallazgo más útil, y es nuevo. **El prompt mediano no
+pierde absolutamente nada —0,00 %— y 11 de 16 prompts quedan en cero o por
+debajo** (seis negativos, cinco exactamente cero). La media está *fabricada* por
+dos prompts: `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %) suman entre
+los dos el 140 % de ella, y sin ellos la media de los catorce restantes es
+**−1,06 %**. Es decir: **en 11 de 16 prompts de resumen de tablas, partir el
+trabajo en dos salió gratis; en dos de ellos salió caro.** Esos dos son además
+los únicos prompts donde dos fragmentos cuestan *más* que ocho (+28,50 % frente a
++13,57 %; +23,08 % frente a +14,00 %) — que más fragmentos ayuden no es lo que
+predice una historia de impuesto de coherencia, lo que apunta a un fallo de
+calidad de partición y no a un costo de fragmentar. Es una pista, no una
+afirmación puesta a prueba, y no alcanza el listón: un costo bimodal con una
+frontera identificable vale más para un enrutador que uno bajo y uniforme, pero
+el umbral que el propio proyecto se fijó no se ha cumplido.
 
 **Una versión anterior de esta página reportaba esa pérdida cayendo de 24,1 % a
 13,7 % a medida que subía el contexto compartido, y afirmaba que la predicción se
@@ -78,7 +91,11 @@ Lo que sobrevive es más pequeño y está mejor establecido: con dos fragmentos,
 un corpus reservado y con un control que se comportó, el costo de fragmentar es
 de unos pocos puntos porcentuales y su distribución es bimodal. El umbral que el
 propio proyecto se fijó dice que eso todavía no es suficiente, y esta página lo
-dice en lugar de mover el umbral.
+dice en lugar de mover el umbral. Con una varianza entre prompts de este tamaño,
+dieciséis prompts no pueden, por pura aritmética, meter un intervalo de 9,5
+puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto verdadero:
+ampliar el corpus es un requisito previo para volver a poner a prueba el
+criterio, no una manera de obtener una respuesta mejor.
 
 ## Lo que no está demostrado — dicho aquí, no escondido
 
@@ -115,4 +132,4 @@ El conocimiento ya es público. El hardware ya está construido. Lo que faltaba 
 
 ---
 
-*Argumento técnico completo: `docs/WHITEPAPER_ES.md`. Versión divulgativa: `docs/DIVULGACION_ES.md`. Resultado actual completo: `docs/RESULTS_TABLES_FINAL.md`. Las primeras mediciones, retiradas y conservadas con su aritmética: `docs/RESULTS_V0_V3C.md`. Versión en inglés de esta página: `ONEPAGER_EN.md`.*
+*Argumento técnico completo: `docs/WHITEPAPER_ES.md`. Versión divulgativa: `docs/DIVULGACION_ES.md`. Resultado actual completo: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. Las primeras mediciones, retiradas y conservadas con su aritmética: `docs/RESULTS_V0_V3C.md`. Versión en inglés de esta página: `ONEPAGER_EN.md`.*

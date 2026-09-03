@@ -29,7 +29,7 @@ Second, I decompose swarm performance into **coverage** (does any worker produce
 
 Third, I specify the wire protocol, the assembly algorithm, the verification scheme and the parameter derivations in implementable detail.
 
-Fourth, I publish a reference harness that measures the **coherence tax** — quality lost to fragmentation and reassembly — as a function of *S*, together with an explicit go/no-go criterion under which the architecture should be abandoned. **That measurement has now been made, and the criterion was not met.** On a corrected instrument, against a cell named before the run and a control required to fail, the tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is **+3.26 %, 95 % CI [−0.02 %, +6.93 %]** — the point estimate clears 5 % and the interval does not, and the criterion was written against the interval. The distribution is the more informative result: the median prompt loses 1.16 % and **8 of 16 lose nothing**, so fragmentation appears close to free on part of this corpus and clearly not free on the rest. An earlier version of this paper reported the tax falling 24.1 % → 13.7 % across *S* and called the prediction confirmed; that result is **withdrawn** — the ρ axis had not moved (13 of 96 cells sat above their packing floor) and the coherence metric was not arm-neutral (+46.7 % of apparent tax on text that never changed). The companion confidence-map claim is also **withdrawn**: agreement between independent replicas showed no relationship to judged quality (*r* = −0.030 over 597 units), and three subsequent ground-truth runs put the common odds ratio at 3.47, 0.26 and 1.24 — no signal, measured three times. Section 11.3 reports the withdrawal in full and §11.3a the measurement that replaces it.
+Fourth, I publish a reference harness that measures the **coherence tax** — quality lost to fragmentation and reassembly — as a function of *S*, together with an explicit go/no-go criterion under which the architecture should be abandoned. **That measurement has now been made, and the criterion was not met.** On a corrected instrument, against a cell named before the run and a control required to fail, the tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is **+2.30 %, 95 % CI [−2.05 %, +7.49 %]** — the point estimate clears 5 % and the interval does not, and the criterion was written against the interval; it is short by 2.49 points on the upper bound. The distribution is the more informative result: the **median prompt effect is exactly 0.00 %** and **11 of 16 prompts are at or below zero**, while two prompts — `tbl24_outturn` (+28.50 %) and `tbl24_bonded` (+23.08 %) — account for 140 % of the mean, without which the remaining fourteen average **−1.06 %**. So on 11 of 16 table-summarisation prompts, splitting the work in two was free; on two of them it was expensive. An earlier version of this paper reported the tax falling 24.1 % → 13.7 % across *S* and called the prediction confirmed; that result is **withdrawn** — the ρ axis had not moved (13 of 96 cells sat above their packing floor) and the coherence metric was not arm-neutral (+46.7 % of apparent tax on text that never changed). The companion confidence-map claim is also **withdrawn**: agreement between independent replicas showed no relationship to judged quality (*r* = −0.030 over 597 units), and three subsequent ground-truth runs put the common odds ratio at 3.47, 0.26 and 1.24 — no signal, measured three times. Section 11.3 reports the withdrawal in full and §11.3a the measurement that replaces it.
 
 Fifth, I introduce a second routing axis, orthogonal to content sensitivity: a client-side privacy classifier assigns every request to a **tier** — an open volunteer mesh, a permissioned *trusted swarm* whose membership is a cryptographic public-key whitelist under mutual TLS, or purely local execution — and the same protocol and the same client run at all three. This is what makes the architecture deployable where an anonymous volunteer cannot lawfully be a data processor, and it separates two roles the replica count *k* had been serving at once: defence against dishonest workers, which a whitelist removes, and the independent replicas that the confidence map requires, which it does not.
 
@@ -77,7 +77,7 @@ The design vocabulary is borrowed deliberately from genome shotgun assembly. A r
 
 ### 1.3 What this makes possible
 
-The first measurement is now in, and **the criterion was not met**: at ρ = 3.5, *N* = 2, *k* = 1 on 16 held-out prompts the coherence tax is +3.26 % with a 95 % CI of [−0.02 %, +6.93 %], and the criterion is written against the upper bound (Section 11.3a). An earlier version of this section said the central prediction held and cited a tax falling monotonically in the context budget; that claim is withdrawn — the ρ axis had not moved, because 13 of 96 cells sat above their own packing floor. What survives is narrower and better founded: the median prompt loses 1.16 %, **8 of 16 lose nothing**, and the control at *N* = 8 fails as it was required to. So fragmentation is close to free on part of this corpus and clearly not on the rest, the falsifiable core of Section 4 has now produced a real negative, and the four things that follow below are motivated by a measured bimodal cost rather than by a confirmed trend.
+The first measurement is now in, and **the criterion was not met**: at ρ = 3.5, *N* = 2, *k* = 1 on 16 held-out prompts the coherence tax is +2.30 % with a 95 % CI of [−2.05 %, +7.49 %], and the criterion is written against the upper bound, which falls short by 2.49 points (Section 11.3a). An earlier version of this section said the central prediction held and cited a tax falling monotonically in the context budget; that claim is withdrawn — the ρ axis had not moved, because 13 of 96 cells sat above their own packing floor. What survives is narrower and better founded: the **median prompt loses exactly nothing (0.00 %)**, **11 of 16 prompts are at or below zero**, and the control at *N* = 8 fails as it was required to. The mean is manufactured by two prompts, `tbl24_outturn` (+28.50 %) and `tbl24_bonded` (+23.08 %), which between them are 140 % of it; drop them and the other fourteen average −1.06 %. So fragmentation was free on eleven of sixteen prompts and expensive on two, the falsifiable core of Section 4 has now produced a real negative, and the four things that follow below are motivated by a measured bimodal cost rather than by a confirmed trend.
 
 **1. Serving capacity without owning it.** A participant contributes a machine that already exists and already draws power when idle. The entry requirement is a complete small model, not a shard of a large one, which places the addressable hardware pool orders of magnitude above what pipeline-parallel schemes can reach. Capacity then scales with *participation* rather than with capital expenditure — a growth curve that no centralized operator can match, because theirs is bounded by what they can build and finance.
 
@@ -897,27 +897,50 @@ every interval — and intervals are bootstrap percentiles clustered by prompt.
 
 | | |
 |---|---|
-| Coherence tax | **+3.26 %** |
-| 95 % CI (clustered by prompt) | **[−0.02 %, +6.93 %]** |
+| Coherence tax | **+2.30 %** |
+| 95 % CI (clustered by prompt) | **[−2.05 %, +7.49 %]** |
 | Criterion | upper bound below 5 % |
-| Verdict | **NOT MET** — 1.93 points short |
-| Median prompt effect | +1.16 % |
-| Prompts at or below zero | **8 of 16** |
-| Control, N = 8, k = 1 (required to fail) | +17.6 % — behaved |
+| Verdict | **NOT MET** — 2.49 points short on the upper bound |
+| Median prompt effect | **exactly 0.00 %** |
+| Prompts at or below zero | **11 of 16** (6 negative, 5 exactly zero) |
+| Control, N = 8, k = 1 (required to fail) | +16.23 %, CI [+11.33 %, +20.28 %], median +18.59 %, 15 of 16 prompts worse than baseline — behaved |
+| Rows excluded below the packing floor | 0 |
 
 The point estimate clears the threshold and the interval does not. The criterion
 was written against the upper bound for exactly this case, and it is not being
 rewritten now that the case has arisen.
 
-The distribution is the more informative result. Half the corpus loses nothing
-at all; the rest carries the mean. That is not "fragmentation costs 3 %" — it is
-"fragmentation is free on some workloads and not on others, and the corpus does
-not yet say which is which." Identifying the split is the next measurement,
-and it is a better question than the one the criterion asks.
+**The distribution is the more informative result, and the mean is the wrong
+statistic for it.** The median prompt loses exactly nothing, eleven of sixteen
+prompts are at or below zero, and the mean is not merely pulled by the positive
+prompts — it is *manufactured* by two of them. `tbl24_outturn` (+28.50 %) and
+`tbl24_bonded` (+23.08 %) sum to +0.516 against a total of +0.368, **140 % of
+it**; remove them and the mean over the remaining fourteen prompts is
+**−1.06 %**, i.e. fragmenting into two is very slightly *better* than not
+fragmenting. So the honest description is not "fragmentation costs 2.3 %" — it is
+**on 11 of 16 table-summarisation prompts, splitting the work in two was free,
+and on two of them it was expensive.**
+
+Those same two prompts are the **only two where N = 2 is worse than N = 8**
+(outturn +28.50 % against +13.57 %; bonded +23.08 % against +14.00 %). More
+fragments *helping* is not what a coherence-tax story predicts, so this looks
+like a **partition-quality** failure — a two-way split putting a seam somewhere
+costly, which cutting eight ways happens to avoid — rather than a cost of
+fragmentation as such. That is a testable claim and it is explicitly **not**
+tested here.
+
+None of this rescues the criterion. A threshold criterion asks "is the average
+cost acceptable?", which is the wrong question for a routing protocol: the router
+decides per request, so a bimodal cost with an identifiable boundary is worth
+more than a low uniform one, because it is **routable**. That is an *additional*
+finding. The bar the project set for itself has not been cleared.
 
 **Scope.** 16 prompts, one seed, 2–3B models, N = 2. A result at the low end of
 the capability range the protocol targets, which bounds the architecture there
-and does not settle it at 8B.
+and does not settle it at 8B. With a between-prompt variance this size, sixteen
+prompts cannot arithmetically bring a 9.5-point interval under a 5-point
+threshold whatever the true effect is — widening the corpus is a prerequisite for
+re-testing the criterion, not a way of getting a better answer.
 
 ---
 
@@ -982,7 +1005,7 @@ That distinction does not rescue the claim. An unsupported property cannot be ad
 
 | Metric | Definition | v1.0 target | Measured (Section 11.3) |
 |---|---|---|---|
-| Coherence tax | Δ seam-free sentence fraction vs monolithic | upper bound of the 95 % CI below 5 % | **NOT MET** (§11.3a): +3.26 %, CI [−0.02 %, +6.93 %], 16 held-out prompts at ρ = 3.5, N = 2, k = 1 |
+| Coherence tax | Δ seam-free sentence fraction vs monolithic | upper bound of the 95 % CI below 5 % | **NOT MET** (§11.3a): +2.30 %, CI [−2.05 %, +7.49 %], 16 held-out prompts at ρ = 3.5, N = 2, k = 1; median prompt effect exactly 0.00 %, 11 of 16 at or below zero |
 | Operating ρ | Input tokens per prompt token | <2.0 | **not attainable on this corpus.** The packing floor at N = 2 is 1.20 on `tables24` and 1.42–1.68 on the V0 corpus, so a target of 2.0 leaves almost no context above the mandatory task and header. A target of <2.0 is not a target the design can meet at any useful N; the figure needs re-deriving from the floor rather than asserting. |
 | Effective speedup | vs monolithic, same model | >1.5× | not measured yet |
 | Speedup vs honest baseline | vs speculative decoding | Reported even when <1 | not measured yet |
@@ -1079,7 +1102,7 @@ Three consequences follow that I did not anticipate when this work began, and th
 
 The case against is equally specific and is stated at length in Section 12. Independent generation loses quality for reasons that are theoretical rather than incidental. The client-side model on which the design depends sits at the weak end of measured planning ability. Volunteer computing has been contracting for twenty years, and no incentive design in this paper is yet a demonstrated answer to why that reverses.
 
-Both cases are real, and neither is settled by argument. What settles it is a measurement. The measurements are now in, and both went against the paper. The coherence tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is +3.26 % with a 95 % CI of [−0.02 %, +6.93 %], and the abandonment threshold fixed in advance is written against that upper bound: **it is not met**, by 1.93 points (§11.3a). An earlier version of this conclusion claimed a tax falling monotonically in the context budget and a threshold cleared in three task categories; that claim is withdrawn, because the ρ axis had not moved and the coherence metric was not arm-neutral. The confidence map, the property this paper was proudest of, is withdrawn outright. What survives is a measured, bimodal cost — the median prompt loses 1.16 % and 8 of 16 lose nothing — and a control that failed as it was required to. What remains to settle is what separates the half of the corpus that fragments for free from the half that does not, and whether a context budget exists that satisfies coherence, privacy, verifiability and worker capability simultaneously, at a cost below the value of the aggregated capacity. I have specified the protocol in enough detail to implement, stated the hypotheses that would falsify it, published the harness that measures the first of them, and committed in advance to the threshold at which I would conclude the design does not work.
+Both cases are real, and neither is settled by argument. What settles it is a measurement. The measurements are now in, and both went against the paper. The coherence tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is +2.30 % with a 95 % CI of [−2.05 %, +7.49 %], and the abandonment threshold fixed in advance is written against that upper bound: **it is not met**, short by 2.49 points (§11.3a). An earlier version of this conclusion claimed a tax falling monotonically in the context budget and a threshold cleared in three task categories; that claim is withdrawn, because the ρ axis had not moved and the coherence metric was not arm-neutral. The confidence map, the property this paper was proudest of, is withdrawn outright. What survives is a measured, bimodal cost — the median prompt loses exactly nothing, 11 of 16 prompts are at or below zero, and two prompts carry 140 % of the mean — and a control that failed as it was required to. What remains to settle is what separates the eleven prompts that fragment for free from the two that do not, and whether a context budget exists that satisfies coherence, privacy, verifiability and worker capability simultaneously, at a cost below the value of the aggregated capacity. I have specified the protocol in enough detail to implement, stated the hypotheses that would falsify it, published the harness that measures the first of them, and committed in advance to the threshold at which I would conclude the design does not work.
 
 If it does work, the result is not a cheaper way to buy what is already sold. It is inference capacity that grows with the number of people who participate rather than with the amount of capital available to build, held under a licence and a governance structure designed so that no single party can enclose it. That is worth attempting even at a substantial probability of failure, and it is worth attempting in the open, where it can be checked.
 

@@ -159,14 +159,20 @@ digest from that run's metadata and refuses if:
   way to confirm what it was fitted on;
 - that run was not on the `dev` split — a threshold fitted on the data it judges.
 
-> ## ⚠ THIS HALF HAS BEEN SPENT — 27 August 2026
+> ## ⚠ THIS HALF HAS BEEN SPENT — 27 August 2026, re-run 3 September 2026
 >
-> `results/tables-final-20260827-102014`. The declared cell came back at
-> **+3.26 %, CI [−0.02 %, +6.93 %]** on 16 prompts. The criterion requires the
-> upper bound below 5 %; it is 6.93 %. **NOT MET.** The control behaved —
-> N=8 at +17.6 %, no overlap.
+> **The 27 August run was made on a defective instrument and its figures are
+> superseded.** They are kept here as the log of what happened, not as results.
+> `results/tables-final-20260827-102014`: the declared cell came back at
+> **+3.26 %, CI [−0.02 %, +6.93 %]** on 16 prompts, control N=8 at +17.6 %.
 >
-> See `docs/RESULTS_TABLES_FINAL.md`.
+> The same cell was re-run on a corrected instrument on 3 September 2026
+> (`results/tables-final-20260903-153237`) after twelve defects were fixed:
+> **+2.30 %, CI [−2.05 %, +7.49 %]**, criterion **NOT MET**, short by 2.49
+> points on the upper bound. Control N=8, k=1 at **+16.23 %**, CI
+> [+11.33 %, +20.28 %] — behaved, no overlap.
+>
+> The measurement that stands is `docs/RESULTS_TABLES_FINAL_CORRECTED.md`.
 >
 > **Do not run this tier again on this corpus.** Appending prompts to a spent
 > split is the same study, and this study is finished. A further test needs a

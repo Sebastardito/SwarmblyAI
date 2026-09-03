@@ -44,19 +44,31 @@ cell named before the run. **The criterion was not met.**
 | | |
 |---|---|
 | Cell, named in advance | `table_summary`, ρ = 3.5, N = 2, k = 1 |
-| Quality lost to fragmentation | **+3.26 %** |
-| 95 % CI, bootstrap clustered by prompt | **[−0.02 %, +6.93 %]** |
+| Quality lost to fragmentation | **+2.30 %** |
+| 95 % CI, bootstrap clustered by prompt | **[−2.05 %, +7.49 %]** |
 | Criterion | the *upper bound* must clear 5 % |
-| Verdict | **NOT MET**, by 1.93 points |
+| Verdict | **NOT MET**, short by 2.49 points |
 | Corpus | 16 held-out prompts |
-| Control (N = 8, required to fail) | +17.6 % — behaved |
+| Control (N = 8, k = 1, required to fail) | +16.23 %, CI [+11.33 %, +20.28 %] — behaved |
 
 The point estimate is comfortably under 5 %. The interval is not, and the
 criterion was written against the interval so that a favourable point estimate
-could not carry it on its own. The distribution is the more useful finding: the
-median prompt loses 1.16 % and **8 of 16 prompts lose nothing at all**. At two
-fragments this workload is close to free on about half the corpus and clearly
-not free on the rest.
+could not carry it on its own. The criterion is not met and is not being
+rewritten.
+
+The distribution is the more useful finding, and it is new. **The median prompt
+loses exactly nothing — 0.00 % — and 11 of 16 prompts are at or below zero** (six
+negative, five exactly zero). The mean is manufactured by two prompts:
+`tbl24_outturn` (+28.50 %) and `tbl24_bonded` (+23.08 %) together account for
+140 % of it, and without them the mean over the remaining fourteen is **−1.06 %**.
+So: **on 11 of 16 table-summarisation prompts, splitting the work in two was
+free; on two of them it was expensive.** Those two are also the only prompts
+where two fragments cost *more* than eight (+28.50 % vs +13.57 %, +23.08 % vs
++14.00 %) — more fragments helping is not what a coherence-tax story predicts,
+which points at a partition-quality failure rather than a cost of fragmentation.
+That is a clue, not a tested claim, and it does not clear the bar: a bimodal cost
+with an identifiable boundary is worth more to a router than a low uniform one,
+but the threshold the project set for itself has not been met.
 
 **An earlier version of this page reported that loss falling 24.1 % → 13.7 % as
 shared context rose, and said the prediction held. That table is withdrawn.**
@@ -74,7 +86,11 @@ The withdrawal is kept in full in `docs/RESULTS_V0_V3C.md`.
 What survives is smaller and better established: at two fragments, on a held-out
 corpus, with a control that behaved, the cost of fragmentation is a few per cent
 and its distribution is bimodal. The project's own threshold says that is not
-good enough yet, and this page says so rather than moving the threshold.
+good enough yet, and this page says so rather than moving the threshold. With a
+between-prompt variance this size, sixteen prompts cannot arithmetically bring a
+9.5-point interval under a 5-point threshold whatever the true effect is:
+widening the corpus is a prerequisite for re-testing, not a way of getting a
+better answer.
 
 ## What has not been proven — stated here, not buried
 
@@ -110,4 +126,4 @@ The knowledge is already public. The hardware is already built. What remains is 
 
 ---
 
-*Full technical argument: `docs/WHITEPAPER_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Current result in full: `docs/RESULTS_TABLES_FINAL.md`. The withdrawn first measurements, kept with the arithmetic: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*
+*Full technical argument: `docs/WHITEPAPER_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Current result in full: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. The withdrawn first measurements, kept with the arithmetic: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*

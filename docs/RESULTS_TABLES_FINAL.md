@@ -1,5 +1,17 @@
 # tables-final — the pre-registered criterion is NOT MET
 
+> **The run below (27 August) was made with a DEFECTIVE instrument and is kept
+> as history. The measurement that stands is [`RESULTS_TABLES_FINAL_CORRECTED.md`]
+> (RESULTS_TABLES_FINAL_CORRECTED.md), re-run on 3 September once twelve
+> instrument defects were fixed. Its verdict is the same — NOT MET — but every
+> figure moved, and the distribution behind the figure moved a great deal more.**
+>
+> Do not quote a number from this file. The defects, and why each was one-sided
+> in the direction of the project's own hypothesis, are in
+> [`REVISION_2026-08-12.md`](REVISION_2026-08-12.md).
+
+## The withdrawn run of 27 August, unaltered below
+
 **Run:** `results/tables-final-20260827-102014`. The final half of
 `prompts/tables24.json`, digest `0c5cb7e2…`, verified before the run. Sixteen
 prompts, ρ = 3.5, N ∈ {2, 8}, k ∈ {1, 3}. τ_sem **inherited** from

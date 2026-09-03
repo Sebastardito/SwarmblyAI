@@ -29,7 +29,7 @@ Segunda, descompongo el rendimiento del enjambre en **cobertura** (¿produce alg
 
 Tercera, especifico el protocolo de red, el algoritmo de ensamblaje, el esquema de verificación y las derivaciones de los parámetros con un detalle implementable.
 
-Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado, y el criterio no se alcanzó.** Sobre un instrumento corregido, contra una celda nombrada antes de la ejecución y con un control obligado a fallar, el impuesto con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de **+3,26 %, IC del 95 % [−0,02 %, +6,93 %]**: la estimación puntual queda por debajo del 5 % y el intervalo no, y el criterio se escribió contra el intervalo. La distribución es el resultado más informativo: el prompt mediano pierde 1,16 % y **8 de 16 no pierden nada**, de modo que fragmentar parece casi gratis en una parte de este corpus y claramente no gratis en el resto. Una versión anterior de este artículo reportaba el impuesto cayendo de 24,1 % a 13,7 % a lo largo de *S* y daba la predicción por confirmada; ese resultado queda **retirado**: el eje ρ no se había movido (13 de 96 celdas quedaban por encima de su piso de empaquetado) y la métrica de coherencia no era neutral respecto del brazo (+46,7 % de impuesto aparente sobre un texto que nunca cambió). La afirmación acompañante del mapa de confianza queda **retirada** también: el acuerdo entre réplicas independientes no mostró relación con la calidad juzgada (*r* = −0,030 sobre 597 unidades), y tres ejecuciones posteriores contra verdad de referencia situaron la razón de momios común en 3,47, 0,26 y 1,24 — ninguna señal, medida tres veces. La sección 11.3 reporta la retractación completa y la 11.3a la medición que la reemplaza.
+Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado, y el criterio no se alcanzó.** Sobre un instrumento corregido, contra una celda nombrada antes de la ejecución y con un control obligado a fallar, el impuesto con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de **+2,30 %, IC del 95 % [−2,05 %, +7,49 %]**: la estimación puntual queda por debajo del 5 % y el intervalo no, y el criterio se escribió contra el intervalo; le faltan 2,49 puntos en el límite superior. La distribución es el resultado más informativo: el **efecto mediano por prompt es exactamente 0,00 %** y **11 de 16 prompts quedan en cero o por debajo**, mientras que dos prompts —`tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %)— explican el 140 % de la media, y sin ellos los catorce restantes promedian **−1,06 %**. Es decir: en 11 de 16 prompts de resumen de tablas, partir el trabajo en dos salió gratis; en dos de ellos salió caro. Una versión anterior de este artículo reportaba el impuesto cayendo de 24,1 % a 13,7 % a lo largo de *S* y daba la predicción por confirmada; ese resultado queda **retirado**: el eje ρ no se había movido (13 de 96 celdas quedaban por encima de su piso de empaquetado) y la métrica de coherencia no era neutral respecto del brazo (+46,7 % de impuesto aparente sobre un texto que nunca cambió). La afirmación acompañante del mapa de confianza queda **retirada** también: el acuerdo entre réplicas independientes no mostró relación con la calidad juzgada (*r* = −0,030 sobre 597 unidades), y tres ejecuciones posteriores contra verdad de referencia situaron la razón de momios común en 3,47, 0,26 y 1,24 — ninguna señal, medida tres veces. La sección 11.3 reporta la retractación completa y la 11.3a la medición que la reemplaza.
 
 Quinta, introduzco un segundo eje de enrutamiento, ortogonal a la sensibilidad del contenido: un clasificador de privacidad del lado del cliente asigna a cada petición un **nivel** —malla abierta de voluntarios, *enjambre de confianza* permisionado cuya pertenencia es una lista blanca criptográfica de claves públicas bajo TLS mutuo, o ejecución puramente local— y el mismo protocolo y el mismo cliente se ejecutan en los tres. Esto es lo que hace la arquitectura desplegable allí donde un voluntario anónimo no puede ser lícitamente un encargado del tratamiento, y separa dos papeles que el número de réplicas *k* venía desempeñando a la vez: la defensa frente a trabajadores deshonestos, que la lista blanca elimina, y las réplicas independientes que el mapa de confianza necesita, que no.
 
@@ -77,7 +77,7 @@ El vocabulario de diseño se toma deliberadamente del ensamblaje shotgun de geno
 
 ### 1.3 Qué hace posible esto
 
-La primera medición ya está hecha, y **el criterio no se alcanzó**: con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados, el impuesto de coherencia es de +3,26 % con un IC del 95 % de [−0,02 %, +6,93 %], y el criterio está escrito contra el límite superior (sección 11.3a). Una versión anterior de esta sección afirmaba que la predicción central se había cumplido y citaba un impuesto que decrecía de forma monótona con el presupuesto de contexto; esa afirmación queda retirada: el eje ρ no se había movido, porque solo 13 de 96 celdas quedaban por encima de su propio piso de empaquetado. Lo que sobrevive es más estrecho y está mejor fundado: el prompt mediano pierde 1,16 %, **8 de 16 no pierden nada**, y el control con *N* = 8 falla como estaba obligado a fallar. Así que fragmentar es casi gratis en una parte de este corpus y claramente no en el resto, el núcleo falsable de la sección 4 ha producido por fin un negativo real, y las cuatro cosas que siguen están motivadas por un costo bimodal medido y no por una tendencia confirmada.
+La primera medición ya está hecha, y **el criterio no se alcanzó**: con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados, el impuesto de coherencia es de +2,30 % con un IC del 95 % de [−2,05 %, +7,49 %], y el criterio está escrito contra el límite superior, al que le faltan 2,49 puntos (sección 11.3a). Una versión anterior de esta sección afirmaba que la predicción central se había cumplido y citaba un impuesto que decrecía de forma monótona con el presupuesto de contexto; esa afirmación queda retirada: el eje ρ no se había movido, porque solo 13 de 96 celdas quedaban por encima de su propio piso de empaquetado. Lo que sobrevive es más estrecho y está mejor fundado: el **prompt mediano no pierde absolutamente nada (0,00 %)**, **11 de 16 prompts quedan en cero o por debajo**, y el control con *N* = 8 falla como estaba obligado a fallar. La media está fabricada por dos prompts, `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %), que entre los dos son el 140 % de ella; sin ellos, los otros catorce promedian −1,06 %. Así que fragmentar salió gratis en once de dieciséis prompts y caro en dos, el núcleo falsable de la sección 4 ha producido por fin un negativo real, y las cuatro cosas que siguen están motivadas por un costo bimodal medido y no por una tendencia confirmada.
 
 **1. Capacidad de servicio sin poseerla.** Un participante aporta una máquina que ya existe y que ya consume energía cuando está ociosa. El requisito de entrada es un modelo pequeño completo, no un fragmento de uno grande, lo que sitúa el conjunto de hardware alcanzable órdenes de magnitud por encima de lo que pueden alcanzar los esquemas de paralelismo de tubería. La capacidad escala entonces con la *participación* y no con el gasto de capital: una curva de crecimiento que ningún operador centralizado puede igualar, porque la suya está acotada por lo que puede construir y financiar.
 
@@ -903,27 +903,52 @@ reservados:
 
 | | |
 |---|---|
-| Impuesto de coherencia | **+3,26 %** |
-| IC del 95 % (agrupado por prompt) | **[−0,02 %, +6,93 %]** |
+| Impuesto de coherencia | **+2,30 %** |
+| IC del 95 % (agrupado por prompt) | **[−2,05 %, +7,49 %]** |
 | Criterio | límite superior por debajo del 5 % |
-| Veredicto | **NO ALCANZADO** — le faltan 1,93 puntos |
-| Efecto mediano por prompt | +1,16 % |
-| Prompts en cero o por debajo | **8 de 16** |
-| Control, N = 8, k = 1 (obligado a fallar) | +17,6 % — se comportó |
+| Veredicto | **NO ALCANZADO** — le faltan 2,49 puntos en el límite superior |
+| Efecto mediano por prompt | **exactamente 0,00 %** |
+| Prompts en cero o por debajo | **11 de 16** (6 negativos, 5 exactamente cero) |
+| Control, N = 8, k = 1 (obligado a fallar) | +16,23 %, IC [+11,33 %, +20,28 %], mediana +18,59 %, 15 de 16 prompts peores que la línea base — se comportó |
+| Filas excluidas por debajo del piso de empaquetado | 0 |
 
 La estimación puntual queda por debajo del umbral y el intervalo no. El criterio
 se escribió contra el límite superior precisamente para este caso, y no se va a
 reescribir ahora que el caso se ha presentado.
 
-La distribución es el resultado más informativo. La mitad del corpus no pierde
-nada en absoluto; el resto carga con la media. Eso no es «fragmentar cuesta
-3 %», es «fragmentar es gratis en algunas cargas de trabajo y no en otras, y el
-corpus todavía no dice cuál es cuál». Identificar esa separación es la siguiente
-medición, y es una pregunta mejor que la que plantea el criterio.
+**La distribución es el resultado más informativo, y la media es el estadístico
+equivocado para describirlo.** El prompt mediano no pierde absolutamente nada,
+once de dieciséis prompts quedan en cero o por debajo, y la media no está
+simplemente arrastrada por los prompts positivos: está *fabricada* por dos de
+ellos. `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %) suman +0,516 frente
+a un total de +0,368, el **140 % de la media**; si se quitan, la media de los
+catorce prompts restantes es **−1,06 %**, es decir, fragmentar en dos resulta
+ligeramente *mejor* que no fragmentar. La descripción honesta no es «fragmentar
+cuesta 2,3 %», sino: **en 11 de 16 prompts de resumen de tablas, partir el
+trabajo en dos salió gratis, y en dos de ellos salió caro.**
+
+Esos mismos dos prompts son los **únicos dos donde N = 2 es peor que N = 8**
+(outturn, +28,50 % frente a +13,57 %; bonded, +23,08 % frente a +14,00 %). Que
+más fragmentos *ayuden* no es lo que predice una historia de impuesto de
+coherencia, así que esto parece un fallo de **calidad de partición** —una
+división en dos que deja una costura en un sitio caro, y que cortar en ocho
+esquiva por casualidad— y no un costo de fragmentar como tal. Es una afirmación
+comprobable y aquí **no** se comprueba.
+
+Nada de esto rescata el criterio. Un criterio de umbral pregunta «¿es aceptable
+el costo medio?», que es la pregunta equivocada para un protocolo de
+enrutamiento: el enrutador decide por petición, de modo que un costo bimodal con
+una frontera identificable vale más que uno bajo y uniforme, porque es
+**enrutable**. Eso es un hallazgo *adicional*. El listón que el proyecto se fijó
+a sí mismo no se ha superado.
 
 **Alcance.** 16 prompts, una semilla, modelos de 2–3 B, N = 2. Un resultado en
 el extremo bajo del rango de capacidad al que apunta el protocolo, lo que acota
-la arquitectura ahí y no la zanja a 8 B.
+la arquitectura ahí y no la zanja a 8 B. Con una varianza entre prompts de este
+tamaño, dieciséis prompts no pueden, por pura aritmética, meter un intervalo de
+9,5 puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto
+verdadero: ampliar el corpus es un requisito previo para volver a poner a prueba
+el criterio, no una manera de obtener una respuesta mejor.
 
 ---
 
@@ -988,7 +1013,7 @@ Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede a
 
 | Métrica | Definición | Objetivo v1.0 | Medido (sección 11.3) |
 |---|---|---|---|
-| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | límite superior del IC del 95 % por debajo del 5 % | **NO ALCANZADO** (sección 11.3a): +3,26 %, IC [−0,02 %, +6,93 %], 16 prompts reservados con ρ = 3,5, N = 2, k = 1 |
+| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | límite superior del IC del 95 % por debajo del 5 % | **NO ALCANZADO** (sección 11.3a): +2,30 %, IC [−2,05 %, +7,49 %], 16 prompts reservados con ρ = 3,5, N = 2, k = 1; efecto mediano por prompt exactamente 0,00 %, 11 de 16 en cero o por debajo |
 | ρ operativa | Tokens de entrada por token de prompt | <2,0 | **no alcanzable en este corpus.** El piso de empaquetado con N = 2 es de 1,20 en `tables24` y de 1,42–1,68 en el corpus V0, así que un objetivo de 2,0 deja casi nada de contexto por encima de la tarea obligatoria y su cabecera. Un objetivo de <2,0 no es un objetivo que el diseño pueda cumplir con ningún N útil; la cifra hay que rederivarla a partir del piso en vez de afirmarla. |
 | Aceleración efectiva | Frente a monolítico, mismo modelo | >1,5× | sin medir todavía |
 | Aceleración frente a la línea base honesta | Frente a decodificación especulativa | Reportada incluso cuando es <1 | sin medir todavía |
@@ -1085,7 +1110,7 @@ Se siguen tres consecuencias que no anticipaba cuando comenzó este trabajo y qu
 
 El argumento en contra es igual de específico y se enuncia extensamente en la sección 12. La generación independiente pierde calidad por razones teóricas y no incidentales. El modelo del lado del cliente del que depende el diseño se sitúa en el extremo débil de la capacidad de planificación medida. La computación voluntaria lleva veinte años contrayéndose, y ningún diseño de incentivos de este artículo es todavía una respuesta demostrada a por qué eso habría de revertirse.
 
-Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. Las mediciones ya están, y las dos fueron contra el artículo. El impuesto de coherencia con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de +3,26 % con un IC del 95 % de [−0,02 %, +6,93 %], y el umbral de abandono fijado de antemano está escrito contra ese límite superior: **no se alcanza**, por 1,93 puntos (sección 11.3a). Una versión anterior de esta conclusión afirmaba un impuesto que decrecía de forma monótona con el presupuesto de contexto y un umbral superado en tres categorías de tarea; esa afirmación queda retirada, porque el eje ρ no se había movido y la métrica de coherencia no era neutral respecto del brazo. El mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— queda retirado del todo. Lo que sobrevive es un costo medido y bimodal —el prompt mediano pierde 1,16 % y 8 de 16 no pierden nada— y un control que falló como estaba obligado a fallar. Lo que queda por zanjar es qué separa la mitad del corpus que se fragmenta gratis de la mitad que no, y si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
+Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. Las mediciones ya están, y las dos fueron contra el artículo. El impuesto de coherencia con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de +2,30 % con un IC del 95 % de [−2,05 %, +7,49 %], y el umbral de abandono fijado de antemano está escrito contra ese límite superior: **no se alcanza**, y le faltan 2,49 puntos (sección 11.3a). Una versión anterior de esta conclusión afirmaba un impuesto que decrecía de forma monótona con el presupuesto de contexto y un umbral superado en tres categorías de tarea; esa afirmación queda retirada, porque el eje ρ no se había movido y la métrica de coherencia no era neutral respecto del brazo. El mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— queda retirado del todo. Lo que sobrevive es un costo medido y bimodal —el prompt mediano no pierde absolutamente nada, 11 de 16 prompts quedan en cero o por debajo, y dos prompts cargan el 140 % de la media— y un control que falló como estaba obligado a fallar. Lo que queda por zanjar es qué separa a los once prompts que se fragmentan gratis de los dos que no, y si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
 
 Si funciona, el resultado no es una forma más barata de comprar lo que ya se vende. Es capacidad de inferencia que crece con el número de personas que participan y no con la cantidad de capital disponible para construir, sostenida bajo una licencia y una estructura de gobernanza diseñadas para que ninguna parte pueda cercarla. Eso merece intentarse incluso con una probabilidad sustancial de fracaso, y merece intentarse en abierto, donde pueda comprobarse.
 

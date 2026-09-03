@@ -51,11 +51,22 @@
 >
 > **What replaces it.** One causal claim, one named cell, a control that can
 > fail, and a corpus split so that no threshold is fitted on the data it judges.
-> The result is in [`RESULTS_TABLES_FINAL.md`](RESULTS_TABLES_FINAL.md):
-> `table_summary` at ρ = 3.5, N = 2, k = 1 — **+3.26 %, 95 % CI [−0.02 %,
-> +6.93 %], 16 prompts, criterion NOT MET**, with the control at N = 8 behaving
-> as required (+17.6 %). The upper bound misses the 5 % threshold by 1.93 points;
-> the median prompt effect is +1.16 % and 8 of 16 prompts are at or below zero.
+> The result is in
+> [`RESULTS_TABLES_FINAL_CORRECTED.md`](RESULTS_TABLES_FINAL_CORRECTED.md):
+> `table_summary` at ρ = 3.5, N = 2, k = 1 — **+2.30 %, 95 % CI [−2.05 %,
+> +7.49 %], 16 held-out prompts, criterion NOT MET** by 2.49 points on the upper
+> bound, with the control at N = 8 behaving as required (+16.23 %, CI [+11.33 %,
+> +20.28 %], no overlap with the arm under test).
+>
+> The distribution is the finding the criterion does not ask about: **the median
+> prompt loses exactly 0.00 % and 11 of 16 prompts are at or below zero.** Two
+> prompts account for 140 % of the mean, and removing them leaves −1.06 % over the
+> other fourteen. That does not clear the bar — it says the bar was asking about
+> an average that describes almost none of the corpus.
+>
+> An earlier version of this note cited the run of 27 August (+3.26 %, CI
+> [−0.02 %, +6.93 %]). That run used the same defective instrument this banner is
+> about, and its figures are superseded by the re-run of 3 September above.
 >
 > **What survives from this document.** Section 2 (V3c, agreement vs judged
 > quality) does not depend on ρ or on the coherence metric, and its finding — no

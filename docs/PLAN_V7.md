@@ -27,21 +27,25 @@ that removes an arm from V7.
 
 ### Test 1 — `table_summary` at N=2. **Answered: criterion not met.**
 
-`docs/RESULTS_TABLES_FINAL.md`. Sixteen prompts, declared cell, frozen τ_sem,
-control behaving.
+`docs/RESULTS_TABLES_FINAL_CORRECTED.md` — the 3 September re-run on a corrected
+instrument, which supersedes the 27 August figures. Sixteen prompts, declared
+cell, frozen τ_sem, control behaving.
 
-**+3.26 %, CI [−0.02 %, +6.93 %].** The criterion requires the upper bound below
-5 %; it is 6.93 %. Median prompt +1.16 %, eight of sixteen at or below zero, and
-on the full score including seam classes the fragmented answer is *better* than
-the baseline. The cost is small and the criterion demanded certainty the sample
-could not give.
+**+2.30 %, CI [−2.05 %, +7.49 %].** The criterion requires the upper bound below
+5 %; it is 7.49 %. **NOT MET**, short by 2.49 points. Median prompt effect
+**exactly 0.00 %**, **11 of 16 at or below zero** (6 negative, 5 exactly zero).
+Control N=8, k=1 at +16.23 %, CI [+11.33 %, +20.28 %].
 
-**Consequence for V7:** do not re-ask this question with the same estimator. A
-ratio against a baseline that can score 1.000 is maximally sensitive — one prompt
-(`bonded`, baseline 1.000) contributed 1.3 of the 3.3 points. V7 should declare
-an estimator robust to that **before** it runs: a paired difference in raw score,
-or a ratio with a floor on the denominator, or the median with a bootstrap
-interval. Choose one now, not after seeing the numbers.
+**Consequence for V7:** do not re-ask this question with the same estimator. The
+mean is manufactured by two prompts — `tbl24_outturn` (+28.50 %) and
+`tbl24_bonded` (+23.08 %) are together 140 % of it, and the other fourteen
+average −1.06 % — so a ratio against a strong baseline is maximally sensitive to
+a couple of rows. V7 should declare an estimator robust to that **before** it
+runs: a paired difference in raw score, or a ratio with a floor on the
+denominator, or the median with a bootstrap interval. Choose one now, not after
+seeing the numbers. And widen the corpus first: with a between-prompt variance
+this size, sixteen prompts cannot bring a 9.5-point interval under a 5-point
+threshold whatever the true effect is.
 
 ### Test 3 — V3c as triage. **Answered: no.**
 
