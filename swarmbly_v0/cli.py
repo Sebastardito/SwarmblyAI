@@ -84,6 +84,16 @@ def build_parser() -> argparse.ArgumentParser:
                      help="F-beta weight for tau calibration; must be < 1 (default: 0.5)")
     run.add_argument("--tau", type=float, default=None,
                      help="fix tau_sem instead of calibrating it (discouraged)")
+    run.add_argument("--declare", action="append", default=None,
+                     metavar="CATEGORY@rho=R@N=n@k=K",
+                     help="name the cell this run is testing, BEFORE it runs. The "
+                          "verdict for that one cell -- point estimate, bootstrap "
+                          "interval clustered by prompt, and pass/fail on the UPPER "
+                          "bound -- is then printed as the run's headline. May be "
+                          "given twice: the second cell is treated as the control "
+                          "and is expected to FAIL. Without this the console prints "
+                          "curves and no verdict, and the verdict has to be dug out "
+                          "of summary.json.")
     run.add_argument("--max-prompts", type=int, default=None,
                      help="use only the first K prompts (for smoke runs)")
     run.add_argument("--router-threshold", type=float, default=DEFAULT_THRESHOLD,
@@ -314,6 +324,51 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print("  agreement is not truth: models sharing training data share errors, so "
               "this correlation must be measured, not assumed. Four measurements to "
               "date say there is nothing to find -- see docs/REVISION_2026-08-12.md.")
+
+    # The declared cell, printed as the headline it is.
+    #
+    # tables-dev exists to test ONE named cell and it printed everything except
+    # that cell. The console led with "+8.95%", a mean pooling N=2 and N=8 --
+    # the arm under test averaged with the control that is required to fail --
+    # while the actual verdict (+4.24 %, CI [-4.09 %, +10.59 %], NOT MET) and the
+    # control's (+13.67 %, CI [+7.15 %, +19.30 %]) appeared nowhere on screen and
+    # had to be dug out of summary.json.
+    #
+    # The cell is named on the command line rather than inferred, so that the
+    # declaration is a fact about the invocation -- recoverable from run.log and
+    # from the shell history -- and not a paragraph the tier prints about itself.
+    for position, key in enumerate(getattr(args, "declare", None) or []):
+        cell = stats.get("falsifiable_go_no_go", {}).get(key)
+        role = "DECLARED CELL" if position == 0 else "CONTROL (must fail)"
+        print(f"\n{'=' * 72}\n{role}: {key}")
+        if cell is None:
+            available = sorted(stats.get("falsifiable_go_no_go", {}))
+            print("  NOT PRESENT in this run. The declared cell was not measured, so")
+            print("  this run has no verdict. Check the spelling against the grid:")
+            for name in available[:6]:
+                print(f"    {name}")
+            if len(available) > 6:
+                print(f"    ... and {len(available) - 6} more")
+            continue
+        lo, hi = cell["ci95"]
+        passed = bool(cell["passed"])
+        print(f"  point estimate      {cell['point_estimate'] * 100:+.2f}%")
+        print(f"  95% CI (by prompt)  [{lo * 100:+.2f}%, {hi * 100:+.2f}%]")
+        print(f"  criterion           upper bound below {cell['threshold'] * 100:.0f}%")
+        print(f"  n_prompts           {cell['n_prompts']}   "
+              f"(the sample size that matters; rows from one prompt share its difficulty)")
+        print(f"  VERDICT             {'MET' if passed else 'NOT MET'}"
+              + ("" if passed else
+                 f"  -- short by {(hi - cell['threshold']) * 100:.2f} points on the upper bound"))
+        if position > 0:
+            # A control that passes is worse news than a declared cell that fails.
+            print("  control reading     "
+                  + ("*** THE CONTROL PASSED. The instrument is not discriminating "
+                     "between N=2 and N=8, so NEITHER number is evidence. ***"
+                     if passed else
+                     "fails as required -- the instrument separates the arms."))
+    if getattr(args, "declare", None):
+        print("=" * 72)
 
     # The old criterion, printed as what it is.
     #

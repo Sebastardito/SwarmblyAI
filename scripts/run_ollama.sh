@@ -475,6 +475,8 @@ run_tables_dev() {
     --backend openai --embedder api \
     --prompts prompts/tables24.json --split dev \
     --rho 3.5 --n 2,8 --k 1,3 \
+    --declare 'table_summary@rho=3.5@N=2@k=1' \
+    --declare 'table_summary@rho=3.5@N=8@k=1' \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
   echo ""
@@ -588,6 +590,8 @@ run_tables_final() {
     --backend openai --embedder api \
     --prompts prompts/tables24.json --split final \
     --rho 3.5 --n 2,8 --k 1,3 --tau "$tau" \
+    --declare 'table_summary@rho=3.5@N=2@k=1' \
+    --declare 'table_summary@rho=3.5@N=8@k=1' \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
   echo ""

@@ -390,3 +390,75 @@ def test_a_correlation_is_withheld_for_the_right_stated_reason(tmp_path, capsys)
     assert "almost no variance" not in out, \
         "acceptance was 50 % -- variance was maximal, so that is the wrong reason"
     assert "answer key" in out, "and it must name the tier that would settle it"
+
+
+def _declared_run(tmp_path, capsys, *declare, n="2,8"):
+    from swarmbly_v0.cli import main
+    args = ["run", "--backend", "mock", "--embedder", "hash",
+            "--prompts", "prompts/tables24.json", "--split", "dev",
+            "--rho", "3.5", "--n", n, "--k", "1",
+            "--candidates", "1", "--seed", "0", "--out", str(tmp_path)]
+    for cell in declare:
+        args += ["--declare", cell]
+    assert main(args) == 0
+    return capsys.readouterr().out
+
+
+def test_the_run_prints_the_cell_it_was_declared_to_test(tmp_path, capsys):
+    """tables-dev exists to test ONE named cell and printed everything but it.
+
+    Its console led with "+8.95%" -- a mean pooling N=2 and N=8, the arm under
+    test averaged with the control that is *required to fail* -- while the actual
+    verdict (+4.24 %, CI [-4.09 %, +10.59 %], NOT MET) and the control's
+    (+13.67 %, CI [+7.15 %, +19.30 %]) appeared nowhere on screen. Both had to be
+    read out of summary.json by hand.
+    """
+    out = _declared_run(tmp_path, capsys, "table_summary@rho=3.5@N=2@k=1")
+    assert "DECLARED CELL: table_summary@rho=3.5@N=2@k=1" in out
+    assert "point estimate" in out and "95% CI (by prompt)" in out
+    assert "upper bound below" in out, "the criterion is on the bound, not the estimate"
+    assert "n_prompts" in out, "the sample size that matters must be named"
+    assert "VERDICT" in out
+
+
+def test_the_control_is_labelled_as_one_and_flagged_if_it_passes(tmp_path, capsys):
+    """A control that passes is worse news than a declared cell that fails: it
+    says the instrument cannot separate the arms, so neither number is
+    evidence. That has to be impossible to read past."""
+    out = _declared_run(tmp_path, capsys,
+                        "table_summary@rho=3.5@N=2@k=1",
+                        "table_summary@rho=3.5@N=8@k=1")
+    assert "CONTROL (must fail)" in out
+    control = out[out.index("CONTROL (must fail)"):]
+    assert "control reading" in control
+    # Whichever way the mock lands, the reading must be stated explicitly.
+    assert ("fails as required" in control) or ("THE CONTROL PASSED" in control)
+
+
+def test_a_declared_cell_that_was_never_measured_is_not_silently_skipped(tmp_path, capsys):
+    """A typo in the declaration must not produce a run that looks complete and
+    has no verdict. It names the cells that WERE measured, so the mistake is
+    fixable without opening summary.json."""
+    out = _declared_run(tmp_path, capsys, "table_summary@rho=9.9@N=2@k=1", n="2")
+    assert "NOT PRESENT in this run" in out
+    assert "no verdict" in out
+    assert "table_summary@rho=3.5@N=2@k=1" in out, "it must list what was measured"
+
+
+def test_both_tables_tiers_declare_their_cell_in_the_runner() -> None:
+    """The declaration is a fact about the invocation -- recoverable from run.log
+    and from shell history -- rather than a paragraph the tier prints about
+    itself. If it is only in the header text it can drift from what ran."""
+    script = (Path(__file__).resolve().parent.parent
+              / "scripts" / "run_ollama.sh").read_text(encoding="utf-8")
+    # Anchored on the INVOCATION, not on a prose mention. The first draft of this
+    # test matched "--split final" inside an echo line explaining the split and
+    # passed or failed on the wrong text -- the same class of mistake as reading a
+    # tier's k off a hand-written table instead of off its command line.
+    for tier in ("--prompts prompts/tables24.json --split dev",
+                 "--prompts prompts/tables24.json --split final"):
+        assert script.count(tier) == 1, f"{tier}: expected exactly one invocation"
+        block = script[script.index(tier):script.index(tier) + 600]
+        assert "--declare 'table_summary@rho=3.5@N=2@k=1'" in block, tier
+        assert "--declare 'table_summary@rho=3.5@N=8@k=1'" in block, \
+            f"{tier}: the control must be declared too, or nothing checks it failed"
