@@ -480,8 +480,21 @@ run_tables_dev() {
     --candidates 2 --seed 0 \
     --out "$out" || return 1
   echo ""
-  bold "  tau_sem fitted on dev. Carry it to the final half:"
-  python3 -c "import json,sys;print('    --tau', json.load(open('$out/run_metadata.json'))['tau_sem'])" 2>/dev/null || true
+  # This used to print "--tau <number>", which the final tier REFUSES to accept
+  # and for a stated reason: a bare number cannot carry which corpus it was
+  # fitted on, and the table corpus changed once already. `run_tables_final`
+  # takes the dev run's DIRECTORY and reads the threshold, the corpus digest and
+  # the split out of its run_metadata.json. So the tier's own closing advice
+  # contradicted the tier that consumes it -- an operator following this script's
+  # instructions could not proceed.
+  bold "  tau_sem fitted on dev. Carry it to the final half by naming THIS RUN:"
+  echo ""
+  echo "    bash scripts/run_ollama.sh tables-final $out"
+  echo ""
+  echo "  Not the number. The directory. It carries the threshold, the corpus"
+  echo "  digest it was fitted against, and the split -- and the final tier checks"
+  echo "  all three before it starts."
+  python3 -c "import json;print('  (for the record, tau_sem =', json.load(open('$out/run_metadata.json'))['tau_sem'], ')')" 2>/dev/null || true
   echo "  -> $out/summary.json"
 }
 
@@ -496,7 +509,29 @@ run_tables_final() {
   WHICH CORPUS it was fitted on -- which matters, because the table corpus
   changed on 27 August when a tense directive was added. Naming the dev run
   lets this script read both the threshold and the corpus digest and check them."
-  [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist."
+  # Name the mistake instead of reporting its consequence. Passing "--tau 0.68"
+  # produced `ERROR: --tau/run_metadata.json does not exist`, which tells the
+  # operator nothing about what they did wrong -- and this script's own dev tier
+  # used to instruct exactly that, so it was a mistake the script invited.
+  case "$dev" in
+    --tau|--tau=*|-t)
+      die "this tier takes the dev run's DIRECTORY, not a tau value:
+    bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>
+
+  A bare number cannot carry which corpus it was fitted on, and this corpus has
+  changed once already. Naming the run lets this script read the threshold, the
+  frozen corpus digest and the split, and refuse if any of the three disagrees
+  with the corpus about to be judged. Latest dev run on disk:
+$(ls -1dt results/tables-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
+    -*)
+      die "unexpected option '$dev'. This tier takes the dev run's directory:
+    bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>" ;;
+  esac
+  [ -d "$dev" ] || die "'$dev' is not a directory. This tier takes the dev run's
+  directory, not a threshold and not a file:
+    bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>"
+  [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist.
+  That run did not complete, or it is not a swarmbly results directory."
 
   local tau dev_sha now_sha dev_split
   tau="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json'))['tau_sem'])")"

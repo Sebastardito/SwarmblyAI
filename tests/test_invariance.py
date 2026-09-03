@@ -462,3 +462,28 @@ def test_both_tables_tiers_declare_their_cell_in_the_runner() -> None:
         assert "--declare 'table_summary@rho=3.5@N=2@k=1'" in block, tier
         assert "--declare 'table_summary@rho=3.5@N=8@k=1'" in block, \
             f"{tier}: the control must be declared too, or nothing checks it failed"
+
+
+def test_the_runner_does_not_instruct_an_invocation_it_refuses() -> None:
+    """tables-dev printed "--tau 0.68"; tables-final rejects that and demands the
+    dev run's DIRECTORY, for a stated reason -- a bare number cannot carry which
+    corpus it was fitted on, and this corpus has changed once already.
+
+    So an operator following the script's own closing instruction could not
+    proceed, and the error they got named the consequence ("--tau/run_metadata.json
+    does not exist") rather than the mistake. Both halves are asserted here
+    because fixing one and not the other reopens it.
+    """
+    script = (Path(__file__).resolve().parent.parent
+              / "scripts" / "run_ollama.sh").read_text(encoding="utf-8")
+
+    dev_tail = script[script.index("tau_sem fitted on dev"):][:900]
+    assert "bash scripts/run_ollama.sh tables-final $out" in dev_tail, \
+        "the dev tier must hand over the directory the final tier actually takes"
+    assert "print('    --tau'" not in dev_tail, \
+        "and must not instruct the form the final tier refuses"
+
+    final = script[script.index("run_tables_final()"):]
+    assert "--tau|--tau=*|-t)" in final, \
+        "passing a tau must be named as the mistake, not reported as a missing file"
+    assert 'is not a directory' in final
