@@ -24,15 +24,50 @@ Existing peer-to-peer inference systems split the **model**: layers or tensors l
 
 The design rests on one falsifiable claim: **the more shared context each fragment carries, the less quality is lost when the pieces are rejoined.** A go/no-go threshold was registered publicly *before any data existed* — if the coherence tax never fell below 5 % in any task category, the architecture was to be abandoned.
 
-Run against three real model families (`llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`), the prediction held:
+**The criterion has been tested on a corrected instrument, and it was not met.**
 
-| Shared context ρ | 1.00 | 1.25 | 1.50 | 2.00 |
-|---|---|---|---|---|
-| Coherence tax | 24.1 % | 20.4 % | 16.1 % | **13.7 %** |
+| | |
+|---|---|
+| Cell, named before the run | `table_summary`, ρ = 3.5, N = 2, k = 1 |
+| Coherence tax | **+3.26 %** |
+| 95 % CI (bootstrap clustered by prompt) | **[−0.02 %, +6.93 %]** |
+| Criterion | upper bound below 5 % |
+| Verdict | **NOT MET**, by 1.93 points on the upper bound |
+| Corpus | 16 prompts, held out — the threshold was fitted on a separate 8 |
+| Control (N = 8, must fail) | +17.6 % — behaved |
 
-Monotone in both the ratio and the denominator-free absolute difference. **Three task categories cleared the pre-registered threshold, and in two of them the tax went negative — fragmenting the problem and reassembling it produced a *better* answer than doing it in one piece, by as much as 9.0 %.**
+The point estimate is under 5 %. The interval is not, and the criterion was
+written against the interval precisely so that a favourable point estimate could
+not carry it. The median prompt effect is +1.16 % and **8 of 16 prompts are at or
+below zero** — at N = 2 this workload is close to free on about half the corpus
+and clearly not on the rest, which is a more useful finding than a mean. Full
+result: [`docs/RESULTS_TABLES_FINAL.md`](docs/RESULTS_TABLES_FINAL.md).
 
-The companion V3c run found **no relationship between inter-replica agreement and judged quality** (*r* = −0.030 over 597 units), which does not support the confidence map the whitepaper describes; that contribution has been demoted rather than defended. Eight prompts — one of which produced no usable baseline — one seed, 2–3B models, and one of the two coherence instruments produced no usable measurement at all: a signal to act on, not a benchmark. Everything, including the parts that went the wrong way: [`docs/RESULTS_V0_V3C.md`](docs/RESULTS_V0_V3C.md).
+**An earlier version of this section reported a coherence tax falling 24.1 % →
+13.7 % across ρ and said the prediction held. That result is withdrawn.** Two
+independent defects, both in the instrument rather than in the protocol:
+
+- **The ρ axis never moved.** A context budget below a prompt's *packing floor* —
+  the tokens the micro-tasks and their contract headers cost before any context
+  is added — makes every packet collapse to its bare task, so two different ρ
+  labels produce byte-identical packets. On that corpus **13 of 96 cells were
+  above floor**, and the two rows anchoring the descent, ρ = 1.00 and ρ = 1.25,
+  contained **none**. The curve restated "packets holding nothing score worse
+  than packets holding something", which is true and is not the hypothesis.
+- **The coherence metric was not arm-neutral.** The same sixteen-sentence text
+  scored 0.9375 as monolithic and 0.5000 at N = 8 — an apparent tax of **+46.7 %
+  on text that never changed**.
+
+Both are fixed, both are regression-tested, and the harness now refuses to
+publish a below-floor cell rather than flagging it. The withdrawal is kept in
+full, with the arithmetic, in [`docs/RESULTS_V0_V3C.md`](docs/RESULTS_V0_V3C.md).
+
+The companion V3c finding does not depend on either defect and stands: **no
+relationship between inter-replica agreement and judged quality** (*r* = −0.030
+over 597 units), which does not support the confidence map the whitepaper
+describes. Three subsequent runs put the common odds ratio at 3.47, 0.26 and
+1.24 — the confidence map is dead on its own evidence, and that contribution has
+been withdrawn rather than defended.
 
 ---
 

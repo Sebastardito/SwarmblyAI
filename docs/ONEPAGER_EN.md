@@ -38,24 +38,61 @@ A small orchestrator on the user's own computer decomposes a request into semant
 
 The design rests on one falsifiable claim: **the more shared context each fragment carries, the less quality is lost when the pieces are rejoined.** A go/no-go threshold was registered publicly *before any data existed* — if the loss never fell below 5 % in any task category, the architecture was to be abandoned.
 
-It has now been run against three real model families. The prediction held:
+It has now been tested on a corrected instrument, on a held-out corpus, against a
+cell named before the run. **The criterion was not met.**
 
-| Shared context (ρ) | Quality lost to fragmentation |
+| | |
 |---|---|
-| 1.00 | 24.1 % |
-| 1.25 | 20.4 % |
-| 1.50 | 16.1 % |
-| 2.00 | **13.7 %** |
+| Cell, named in advance | `table_summary`, ρ = 3.5, N = 2, k = 1 |
+| Quality lost to fragmentation | **+3.26 %** |
+| 95 % CI, bootstrap clustered by prompt | **[−0.02 %, +6.93 %]** |
+| Criterion | the *upper bound* must clear 5 % |
+| Verdict | **NOT MET**, by 1.93 points |
+| Corpus | 16 held-out prompts |
+| Control (N = 8, required to fail) | +17.6 % — behaved |
 
-Monotone, in both the ratio and the denominator-free absolute difference. **Three task categories cleared the pre-registered threshold, and in two of them the tax went negative — fragmenting the problem and reassembling it produced a *better* answer than doing it in one piece, by as much as 9.0 %.**
+The point estimate is comfortably under 5 %. The interval is not, and the
+criterion was written against the interval so that a favourable point estimate
+could not carry it on its own. The distribution is the more useful finding: the
+median prompt loses 1.16 % and **8 of 16 prompts lose nothing at all**. At two
+fragments this workload is close to free on about half the corpus and clearly
+not free on the rest.
 
-That is the core argument, measured rather than asserted: the variable the design says is the control variable behaves like the control variable. Two caveats travel with that table rather than being dropped from it — the figures come from one of two coherence instruments, the second having produced no usable measurement on this corpus, and one of the eight prompts failed to produce a baseline at all, so its cells are excluded.
+**An earlier version of this page reported that loss falling 24.1 % → 13.7 % as
+shared context rose, and said the prediction held. That table is withdrawn.**
+Two defects, both in the measuring instrument rather than in the architecture.
+The first: a context budget below a prompt's *packing floor* — what the
+micro-tasks and their headers cost before any context is added — makes every
+packet collapse to its bare task, so two different budget labels produce
+identical packets. On that corpus 13 of 96 cells were above floor, and the two
+rows carrying the descent had none. The second: the coherence metric was not
+arm-neutral — the same text scored 0.9375 unfragmented and 0.5000 at eight
+fragments, an apparent loss of 46.7 % on text that never changed. Both are fixed
+and regression-tested; the harness now refuses to publish a below-floor cell.
+The withdrawal is kept in full in `docs/RESULTS_V0_V3C.md`.
+
+What survives is smaller and better established: at two fragments, on a held-out
+corpus, with a control that behaved, the cost of fragmentation is a few per cent
+and its distribution is bimodal. The project's own threshold says that is not
+good enough yet, and this page says so rather than moving the threshold.
 
 ## What has not been proven — stated here, not buried
 
-One published contribution did **not** survive its first test. The architecture returns a *confidence map* — because independent model families answer the same micro-task, their agreement can be scored per unit, and a single centralized provider has nothing to align. The mechanism works. But the first measurement found **no relationship between agreement and judged quality** (*r* = −0.030 over 597 units). The instrument was weak — the automated judge accepted 93 % of everything — so the honest statement is that the property is **unsupported, not refuted**. It has been demoted in the whitepaper accordingly, in the same document that first advertised it.
+One published contribution did **not** survive. The architecture returns a
+*confidence map* — because independent model families answer the same
+micro-task, their agreement can be scored per unit, and a single centralized
+provider has nothing to align. The mechanism works. The claim that agreement
+predicts quality does not. The first measurement found **no relationship**
+(*r* = −0.030 over 597 units) against a weak judge that accepted 93 % of
+everything, so the honest verdict then was *unsupported, not refuted*. Three
+later runs graded against an answer key instead put the common odds ratio at
+**3.47, then 0.26, then 1.24** — above, below and astride 1 on the same
+question. That is not a weak signal; it is no signal, measured three times. The
+confidence map has been **withdrawn**, not demoted, and it is dropped from the
+V7 benchmark.
 
-The measurements are also small: eight prompts — one of them without a usable baseline — one seed, 2–3B models. A signal to act on, not a benchmark.
+The measurements are also small: 16 held-out prompts, one seed, 2–3B models. A
+signal to act on, not a benchmark.
 
 **Four things this project does not claim.** It is **not faster than a commercial API** for someone who already owns the hardware to run one — single-node speculative decoding beats any fragmentation scheme on latency, and Swarmbly's own latency has not been measured. It does **not offer unlimited context**, only a much higher limit that sits on the user's machine instead of in a vendor's price tier. It is **not encryption**: fragmentation raises the cost of reconstruction and nothing more, which is why genuinely sensitive work is routed to a closed circle or kept entirely local. And it has **not demonstrated an environmental benefit** — the argument is strong, the measurement is not yet made, and the project commits to publishing it whatever it shows.
 
@@ -65,7 +102,7 @@ This section exists because a project that hides its first negative result has n
 
 Small models crossed the capability line that makes this possible only recently; the bandwidth gap that killed model-splitting is not closing. The opportunity is a timing one.
 
-Published and public as of August 2026: a 27-page whitepaper with 90 references, a complete wire specification, a reference implementation with **178 passing tests**, a labelled evaluation corpus, an experimental harness that reports its own measurement failures, and the first real measurements in full. Everything is AGPL-3.0-or-later so that a hosted deployment cannot close it, with a public-domain-dated prior-art record.
+Published and public as of August 2026: a 27-page whitepaper with 90 references, a complete wire specification, a reference implementation with **558 passing tests**, a labelled evaluation corpus, an experimental harness that reports its own measurement failures, and the first real measurements in full. Everything is AGPL-3.0-or-later so that a hosted deployment cannot close it, with a public-domain-dated prior-art record.
 
 **What it needs next is not funding first — it is participants.** The likeliest way this fails is not an engineering fault; it is that nobody connects. Volunteer computing has been declining for twenty years, and the best protocol in the world is worth nothing to an empty network.
 
@@ -73,4 +110,4 @@ The knowledge is already public. The hardware is already built. What remains is 
 
 ---
 
-*Full technical argument: `docs/WHITEPAPER_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Measurements in full: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*
+*Full technical argument: `docs/WHITEPAPER_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Current result in full: `docs/RESULTS_TABLES_FINAL.md`. The withdrawn first measurements, kept with the arithmetic: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*

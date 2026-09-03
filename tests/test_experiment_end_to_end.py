@@ -16,7 +16,14 @@ from swarmbly_v0.experiment import CSV_COLUMNS, SweepConfig, summarize, write_cs
 @pytest.fixture(scope="module")
 def sweep(tmp_path_factory: pytest.TempPathFactory):
     prompts = load_prompts()[:3]
-    config = SweepConfig(rhos=(1.25, 2.0), ns=(2, 4), seed=0)
+    # rho 2.5 and 3.5, not 1.25 and 2.0. The honest packing floors on these three
+    # prompts run 1.425 to 2.228, so EVERY rho=1.25 cell was below floor, as was
+    # rho=2.0 at N=4 on the widest prompt. Below the floor `build_packet` sets
+    # `budget = max(mandatory_tokens, ...)` and each packet collapses to its bare
+    # task, so those cells measured "no context at all", not "a context budget of
+    # 1.25". This grid is entirely reachable, which is what makes the rho axis an
+    # axis.
+    config = SweepConfig(rhos=(2.5, 3.5), ns=(2, 4), seed=0)
     rows, metadata = run_sweep(
         prompts, config, get_backend("mock", seed=0), get_embedder("hash")
     )
@@ -78,15 +85,57 @@ def test_rho_achieved_tracks_the_target_when_reachable(sweep) -> None:
         assert row["rho_achieved"] == pytest.approx(row["rho_target"], rel=0.06)
 
 
-def test_coherence_tax_falls_as_rho_rises(sweep) -> None:
-    """The headline relationship the harness exists to measure."""
+def test_the_curve_has_one_point_per_reachable_rho_and_no_others(sweep) -> None:
+    """What this fixture can honestly assert about the rho axis.
+
+    It used to read ``test_coherence_tax_falls_as_rho_rises`` -- "the headline
+    relationship the harness exists to measure" -- and assert
+    ``curve[1].tax < curve[0].tax`` on a grid of rho 1.25 and 2.0 where every
+    1.25 cell was below its packing floor. Below the floor a packet holds its
+    bare task and nothing else, so the low-rho point was not a starved context
+    budget, it was NO context budget, and it manufactured the descent the
+    assertion then read as the headline result. Run the same fixture on a
+    reachable grid and the mock backend's tax *rises* with rho, at every grid
+    tried.
+
+    That is not a finding about fragmentation -- it is a mock backend, and it
+    says nothing about models. It is a finding about the test: the direction of
+    the coherence-tax curve is a claim about a real run, and a harness-validation
+    fixture cannot carry it. What the fixture can assert is that the axis exists:
+    one point per rho, ordered, both defined, none of them below floor.
+    """
     _, rows, _, _ = sweep
     stats = summarize(rows)
     curve = stats["curve"]
 
-    assert len(curve) == 2
-    assert curve[0]["rho"] < curve[1]["rho"]
-    assert curve[1]["coherence_tax_booook"] < curve[0]["coherence_tax_booook"]
+    assert stats["rows_excluded_below_floor"] == 0, \
+        "the fixture grid must sit above the packing floor, or it measures nothing"
+    assert [c["rho"] for c in curve] == [2.5, 3.5]
+    assert all(isinstance(c["coherence_tax_booook"], float) for c in curve)
+    # rho_achieved tracks the target because the target was reachable. This is
+    # the property that was false for every dropped cell.
+    assert all(c["rho_achieved_mean"] == pytest.approx(c["rho"], rel=0.06) for c in curve)
+
+
+def test_a_below_floor_cell_is_dropped_from_every_figure(sweep) -> None:
+    """The guard itself, on the grid that exposed it.
+
+    V0 swept rho 1.0 to 2.0 on a corpus whose floors ran 1.85 to 2.35 at N=4.
+    Every fragmented cell was written ``rho_reachable: False``; nothing in the
+    analysis read the field; a coherence-tax curve was published against an axis
+    that had never moved. The flag was not missing -- nothing consulted it.
+    """
+    prompts, _, _, _ = sweep
+    below, _ = run_sweep(prompts, SweepConfig(rhos=(1.25,), ns=(4,), seed=0),
+                         get_backend("mock", seed=0), get_embedder("hash"))
+    assert not any(r["rho_reachable"] for r in below if r["condition"] == "fragmented"), \
+        "this grid is supposed to be entirely below floor"
+
+    stats = summarize(below)
+    assert stats["rows_excluded_below_floor"] > 0
+    assert stats["curve"] == [], "a curve built only from below-floor cells must be empty"
+    assert stats["fragment_size_curve"]["points"] == [], \
+        "fragment_size_curve fell back to the unreachable rows when no reachable slice existed"
 
 
 def test_summary_reports_a_go_no_go_verdict(sweep) -> None:

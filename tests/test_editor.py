@@ -217,7 +217,15 @@ def test_the_editor_arm_runs_end_to_end_and_reports_its_own_budget() -> None:
                      {"id": "tide_once", "kind": "term_once", "term": "tide window"}],
     )
     backend = _Scripted()
-    cfg = SweepConfig(rhos=(1.5,), ns=(2,), ks=(1,), editors=(False, True), tau_sem=0.5)
+    # rho=4.5, not 1.5. This prompt's honest packing floor is 4.444 -- two
+    # micro-tasks plus their contract headers already cost 4.4x the prompt -- so
+    # at 1.5 every packet collapsed to its bare task and both cells were written
+    # `rho_reachable: False`. `summarize` now drops below-floor rows from every
+    # figure (see `publishable`), which is how this surfaced: the editor arm's
+    # entire end-to-end evidence was coming from a cell that had not measured
+    # what its axis label said. The fix is to run above the floor, not to exempt
+    # the test from the gate.
+    cfg = SweepConfig(rhos=(4.5,), ns=(2,), ks=(1,), editors=(False, True), tau_sem=0.5)
     rows, _ = run_sweep([spec], cfg, backend=backend, embedder=backend)
 
     conditions = {str(r["condition"]) for r in rows}
@@ -281,23 +289,48 @@ def test_the_old_go_no_go_cannot_fail_and_the_new_one_can() -> None:
     """
     from swarmbly_v0.experiment import falsifiable_go_no_go
 
+    # Distinct prompt_ids: the interval is a cluster bootstrap over prompts, and
+    # four rows from one prompt are one independent draw, not four.
     expensive = [{"condition": "fragmented", "category": "a", "rho_target": 1.5,
-                  "coherence_tax_booook": v} for v in (0.20, 0.24, 0.19, 0.22)]
+                  "prompt_id": f"p{i}", "coherence_tax_booook": v}
+                 for i, v in enumerate((0.20, 0.24, 0.19, 0.22))]
     out = falsifiable_go_no_go(expensive, category="a", rho=1.5)
     assert out["passed"] is False
-    assert out["declared_cell"] == {"category": "a", "rho": 1.5}
+    assert out["declared_cell"] == {"category": "a", "rho": 1.5,
+                                    "n_tasks": None, "k": None}
 
     cheap = [{"condition": "fragmented", "category": "a", "rho_target": 1.5,
-              "coherence_tax_booook": v} for v in (0.01, 0.02, 0.015, 0.012)]
+              "prompt_id": f"p{i}", "coherence_tax_booook": v}
+             for i, v in enumerate((0.01, 0.02, 0.015, 0.012))]
     assert falsifiable_go_no_go(cheap, category="a", rho=1.5)["passed"] is True
 
     # Cheap on average but wildly variable: the point estimate clears the bar and
     # the interval does not. This is the case the old criterion counted as a pass.
     noisy = [{"condition": "fragmented", "category": "a", "rho_target": 1.5,
-              "coherence_tax_booook": v} for v in (-0.30, 0.35, -0.25, 0.32)]
+              "prompt_id": f"p{i}", "coherence_tax_booook": v}
+             for i, v in enumerate((-0.30, 0.35, -0.25, 0.32))]
     noisy_out = falsifiable_go_no_go(noisy, category="a", rho=1.5)
     assert noisy_out["point_estimate"] < 0.05
     assert noisy_out["passed"] is False
+
+
+def test_a_cell_drawn_from_one_prompt_gets_no_interval_and_so_cannot_pass() -> None:
+    """Four rows from one prompt are one independent draw, not four.
+
+    Before the cluster bootstrap the criterion would have formed an interval from
+    the four rows and passed, on a sample of one. It now declines to decide and
+    says why -- the only honest answer when nothing was replicated.
+    """
+    from swarmbly_v0.experiment import falsifiable_go_no_go
+
+    one_prompt = [{"condition": "fragmented", "category": "a", "rho_target": 1.5,
+                   "prompt_id": "p0", "coherence_tax_booook": v}
+                  for v in (0.01, 0.02, 0.015, 0.012)]
+    out = falsifiable_go_no_go(one_prompt, category="a", rho=1.5)
+    assert out["passed"] is None
+    assert out["n_prompts"] == 1
+    assert out["n_observations"] == 4
+    assert "cluster" in out["note"] or "two clusters" in out["note"]
 
 
 def test_the_declared_cell_cannot_be_chosen_after_the_fact() -> None:
@@ -455,3 +488,30 @@ def test_grouping_is_contiguous_and_balanced() -> None:
 
     groups = _join([f"f{i}" for i in range(7)], 3).split("\n\n")
     assert groups == ["f0 f1 f2", "f3 f4", "f5 f6"]
+
+
+def test_the_declared_cell_must_name_n_because_n_dominates() -> None:
+    """The defect the run of 26 August exposed in the criterion itself.
+
+    Pooled over N, table_summary at rho 3.5 read +20.9% and failed comfortably.
+    At N=2 -- the fragment size the threshold question is actually about -- the
+    same cells read +5.8% with an interval spanning the threshold. A criterion
+    written to stop a maximum statistic passing on noise was hiding the one live
+    candidate inside a mean over the axis with the largest effect.
+    """
+    from swarmbly_v0.experiment import falsifiable_go_no_go
+
+    cheap = [{"condition": "fragmented", "category": "t", "rho_target": 3.5,
+              "n_tasks": 2, "prompt_id": f"p{i}", "coherence_tax_booook": v}
+             for i, v in enumerate((0.02, 0.03, 0.02, 0.03))]
+    dear = [{"condition": "fragmented", "category": "t", "rho_target": 3.5,
+             "n_tasks": 8, "prompt_id": f"p{i}", "coherence_tax_booook": v}
+            for i, v in enumerate((0.40, 0.45, 0.42, 0.44))]
+
+    pooled = falsifiable_go_no_go(cheap + dear, category="t", rho=3.5)
+    assert pooled["passed"] is False, "pooling N buries the cheap cell"
+
+    at_two = falsifiable_go_no_go(cheap + dear, category="t", rho=3.5, n_tasks=2)
+    assert at_two["passed"] is True
+    assert at_two["n_observations"] == 4
+    assert at_two["declared_cell"]["n_tasks"] == 2

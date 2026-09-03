@@ -1,5 +1,68 @@
 # First measurements against real models — V0 and V3c
 
+> # ⚠ SUPERSEDED — 12 August 2026
+>
+> **Nothing in Section 1 of this document is a measurement of ρ, and the
+> coherence tax it reports was produced by an instrument that was not
+> arm-neutral. Do not quote a number from it. Both defects are now fixed in the
+> harness; neither can be repaired in this run's data, because the data was never
+> collected under the conditions the axis label claims.**
+>
+> **1. The ρ axis never moved.** A cell can only measure a context budget if that
+> budget is above the prompt's own *packing floor* — the tokens the micro-tasks
+> and their contract headers cost before any context is added. Below the floor
+> `build_packet` falls back to `budget = max(mandatory_tokens, …)`, every packet
+> collapses to its bare task, and two different ρ labels produce byte-identical
+> packets. On this corpus the honest floors are:
+>
+> | | N = 2 | N = 4 | N = 8 |
+> |---|---|---|---|
+> | packing floor | 1.42 – 1.68 | 1.85 – 2.35 | 2.70 – 3.71 |
+>
+> The sweep below ran ρ ∈ {1.00, 1.25, 1.50, 2.00}. Cells at or above their own
+> floor, out of 8 prompts each:
+>
+> | ρ | N = 2 | N = 4 | N = 8 | row |
+> |---|---|---|---|---|
+> | 1.00 | 0/8 | 0/8 | 0/8 | **0/24** |
+> | 1.25 | 0/8 | 0/8 | 0/8 | **0/24** |
+> | 1.50 | 2/8 | 0/8 | 0/8 | 2/24 |
+> | 2.00 | 8/8 | 3/8 | 0/8 | 11/24 |
+>
+> **13 of 96 cells — 13.5 % — were above floor.** The two rows that anchor the
+> descent, ρ = 1.00 and ρ = 1.25, contain no valid cell at all: 48 cells, zero
+> measurements of ρ. The evidence was in the published table the whole time and
+> was read as noise — *"ρ achieved 1.17"* against a target of 1.00 is a 17 %
+> overshoot, which is what a packet does when it cannot fit inside its budget.
+>
+> So "the coherence tax falls monotonically in ρ" restates a different fact:
+> packets that hold nothing but their task score worse than packets that hold
+> some context. That is true, and it is not the hypothesis. `rho_reachable` was
+> written to every row from the start; until 12 August 2026 exactly one function
+> in the analysis read it, and that one fell back to the unreachable rows when no
+> reachable slice existed.
+>
+> **2. The coherence metric was not arm-neutral.** The expected-entity set grew
+> with N, omissions were attributed round-robin across fragment heads, and
+> seam-local error classes could only fire where seams existed — so the same
+> sixteen-sentence text scored **0.9375 as monolithic and 0.5000 at N = 8**, an
+> apparent tax of **+46.7 % on text that never changed**. Every tax figure below
+> carries an unknown share of that.
+>
+> **What replaces it.** One causal claim, one named cell, a control that can
+> fail, and a corpus split so that no threshold is fitted on the data it judges.
+> The result is in [`RESULTS_TABLES_FINAL.md`](RESULTS_TABLES_FINAL.md):
+> `table_summary` at ρ = 3.5, N = 2, k = 1 — **+3.26 %, 95 % CI [−0.02 %,
+> +6.93 %], 16 prompts, criterion NOT MET**, with the control at N = 8 behaving
+> as required (+17.6 %). The upper bound misses the 5 % threshold by 1.93 points;
+> the median prompt effect is +1.16 % and 8 of 16 prompts are at or below zero.
+>
+> **What survives from this document.** Section 2 (V3c, agreement vs judged
+> quality) does not depend on ρ or on the coherence metric, and its finding — no
+> relationship between inter-replica agreement and judged quality — has since been
+> reproduced and strengthened. The confidence map is dead on its own evidence, and
+> that conclusion stands.
+
 **Runs:** `results/v0-20260814-140941/` and `results/v3c-20260814-140941/` ·
 **Backend:** local Ollama, three families (`llama3.2:3b`, `qwen2.5:3b`,
 `gemma2:2b`), embeddings `nomic-embed-text` · **Corpus:** the 8-prompt smoke set,
@@ -22,6 +85,12 @@ one seed, temperature 0
 ---
 
 ## 1. V0 — the coherence tax falls monotonically in ρ
+
+> **WITHDRAWN.** See the banner at the top of this document. The ρ = 1.00 and
+> ρ = 1.25 rows below contain no cell that was above its packing floor, so the
+> descent they anchor is not a function of ρ. The metric that produced the
+> percentages was also not arm-neutral. The table is kept, unaltered, because a
+> withdrawn result that has been deleted cannot be checked.
 
 BooookScore-like tax against the monolithic baseline, *k* = 1, 21 valid cells per ρ:
 
@@ -72,6 +141,19 @@ excluded. This needs investigating before the next run: a prompt that cannot
 produce a baseline cannot contribute a tax.
 
 ## 2. V3c — agreement does not predict quality here
+
+> **The finding stands; the verdict below has been superseded.** This section's
+> measurement does not depend on ρ or on the coherence metric, and its direction
+> has held up. What has changed is its strength. Where this section concludes
+> *"unsupported, not refuted"* — a fair reading against a judge that accepted
+> 93.3 % of everything — the ground-truth experiment it defers to has since been
+> run three times, returning Mantel-Haenszel common odds ratios of **3.47, 0.26
+> and 1.24**, the last with a CI of [0.25, 3.75]. Above, below and astride 1 on
+> the same question is not a weak signal awaiting a better instrument; it is no
+> signal, measured three times. **The confidence map is therefore withdrawn, not
+> demoted**, and dropped from the V7 benchmark. Read "unsupported, not refuted"
+> below as the verdict of August 2026, superseded by its own follow-up. The
+> figures are unaltered.
 
 Sweeping *k* ∈ {1, 3, 5} at ρ = 1.5, one replica per family:
 

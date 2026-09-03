@@ -52,6 +52,16 @@ class CompositionTrace:
     seams: list[dict[str, Any]] = field(default_factory=list)
     per_task: list[dict[str, Any]] = field(default_factory=list)
     duplicated: list[dict[str, Any]] = field(default_factory=list)
+    offsets: list[int] = field(default_factory=list)
+    """The assembler's own ``fragment_sentence_offsets``, stored verbatim.
+
+    Without these a finished run cannot be re-scored exactly. The seam-local
+    error classes fire at the sentences these name, and they are *not* evenly
+    spaced -- fragments produce different numbers of sentences. Re-deriving them
+    as an even split reproduces neither the seam positions nor the score, and on
+    the run of 26 August that put a reconstruction 0.15 away from the recorded
+    figure. ``scripts/rescore.py`` refuses when they are absent rather than
+    reporting a corrected number it cannot stand behind."""
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -62,6 +72,7 @@ class CompositionTrace:
             "seams": self.seams,
             "per_task": self.per_task,
             "duplicated": self.duplicated,
+            "offsets": self.offsets,
         }
 
 
@@ -161,6 +172,7 @@ def build_trace(
         seams=seam_rows,
         per_task=sorted(per_task.values(), key=lambda d: str(d["task_id"])),
         duplicated=_duplicates(sentences),
+        offsets=[int(o) for o in (offsets or [])],
     )
 
 
@@ -189,6 +201,11 @@ def render_trace(traces: Sequence[CompositionTrace]) -> str:
             + (f" ({r.score:.0%})" if r.score is not None else "")
             + f"** · {r.n_paragraphs} paragraphs · {r.n_sentences} sentences · {r.n_tokens} tokens",
             "",
+            # Stored so a finished run can be re-scored exactly. Seam-local
+            # errors fire at these sentence indices, and they are not evenly
+            # spaced; reconstructing them as an even split does not reproduce
+            # the score.
+            f"`offsets: {list(trace.offsets)}`" if trace.offsets else "",
         ]
         if r.failed:
             lines += ["| Constraint | Kind | Observed | Expected | Detail |",

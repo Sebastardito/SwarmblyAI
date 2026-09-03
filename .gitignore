@@ -211,3 +211,25 @@ credentials.json
 
 # Internal working record, deliberately not published.
 docs/AUDIT_V0.md
+
+# ---------------------------------------------------------------------------
+# Process and decision records — deliberately NOT published.
+# ---------------------------------------------------------------------------
+# The remote is the public repository. These are working documents: the
+# reasoning behind decisions, the naming record, the internal audit, and
+# everything staged for disclosure or submission. They belong on the author's
+# machine and nowhere else.
+#
+# Listed explicitly rather than by a wildcard so that adding a new private
+# document is a deliberate act, and so that this list can be read as an
+# inventory of what must never travel.
+docs/AUDIT_V0.md
+docs/DISCUSION_PUNTOS.*
+docs/NAMING.*
+docs/RESOLUCIONES.*
+docs/Swarmbly_AI_Documento_Maestro_ES.*
+docs/Swarmbly_AI_Master_Document_EN.*
+publication/
+_interno/
+_to_delete/
+_audit_*.txt

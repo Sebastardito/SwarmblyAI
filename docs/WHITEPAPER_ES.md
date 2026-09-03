@@ -29,7 +29,7 @@ Segunda, descompongo el rendimiento del enjambre en **cobertura** (¿produce alg
 
 Tercera, especifico el protocolo de red, el algoritmo de ensamblaje, el esquema de verificación y las derivaciones de los parámetros con un detalle implementable.
 
-Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado.** Contra tres familias de modelos servidas localmente, el impuesto de coherencia decrece de forma monótona con *S* —24,1 %, 20,4 %, 16,1 %, 13,7 % a lo largo del rango barrido— y el criterio de abandono se cumple en tres categorías de tarea. En dos de ellas el impuesto es **negativo**: fragmentar el problema y reensamblarlo produjo una respuesta *mejor* que la línea base monolítica, hasta en un 9,0 %. La ejecución V3c acompañante no encuentra **ninguna relación entre el acuerdo entre réplicas y la calidad juzgada** (*r* = −0,030 sobre 597 unidades semánticas), lo que no respalda el mapa de confianza descrito más abajo; la sección 11.3 reporta ambos resultados completos, incluido por qué el segundo queda sin sustento y no refutado.
+Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado, y el criterio no se alcanzó.** Sobre un instrumento corregido, contra una celda nombrada antes de la ejecución y con un control obligado a fallar, el impuesto con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de **+3,26 %, IC del 95 % [−0,02 %, +6,93 %]**: la estimación puntual queda por debajo del 5 % y el intervalo no, y el criterio se escribió contra el intervalo. La distribución es el resultado más informativo: el prompt mediano pierde 1,16 % y **8 de 16 no pierden nada**, de modo que fragmentar parece casi gratis en una parte de este corpus y claramente no gratis en el resto. Una versión anterior de este artículo reportaba el impuesto cayendo de 24,1 % a 13,7 % a lo largo de *S* y daba la predicción por confirmada; ese resultado queda **retirado**: el eje ρ no se había movido (13 de 96 celdas quedaban por encima de su piso de empaquetado) y la métrica de coherencia no era neutral respecto del brazo (+46,7 % de impuesto aparente sobre un texto que nunca cambió). La afirmación acompañante del mapa de confianza queda **retirada** también: el acuerdo entre réplicas independientes no mostró relación con la calidad juzgada (*r* = −0,030 sobre 597 unidades), y tres ejecuciones posteriores contra verdad de referencia situaron la razón de momios común en 3,47, 0,26 y 1,24 — ninguna señal, medida tres veces. La sección 11.3 reporta la retractación completa y la 11.3a la medición que la reemplaza.
 
 Quinta, introduzco un segundo eje de enrutamiento, ortogonal a la sensibilidad del contenido: un clasificador de privacidad del lado del cliente asigna a cada petición un **nivel** —malla abierta de voluntarios, *enjambre de confianza* permisionado cuya pertenencia es una lista blanca criptográfica de claves públicas bajo TLS mutuo, o ejecución puramente local— y el mismo protocolo y el mismo cliente se ejecutan en los tres. Esto es lo que hace la arquitectura desplegable allí donde un voluntario anónimo no puede ser lícitamente un encargado del tratamiento, y separa dos papeles que el número de réplicas *k* venía desempeñando a la vez: la defensa frente a trabajadores deshonestos, que la lista blanca elimina, y las réplicas independientes que el mapa de confianza necesita, que no.
 
@@ -77,11 +77,11 @@ El vocabulario de diseño se toma deliberadamente del ensamblaje shotgun de geno
 
 ### 1.3 Qué hace posible esto
 
-La primera medición ya está hecha, y la predicción central se sostuvo: el impuesto de coherencia decrece de forma monótona con el presupuesto de contexto, y en tres categorías de tarea queda por debajo del umbral de abandono que se fijó antes de que existiera dato alguno —en dos de ellas produciendo una respuesta *mejor* que la línea base monolítica (sección 11.3). Una ejecución, a una escala, sobre ocho prompts —uno de los cuales no produjo una línea base utilizable— no convierte un protocolo en probado, y la sección 11 sigue enunciando la medición bajo la cual concluiría que el diseño falla. Lo que sí significa es que el núcleo falsable de la sección 4 sobrevivió a su primer contacto con la evidencia, y que se siguen cuatro cosas que hoy no están disponibles.
+La primera medición ya está hecha, y **el criterio no se alcanzó**: con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados, el impuesto de coherencia es de +3,26 % con un IC del 95 % de [−0,02 %, +6,93 %], y el criterio está escrito contra el límite superior (sección 11.3a). Una versión anterior de esta sección afirmaba que la predicción central se había cumplido y citaba un impuesto que decrecía de forma monótona con el presupuesto de contexto; esa afirmación queda retirada: el eje ρ no se había movido, porque solo 13 de 96 celdas quedaban por encima de su propio piso de empaquetado. Lo que sobrevive es más estrecho y está mejor fundado: el prompt mediano pierde 1,16 %, **8 de 16 no pierden nada**, y el control con *N* = 8 falla como estaba obligado a fallar. Así que fragmentar es casi gratis en una parte de este corpus y claramente no en el resto, el núcleo falsable de la sección 4 ha producido por fin un negativo real, y las cuatro cosas que siguen están motivadas por un costo bimodal medido y no por una tendencia confirmada.
 
 **1. Capacidad de servicio sin poseerla.** Un participante aporta una máquina que ya existe y que ya consume energía cuando está ociosa. El requisito de entrada es un modelo pequeño completo, no un fragmento de uno grande, lo que sitúa el conjunto de hardware alcanzable órdenes de magnitud por encima de lo que pueden alcanzar los esquemas de paralelismo de tubería. La capacidad escala entonces con la *participación* y no con el gasto de capital: una curva de crecimiento que ningún operador centralizado puede igualar, porque la suya está acotada por lo que puede construir y financiar.
 
-**2. Un mapa de confianza que la centralización no puede producir estructuralmente: un mecanismo, todavía no un beneficio demostrado.** La sección 8.4b lo desarrolla. En un borrador anterior de este artículo se describía como la propiedad de cara al usuario más inmediatamente valiosa de la arquitectura; la primera medición (sección 11.3) no respalda esa descripción y se ha retirado. Lo que queda es un mecanismo cuyo valor está sin medir. Como una microtarea la responden *k* nodos que ejecutan familias de modelo *distintas*, las respuestas pueden alinearse entre sí y el acuerdo puntuarse por unidad semántica. Las regiones donde modelos independientes convergen se reportan como tales; las regiones donde divergen se exponen como de baja confianza, exactamente igual que un ensamblador reporta la calidad por base en lugar de una secuencia uniformemente confiada. **Un proveedor que ejecuta un solo modelo no tiene nada que alinear.** La redundancia que la descentralización exige resulta producir una señal que la centralización no puede obtener a ningún precio. **Que esa señal contenga información sobre la corrección es una cuestión distinta, y el primer intento de medirlo salió plano** (sección 11.3). El mecanismo es real; su utilidad está sin demostrar, y el experimento que zanjaría la cuestión se especifica en la sección 11.4.
+**2. Un mapa de confianza que la centralización no puede producir estructuralmente: un mecanismo cuyo beneficio declarado se ha medido y se ha retirado.** La sección 8.4b lo desarrolla. En un borrador anterior de este artículo se describía como la propiedad de cara al usuario más inmediatamente valiosa de la arquitectura; las mediciones no respaldan esa descripción y se ha retirado. Lo que queda es un mecanismo que informa de *dónde* divergieron réplicas independientes, sin relación establecida entre esa señal y la calidad. Como una microtarea la responden *k* nodos que ejecutan familias de modelo *distintas*, las respuestas pueden alinearse entre sí y el acuerdo puntuarse por unidad semántica. Las regiones donde modelos independientes convergen se reportan como tales; las regiones donde divergen se exponen como de baja confianza, exactamente igual que un ensamblador reporta la calidad por base en lugar de una secuencia uniformemente confiada. **Un proveedor que ejecuta un solo modelo no tiene nada que alinear.** La redundancia que la descentralización exige resulta producir una señal que la centralización no puede obtener a ningún precio. **Que esa señal contenga información sobre la corrección es una cuestión distinta, y ya está respondida: no.** El primer intento salió plano (*r* = −0,030 sobre 597 unidades) contra un juez demasiado saturado para discriminar; el experimento contra verdad de referencia que debía zanjarlo se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de 3,47, 0,26 y 1,24 — por encima, por debajo y a caballo del 1 en la misma pregunta. El mecanismo es real y el informe de divergencias es una capacidad real. La afirmación de fiabilidad queda **retirada** (secciones 8.4b, 11.3 y L13), no a la espera de más medición.
 
 **3. Un contexto acotado por la máquina del usuario y no por la decisión de producto de un proveedor.** La fragmentación reubica el límite de contexto: pasa de una ventana fija fijada por un proveedor a una función del tiempo y de la memoria de ensamblaje del cliente. Con ensamblaje jerárquico, la memoria de trabajo requerida crece logarítmicamente con el volumen total, de modo que el techo práctico para una máquina personal moderna queda muy por encima de lo que agotaría un usuario individual y, a diferencia de la ventana de un proveedor, sube cuando el usuario mejora su equipo y no cuando cambia un plan de precios.
 
@@ -669,7 +669,7 @@ Para un usuario, esta es la diferencia entre una respuesta y una respuesta que l
 **Tres salvedades honestas.**
 
 1. **El acuerdo no es verdad.** Los modelos entrenados sobre corpus solapados comparten errores. La convergencia sobre una falsedad común es un fallo correlacionado que el alineamiento no puede ver. Precisamente por eso la sección 7.6 exige **diversidad entre familias** entre las réplicas: la señal solo es tan fuerte como la independencia de las muestras.
-2. **Debe validarse, no suponerse, y el primer intento de validarlo falló.** La correlación entre la puntuación de acuerdo y la corrección factual es una magnitud empírica. Medida contra un juez de clase par sobre 597 unidades semánticas, salió en *r* = −0,030 con tramos planos y no monótonos (sección 11.3). Esa medición es débil en sus propios términos —el juez aceptó el 93,3 % de las unidades, dejando casi ninguna varianza contra la que pudiera aparecer una correlación—, de modo que deja el mecanismo **sin sustento y no refutado**. La sección 11.4 especifica el experimento contra conjuntos de datos con verdad de referencia que zanjaría la cuestión. Hasta que se ejecute, las etiquetas de confianza se reportan como *acuerdo*, nunca como *exactitud*, y el mapa no se ofrece como garantía de fiabilidad.
+2. **Había que validarlo, no suponerlo: se validó cuatro veces, y ahora queda retirado.** La correlación entre la puntuación de acuerdo y la corrección factual es una magnitud empírica. Medida contra un juez de clase par sobre 597 unidades semánticas, salió en *r* = −0,030 con tramos planos y no monótonos (sección 11.3). Esa medición era débil en sus propios términos —el juez aceptó el 93,3 % de las unidades, dejando casi ninguna varianza contra la que pudiera aparecer una correlación—, de modo que entonces dejaba el mecanismo *sin sustento y no refutado*, y la sección 11.4 especificaba el experimento contra verdad de referencia que zanjaría la cuestión. **Ese experimento se ha ejecutado ya tres veces, y la zanjó en negativo.** Calificada contra una clave de respuestas, la razón de momios común de Mantel-Haenszel salió en **3,47, luego 0,26, luego 1,24**: por encima del 1, por debajo del 1 y a caballo del 1 en la misma pregunta. Tres estimaciones mutuamente contradictorias no son una señal débil; son ninguna señal, medida tres veces. La afirmación de que el acuerdo predice la calidad queda por tanto **retirada, no degradada**, y sale del banco de pruebas V7. El mecanismo sigue especificado y sigue informando de *dónde* divergieron las réplicas independientes; lo que no puede hacer es presentar eso como evidencia de corrección. Las etiquetas de confianza se reportan como *acuerdo*, nunca como *exactitud*, y el mapa no se ofrece como garantía de fiabilidad.
 3. **Cuesta *k*×.** El consenso se aplica por criticidad, no universalmente.
 
 ### 8.5 Calibración de umbrales
@@ -851,11 +851,83 @@ Reporta la puntuación de rejilla de entidades, la taxonomía de errores de cost
 
 > **Continuar o abandonar.** Debe existir una ρ a la que la degradación de coherencia sea **inferior al 5 % respecto de la generación monolítica, en al menos una categoría de tarea.** Si no existe tal ρ, la arquitectura no es viable para el ensamblaje generativo, y el proyecto debería o bien detenerse o bien restringirse a cargas de trabajo sin costura que romper: clasificación, extracción, etiquetado. El banco de pruebas imprime este veredicto en cada ejecución.
 
+**Cómo se aplica ese criterio, y por qué importa la forma.** «Por debajo del 5 %» es una afirmación sobre una magnitud estimada a partir de un corpus finito, así que el criterio se resuelve contra un **intervalo y no contra una estimación puntual**: el límite superior de un intervalo bootstrap del 95 %, agrupado por prompt, debe quedar por debajo del 5 % en la celda nombrada. Esa cláusula forma parte del preregistro original y no es un añadido posterior, y es lo único que la hace valer algo: un criterio endurecido después de que lleguen los datos no demuestra nada, y uno relajado después demuestra menos. Es también lo que decide el caso en la sección 11.3a, donde la estimación puntual queda por debajo del 5 % y el intervalo no. Leer allí el criterio sobre la estimación puntual convertiría una prueba preregistrada en una prueba post hoc.
+
 La intención de enunciar una regla de parada antes de recoger datos es hacer que el resultado sea informativo en ambas direcciones.
 
 ### 11.3 Primeras mediciones
 
-V0 y la calibración del acuerdo ya se han ejecutado contra modelos reales. Lo que sigue es el resultado completo, incluida la parte que no respalda una afirmación hecha antes en este mismo artículo.
+> **La sección 11.3, tal como se escribió originalmente, queda RETIRADA. Su
+> reemplazo es la 11.3a, más abajo.** La tabla del impuesto de coherencia de esta
+> sección la produjo un instrumento con dos defectos independientes, y ninguna
+> cifra de ella puede repararse a partir de los datos almacenados.
+>
+> **El eje ρ nunca se movió.** Una celda mide un presupuesto de contexto solo si
+> el presupuesto excede el *piso de empaquetado* del prompt: lo que cuestan las
+> microtareas y sus cabeceras de contrato antes de añadir contexto alguno. Por
+> debajo, `build_packet` cae a `budget = max(mandatory_tokens, …)`, todo paquete
+> se reduce a su tarea desnuda, y dos etiquetas ρ distintas producen paquetes
+> idénticos byte a byte. En este corpus los pisos son 1,42–1,68 con N = 2,
+> 1,85–2,35 con N = 4 y 2,70–3,71 con N = 8, contra un barrido de
+> ρ ∈ {1,00, 1,25, 1,50, 2,00}: **13 de 96 celdas quedaban por encima del piso, y
+> las filas ρ = 1,00 y ρ = 1,25 no contenían ninguna.** El sobrepaso era visible
+> en la propia tabla publicada —ρ alcanzada 1,17 contra un objetivo de 1,00— y se
+> leyó como tolerancia en lugar de como un paquete que no cabía en su
+> presupuesto. «El impuesto decrece de forma monótona con ρ» reformula por tanto
+> otra cosa: que los paquetes que no llevan nada puntúan peor que los que llevan
+> algo.
+>
+> **La métrica de coherencia no era neutral respecto del brazo.** El conjunto de
+> entidades esperadas crecía con N, las omisiones se atribuían por turnos entre
+> las cabezas de fragmento, y las clases de error locales a la costura solo
+> podían dispararse allí donde había costuras. El mismo texto de dieciséis
+> oraciones puntuó **0,9375 como monolítico y 0,5000 con N = 8: +46,7 % de
+> impuesto aparente sobre un texto que nunca cambió.**
+>
+> Ambos defectos están corregidos y cubiertos por pruebas de regresión, y
+> `publishable()` ahora descarta de toda figura una fila por debajo del piso en
+> vez de anotarla. La sección se conserva sin alterar debajo del reemplazo,
+> porque un resultado retirado que se ha borrado no se puede comprobar.
+
+### 11.3a La medición que la reemplaza
+
+**Diseño.** Una afirmación causal, una celda nombrada antes de la ejecución, un
+control obligado a fallar y un corpus partido de modo que ningún umbral se
+ajuste sobre los datos que luego juzga. La unidad estadística es el **prompt** y
+no la oración —el análisis anterior trataba las oraciones como independientes
+dentro de un prompt, lo que subestima todos los intervalos— y los intervalos son
+percentiles bootstrap agrupados por prompt.
+
+**Resultado.** `table_summary`, ρ = 3,5, N = 2, k = 1, sobre los 16 prompts
+reservados:
+
+| | |
+|---|---|
+| Impuesto de coherencia | **+3,26 %** |
+| IC del 95 % (agrupado por prompt) | **[−0,02 %, +6,93 %]** |
+| Criterio | límite superior por debajo del 5 % |
+| Veredicto | **NO ALCANZADO** — le faltan 1,93 puntos |
+| Efecto mediano por prompt | +1,16 % |
+| Prompts en cero o por debajo | **8 de 16** |
+| Control, N = 8, k = 1 (obligado a fallar) | +17,6 % — se comportó |
+
+La estimación puntual queda por debajo del umbral y el intervalo no. El criterio
+se escribió contra el límite superior precisamente para este caso, y no se va a
+reescribir ahora que el caso se ha presentado.
+
+La distribución es el resultado más informativo. La mitad del corpus no pierde
+nada en absoluto; el resto carga con la media. Eso no es «fragmentar cuesta
+3 %», es «fragmentar es gratis en algunas cargas de trabajo y no en otras, y el
+corpus todavía no dice cuál es cuál». Identificar esa separación es la siguiente
+medición, y es una pregunta mejor que la que plantea el criterio.
+
+**Alcance.** 16 prompts, una semilla, modelos de 2–3 B, N = 2. Un resultado en
+el extremo bajo del rango de capacidad al que apunta el protocolo, lo que acota
+la arquitectura ahí y no la zanja a 8 B.
+
+---
+
+**Lo que sigue es la sección 11.3 retirada, sin alterar.** V0 y la calibración del acuerdo ya se han ejecutado contra modelos reales. Lo que sigue es el resultado completo, incluida la parte que no respalda una afirmación hecha antes en este mismo artículo.
 
 **Montaje.** Tres familias de modelos servidas por un Ollama local —`llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`— con `nomic-embed-text` para los embeddings. Ocho prompts en ocho categorías, una semilla, temperatura 0. τ_sem se calibró sobre **72 pares etiquetados** (F₀·₅ = 0,988, precisión 1,00, exhaustividad 0,944) y quedó en **0,51**. Los metadatos de la ejecución registran que no se usó el backend simulado y que la ruta de embeddings no degradó; sin ambas cosas los números de abajo son nulos, y por eso el banco de pruebas los reporta.
 
@@ -908,7 +980,7 @@ Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede a
 
 **V3 — red real, 20–50 nodos.** Integrar el esquema de compromiso [68] y la auditoría muestreada [69]. Inyectar deliberadamente nodos deshonestos: modelos infradimensionados, fabricaciones plausibles, inyección de prompts. Exigir >95 % de detección con menos del 5 % de sobrecoste de verificación.
 
-**V3c — calibración del acuerdo.** Medir la correlación entre la puntuación de acuerdo por unidad de la sección 8.4b y la corrección factual, contra conjuntos de datos con verdad de referencia, con réplicas tomadas de familias de modelo deliberadamente distintas. Reportar curvas de calibración por categoría de tarea. Hasta que este experimento se ejecute, las etiquetas de confianza se reportan como *acuerdo* y nunca como *exactitud*; una correlación plana o negativa invalidaría el mapa de confianza como señal de fiabilidad, y ese resultado debe ser publicable.
+**V3c — calibración del acuerdo. Ejecutada, y cerrada en negativo.** La especificación era: medir la correlación entre la puntuación de acuerdo por unidad de la sección 8.4b y la corrección factual, contra conjuntos de datos con verdad de referencia, con réplicas tomadas de familias de modelo deliberadamente distintas, y tratar una correlación plana o negativa como invalidante del mapa de confianza como señal de fiabilidad — con ese resultado obligado a ser publicable. Se ha ejecutado ya tres veces contra una clave de respuestas, devolviendo razones de momios comunes de **3,47, 0,26 y 1,24**. Tres estimaciones mutuamente contradictorias sobre una misma pregunta invalidan la señal exactamente como decía el preregistro, de modo que el mapa de confianza queda **retirado** (secciones 8.4b, 11.3 y L13) y sale del banco de pruebas V7. Las etiquetas de confianza siguen reportándose como *acuerdo* y nunca como *exactitud*. Esta fase está cerrada; reabrirla exigiría un instrumento nuevo, no repetir este.
 
 **V4 — medición ambiental.** Instrumentar y publicar el SCI frente a una línea base centralizada.
 
@@ -916,8 +988,8 @@ Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede a
 
 | Métrica | Definición | Objetivo v1.0 | Medido (sección 11.3) |
 |---|---|---|---|
-| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | <5 % | **cumplido en 3 de las 7 categorías que produjeron medición**; 13,7 % global con ρ = 2,0 |
-| ρ operativa | Tokens de entrada por token de prompt | <2,0 | sin medir todavía |
+| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | límite superior del IC del 95 % por debajo del 5 % | **NO ALCANZADO** (sección 11.3a): +3,26 %, IC [−0,02 %, +6,93 %], 16 prompts reservados con ρ = 3,5, N = 2, k = 1 |
+| ρ operativa | Tokens de entrada por token de prompt | <2,0 | **no alcanzable en este corpus.** El piso de empaquetado con N = 2 es de 1,20 en `tables24` y de 1,42–1,68 en el corpus V0, así que un objetivo de 2,0 deja casi nada de contexto por encima de la tarea obligatoria y su cabecera. Un objetivo de <2,0 no es un objetivo que el diseño pueda cumplir con ningún N útil; la cifra hay que rederivarla a partir del piso en vez de afirmarla. |
 | Aceleración efectiva | Frente a monolítico, mismo modelo | >1,5× | sin medir todavía |
 | Aceleración frente a la línea base honesta | Frente a decodificación especulativa | Reportada incluso cuando es <1 | sin medir todavía |
 | Latencia p95 bajo rotación | *p*=0,10, *N*=8 | <2× la del caso sin fallos | sin medir todavía |
@@ -955,7 +1027,7 @@ Enunciados sin rodeos y con extensión. Una especificación cuyos modos de fallo
 
 **L12 — Un enjambre de confianza reubica la confianza; no la elimina.** Véase la sección 9.5. Quien controla la lista blanca de pertenencia controla el enjambre, de modo que la gobernanza del registro pasa a ser una función crítica de seguridad; el TLS mutuo autentica una identidad, no el modelo que hay detrás; y un enjambre que baja *k* a 1 renuncia al mapa de confianza de la sección 8.4b junto con la redundancia adversarial que ya no necesita. El nivel es un cambio de modelo de amenaza, y la especificación exige que se declare en lugar de darse por supuesto.
 
-**L13 — El mapa de confianza no tiene valor demostrado.** Véase la sección 11.3. Medido contra un juez de clase par, el acuerdo por unidad no predijo la aceptabilidad juzgada (*r* = −0,030 sobre 597 unidades), y *k* > 1 costó entre 17 y 20 puntos de coherencia en la misma ejecución. El mecanismo está divulgado y especificado; su beneficio no está establecido, y la medición que lo establecería aún no se ha ejecutado. Quien construya sobre E16 debería tratarlo como una hipótesis sin validar.
+**L13 — El mapa de confianza queda retirado.** Véase la sección 11.3. Medido contra un juez de clase par, el acuerdo por unidad no predijo la aceptabilidad juzgada (*r* = −0,030 sobre 597 unidades), y *k* > 1 costó entre 17 y 20 puntos de coherencia en la misma ejecución. Eso lo dejaba sin sustento y no refutado, contra un juez demasiado saturado para discriminar. El experimento contra verdad de referencia se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de **3,47, 0,26 y 1,24**: por encima, por debajo y a caballo del 1 en la misma pregunta. Esto ya no es una hipótesis sin validar a la espera de su medición; es una afirmación que se ha medido y no ha sobrevivido, así que queda **retirada** en vez de degradada, y sale del banco de pruebas V7. El mecanismo sigue divulgado y especificado, e informar de *dónde* divergieron las réplicas sigue siendo una capacidad real; afirmar que la convergencia indica corrección no lo es. Quien construya sobre E16 debería construir sobre el informe de divergencias, no sobre la afirmación de fiabilidad.
 
 **L14 — El segundo instrumento de coherencia no funciona con respuestas cortas.** Véase la sección 11.3. La rejilla de entidades devolvió líneas base monolíticas entre 0,000 y 0,114 en todo el corpus, lo que convierte cualquier comparación relativa construida sobre ella en una razón con denominador casi nulo. O el corpus de evaluación pasa a salidas más largas o se sustituye el instrumento; hasta entonces este artículo tiene un instrumento de coherencia en funcionamiento, no dos, y un único proxy mecánico es evidencia más delgada de lo que el diseño merece.
 
@@ -1013,7 +1085,7 @@ Se siguen tres consecuencias que no anticipaba cuando comenzó este trabajo y qu
 
 El argumento en contra es igual de específico y se enuncia extensamente en la sección 12. La generación independiente pierde calidad por razones teóricas y no incidentales. El modelo del lado del cliente del que depende el diseño se sitúa en el extremo débil de la capacidad de planificación medida. La computación voluntaria lleva veinte años contrayéndose, y ningún diseño de incentivos de este artículo es todavía una respuesta demostrada a por qué eso habría de revertirse.
 
-Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. La primera ya está: contra tres familias de modelos locales el impuesto de coherencia decrece de forma monótona al subir el presupuesto de contexto, y el umbral de abandono fijado de antemano se supera en tres categorías de tarea, mientras que el mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— volvió sin relación medible con la calidad. Lo que queda por zanjar es si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
+Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. Las mediciones ya están, y las dos fueron contra el artículo. El impuesto de coherencia con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de +3,26 % con un IC del 95 % de [−0,02 %, +6,93 %], y el umbral de abandono fijado de antemano está escrito contra ese límite superior: **no se alcanza**, por 1,93 puntos (sección 11.3a). Una versión anterior de esta conclusión afirmaba un impuesto que decrecía de forma monótona con el presupuesto de contexto y un umbral superado en tres categorías de tarea; esa afirmación queda retirada, porque el eje ρ no se había movido y la métrica de coherencia no era neutral respecto del brazo. El mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— queda retirado del todo. Lo que sobrevive es un costo medido y bimodal —el prompt mediano pierde 1,16 % y 8 de 16 no pierden nada— y un control que falló como estaba obligado a fallar. Lo que queda por zanjar es qué separa la mitad del corpus que se fragmenta gratis de la mitad que no, y si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
 
 Si funciona, el resultado no es una forma más barata de comprar lo que ya se vende. Es capacidad de inferencia que crece con el número de personas que participan y no con la cantidad de capital disponible para construir, sostenida bajo una licencia y una estructura de gobernanza diseñadas para que ninguna parte pueda cercarla. Eso merece intentarse incluso con una probabilidad sustancial de fracaso, y merece intentarse en abierto, donde pueda comprobarse.
 

@@ -96,8 +96,14 @@ observations per cell, which shortens the interval by roughly the square root of
 that ratio."""
 
 
-def _rows(rng: random.Random, n: int) -> list[dict]:
-    depots = rng.sample(DEPOTS, n)
+def _rows(rng: random.Random, n: int, pool: list[str] | None = None) -> list[dict]:
+    # ``pool`` defaults to DEPOTS so the shared corpus draws exactly as before.
+    # scripts/make_tables.py passes a wider pool: with 22 names and 20 rows per
+    # table, every table in the eight-prompt corpus uses all but two of the same
+    # destinations, and twenty-four tables built that way would be near-copies of
+    # each other on that column. Prompts meant to be independent draws should
+    # look independent.
+    depots = rng.sample(pool if pool is not None else DEPOTS, n)
     return [
         {"ref": f"{rng.choice('ABCDEFGH')}{rng.randint(1000, 9999)}",
          "destination": depot,
@@ -188,52 +194,78 @@ def long_prose(rng: random.Random) -> list[dict]:
     return out
 
 
+TABLE_NAMES = ("manifest", "backlog", "dispatch", "intake", "transit",
+               "holdover", "consolidation", "clearance")
+"""The eight tables of the V4/V5/V6 corpus, in their original order.
+
+The order is load-bearing: the shapes share one RNG and consume it in sequence,
+so inserting or reordering a name here would silently redraw every dependency
+chain that follows. ``scripts/make_tables.py`` extends the *count* of table
+prompts by drawing from its own generator rather than by touching this tuple,
+for exactly that reason."""
+
+
+def table_prompt(rng: random.Random, name: str, n_rows: int = 20,
+                 pool: list[str] | None = None) -> dict:
+    """One enclosed-table prompt. The semantic unit is a row group.
+
+    Factored out of :func:`table_summary` so that ``scripts/make_tables.py`` can
+    build a larger table corpus from the identical builder. Two generators
+    writing the same prompt by hand drift; one generator called twice cannot.
+
+    Args:
+        rng: Draws the rows. Consumed in the same order as before the factoring,
+            so ``prompts/complex.json`` still reproduces byte for byte.
+        name: Names the table in the instruction and forms the prompt id.
+        n_rows: Twenty by default, so a fragment holds a coherent subset at every
+            N in the sweep, N=8 included.
+    """
+    rows = _rows(rng, n_rows, pool)
+    weights = [float(r["weight"]) for r in rows]
+    allowed = sorted(set(weights) | derived_aggregates(weights))
+    heaviest = max(rows, key=lambda r: r["weight"])
+    prompt = (
+        f"Summarise the {name} table below for a duty manager.\n\n"
+        f"{_table(rows)}\n\n"
+        f"Write exactly four paragraphs separated by blank lines, each between 70 and "
+        f"130 words. Name the heaviest consignment and give the total weight, each "
+        f"exactly once. Every figure you state must come from the table above or be an "
+        f"arithmetic aggregate of it -- a total, a count, an average, the heaviest or "
+        f"the lightest. Do not estimate and do not round to a figure the table does not "
+        f"support. Write continuous prose only: do not reproduce the table, do not emit "
+        f"rows or pipe characters, and do not use bullet points or headings. Do not "
+        f"repeat any sentence or any phrase of eight words or more. Write in the "
+        f"present tense throughout, in a neutral professional register."
+    )
+    return {
+        "id": f"table_{name}",
+        "category": "table_summary",
+        "level": 3,
+        "expected_decomposable": True,
+        "prompt": prompt,
+        "constraints": [
+            {"id": "paragraphs", "kind": "paragraph_count", "count": 4},
+            {"id": "length", "kind": "words_per_paragraph", "min": 70, "max": 130},
+            {"id": "mentions_total", "kind": "must_mention", "term": "total"},
+            {"id": "heaviest_once", "kind": "term_once", "term": "heaviest"},
+            {"id": "no_repeated_sentence", "kind": "no_repeated_sentence"},
+            {"id": "no_repeated_phrase", "kind": "no_repeated_ngram", "size": 8},
+        ],
+        "numeric_facts": {
+            "allowed": allowed,
+            "total": sum(weights),
+            "heaviest_ref": heaviest["ref"],
+        },
+        "notes": ("Twenty rows so a fragment can hold a coherent subset at every N in the "
+                  "sweep, including N=8. Every figure "
+                  "in allowed[] is either a row or a legitimate aggregate, so a "
+                  "sentence citing the table correctly cannot be graded a fabrication."),
+    }
+
+
 def table_summary(rng: random.Random) -> list[dict]:
-    """A twelve-row table, enclosed. The semantic unit is a row group."""
-    out = []
-    for name in ("manifest", "backlog", "dispatch", "intake", "transit",
-                 "holdover", "consolidation", "clearance"):
-        rows = _rows(rng, 20)
-        weights = [float(r["weight"]) for r in rows]
-        allowed = sorted(set(weights) | derived_aggregates(weights))
-        heaviest = max(rows, key=lambda r: r["weight"])
-        prompt = (
-            f"Summarise the {name} table below for a duty manager.\n\n"
-            f"{_table(rows)}\n\n"
-            f"Write exactly four paragraphs separated by blank lines, each between 70 and "
-            f"130 words. Name the heaviest consignment and give the total weight, each "
-            f"exactly once. Every figure you state must come from the table above or be an "
-            f"arithmetic aggregate of it -- a total, a count, an average, the heaviest or "
-            f"the lightest. Do not estimate and do not round to a figure the table does not "
-            f"support. Write continuous prose only: do not reproduce the table, do not emit "
-            f"rows or pipe characters, and do not use bullet points or headings. Do not "
-            f"repeat any sentence or any phrase of eight words or more."
-        )
-        out.append({
-            "id": f"table_{name}",
-            "category": "table_summary",
-            "level": 3,
-            "expected_decomposable": True,
-            "prompt": prompt,
-            "constraints": [
-                {"id": "paragraphs", "kind": "paragraph_count", "count": 4},
-                {"id": "length", "kind": "words_per_paragraph", "min": 70, "max": 130},
-                {"id": "mentions_total", "kind": "must_mention", "term": "total"},
-                {"id": "heaviest_once", "kind": "term_once", "term": "heaviest"},
-                {"id": "no_repeated_sentence", "kind": "no_repeated_sentence"},
-                {"id": "no_repeated_phrase", "kind": "no_repeated_ngram", "size": 8},
-            ],
-            "numeric_facts": {
-                "allowed": allowed,
-                "total": sum(weights),
-                "heaviest_ref": heaviest["ref"],
-            },
-            "notes": ("Twenty rows so a fragment can hold a coherent subset at every N in the "
-                      "sweep, including N=8. Every figure "
-                      "in allowed[] is either a row or a legitimate aggregate, so a "
-                      "sentence citing the table correctly cannot be graded a fabrication."),
-        })
-    return out
+    """The eight enclosed-table prompts of the shared corpus."""
+    return [table_prompt(rng, name) for name in TABLE_NAMES]
 
 
 def dependency_chain(rng: random.Random) -> list[dict]:

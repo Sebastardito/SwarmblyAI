@@ -948,7 +948,20 @@ class OpenAICompatBackend:
         # the field travels in `extra_body`, which exists for exactly this. Only
         # the HTTP body was exercised before, which is why this surfaced at run
         # time instead of in the tests.
-        extra: dict[str, Any] = {"options": {"num_predict": max_tokens}} if self._is_ollama else {}
+        #
+        # `seed` travels the same way, and for the same reason. The top-level
+        # field is in the payload above because the OpenAI schema has it, but
+        # Ollama's shim reads its sampler settings out of `options` -- so on the
+        # Ollama path the seed was very likely being dropped, while
+        # `metadata["seed"] = cfg.seed` recorded it as though it had controlled
+        # generation. `--candidates 2` at k=1 dispatches variant 0 and variant 1,
+        # which differ ONLY by seed at temperature 0.0: if the seed never
+        # arrived, the two candidates were the same draw and the candidate axis
+        # measured nothing. Sending it in both places costs nothing and makes the
+        # recorded field true on either shim.
+        extra: dict[str, Any] = {
+            "options": {"num_predict": max_tokens, "seed": payload["seed"]}
+        } if self._is_ollama else {}
 
         data = self._retrying("/chat/completions", lambda: self._chat_once(payload, extra))
         try:

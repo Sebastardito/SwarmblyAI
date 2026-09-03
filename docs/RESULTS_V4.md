@@ -1,5 +1,21 @@
 # V4 — the effective size of a semantic fragment
 
+> ## ⚠ The coherence-tax figures in this document are SUPERSEDED (27 August 2026)
+>
+> The metric that produced them was not arm-neutral. The monolithic baseline was
+> held to a smaller expected-entity set than the fragmented arm, its omissions
+> dirtied one sentence where the fragmented arm's dirtied N, and it could not
+> incur a seam error at all — so the penalty grew with N by construction.
+> Scoring one identical answer through both conventions gives 0.9375 against
+> 0.5000. Every coherence tax and every "monotone in N" claim below is affected;
+> the accuracy, agreement and constraint figures are not.
+>
+> `scripts/rescore.py <run>` recomputes a finished run's tax with the corrected
+> metric from the run's own assembled answers — but only for runs whose traces
+> store the assembler's sentence offsets, which none written before 27 August do.
+> For those, the corrected figure can only come from running them again.
+
+
 **Run:** `results/v4-20260824-175122`. Five model families over Ollama, transport
 `openai-sdk`, 0 transport retries, embeddings not degraded, `tau_sem` calibrated
 to 0.575 from 108 labelled pairs. ρ ∈ {2.0, 3.0}, N ∈ {2, 4, 6, 8}, k ∈ {1, 3},

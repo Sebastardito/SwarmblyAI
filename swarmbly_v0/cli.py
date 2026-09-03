@@ -25,6 +25,7 @@ from .experiment import (
     write_csv,
 )
 from .report import render_report
+from .schema import _source_files, source_fingerprint
 from .router import DEFAULT_THRESHOLD, evaluate_router, is_decomposable
 
 __all__ = ["main", "build_parser"]
@@ -69,6 +70,12 @@ def build_parser() -> argparse.ArgumentParser:
                           "route, e.g. Ollama nomic-embed-text; recommended for real runs)")
     run.add_argument("--prompts", default=str(DEFAULT_PROMPTS_PATH),
                      help="path to the labelled prompt corpus")
+    run.add_argument("--split", choices=("dev", "final"), default=None,
+                     help="run only one half of a corpus that declares a split. "
+                          "dev is where thresholds, bin edges and tau_sem are "
+                          "fitted; final is evaluated once, afterwards, with "
+                          "nothing left to choose. Omit for a corpus with no "
+                          "split.")
     run.add_argument("--out", default="results/", help="output directory")
     run.add_argument("--seed", type=int, default=0, help="global seed (default: 0)")
     run.add_argument("--candidates", type=int, default=2,
@@ -103,7 +110,25 @@ def _cmd_run(args: argparse.Namespace) -> int:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    prompts = load_prompts(args.prompts)
+    prompts = load_prompts(args.prompts, split=args.split)
+    if args.split:
+        print(f"corpus split: {args.split} ({len(prompts)} prompts)")
+    # The split is worth nothing if the final half re-fits the thresholds it is
+    # supposed to be evaluated under. tau_sem is the one that moves: it is
+    # calibrated inside the run, from that run's own baselines, so a final run
+    # left to calibrate itself has learned its threshold from the data it is
+    # about to judge -- the leakage the split exists to close, arriving through
+    # the split. It must be passed in, from the dev run's run_metadata.json.
+    if args.split == "final" and args.tau is None:
+        raise SystemExit(
+            "refusing to run --split final without --tau.\n"
+            "  tau_sem is fitted inside the run unless it is given, so a final "
+            "run without it calibrates its threshold on the data it then "
+            "evaluates.\n"
+            "  Take the value from the dev run: "
+            "python -c \"import json;print(json.load("
+            "open('results/<dev-run>/run_metadata.json'))['tau_sem'])\"\n"
+            "  then pass it as --tau <value>.")
     config = SweepConfig(
         rhos=tuple(args.rho),
         ns=tuple(args.n),
@@ -131,6 +156,50 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
     used = prompts[: args.max_prompts] if args.max_prompts else prompts
     stats = summarize(rows, used, args.router_threshold)
+    # Which half of the corpus produced these rows, recorded next to them. A
+    # split that lives only in the command line cannot be checked afterwards,
+    # and "we calibrated on dev" is exactly the kind of claim that needs to
+    # survive being asked about six weeks later.
+    metadata["corpus"] = str(args.prompts)
+    metadata["corpus_split"] = args.split or "(whole corpus)"
+    metadata["prompt_ids"] = [s.prompt_id for s in used]
+    # The corpus's own digest, so a threshold fitted here can be checked against
+    # the corpus it is later applied to. A tau_sem carried from a dev run to a
+    # final run is only valid if the prompts did not change in between -- and on
+    # 27 August they did, when a tense directive was added to the contract. A
+    # bare number passed on the command line cannot carry that fact; this can.
+    #
+    # TWO digests, deliberately named apart, because they are not the same number
+    # and confusing them is its own trap:
+    #
+    #   corpus_file_sha256   -- the raw bytes. Changes when a comment changes.
+    #   corpus_frozen_sha256 -- the corpus's own `_frozen.sha256`, over id, split
+    #                           and prompt text only. This is the one
+    #                           `make_tables.py --verify` prints, and the one a
+    #                           frozen threshold is pinned to.
+    #
+    # An earlier draft recorded only the file digest and the runbook told the
+    # reader to compare it against what --verify prints. They can never match.
+    try:
+        import hashlib
+        raw = Path(args.prompts).read_bytes()
+        metadata["corpus_file_sha256"] = hashlib.sha256(raw).hexdigest()
+        payload = json.loads(raw)
+        metadata["corpus_frozen_sha256"] = str(
+            (payload.get("_frozen") or {}).get("sha256", "")
+            if isinstance(payload, dict) else "")
+    except (OSError, ValueError):
+        metadata["corpus_file_sha256"] = ""
+        metadata["corpus_frozen_sha256"] = ""
+
+    # WHICH CODE produced this run. Corpus digests said what was measured;
+    # nothing said what did the measuring, and on 27 August that gap cost real
+    # confusion: three tables-* runs sat side by side, two of them scored by an
+    # arm-neutral metric and one by the defective one, and the only way to tell
+    # them apart was the directory timestamp against a memory of when the fix
+    # landed. A results directory has to be self-describing.
+    metadata["code_sha256"] = source_fingerprint()
+    metadata["code_files"] = len(_source_files())
     (out_dir / "run_metadata.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"
     )

@@ -25,6 +25,8 @@ is the machinery a real run will use unchanged.
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import csv
 import json
 import math
@@ -50,7 +52,8 @@ from .consensus import (
 from .composition_trace import build_trace, render_trace
 from .constraints import asserts_an_aggregate, check_numeric_fidelity, is_source_table_row
 from .editor import EditorReport, edit_assembled
-from .grading import grade_units
+from .stats import cluster_bootstrap
+from .grading import _optional_score, grade_units
 from .metrics import (
     ERROR_CLASSES,
     TauCalibration,
@@ -61,7 +64,10 @@ from .metrics import (
     redundancy_between,
     seam_error_taxonomy,
 )
-from .packing import build_monolithic_prompt, build_packets, packing_floor
+from .packing import (PacketInvariantError, assert_packet_invariants,
+                      build_monolithic_prompt, build_packets, packing_floor,
+                      task_budget_floors as _task_budget_floors,
+                      task_budget_weights as _task_budget_weights)
 from .planner import (BASELINE_FORMAT_DIRECTIVE, carry_values, requested_paragraphs,
                       global_contract, plan as build_plan, split_enumerated,
                       summarize_fragment)
@@ -97,6 +103,85 @@ __all__ = [
 
 DEFAULT_PROMPTS_PATH = Path(__file__).resolve().parent.parent / "prompts" / "prompts.json"
 
+ASSEMBLER_ENFORCED: frozenset[str] = frozenset({
+    "paragraph_count",
+    "words_per_paragraph",
+})
+"""Constraint kinds the ASSEMBLER satisfies for the fragmented arm.
+
+`select_then_splice` is handed `paragraph_join=requested_paragraphs(prompt)` and
+deterministically buckets the pieces into exactly that many paragraphs;
+`run_monolithic` is a bare generate with no post-processing. So on every prompt
+that names a paragraph count these two checks are a guaranteed pass for one arm
+and something the other has to earn from the model -- two of seven checks on the
+table corpus. Where a prompt describes its structure without naming a count the
+bias inverts: the pieces are spliced into one paragraph and the fragmented arm
+fails by construction.
+
+Excluded from `mean_constraint_score_comparable`, which is the figure to read
+across arms. `mean_constraint_score` keeps every check so the record stays
+comparable with what was published."""
+
+def is_reachable(row: Mapping[str, Any]) -> bool:
+    """Did this cell's rho target sit at or above its own honest packing floor?
+
+    A row is a *measurement of rho* only if rho could vary. Below the floor,
+    ``build_packet`` sets ``budget = max(mandatory_tokens, ...)`` and every packet
+    collapses to its bare task, so a cell at rho=1.0 and a cell at rho=1.25
+    produce byte-identical output and the axis the figure is plotted against
+    never moved.
+
+    A row with no ``rho_reachable`` column is treated as reachable: CSVs written
+    before the column existed must not be silently emptied by this guard. That is
+    a deliberate asymmetry -- it fails open on old data and closed on new.
+    """
+    value = row.get("rho_reachable", True)
+    if isinstance(value, bool):
+        return value
+    if value in ("", None):
+        return True
+    return str(value).strip().lower() in ("true", "1", "yes")
+
+
+def publishable(rows: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    """The rows a figure may be computed from, and the single place that decides.
+
+    Until this existed, ``rho_reachable`` was written to every row and read by
+    exactly ONE function in the whole analysis -- ``fragment_size_curve``, which
+    used it to pick a slice and then fell back to the full set when no reachable
+    slice existed. ``summarize``, ``falsifiable_go_no_go``,
+    ``paired_absolute_effect``, ``flag_effect``, ``discrete_calibration``,
+    ``go_no_go`` and everything in ``report.py`` ignored it.
+
+    That is the shape of the V0 failure, exactly. On V0's corpus at N=4 the
+    honest floor was 1.85 to 2.35 while the sweep ran rho 1.0 to 2.0, so nearly
+    every fragmented cell was below floor; the rows were written with
+    ``rho_reachable: False``, no gate read that field, and a coherence-tax curve
+    was published against an axis that had never moved. The flag was not missing.
+    Nothing consulted it.
+
+    Dropping the rows rather than annotating them is the point. A note beside a
+    printed number is the shape of failure this project has already had four
+    times -- the number gets quoted and the note does not travel with it.
+    """
+    return [r for r in rows if is_reachable(r)]
+
+
+SATURATION_LIMIT = 0.90
+"""Acceptance rate above which a judge is reported as saturated, not measured.
+
+Ninety percent, not ninety-nine, because the point is not to catch a degenerate
+judge but a useless one: at 93.3 % on 14 August the correlation was already
+uninterpretable, and nobody said so for three more runs."""
+
+RHO_TOLERANCE = 0.05
+"""How far achieved rho may sit from its target before the run is refused.
+
+Five percent is loose enough to absorb atomic-block granularity -- a packet
+cannot be sliced finer than its contract header -- and tight enough to have
+caught the 11.7 % drift that four consecutive runs carried as a warning nobody
+acted on."""
+
 CSV_COLUMNS: list[str] = [
     "prompt_id",
     "category",
@@ -123,6 +208,8 @@ CSV_COLUMNS: list[str] = [
     "frac_low",
     "n_low_conf_regions",
     "booook_like_score",
+    "booook_comparable",
+    "seam_error_rate",
     "entity_grid",
     "judge_score",
     "redundancy_self",
@@ -134,9 +221,12 @@ CSV_COLUMNS: list[str] = [
     "input_tokens",
     "output_tokens",
     "coherence_tax_booook",
+    "coherence_tax_booook_full",
+    "seam_error_rate_delta",
     "coherence_tax_entity_grid",
     "quality_tax_judge",
     "baseline_booook",
+    "baseline_booook_comparable",
     "baseline_entity_grid",
     "baseline_judge",
     "typed_carry",
@@ -238,6 +328,20 @@ class PromptSpec:
     much the peer-class judge was distorting the V3c result.
     """
 
+    split: str = ""
+    """``"dev"``, ``"final"``, or empty for a corpus that declares no split.
+
+    Carried on the spec rather than left in the JSON because a split that only
+    exists in a file is a note, not a control. Every threshold this project has
+    used -- ``tau_sem`` most visibly, but also the go/no-go threshold, the
+    agreement bin edges and the flagging rate -- was fitted on the same data it
+    then evaluated. Reading the field here lets the runner refuse to evaluate the
+    final half while anything is still being chosen.
+
+    Empty is not "dev". A corpus with no split is run whole, as before; only a
+    corpus that declares one can be filtered by one.
+    """
+
     @property
     def has_ground_truth(self) -> bool:
         return bool(self.key)
@@ -260,6 +364,7 @@ class PromptSpec:
             key=data.get("key") or None,
             constraints=data.get("constraints") or None,
             numeric_facts=data.get("numeric_facts") or None,
+            split=str(data.get("split") or ""),
         )
 
 
@@ -327,13 +432,37 @@ class SweepConfig:
     """
 
 
-def load_prompts(path: str | Path | None = None) -> list[PromptSpec]:
-    """Load the labelled prompt corpus (defaults to the bundled ``prompts/``)."""
+def load_prompts(path: str | Path | None = None,
+                 split: str | None = None) -> list[PromptSpec]:
+    """Load the labelled prompt corpus (defaults to the bundled ``prompts/``).
+
+    Args:
+        path: Corpus file. A dict payload's ``prompts`` list, or a bare list.
+        split: ``"dev"`` or ``"final"`` to load only that half of a corpus that
+            declares one. ``None`` loads everything, which is the behaviour for
+            every corpus that predates the split.
+
+    Raises:
+        ValueError: If a split is requested and no prompt carries it. Returning
+            an empty list would let a calibration run on nothing and report its
+            thresholds as if they had been fitted -- the failure mode the split
+            exists to prevent, arriving through the mechanism meant to prevent
+            it.
+    """
     target = Path(path) if path is not None else DEFAULT_PROMPTS_PATH
     with open(target, "r", encoding="utf-8") as handle:
         payload = json.load(handle)
     entries = payload["prompts"] if isinstance(payload, dict) else payload
-    return [PromptSpec.from_dict(entry) for entry in entries]
+    specs = [PromptSpec.from_dict(entry) for entry in entries]
+    if split is None:
+        return specs
+    chosen = [s for s in specs if s.split == split]
+    if not chosen:
+        declared = sorted({s.split for s in specs if s.split}) or ["(none)"]
+        raise ValueError(
+            f"no prompt in {target} carries split={split!r}; the corpus declares "
+            f"{declared}. Refusing to run a calibration on an empty corpus.")
+    return chosen
 
 
 # --------------------------------------------------------------------------
@@ -354,13 +483,51 @@ def _base_row(spec: PromptSpec, config: SweepConfig, backend: Backend) -> dict[s
     }
 
 
+@lru_cache(maxsize=256)
+def _expected_from_prompt(text: str, canonical: tuple[str, ...]) -> tuple[str, ...]:
+    """Entities a correct answer must mention, derived from the PROMPT alone.
+
+    The partition must not change the standard. Segmenting the prompt into one
+    task and reading its expected entities gives the same answer whatever N the
+    run is sweeping, which is the property the plan-derived set lacked.
+    """
+    from .planner import expected_entities_for
+    return tuple(dict.fromkeys(list(expected_entities_for(text)) + list(canonical)))
+
+
+def prompt_expected_entities(spec: "PromptSpec", contract: Contract,
+                             backend: Backend) -> list[str]:
+    """The arm-independent expected-entity set for one prompt.
+
+    Both arms are handed this. ``backend`` is accepted for symmetry with the
+    other per-prompt helpers and is unused: deriving the standard from a model
+    would make it a function of which model happened to answer.
+    """
+    return list(_expected_from_prompt(spec.text, tuple(contract.canonical_entities)))
+
+
 def _fill_metric_row(row: dict[str, Any], text: str, plan: Plan | None,
                      contract: Contract, embedder: Embedder,
                      offsets: Sequence[int] | None = None,
-                     fragments: Sequence[str] | None = None) -> dict[str, Any]:
-    """Populate every coherence/quality column for one produced answer."""
-    taxonomy = seam_error_taxonomy(text, plan, offsets, contract)
+                     fragments: Sequence[str] | None = None,
+                     expected_entities: Sequence[str] | None = None) -> dict[str, Any]:
+    """Populate every coherence/quality column for one produced answer.
+
+    ``expected_entities`` is passed explicitly and identically for both arms.
+    Left to default, the omission detector takes its standard from the plan, and
+    the plan is a function of N -- which made the baseline's standard smaller
+    than the fragmented arm's and made the fragmented arm's grow with the
+    partition. See :func:`swarmbly_v0.metrics.seam_error_taxonomy`.
+    """
+    taxonomy = seam_error_taxonomy(text, plan, offsets, contract,
+                                   expected_entities=expected_entities)
     row["booook_like_score"] = round(taxonomy.booook_like_score, 6)
+    # The arm-comparable score and the seam cost, side by side. The headline tax
+    # is computed on the comparable one because the baseline cannot incur a seam
+    # error however bad it is; the seam rate is the cost specific to assembly and
+    # belongs in its own column rather than inside that ratio.
+    row["booook_comparable"] = round(taxonomy.comparable_score, 6)
+    row["seam_error_rate"] = round(taxonomy.seam_error_rate, 6)
     row["entity_grid"] = round(entity_grid_coherence(text), 6)
     row["judge_score"] = round(quality_judge(text, contract, embedder), 6)
     row["redundancy_self"] = round(float(redundancy(text)), 6)
@@ -402,7 +569,12 @@ def _consensus_columns(
     units = [unit for _, result in results for unit in result.units]
     n_units = len(units)
     counts = {label: sum(1 for u in units if u.label == label) for label in LABELS}
-    mean_agreement = (sum(u.agreement for u in units) / n_units) if n_units else 0.0
+    # Units with no agreement are skipped rather than counted as zero. The k<=1
+    # guard above already keeps them out of this branch; the filter is here so
+    # that a future path reaching it cannot reintroduce a mean pulled toward
+    # zero by units that were never measured. See ``_MonolithicUnit``.
+    scored = [float(u.agreement) for u in units if u.agreement is not None]
+    mean_agreement = (sum(scored) / len(scored)) if scored else 0.0
     return {
         "k": k,
         "n_families": len({f for _, result in results for f in result.families} or families),
@@ -450,20 +622,40 @@ def _unit_records(
 
 @dataclass(frozen=True)
 class _MonolithicUnit:
-    """One sentence of the baseline, shaped like a consensus unit.
+    """One sentence of a single-replica reply, shaped like a consensus unit.
 
-    The baseline is a single reply, so nothing about it was agreed with anything:
-    ``agreement`` is 0.0 and stays out of every calibration by construction, the
-    same way the item-corpus baseline already does. What it contributes is the
-    *accuracy* denominator -- the number that separates "assembly broke this"
-    from "the model could never do it".
+    ``agreement`` is ``None``, and the previous value -- 0.0, with a comment
+    claiming it "stays out of every calibration by construction" -- is the
+    defect this class is now the record of. Nothing filtered on it. 0.0 is a
+    legal agreement score, so single-replica units entered the calibration as
+    the *least confident* items in the dataset.
+
+    In the run of 26 August that was 8 984 rows, 45 % of the graded mass, all
+    pinned at 0.0. It produced two headline numbers, both false: mean agreement
+    read 0.392 for aggregate claims and 0.391 for local ones -- two populations
+    whose accuracy differs by 37 points reading the same value to three
+    decimals, which is a constant announcing itself -- and the local AUC came
+    out at 0.477, below chance. That below-chance figure was not a failed
+    calibration either: the tied-at-zero group is 95.8 % correct against 92.2 %
+    for the k=3 group, so a block of correct items pinned at the bottom of the
+    agreement scale dragged the statistic under 0.5. The same pooling artefact
+    as the other four, on a variable introduced by the fix that created these
+    rows.
+
+    Restricted to k=3, the same run gives 0.813 and 0.736 -- V5's 0.836 and
+    0.699, replicated. What did not replicate is the aggregate AUC, and that is
+    a real finding rather than an artefact: see ``docs/RESULTS_V6.md``.
+
+    What a single-replica unit contributes is the *accuracy* denominator -- the
+    number that separates "assembly broke this" from "the model could never do
+    it". It contributes nothing about agreement, and now says so.
     """
 
     index: int
     text: str
     label: str = ""
-    agreement: float = 0.0
-    judge_score: float = 0.0
+    agreement: float | None = None
+    judge_score: float | None = None
     accepted: bool = True
 
 
@@ -515,8 +707,8 @@ def _numeric_records(
                 "rho_target": row.get("rho_target", ""), "n_tasks": row.get("n_tasks", ""),
                 "k": result.k, "task_id": task_id, "unit_index": index,
                 "item_id": "", "label": unit.label,
-                "agreement": round(float(unit.agreement), 6),
-                "judge_score": round(float(unit.judge_score), 6),
+                "agreement": _optional_score(unit, "agreement"),
+                "judge_score": _optional_score(unit, "judge_score"),
                 "accepted": bool(unit.accepted), "mode": "numeric_fidelity",
                 "expected": "figures from the table or an aggregate of it",
                 "given": unit.text[:200], "correct": verdict,
@@ -534,7 +726,20 @@ def _numeric_records(
     }
 
 
-_TASK_ITEM_RE = re.compile(r"[\[(]?(\d{1,3})[\]).:]\s+")
+_TASK_ITEM_RE = re.compile(r"(?:^|\s)[\[(](\d{1,3})[\])]", re.MULTILINE)
+r"""An item label in a task's text -- **bracketed only**.
+
+The bracket is not optional and the reason is a defect this regex had on its
+first outing. Written as ``[\[(]?(\d{1,3})[\]).:]\s+`` it also matched a bare
+``NN.``, and a chain step whose text ends "...to the weekly figure from step 3."
+therefore claimed item 03 as well as its own 04. At N=4 that credited a successor
+with its predecessor's item -- reintroducing exactly the inflation the scope
+filter exists to remove, in the arm built to measure the carry.
+
+Every corpus writes its items as ``[NN]`` and its prose references as "step 3",
+so requiring the bracket separates the two cleanly. Caught by
+``tests/test_instrument.py`` on the first run of the fault-injection suite, which
+is the argument for that file existing."""
 
 
 def task_item_scope(plan: Any) -> dict[str, set[str]]:
@@ -609,9 +814,40 @@ def _truth_records(
                 "task_id": task_id,
                 **rec,
             })
+        # The unit-level counters come from the report, which is about UNITS and
+        # is unaffected by which items were in scope.
         d = report.as_dict()
-        for field_name in totals:
+        for field_name in ("units_total", "units_with_no_label"):
             totals[field_name] += int(d.get(field_name) or 0)
+
+        # The ITEM counters must come from the filtered records, not from the
+        # report. `report` is computed by grade_units BEFORE the scope filter
+        # runs, so it counts every item the fragment named -- including the ones
+        # it was never asked for.
+        #
+        # That is exactly what task_item_scope exists to remove. The typed carry
+        # hands a successor its predecessors' answers formatted as answer lines,
+        # `[01]=480 [02]=428`, and a fragment that restates them scored those
+        # items for free: one enumerated corpus reported 379 graded items against
+        # a key holding 150. The filter fixed the records and left the report
+        # alone, so one run emitted two different accuracies from the same units
+        # and the published `grading` block carried the inflated one.
+        #
+        # The bias is one-sided -- a restated answer is correct by construction --
+        # it grows with N, and it is larger in the typed-carry arm than in its
+        # control, which is to say it points the same way as the headline that
+        # arm exists to produce. The monolithic baseline has no scope and is
+        # unaffected, so the arm comparison was skewed too.
+        for rec in graded:
+            totals["items_seen"] += 1
+            if rec.get("graded"):
+                totals["items_graded"] += 1
+                totals["items_correct"] += int(bool(rec.get("correct")))
+            elif rec.get("correct") is None:
+                totals["items_unintelligible"] += 1
+            totals["items_echoed"] += int(bool(rec.get("echoed")))
+            totals["items_unknown_id"] += int(bool(rec.get("unknown_item")))
+
     totals["accuracy"] = (
         round(totals["items_correct"] / totals["items_graded"], 6)
         if totals["items_graded"] else None
@@ -672,7 +908,8 @@ def run_monolithic(
         "coherence_tax_entity_grid": 0.0,
         "quality_tax_judge": 0.0,
     })
-    _fill_metric_row(row, text, None, gamma, embedder)
+    _fill_metric_row(row, text, None, gamma, embedder,
+                     expected_entities=prompt_expected_entities(spec, gamma, backend))
 
     # Grade the baseline too, when there is a key. Without this the run cannot
     # separate "a 3B model cannot do this task" from "fragmenting it destroyed
@@ -786,8 +1023,53 @@ def run_fragmented(
     # units to the grader, which only needs the text and the item label.
     single_results: list[tuple[str, Any]] = []
 
+    # The budget is global and consumed across levels, not restored at each one.
+    #
+    # This loop used to call build_packets once per topological level with the
+    # FULL budget every time, while dispatching only that level's packets. On a
+    # plan of seven sections plus one integration node the integration node was
+    # therefore budgeted twice, and on the second pass its `desired` had grown --
+    # seven predecessor summaries now existed for it to want -- so it took a
+    # larger share of the slack than the first pass had reserved. Achieved rho
+    # came out at 3.90 against a target of 3.5 in four consecutive runs, and
+    # nothing but a rho_fidelity warning ever said so.
+    # Each level receives its FAIR SHARE of what is left, not all of it. Handing
+    # a level the whole remaining budget is the same error in the other
+    # direction: a first level of one task would spend everything and starve the
+    # rest.
+    # The allocation is computed ONCE, up front, and does not depend on the
+    # order levels happen to run in: every task gets its floor -- its own block
+    # plus one contract header -- and the slack above that is divided in
+    # proportion to what each task would consume unrationed.
+    #
+    # A purely proportional split does not work, and the way it fails is quiet.
+    # On `bulk_extraction_invoices` at rho 1.25, N=4, the global floor is 1.163
+    # so the cell is reachable; but proportionally the first level of three tasks
+    # drew 155 tokens against its own mandatory 157, so all three collapsed to
+    # bare task blocks with no contract header at all. Reachable in aggregate,
+    # unreachable per level.
+    total_budget = rho_target * max(count_tokens(spec.text), 1)
+    weights = _task_budget_weights(packing_contract, plan)
+    floors = _task_budget_floors(packing_contract, plan)
+    total_floor = sum(floors.values())
+    total_weight = sum(weights.values()) or 1.0
+    global_slack = max(0.0, total_budget - total_floor)
+
     for level in plan.topological_levels():
-        packing = build_packets(packing_contract, plan, rho_target, summaries)
+        level_ids = [str(t) for t in level]
+        share = (sum(floors.get(t, 0.0) for t in level_ids)
+                 + global_slack * sum(weights.get(t, 1.0) for t in level_ids) / total_weight)
+        packing = build_packets(
+            packing_contract, plan, rho_target, summaries,
+            budget_tokens=share, only_tasks=level_ids)
+        # Refuse before spending tokens, not after. Contract present, carry
+        # delivered where the task consumes one; rho is checked once at the end
+        # over the whole dispatched set, because a single level's share is not
+        # the run's budget.
+        assert_packet_invariants(
+            packing.packets, plan, packing_contract,
+            rho_target=0.0, prompt=spec.text, summaries=summaries,
+            reachable=packing.reachable)
         by_task = {p.task_id: p for p in packing.packets}
         for task_id in level:
             packet = by_task[task_id]
@@ -855,6 +1137,27 @@ def run_fragmented(
 
     final_packing = build_packets(packing_contract, plan, rho_target, summaries)
     rho_achieved = packet_tokens_total / max(count_tokens(spec.text), 1)
+    # The budget check, on the whole dispatched set. Only meaningful when the
+    # target was reachable at all: a target below the floor cannot be hit, and
+    # `rho_reachable` already records that as a property of the cell.
+    # The floor computed WITH the summaries, which is the truthful one. A
+    # mandatory carry is added to the floor rather than funded from slack -- a
+    # packet that cannot state the value its task consumes is unanswerable, and
+    # answerability outranks the budget. So a chain whose carries exceed the
+    # target overshoots BY DESIGN, and that is a property of the cell, not a
+    # violation. `packing_floor` has always accepted summaries for exactly this;
+    # the check has to use it, or it refuses a run for doing the right thing.
+    truthful_floor = packing_floor(packing_contract, plan, summaries)
+    if rho_target >= truthful_floor and rho_target > 0:
+        deviation = (rho_achieved - rho_target) / rho_target
+        if abs(deviation) > RHO_TOLERANCE:
+            raise PacketInvariantError(
+                f"{spec.prompt_id} at N={len(plan.tasks)}: achieved rho "
+                f"{rho_achieved:.3f} against a target of {rho_target:.3f} "
+                f"({deviation:+.1%}, tolerance {RHO_TOLERANCE:.0%}). rho is the "
+                f"independent variable; this cell would not measure what its "
+                f"label says, and four consecutive runs completed with exactly "
+                f"this drift because it was only a warning.")
 
     assembly = select_then_splice(
         fragments, gamma, backend, tau_sem, plan=plan, embedder=embedder,
@@ -897,8 +1200,12 @@ def run_fragmented(
         "sequential_plan": plan.sequential,
         "rho_target": rho_target,
         "rho_achieved": round(rho_achieved, 6),
-        "rho_floor": round(packing_floor(packing_contract, plan), 6),
-        "rho_reachable": final_packing.reachable,
+        # The floor computed WITH the summaries. The optimistic floor -- taken
+        # before generation, when no carry exists yet -- let a cell announce
+        # rho_reachable=true and then overshoot, which is what packing_floor's
+        # own docstring warns about.
+        "rho_floor": round(truthful_floor, 6),
+        "rho_reachable": bool(rho_target >= truthful_floor),
         "tau_sem": round(tau_sem, 6),
         "n_seams": len(assembly.seams),
         "n_bridges": assembly.n_bridges,
@@ -911,9 +1218,18 @@ def run_fragmented(
     row.update(editor_report.as_dict() if editor_report else _EMPTY_EDITOR_COLUMNS)
     selected_texts = [assembly.selected[f.task_id] for f in fragments]
     _fill_metric_row(row, assembled_text, plan, gamma, embedder,
-                     assembly.fragment_sentence_offsets, selected_texts)
+                     assembly.fragment_sentence_offsets, selected_texts,
+                     expected_entities=prompt_expected_entities(spec, gamma, backend))
     if spec.is_composition:
-        label = f"fragmented k={k}" + (" +editor" if use_editor else "")
+        # N and the carry arm belong in the label. Without them the traces of a
+        # run that sweeps N carry two sections per prompt with identical
+        # headings, and any tool re-reading them has to infer the cell from file
+        # order -- which is exactly the kind of implicit join that goes wrong
+        # silently. scripts/rescore.py verifies its join against results.csv for
+        # this reason; the label makes the check unnecessary for future runs.
+        label = (f"fragmented N={n_tasks} k={k}"
+                 + (" +carry" if typed_carry else "")
+                 + (" +editor" if use_editor else ""))
         row["_trace"] = build_trace(
             spec.prompt_id, label, assembled_text, spec.constraints or [],
             # Sentence offsets describe the *assembled* text. An editor that
@@ -934,8 +1250,21 @@ def run_fragmented(
         row["_truth_report"] = truth_report
 
     if baseline:
+        # The headline. Computed on the arm-comparable score: the baseline has no
+        # seams and so cannot incur missing_transition or a seam-anchored
+        # dangling_reference, and the number of seams is N-1, so including those
+        # classes charged the fragmented arm more the more it was fragmented. On
+        # the table run of 26 August that alone accounted for 5.7 points at N=2
+        # and 10.1 at N=8.
         row["coherence_tax_booook"] = _relative_tax(
+            baseline.get("booook_comparable", baseline["booook_like_score"]),
+            row["booook_comparable"])
+        # The old figure, kept so every run stays comparable with the record.
+        row["coherence_tax_booook_full"] = _relative_tax(
             baseline["booook_like_score"], row["booook_like_score"])
+        row["seam_error_rate_delta"] = round(
+            float(row["seam_error_rate"])
+            - float(baseline.get("seam_error_rate", 0.0)), 6)
         row["coherence_tax_entity_grid"] = _relative_tax(
             baseline["entity_grid"], row["entity_grid"])
         row["quality_tax_judge"] = _relative_tax(
@@ -943,15 +1272,17 @@ def run_fragmented(
         # The denominators travel with the ratios. A tax without its baseline
         # cannot be checked for the instability MIN_BASELINE documents.
         row["baseline_booook"] = round(float(baseline["booook_like_score"]), 6)
+        row["baseline_booook_comparable"] = round(
+            float(baseline.get("booook_comparable", baseline["booook_like_score"])), 6)
         row["baseline_entity_grid"] = round(float(baseline["entity_grid"]), 6)
         row["baseline_judge"] = round(float(baseline["judge_score"]), 6)
     else:
-        row["coherence_tax_booook"] = ""
-        row["coherence_tax_entity_grid"] = ""
-        row["quality_tax_judge"] = ""
-        row["baseline_booook"] = ""
-        row["baseline_entity_grid"] = ""
-        row["baseline_judge"] = ""
+        for field_name in ("coherence_tax_booook", "coherence_tax_booook_full",
+                           "seam_error_rate_delta", "coherence_tax_entity_grid",
+                           "quality_tax_judge", "baseline_booook",
+                           "baseline_booook_comparable", "baseline_entity_grid",
+                           "baseline_judge"):
+            row[field_name] = ""
     return row
 
 
@@ -1304,9 +1635,32 @@ def _composition_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     def _summarise(group: Sequence[Any]) -> dict[str, Any]:
         scored = [t.report.score for t in group if t.report.score is not None]
         cross = sum(1 for t in group for d in t.duplicated if d["cross_task"])
+        # The score over the checks NEITHER arm gets for free.
+        #
+        # `paragraph_count` and `words_per_paragraph` are satisfied by the
+        # assembler in the fragmented arm and by the model alone in the baseline:
+        # `select_then_splice` is handed `paragraph_join=requested_paragraphs(...)`
+        # and deterministically emits exactly that many paragraphs, while
+        # `run_monolithic` is a bare generate with no post-processing at all. On
+        # the table corpus that is a guaranteed pass for one arm against a
+        # near-certain fail for the other, on two of seven checks -- and the sign
+        # flips by corpus: where a prompt says "one paragraph to each" rather
+        # than naming a count, `requested_paragraphs` returns None, the pieces
+        # are spliced into a single paragraph, and the fragmented arm is
+        # guaranteed to FAIL instead. Same instrument, opposite bias, decided by
+        # prompt wording.
+        #
+        # `mean_constraint_score` is kept so the record stays comparable, and
+        # `mean_constraint_score_comparable` is the one to read across arms.
+        comparable = [t.report.score_excluding(ASSEMBLER_ENFORCED)
+                      for t in group if t.report.score is not None]
+        comparable = [s for s in comparable if s is not None]
         return {
             "n_compositions": len(group),
             "mean_constraint_score": round(sum(scored) / len(scored), 6) if scored else None,
+            "mean_constraint_score_comparable": (
+                round(sum(comparable) / len(comparable), 6) if comparable else None),
+            "assembler_enforced_checks": sorted(ASSEMBLER_ENFORCED),
             "constraints_failed": sorted({f.constraint_id for t in group for f in t.report.failed}),
             "repeated_sentences": sum(len(t.duplicated) for t in group),
             "repeated_sentences_cross_task": cross,
@@ -1419,8 +1773,58 @@ def _truth_summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         + (f" Per-category lift ranges {min(lifts):.2f} to {max(lifts):.2f}." if lifts else "")
     )
 
+    # The same discipline on the claim class, and on this corpus it is the
+    # stratification that changes the answer. The run of 26 August, table
+    # prompts, k=3: pooled flagging lift reads 1.05, 0.70 and 0.88 -- at or
+    # below random, which reads as "the confidence map does not work". Inside
+    # the aggregate class it reads 2.15, 1.75 and 1.48: flag the lowest-
+    # agreement tenth and 78 % of what is flagged is an error, against a base
+    # rate of 36 %.
+    #
+    # The cause is that the two classes sit at opposite corners. Aggregate
+    # claims carry HIGH agreement (0.78) and LOW accuracy (0.64); local claims
+    # carry LOW agreement (0.68) and HIGH accuracy (0.90). Pooled, the
+    # high-agreement items are disproportionately the wrong ones and the
+    # statistic inverts. Replicas agree readily on a total or an average because
+    # those are formulaic to phrase, not because they got the arithmetic right.
+    #
+    # This is the sixth pooling artefact in this project and the first that ran
+    # the other way: the previous five made a null look like a result, this one
+    # made a result look like a null.
+    stratified_claim = stratified_auc(fragmented, key="claim")
+    stratified_claim["flagging"] = stratified_flagging(fragmented, key="claim")
+    claim_lifts = [
+        s["lift"] for row in stratified_claim["flagging"]
+        for s in row["by_stratum"].values() if s.get("lift") is not None
+    ]
+    stratified_claim["confounded"] = (
+        pooled_auc is not None and stratified_claim.get("auc") is not None
+        and abs(pooled_auc - stratified_claim["auc"]) > 0.05
+    )
+    stratified_claim["note"] = (
+        "Pairs and flags counted inside a claim class only. Read this before the pooled "
+        "figures: aggregate and local claims differ in BOTH agreement and accuracy, and in "
+        "opposite directions, so pooling them measures the difference between the classes "
+        "rather than between right and wrong answers. When `confounded` is true the pooled "
+        "AUC is not answering the confidence-map question at all."
+        + (f" Per-class lift ranges {min(claim_lifts):.2f} to {max(claim_lifts):.2f}."
+           if claim_lifts else "")
+    )
+
     return {"truth_calibration": {
         "pooled": pooled,
+        "discrete_calibration_by_claim": discrete_calibration(fragmented, key="claim"),
+        # The declared successor hypothesis, computed for each claim class:
+        # aggregate is the one under test, local is its failing control. If the
+        # flag works equally in both, it is not tracking claim-specific error and
+        # the result is void -- dev says local is flat (span 0.11, non-monotone).
+        "flag_effect_by_claim": {
+            claim: flag_effect(
+                [r for r in fragmented if str(r.get("claim", "")) == claim])
+            for claim in ("aggregate", "local")
+            if any(str(r.get("claim", "")) == claim for r in fragmented)
+        },
+        "stratified_by_claim": stratified_claim,
         "stratified_by_category": stratified,
         "by_category": {cat: agreement_truth_calibration(recs)
                         for cat, recs in sorted(by_category.items())},
@@ -1521,7 +1925,144 @@ def agreement_quality_correlation(
             "n_units": len(members),
             "acceptability_rate": round(rate, 6) if rate is not None else None,
         })
+
+    # A judge that accepts (or rejects) nearly everything is not an instrument,
+    # and this correlation cannot be computed from it whether or not the signal
+    # exists. The record: 93.3 % acceptance on 14 August left the first V3c
+    # result uninterpretable, and it has run at 100.0 % for four consecutive
+    # runs since -- 1 502 units on the last one, every single one accepted.
+    #
+    # Reported as saturated rather than as a number. `pearson_r` is already None
+    # when a variable is constant; this says WHY, so a reader does not read an
+    # absent correlation as a measured null.
+    rate = result["acceptance_rate"]
+    saturated = n > 0 and (rate >= SATURATION_LIMIT or rate <= 1 - SATURATION_LIMIT)
+    result["saturated"] = bool(saturated)
+    if saturated:
+        result["pearson_r"] = None
+        result["note"] = (
+            f"judge saturated at {rate:.1%} acceptance over {n} units. The "
+            f"correlation is not computable from a verdict that does not vary, "
+            f"and this is the fourth consecutive run in that state. Treat every "
+            f"judge-based figure on this corpus as ABSENT, not as null. Ground "
+            f"truth is unaffected and is what Section 11.4 specifies anyway."
+        )
     return result
+
+
+def paired_absolute_effect(
+    rows: Sequence[Mapping[str, Any]],
+    category: str,
+    rho: float,
+    n_tasks: int | None = None,
+    k: int | None = None,
+    score: str = "booook_comparable",
+    baseline: str = "baseline_booook_comparable",
+) -> dict[str, Any]:
+    """The same cell, as a paired difference in raw score rather than a ratio.
+
+    Reported **beside** :func:`falsifiable_go_no_go`, never instead of it. The
+    declared criterion is a relative degradation and it stays that way, because
+    changing an estimator after it returned an unwelcome answer is how a project
+    talks itself out of a result.
+
+    Why it is worth having anyway. A ratio ``(baseline - fragmented) / baseline``
+    is maximally sensitive exactly where the baseline is best: at a baseline of
+    1.000 a single lost sentence is the whole numerator. On the final run of
+    27 August one prompt -- ``bonded``, baseline 1.000 -- contributed 1.3 of the
+    3.3 points, and the cell missed its threshold on the upper bound by 1.9.
+    A paired absolute difference has no denominator to be sensitive to.
+
+    Neither is the "right" estimator in the abstract. A relative figure is what a
+    threshold expressed as a percentage needs; an absolute one is what a reader
+    comparing two corpora needs. **The point is that a future study declares
+    which one before it runs**, and having both computed means that declaration
+    can be made from evidence rather than from preference.
+
+    Returns:
+        The mean and median paired difference with prompt-clustered intervals,
+        and the per-prompt pairs so a reader can see the distribution rather than
+        a summary of it.
+    """
+    # Below-floor rows cannot enter a published figure; see `publishable`.
+    rows = publishable(rows)
+    cells = [r for r in rows
+             if str(r.get("condition", "")).startswith("fragmented")
+             and str(r.get("category")) == category
+             and _close(r.get("rho_target"), rho)
+             and (n_tasks is None or _same_number(r.get("n_tasks"), n_tasks))
+             and (k is None or _same_number(r.get("k"), k))
+             and isinstance(r.get(score), (int, float))
+             and isinstance(r.get(baseline), (int, float))]
+
+    pairs = [{"prompt_id": str(r.get("prompt_id", "")),
+              "delta": float(r[baseline]) - float(r[score]),
+              "baseline": float(r[baseline])}
+             for r in cells]
+    if not pairs:
+        return {"declared_cell": {"category": category, "rho": rho,
+                                  "n_tasks": n_tasks, "k": k},
+                "n_observations": 0, "note": "no rows in this cell"}
+
+    deltas = sorted(p["delta"] for p in pairs)
+    mean_ci = cluster_bootstrap(
+        pairs, lambda rs: sum(x["delta"] for x in rs) / len(rs) if rs else None)
+    median_ci = cluster_bootstrap(
+        pairs, lambda rs: float(np.median([x["delta"] for x in rs])) if rs else None)
+
+    return {
+        "declared_cell": {"category": category, "rho": rho,
+                          "n_tasks": n_tasks, "k": k},
+        "n_observations": len(pairs),
+        "n_prompts": mean_ci.get("n_clusters"),
+        "mean_delta": round(sum(deltas) / len(deltas), 6),
+        "mean_ci95": mean_ci.get("ci95"),
+        "median_delta": round(float(np.median(deltas)), 6),
+        "median_ci95": median_ci.get("ci95"),
+        "n_at_or_below_zero": sum(1 for d in deltas if d <= 0),
+        "baseline_at_ceiling": sum(1 for p in pairs if p["baseline"] >= 0.999),
+        "pairs": sorted(pairs, key=lambda p: p["delta"]),
+        "note": (
+            "A paired difference in raw score: positive means the fragmented arm "
+            "scored lower. Reported beside the declared relative criterion, not "
+            "in place of it. baseline_at_ceiling counts prompts whose baseline "
+            "scored 1.000, where a ratio has no room and one lost sentence is the "
+            "entire numerator."
+        ),
+    }
+
+
+def _same_number(value: Any, target: int) -> bool:
+    """Numeric equality for a cell filter, not string equality.
+
+    ``str(r["n_tasks"]) == str(n_tasks)`` was the old form and it works exactly
+    as long as the rows are the ones the run held in memory. Read back from
+    ``results.csv`` the same field is a float, ``"2.0" != "2"``, and every cell
+    filter silently matches nothing -- so a criterion re-run over a finished
+    run's own artefacts reports no cells at all rather than an error. Found by
+    ``scripts/reanalyse.py`` on its first use.
+    """
+    try:
+        return float(value) == float(target)
+    except (TypeError, ValueError):
+        return False
+
+
+def _single_replica(record: Mapping[str, Any]) -> bool:
+    """True when the record came from one generation, so agreement is undefined.
+
+    Reads ``k``. A record with no ``k`` at all is *not* treated as single: the
+    item corpora predate the field and excluding them would silently empty the
+    calibration. A record with an unparsable ``k`` is treated as single, because
+    the safe default when the replica count is unknown is to leave it out of a
+    statistic that only means something when there were several replicas.
+    """
+    if "k" not in record:
+        return False
+    try:
+        return int(float(record["k"])) <= 1
+    except (TypeError, ValueError):
+        return True
 
 
 def agreement_truth_calibration(
@@ -1575,10 +2116,28 @@ def agreement_truth_calibration(
     usable: list[tuple[float, int]] = []
     excluded_no_agreement = 0
     excluded_unintelligible = 0
+    excluded_single_replica = 0
 
     for rec in records:
         correct = rec.get("correct")
         agreement = rec.get("agreement")
+        # A single replica has nothing to agree with, so whatever sits in the
+        # agreement field is not a measurement. This filter is deliberately on
+        # k rather than on the value: the run of 26 August carried a 0.0
+        # sentinel there, which is a legal score, and 8 984 such rows -- 45 % of
+        # the graded mass -- entered the calibration as its least confident
+        # items. That produced a mean agreement identical to three decimals
+        # across two classes 37 accuracy points apart, and an AUC below chance.
+        # Filtering on the value would have missed it; filtering on k cannot.
+        #
+        # Checked *before* intelligibility so that the count is complete. Tested
+        # second it read 0 on a run full of single-replica rows, because those
+        # rows were mostly unintelligible too and the other counter claimed them
+        # first -- a diagnostic that reports zero when the thing it watches for
+        # is present is worse than no diagnostic.
+        if _single_replica(rec):
+            excluded_single_replica += 1
+            continue
         if correct is None:
             excluded_unintelligible += 1
             continue
@@ -1598,6 +2157,7 @@ def agreement_truth_calibration(
         "mean_agreement": round(sum(x for x, _ in usable) / n, 6) if n else None,
         "excluded_unintelligible": excluded_unintelligible,
         "excluded_no_agreement": excluded_no_agreement,
+        "excluded_single_replica": excluded_single_replica,
         "pearson_r": None,
         "auc": None,
         "bins": [],
@@ -1727,6 +2287,80 @@ def stratified_auc(
     }
 
 
+def rho_fidelity(
+    rows: Sequence[Mapping[str, Any]],
+    tolerance: float = 0.05,
+) -> dict[str, Any]:
+    """Did each cell actually run at the context budget it was asked for?
+
+    rho is the independent variable of every fragmentation comparison, so a cell
+    that overshot its target is not the cell the comparison names. Nothing
+    checked this, and the table run of 26 August shows why it must: at N=8 the
+    achieved rho was **3.91** against a target of 3.5 -- 11.6 % over -- while
+    rho_floor was only 1.13, so the packer was not being forced up by the floor.
+    The N=8 arm therefore received *more* context than N=2 and still did far
+    worse, which happens to be conservative for the conclusion drawn from it, but
+    the direction was luck rather than design.
+
+    Reported per (rho_target, N) rather than pooled, because the drift is a
+    function of N: at N=2 the same run sits at 3.48 against 3.5, inside a
+    percent.
+
+    Args:
+        rows: Fragmented rows carrying ``rho_target`` and ``rho_achieved``.
+        tolerance: Relative deviation above which a cell is flagged. 5 % is
+            tight enough to catch the N=8 case and loose enough to ignore the
+            rounding that packing a whole number of tokens produces.
+
+    Returns:
+        ``cells`` with the per-cell deviation, ``worst``, and ``within_tolerance``
+        -- false when any cell drifted. A run with ``within_tolerance: false``
+        has not measured what its axis labels say it measured, and the cells that
+        drifted should be named in any write-up rather than quietly averaged in.
+    """
+    groups: dict[tuple[float, int], list[tuple[float, float]]] = {}
+    for row in rows:
+        try:
+            target = float(row["rho_target"])
+            achieved = float(row["rho_achieved"])
+            n_tasks = int(row["n_tasks"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if target <= 0:
+            continue
+        groups.setdefault((target, n_tasks), []).append((target, achieved))
+
+    cells: list[dict[str, Any]] = []
+    for (target, n_tasks), pairs in sorted(groups.items()):
+        mean_achieved = sum(a for _, a in pairs) / len(pairs)
+        deviation = (mean_achieved - target) / target
+        cells.append({
+            "rho_target": target,
+            "n_tasks": n_tasks,
+            "rho_achieved_mean": round(mean_achieved, 4),
+            "relative_deviation": round(deviation, 4),
+            "within_tolerance": abs(deviation) <= tolerance,
+            "n_rows": len(pairs),
+        })
+
+    drifted = [c for c in cells if not c["within_tolerance"]]
+    worst = max(cells, key=lambda c: abs(c["relative_deviation"]), default=None)
+    return {
+        "tolerance": tolerance,
+        "cells": cells,
+        "n_cells_out_of_tolerance": len(drifted),
+        "worst": worst,
+        "within_tolerance": not drifted,
+        "note": (
+            "rho is the independent variable, so a cell that did not run at its target is "
+            "not the cell its label names. Deviation is reported per (rho_target, N) because "
+            "it is a function of N: the table run of 26 August sat at 3.48 against 3.5 at "
+            "N=2 and at 3.91 at N=8. Compare tax across N only among cells that are within "
+            "tolerance, or say plainly which one was not."
+        ),
+    }
+
+
 def stratified_flagging(
     records: Sequence[Mapping[str, Any]],
     key: str = "category",
@@ -1764,14 +2398,18 @@ def stratified_flagging(
             cut = int(round(rate * n))
             if cut <= 0 or not n_wrong:
                 continue
-            hits = sum(1 for _, y in sorted(pairs, key=lambda p: p[0])[:cut] if y == 0)
-            flagged += cut
+            picked = _flag_whole_ties(pairs, cut)
+            taken = len(picked)
+            hits = sum(1 for _, y in picked if y == 0)
+            flagged += taken
             caught += hits
             # What flagging at random inside this category would have caught.
-            expected += cut * (n_wrong / n)
-            per_stratum[name] = {"n_flagged": cut, "errors_caught": hits,
-                                 "precision": round(hits / cut, 6),
-                                 "lift": round((hits / cut) / (n_wrong / n), 6)}
+            expected += taken * (n_wrong / n)
+            per_stratum[name] = {"n_flagged": taken,
+                                 "achieved_rate": round(taken / n, 6),
+                                 "errors_caught": hits,
+                                 "precision": round(hits / taken, 6),
+                                 "lift": round((hits / taken) / (n_wrong / n), 6)}
         out.append({
             "flag_rate": rate,
             "n_flagged": flagged,
@@ -1780,6 +2418,252 @@ def stratified_flagging(
             "lift": round(caught / expected, 6) if expected > 0 else None,
             "by_stratum": per_stratum,
         })
+    return out
+
+
+def _flag_whole_ties(
+    pairs: Sequence[tuple[float, int]],
+    cut: int,
+) -> list[tuple[float, int]]:
+    """Take the lowest-agreement items, never splitting a tie group.
+
+    Agreement at k replicas takes exactly k+1 values. At k=3 that is
+    ``{0, 1/3, 2/3, 1}``, and on the table run of 26 August those four values
+    held 8, 82, 87 and 141 items. "Flag the lowest 20 %" then asks for 64 items
+    out of a group of 82 that are *indistinguishable to the predictor*, so which
+    64 depends entirely on the sort's tie order -- and two correct
+    implementations disagreed by 0.6 in lift because of it.
+
+    A flag that cannot be acted on is not a measurement. So a tie group is taken
+    whole or not at all, and ``achieved_rate`` reports what fraction that came
+    to. When the achieved rate is far from the requested one, the requested rate
+    was not expressible on this predictor and the calibration table -- accuracy
+    at each distinct value -- is the honest statistic.
+    """
+    ordered = sorted(pairs, key=lambda p: p[0])
+    picked: list[tuple[float, int]] = []
+    index = 0
+    while index < len(ordered):
+        value = ordered[index][0]
+        group = [p for p in ordered[index:] if p[0] == value]
+        # Take the group only if doing so does not overshoot further than
+        # stopping short would undershoot.
+        if picked and abs(len(picked) + len(group) - cut) > abs(len(picked) - cut):
+            break
+        picked.extend(group)
+        index += len(group)
+        if len(picked) >= cut:
+            break
+    return picked or ordered[:cut]
+
+
+FLAG_CUT = 2.0 / 3.0
+"""Agreement below which a claim is flagged for review.
+
+Read as "fewer than two of three replicas agreed". Frozen on the dev half of
+``prompts/tables24.json`` on 26 August, before the final half was run, and
+deliberately expressed as a fraction of k rather than as a percentile: agreement
+takes k+1 values, so a percentile cut lands inside a tie group the predictor
+cannot resolve and its result depends on sort order."""
+
+
+def flag_effect(
+    records: Sequence[Mapping[str, Any]],
+    cut: float = FLAG_CUT,
+    cluster_key: str = "prompt_id",
+    draws: int = 4000,
+    alpha: float = 0.05,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Does flagging low-agreement claims catch errors *within* a prompt?
+
+    The confidence map's whole proposition is per-claim triage: told which of its
+    own outputs to distrust, a reviewer reads a tenth of them and catches a
+    disproportionate share of the errors. The naive way to measure that is a
+    lift -- precision among flagged items over the base error rate -- and on the
+    dev half of the table corpus it reads **2.21**, with a prompt-clustered
+    interval of [1.32, 3.83].
+
+    That number is not trustworthy, and the reason is visible in the data: of
+    eight prompts, three contributed no flagged item at all, and the three with
+    the most flagged items were also the three with the most errors. A lift
+    computed across prompts cannot separate "this claim is wrong" from "this
+    prompt is hard" -- and only the first is worth anything, because the second
+    is already available from the error rate itself.
+
+    So the estimator is a **Mantel-Haenszel common odds ratio with the prompt as
+    the stratum**, which never compares an item in one prompt against an item in
+    another. On the same dev data it gives **3.47**, so the effect does survive
+    removing the between-prompt component -- but its clustered interval is
+    **[0.80, 10.67]**, which does not exclude "no effect". The honest reading of
+    dev is a strong point estimate that eight prompts cannot establish.
+
+    Args:
+        records: Graded records carrying ``agreement``, ``correct`` and
+            ``cluster_key``. Single-replica records are excluded: agreement is
+            undefined for them.
+        cut: Flag when ``agreement < cut``. Defaults to :data:`FLAG_CUT`.
+        cluster_key: The stratum, and also what the bootstrap resamples. The
+            prompt, not the item -- items from one prompt share its difficulty.
+        draws: Bootstrap resamples over clusters.
+        alpha: 1 - coverage.
+        seed: Fixed, so a reported interval reproduces.
+
+    Returns:
+        ``odds_ratio`` with ``ci95``, the unstratified ``lift`` beside it for
+        comparison, the per-stratum 2x2 tables, and
+        ``n_strata_contributing`` -- the number of prompts that had at least one
+        flagged item *and* at least one unflagged one. A stratum with none of
+        one is uninformative and contributes zero to the estimate, so a run
+        where that count is small has less evidence than its item count implies.
+    """
+    usable = [r for r in records
+              if r.get("correct") is not None and r.get("agreement") is not None
+              and not _single_replica(r)]
+
+    def _tables(rows: Sequence[Mapping[str, Any]]) -> dict[str, tuple[int, int, int, int]]:
+        out: dict[str, list[int]] = {}
+        for row in rows:
+            flagged = float(row["agreement"]) < cut
+            wrong = not bool(row["correct"])
+            cell = out.setdefault(str(row.get(cluster_key, "")), [0, 0, 0, 0])
+            cell[(0 if flagged else 2) + (0 if wrong else 1)] += 1
+        return {name: tuple(cell) for name, cell in out.items()}
+
+    def _mh(rows: Sequence[Mapping[str, Any]]) -> float | None:
+        numerator = denominator = 0.0
+        for a, b, c, d in _tables(rows).values():
+            total = a + b + c + d
+            if not total:
+                continue
+            numerator += a * d / total
+            denominator += b * c / total
+        # A zero denominator has two quite different causes and they must not be
+        # returned as the same None. Either no stratum had both a flagged and an
+        # unflagged item -- nothing is estimable -- or the flag separated errors
+        # perfectly, which is an infinite odds ratio and the best possible
+        # outcome. `unestimable_reason` below says which.
+        return (numerator / denominator) if denominator > 0 else None
+
+    tables = _tables(usable)
+    n_flagged = sum(a + b for a, b, _, _ in tables.values())
+    n_wrong = sum(a + c for a, _, c, _ in tables.values())
+    contributing = sum(1 for a, b, c, d in tables.values()
+                       if (a + b) > 0 and (c + d) > 0)
+
+    base = n_wrong / len(usable) if usable else None
+    flagged_wrong = sum(a for a, _, _, _ in tables.values())
+    lift = ((flagged_wrong / n_flagged) / base) if n_flagged and base else None
+
+    interval = cluster_bootstrap(usable, _mh, cluster_key=cluster_key,
+                                 draws=draws, alpha=alpha, seed=seed)
+
+    odds_ratio = _mh(usable)
+    unestimable = None
+    if odds_ratio is None:
+        discordant = sum(1 for a, b, c, d in tables.values() if b or c)
+        unestimable = ("perfect separation: every flagged item is an error and every "
+                       "unflagged one is correct, so the odds ratio is unbounded above"
+                       if contributing and not discordant else
+                       "no stratum holds both a flagged and an unflagged item, so nothing "
+                       "is estimable within prompts")
+
+    return {
+        "cut": round(cut, 6),
+        "odds_ratio": round(odds_ratio, 6) if odds_ratio is not None else None,
+        "unestimable_reason": unestimable,
+        "ci95": interval.get("ci95"),
+        "n_clusters": interval.get("n_clusters"),
+        "n_strata_contributing": contributing,
+        "draws_unusable": interval.get("draws_unusable"),
+        "n_items": len(usable),
+        "n_flagged": n_flagged,
+        "n_errors": n_wrong,
+        "base_error_rate": round(base, 6) if base is not None else None,
+        "precision_flagged": round(flagged_wrong / n_flagged, 6) if n_flagged else None,
+        "lift_unstratified": round(lift, 6) if lift is not None else None,
+        "by_stratum": {name: {"flagged_wrong": a, "flagged_right": b,
+                              "unflagged_wrong": c, "unflagged_right": d}
+                       for name, (a, b, c, d) in sorted(tables.items())},
+        "note": (
+            "Mantel-Haenszel common odds ratio with the prompt as the stratum, so no item is "
+            "ever compared against an item from another prompt. lift_unstratified is reported "
+            "beside it and is the larger number for a reason: it borrows the between-prompt "
+            "signal, and 'this prompt is hard' is not what a per-claim confidence map is for. "
+            "Read n_strata_contributing before the interval -- a prompt with no flagged item, "
+            "or with no unflagged one, contributes nothing at all."
+        ),
+    }
+
+
+def discrete_calibration(
+    records: Sequence[Mapping[str, Any]],
+    key: str | None = None,
+    max_values: int = 12,
+) -> dict[str, Any]:
+    """Accuracy at each distinct agreement value -- the statistic a k-replica
+    predictor can actually support.
+
+    An AUC and a percentile flag both assume the predictor is finely graded.
+    Agreement is not: it is ``consistent / k``, so k=3 gives four values. On the
+    table run of 26 August that table is the clearest result the project has
+    produced, and both summary statistics obscured it.
+
+    Aggregate claims, accuracy by agreement: **0.00, 0.25, 0.625, 0.75** at
+    n = 2, 8, 40, 44. Monotone across 75 accuracy points -- a working confidence
+    map. Local claims: 0.833, 0.946, 0.936, 0.845 -- flat, non-monotone, and
+    inverted at the top. Pooled the two give 0.625, 0.878, 0.793, 0.816, which
+    is neither, and it was the pooled figure that got reported.
+
+    Args:
+        records: Graded records with ``agreement`` and ``correct``.
+        key: Field to stratify by -- ``"claim"`` is the one that matters here.
+            ``None`` pools, which this function exists to argue against.
+        max_values: Above this many distinct values the predictor is continuous
+            enough that a table is not the right summary, and ``discrete`` comes
+            back false.
+
+    Returns:
+        Per stratum, a list of ``{agreement, n, accuracy}`` in ascending order,
+        plus ``monotone`` and the accuracy ``span`` -- the two things that decide
+        whether a confidence map is worth its cost.
+    """
+    groups: dict[str, list[tuple[float, int]]] = {}
+    for record in records:
+        correct, agreement = record.get("correct"), record.get("agreement")
+        if correct is None or agreement is None or _single_replica(record):
+            continue
+        name = str(record.get(key, "")) if key else "all"
+        groups.setdefault(name, []).append((float(agreement), 1 if correct else 0))
+
+    distinct = {value for pairs in groups.values() for value, _ in pairs}
+    out: dict[str, Any] = {
+        "stratified_by": key,
+        "n_distinct_values": len(distinct),
+        "discrete": 0 < len(distinct) <= max_values,
+        "by_stratum": {},
+        "note": (
+            "Agreement is consistent/k, so it takes k+1 values and no more. An AUC and a "
+            "percentile flag both assume a finely graded predictor; this table does not. "
+            "Read `monotone` and `span`: a confidence map earns its cost by separating "
+            "accuracy across its range, and a map that is monotone in one claim class and "
+            "flat in the other is a much narrower claim than a single pooled number makes "
+            "it look."
+        ),
+    }
+    for name, pairs in sorted(groups.items()):
+        table = []
+        for value in sorted({v for v, _ in pairs}):
+            bucket = [y for v, y in pairs if v == value]
+            table.append({"agreement": round(value, 6), "n": len(bucket),
+                          "accuracy": round(sum(bucket) / len(bucket), 6)})
+        accuracies = [entry["accuracy"] for entry in table]
+        out["by_stratum"][name] = {
+            "points": table,
+            "n": len(pairs),
+            "monotone": all(a <= b for a, b in zip(accuracies, accuracies[1:])),
+            "span": round(max(accuracies) - min(accuracies), 6) if accuracies else None,
+        }
     return out
 
 
@@ -1902,6 +2786,19 @@ def fragment_size_curve(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     choose N. ``suggest_n_tasks`` currently hardcodes one micro-task per 60
     canonical tokens, a constant that has never been validated against anything.
     """
+    # Below-floor rows cannot enter a published figure; see `publishable`. This
+    # function used to be the ONLY reader of `rho_reachable` in the whole
+    # analysis, and it read it to pick a slice, then fell back to the full set
+    # when no reachable slice existed:
+    #
+    #     slice_rho = reachable_rhos[0] if reachable_rhos else (rhos[0] ...)
+    #
+    # On a sweep entirely below floor -- V0's, at N=4 -- `reachable_rhos` is
+    # empty and the fallback silently builds the project's declared primary
+    # result out of exactly the cells the flag was raised about. Filtering first
+    # means the curve is either computed from cells where rho could vary, or
+    # reported as empty. There is no third answer that is worth printing.
+    rows = publishable(rows)
     baselines = {str(r.get("prompt_id")): r for r in rows
                  if r.get("condition") == "monolithic"}
 
@@ -2218,6 +3115,8 @@ def falsifiable_go_no_go(
     category: str,
     rho: float,
     threshold: float = 0.05,
+    n_tasks: int | None = None,
+    k: int | None = None,
 ) -> dict[str, Any]:
     """The pre-registered criterion, restated so that it can fail.
 
@@ -2236,29 +3135,70 @@ def falsifiable_go_no_go(
       interval, not by the point estimate;
     * ``n_cells_examined`` is reported, so a reader can see how many chances the
       criterion had even when only one was declared.
+
+    ``n_tasks`` must be named too, and the run of 26 August is why. Filtering on
+    category and rho alone averages N -- and N is the axis with by far the
+    largest effect. Pooled over N, ``table_summary`` at rho 3.5 reads +20.9 %,
+    comfortably failing; at N=2, the fragment size the threshold question is
+    actually about, the same cells read **+5.8 %** with an interval spanning the
+    threshold. The criterion written to stop a maximum statistic from passing on
+    noise was itself hiding the one live candidate inside a mean.
+
+    ``k`` must be named for the same reason, one axis later, and the table run of
+    26 August is why. Filtered on category, rho and N but not k, the declared
+    cell read **+18.3 %** -- a mean of +20.6 % at k=1 and +16.0 % at k=3, a
+    number belonging to neither arm. The rest of this file already refuses to
+    average k: ``headline_restricted_to_k`` exists precisely because consensus is
+    a separate mechanism from fragmentation. The criterion was the one place
+    still doing it.
+
+    On that run the omission did not change the verdict -- both arms fail by a
+    wide margin -- but it would have at N=8, where k=1 costs +25.3 % and k=3
+    costs +63.7 %. A mean of those two describes no arm that was run.
     """
+    # Below-floor rows cannot enter a published figure; see `publishable`.
+    rows = publishable(rows)
     cells = [r for r in rows
              if str(r.get("condition", "")).startswith("fragmented")
              and str(r.get("category")) == category
              and _close(r.get("rho_target"), rho)
+             and (n_tasks is None or _same_number(r.get("n_tasks"), n_tasks))
+             and (k is None or _same_number(r.get("k"), k))
              and isinstance(r.get("coherence_tax_booook"), (int, float))]
     examined = len({(str(r.get("category")), r.get("rho_target")) for r in rows
                     if str(r.get("condition", "")).startswith("fragmented")})
 
     if len(cells) < 2:
-        return {"declared_cell": {"category": category, "rho": rho},
+        return {"declared_cell": {"category": category, "rho": rho, "n_tasks": n_tasks, "k": k},
                 "passed": None, "n_observations": len(cells),
                 "n_cells_examined": examined,
                 "note": "too few observations in the declared cell to form an interval"}
 
+    # Resample whole PROMPTS, not rows. Rows from one prompt share its
+    # difficulty, its contract and its source material, so treating them as
+    # independent draws narrows the interval by roughly the square root of the
+    # rows per prompt. On the current corpus a cell is nearly a prompt and the
+    # damage is small -- but "nearly" is not a property to rely on, and it stops
+    # being true the moment a sweep varies anything inside a prompt.
+    interval = cluster_bootstrap(
+        [{"prompt_id": str(r.get("prompt_id", "")),
+          "value": float(r["coherence_tax_booook"])} for r in cells],
+        lambda rows: (sum(x["value"] for x in rows) / len(rows)) if rows else None,
+        cluster_key="prompt_id",
+    )
     values = np.asarray([float(r["coherence_tax_booook"]) for r in cells], dtype=np.float64)
-    rng = np.random.default_rng(0)
-    draws = rng.choice(values, size=(4000, values.size), replace=True).mean(axis=1)
-    lo, hi = (float(np.quantile(draws, 0.025)), float(np.quantile(draws, 0.975)))
+    if interval.get("ci95") is None:
+        return {"declared_cell": {"category": category, "rho": rho, "n_tasks": n_tasks, "k": k},
+                "passed": None, "n_observations": int(values.size),
+                "n_prompts": interval["n_clusters"], "n_cells_examined": examined,
+                "point_estimate": round(float(values.mean()), 6),
+                "note": interval.get("note", "no interval estimable")}
+    lo, hi = interval["ci95"]
 
     return {
-        "declared_cell": {"category": category, "rho": rho},
+        "declared_cell": {"category": category, "rho": rho, "n_tasks": n_tasks, "k": k},
         "n_observations": int(values.size),
+        "n_prompts": interval["n_clusters"],
         "n_cells_examined": examined,
         "point_estimate": round(float(values.mean()), 6),
         "ci95": [round(lo, 6), round(hi, 6)],
@@ -2267,7 +3207,9 @@ def falsifiable_go_no_go(
         "note": (
             "Passes only when the upper bound of the interval clears the threshold, on a cell "
             "named before the run. The point estimate alone is what made the old criterion "
-            "unfalsifiable; n_cells_examined states how many chances were available."
+            "unfalsifiable; n_cells_examined states how many chances were available. The "
+            "interval is a cluster bootstrap over prompts -- n_prompts, not n_observations, is "
+            "the sample size that matters, because rows from one prompt share its difficulty."
         ),
     }
 
@@ -2306,6 +3248,9 @@ def summarize(
             carry in ``_unit_records``; pass the sidecar (:func:`read_unit_rows`)
             when summarising rows that came back from disk.
     """
+    # Below-floor rows never enter a published figure. See `publishable`.
+    n_unreachable = len(rows) - len(publishable(rows))
+    rows = publishable(rows)
     fragmented_all = [r for r in rows if r.get("condition") == "fragmented"]
     # The tax headline already refuses to average k, on the stated grounds that a
     # mean of k=1 and k=3 "belongs to neither". The carry is the same kind of
@@ -2455,6 +3400,16 @@ def summarize(
     ]
 
     summary: dict[str, Any] = {
+        "rows_excluded_below_floor": n_unreachable,
+        "rows_excluded_note": (
+            "Rows whose rho_target sat below their own packing floor. Below the "
+            "floor every packet collapses to its bare task, so the rho axis does "
+            "not move and two different rho labels produce byte-identical cells. "
+            "They are dropped from every figure in this summary rather than "
+            "flagged, because a note beside a number does not travel with the "
+            "number. Read them in results.csv where rho_reachable is false."
+            if n_unreachable else
+            "Every row was at or above its packing floor."),
         "curve": curve,
         "category_curve": category_curve,
         "consensus_curve": consensus_curve,
@@ -2469,17 +3424,41 @@ def summarize(
         "best_category_cell": best_cell,
         "fragment_size_curve": fragment_size_curve(rows),
         "falsifiable_go_no_go": {
-            f"{cat}@rho={rho}": falsifiable_go_no_go(fragmented_all, category=cat, rho=rho)
+            f"{cat}@rho={rho}@N={n}@k={k}": falsifiable_go_no_go(
+                fragmented_all, category=cat, rho=rho, n_tasks=n, k=k)
             for cat in sorted({str(r.get("category", "")) for r in fragmented_all})
             for rho in sorted({float(r["rho_target"]) for r in fragmented_all
                                if isinstance(r.get("rho_target"), (int, float))})
+            for n in sorted({int(r["n_tasks"]) for r in fragmented_all
+                             if str(r.get("n_tasks", "")).isdigit()})
+            for k in sorted({int(r["k"]) for r in fragmented_all
+                             if str(r.get("k", "")).isdigit()})
+        },
+        "rho_fidelity": rho_fidelity(fragmented_all),
+        # The same cells as an absolute paired difference. Beside the declared
+        # relative criterion, never instead of it -- see paired_absolute_effect.
+        "paired_absolute": {
+            f"{cat}@rho={rho}@N={n}@k={k}": paired_absolute_effect(
+                fragmented_all, category=cat, rho=rho, n_tasks=n, k=k)
+            for cat in sorted({str(r.get("category", "")) for r in fragmented_all})
+            for rho in sorted({float(r["rho_target"]) for r in fragmented_all
+                               if isinstance(r.get("rho_target"), (int, float))})
+            for n in sorted({int(r["n_tasks"]) for r in fragmented_all
+                             if str(r.get("n_tasks", "")).isdigit()})
+            for k in sorted({int(r["k"]) for r in fragmented_all
+                             if str(r.get("k", "")).isdigit()})
         },
         "falsifiable_go_no_go_note": (
             "Every cell is reported because a run cannot know which one was declared in "
             "advance -- but declaring afterwards is not declaring, and n_cells_examined in "
-            "each entry states how many chances were available. A pass here counts only for "
-            "a cell named before the run. Computed on the same slice as the tax headline: "
-            "the untyped arm, no editor, headline k."
+            "each entry states how many chances were available. N is part of the cell: "
+            "pooling it averages the axis with the largest effect and hid a candidate at "
+            "+5.8% inside a mean of +20.9%. So is k, and this note used to claim the cells "
+            "were computed at 'headline k' while nothing restricted k at all: on the table "
+            "run of 26 August the declared cell read +18.3%, the midpoint of +20.6% at k=1 "
+            "and +16.0% at k=3, a number belonging to neither arm. At N=8 the same omission "
+            "would have averaged +25.3% with +63.7%. A pass here counts only for a cell "
+            "named before the run, and the cell is (category, rho, N, k)."
         ),
         "editor_effect": editor_effect(rows),
         "carry_effect": carry_effect(rows),

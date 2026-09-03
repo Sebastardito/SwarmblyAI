@@ -221,6 +221,22 @@ ERROR_CLASSES: tuple[str, ...] = (
 )
 """The mechanically detectable subset of the BooookScore error taxonomy."""
 
+SEAM_LOCAL_CLASSES: frozenset[str] = frozenset({
+    "missing_transition",
+    "dangling_reference",
+})
+"""Classes that can only fire where one fragment meets the next.
+
+A monolithic answer has no seams, so it cannot incur these however incoherent it
+is. Including them in a ratio against that baseline charges the fragmented arm
+for a category the baseline is exempt from -- and the charge grows with N,
+because there are N-1 seams. On the table run of 26 August that alone moved the
+N=8 figure from +24.7 % to +14.6 %.
+
+They are reported through ``TaxonomyReport.seam_error_rate`` instead: the damage
+assembly does, in its own column, where a reader can see it rather than find it
+folded into a coherence score."""
+
 _CONNECTIVE_RE = re.compile(
     r"^(consequently|in addition|additionally|moreover|furthermore|accordingly|therefore|thus|"
     r"however|nevertheless|meanwhile|building on|following from|taken together|by contrast|"
@@ -283,6 +299,39 @@ class TaxonomyReport:
     details: dict[str, Any] = field(default_factory=dict)
 
     @property
+    def comparable_score(self) -> float:
+        """The same rate, over the error classes **both arms can incur**.
+
+        ``booook_like_score`` includes the seam-local classes, and a monolithic
+        answer has no seams: it cannot score ``missing_transition`` or a
+        seam-anchored ``dangling_reference`` however bad it is. Comparing the two
+        arms on the full score therefore charges the fragmented arm for a
+        category the baseline is structurally exempt from, and the charge grows
+        with N because the number of seams is N-1.
+
+        Measured on the table run of 26 August: the full score put N=8 k=1 at
+        +24.7 % against its baseline; on this one it reads +14.6 %.
+
+        This is not an argument that seam defects do not matter -- they are the
+        specific damage assembly does, and ``seam_error_rate`` reports them
+        beside this. It is an argument that they belong in their own column
+        rather than inside a ratio whose denominator cannot contain them.
+        """
+        if not self.n_sentences:
+            return 0.0
+        clean = sum(1 for errors in self.errors_by_sentence
+                    if not [e for e in errors if e not in SEAM_LOCAL_CLASSES])
+        return clean / self.n_sentences
+
+    @property
+    def seam_error_rate(self) -> float:
+        """Seam-local errors per sentence -- the cost specific to assembly."""
+        if not self.n_sentences:
+            return 0.0
+        return sum(self.counts.get(cls, 0)
+                   for cls in SEAM_LOCAL_CLASSES) / self.n_sentences
+
+    @property
     def total_errors(self) -> int:
         return sum(self.counts.values())
 
@@ -316,6 +365,7 @@ def seam_error_taxonomy(
     plan: Plan | None = None,
     fragment_sentence_offsets: Sequence[int] | None = None,
     contract: Contract | None = None,
+    expected_entities: Sequence[str] | None = None,
 ) -> TaxonomyReport:
     """Detect BooookScore-style coherence errors in an assembled answer.
 
@@ -328,6 +378,16 @@ def seam_error_taxonomy(
             errors are attributed exactly instead of being estimated from an
             even split.
         contract: Optional contract, used to widen the expected-entity set.
+        expected_entities: The entities a correct answer must mention. **Pass
+            this whenever two arms are going to be compared, and pass the same
+            value to both.** Omitting it falls back to the union of
+            ``plan.tasks[].expected_entities``, which is a function of the
+            partition: plan=None gives the contract's entities alone, N=2 gave 6
+            on the table corpus, N=8 gave 17. Scoring one identical
+            16-sentence answer through both conventions produced 0.9375 against
+            0.5000 -- an apparent "coherence tax" of +46.7 % on text that never
+            changed. The fallback is retained only so the detector can be used
+            standalone on a single answer, where no comparison is at stake.
 
     Returns:
         A :class:`TaxonomyReport`. ``booook_like_score`` is the fraction of
@@ -359,10 +419,31 @@ def seam_error_taxonomy(
     sentence_ngrams = [set(ngrams(content_words(s), 3)) for s in sentences]
 
     # -- 1. entity omission ------------------------------------------------
-    expected: list[str] = []
-    if plan is not None:
-        for task in plan.tasks:
-            expected.extend(task.expected_entities)
+    # The standard a correct answer is held to must NOT depend on how the prompt
+    # was partitioned, and until now it did. The expected set was the union of
+    # `plan.tasks[].expected_entities`, so:
+    #
+    #   * the monolithic baseline passes plan=None and was held to the
+    #     contract's canonical entities alone -- 6 on the table corpus;
+    #   * the fragmented arm was held to the union over its tasks -- 6 at N=2,
+    #     10 at N=4, 17 at N=8.
+    #
+    # Scoring one identical 16-sentence answer through both conventions gives
+    # 0.9375 against 0.5000, an apparent "coherence tax" of +46.7 % on text that
+    # never changed. That is not a measurement of anything.
+    #
+    # Worse, the entities the plan contributes are table row refs and
+    # destinations -- and the prompt forbids reproducing the table. The
+    # fragmented arm was required to name entities its own instructions
+    # prohibited.
+    #
+    # The contract defines the standard, because the contract is what both arms
+    # receive. The plan is used only for ATTRIBUTION below: which fragment head
+    # should have carried a missing entity.
+    expected: list[str] = list(expected_entities) if expected_entities is not None else [
+        entity for task in (plan.tasks if plan is not None else [])
+        for entity in task.expected_entities
+    ]
     if contract is not None:
         expected.extend(contract.canonical_entities)
     present_norms = {normalize_entity(e) for e in extract_entities(text, min_mentions=1)}
@@ -372,11 +453,19 @@ def seam_error_taxonomy(
         norm = normalize_entity(entity)
         if norm and norm not in present_norms and entity.lower() not in text_lower:
             missing.append(entity)
-    for i, entity in enumerate(missing):
-        anchor = offsets[i % len(offsets)] if offsets else 0
-        # Omission has no natural sentence; attribute it to the fragment head
-        # that was supposed to carry it.
-        flag(anchor, "entity_omission")
+    # An omission is a property of the DOCUMENT -- there is no sentence in which
+    # a missing entity fails to appear -- so it is counted, and attributed for
+    # the trace, but it does not flag a sentence.
+    #
+    # It used to. `anchor = offsets[i % len(offsets)]` spread the missing
+    # entities round-robin across the fragment heads, so the identical set of
+    # omissions dirtied ONE sentence with plan=None and up to N with a plan of N
+    # tasks. The score is clean/n_sentences, so the same document lost 1/n at
+    # monolithic and N/n at N fragments. That is the partition changing the
+    # score through the attribution, which attribution must never do.
+    counts["entity_omission"] = len(missing)
+    omission_anchors = [offsets[i % len(offsets)] if offsets else 0
+                        for i in range(len(missing))]
 
     # -- 2. duplicated content --------------------------------------------
     for j in range(1, n):
@@ -485,6 +574,7 @@ def seam_error_taxonomy(
         n_sentences=n,
         details={
             "missing_entities": missing,
+            "omission_anchors": omission_anchors,
             "seam_starts": seam_starts,
             "doc_tense": doc_tense,
             "doc_casual_rate": doc_casual_rate,

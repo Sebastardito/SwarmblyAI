@@ -435,9 +435,28 @@ def test_the_length_knob_reaches_ollama_through_the_sdk_without_breaking_it() ->
     client = _StrictClient()
     backend._client = client
 
-    assert backend.generate("hello", max_tokens=61) == "ok"
+    assert backend.generate("hello", max_tokens=61, seed=7) == "ok"
     assert "options" not in client.seen, "options must not be a top-level keyword argument"
-    assert client.seen["extra_body"] == {"options": {"num_predict": 61}}
+    # The seed rides in `options` beside num_predict, and for the same reason:
+    # Ollama's shim reads its sampler settings there, not from the top level.
+    assert client.seen["extra_body"] == {"options": {"num_predict": 61, "seed": 7}}
+    assert client.seen["seed"] == 7, "the OpenAI-schema field stays, for real endpoints"
+
+
+def test_the_variant_reaches_the_sampler_and_not_only_the_metadata() -> None:
+    """``--candidates 2`` at k=1 dispatches variant 0 and variant 1, which at
+    temperature 0.0 differ ONLY by seed. The seed was sent top-level, where
+    Ollama does not read it, while ``metadata["seed"]`` recorded it as though it
+    had controlled generation -- so the two candidates were plausibly the same
+    draw and the candidate axis measured nothing."""
+    backend = _server_backend("http://localhost:11434/v1")
+    seeds = []
+    for variant in (0, 1):
+        client = _StrictClient()
+        backend._client = client
+        backend.generate("hello", max_tokens=16, seed=5, variant=variant)
+        seeds.append(client.seen["extra_body"]["options"]["seed"])
+    assert seeds == [5, 6], "the variant must move the seed the sampler sees"
 
 
 def test_a_non_ollama_endpoint_gets_no_extra_body_at_all() -> None:
@@ -466,9 +485,10 @@ def test_the_http_path_still_carries_the_knob_in_the_body() -> None:
         return {"choices": [{"message": {"content": "ok"}}]}
 
     backend._post_once = _fake_post  # type: ignore[method-assign]
-    assert backend.generate("hello", max_tokens=61) == "ok"
-    assert captured["payload"]["options"] == {"num_predict": 61}
+    assert backend.generate("hello", max_tokens=61, seed=7) == "ok"
+    assert captured["payload"]["options"] == {"num_predict": 61, "seed": 7}
     assert captured["payload"]["max_tokens"] == 61
+    assert captured["payload"]["seed"] == 7
 
 
 # --------------------------------------------------------------------------- #
@@ -583,7 +603,17 @@ def test_the_grounded_baseline_is_graded_so_its_accuracy_can_be_attributed() -> 
     verdicts = [r["correct"] for r in records if r["correct"] is not None]
     assert verdicts.count(True) == 2 and verdicts.count(False) == 1, verdicts
     # A single reply agrees with nothing, so it must not enter a calibration.
-    assert all(r["agreement"] == 0.0 for r in records)
+    # This line used to read ``== 0.0`` and that assertion was the bug: 0.0 is a
+    # legal agreement score, and asserting it only confirmed that the sentinel
+    # was present, never that anything excluded it. Nothing did. The test now
+    # checks both halves -- the field is absent, and the calibration says so.
+    assert all(r["agreement"] is None for r in records)
+
+    from swarmbly_v0.experiment import agreement_truth_calibration
+    calibration = agreement_truth_calibration(records)
+    assert calibration["n_items"] == 0
+    assert calibration["excluded_single_replica"] == len(records)
+    assert calibration["mean_agreement"] is None
 
 
 def test_flagging_lift_is_reported_inside_each_category_too() -> None:

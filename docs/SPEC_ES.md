@@ -169,21 +169,121 @@ Un paquete cuyo `lane` sea `SENSITIVE` MUST NOT transmitirse a un nodo fuera del
 ## 9. Empaquetado y presupuesto de contexto
 
 ```
-S       = |Γ| + E[ Σ |predecessors[].summary| ]
-ρ       = ( Σᵢ |Kᵢ| ) / |P|
+S           = |Γ| + E[ Σ |predecessors[].summary| ]
+ρ           = ( Σᵢ |Kᵢ| ) / |P|
+ρ_floor     = ( Σᵢ ( |taskᵢ| + |Γ_min| + |carryᵢ| ) ) / |P|
 ```
 
-El orquestador MUST reportar la ρ alcanzada en los metadatos de la respuesta.
+El orquestador MUST reportar la ρ alcanzada **y** ρ_floor en los metadatos de la respuesta.
 
-**Algoritmo de empaquetado (normativo).**
+### 9.1 Contenido obligatorio: qué es un paquete como mínimo
 
-1. Incluir Γ íntegro.
-2. `budget ← S_target − |Γ|`. Si es negativo, reducir el número de microtareas y replanificar.
-3. Ordenar los predecesores por tipo de arista (`result` antes que `statement`) y después por recencia.
-4. Para cada predecesor mientras quede presupuesto, adjuntar un resumen de longitud `min(budget, cap_per_pred)`.
-5. Emitir.
+Tres partes de un paquete son **obligatorias**. Se cuentan dentro de ρ_floor y
+nunca se financian con el margen discrecional, nunca se recortan y nunca se
+omiten:
+
+1. **El bloque de la microtarea.** Un paquete sin su tarea no es un paquete.
+2. **La cabecera de contrato `Γ_min`** — la representación mínima de Γ
+   (sección 5). Un fragmento puntuado contra un contrato que nunca recibió mide
+   la *ausencia* del contrato, no el coste de fragmentar. Es la misma exigencia
+   que la prohibición de recortar Γ de la sección 5, enunciada del lado del
+   empaquetado.
+3. **El acarreo**, para una microtarea dependiente que *consume el valor de un
+   predecesor*. Una tarea cuyo texto dice «divide el valor neto del paso 2» no
+   se puede responder sin ese valor. Un paquete que no puede enunciar el valor
+   que su tarea consume es **irresoluble por construcción**, y ningún tamaño de
+   fragmento lo arregla; **la resolubilidad manda sobre el presupuesto.** Por eso
+   el acarreo se suma a ρ_floor en el mismo plano que el texto de la tarea, en
+   vez de competir por el margen con el glosario como contexto ordinario.
+
+El acarreo es obligatorio en función del **texto de la microtarea**, no de la
+forma del plan. Un plan enumerado de ítems independientes es secuencial en su
+forma pero no consume nada, y forzar la salida de un predecesor en paquetes que
+no la necesitan hace que el sucesor la reformule como propia. Las
+implementaciones MUST condicionar el acarreo obligatorio a que la tarea consuma
+un valor de un predecesor, y SHOULD usar un acarreo tipado (`[02]=2247`) en vez
+de un resumen en prosa: es la misma garantía a una fracción de los tokens, y es
+lo que hace que el acarreo obligatorio resulte asequible en lugar de ser un
+nuevo impuesto sobre ρ.
+
+Todo lo demás —la nota de longitud, los resúmenes de predecesores no
+consumidos, el glosario, la lista de términos prohibidos y el material de
+expansión determinista con ρ alta— es **contexto discrecional**, adjuntado por
+orden de prioridad con lo que quede.
+
+### 9.2 Algoritmo de empaquetado (normativo)
+
+Sea *B* = ρ_target · |P| el presupuesto total de las microtareas que se van a despachar.
+
+1. Calcular `mandatoryᵢ` para cada microtarea: bloque de tarea + `Γ_min` +
+   acarreo (sección 9.1).
+2. Calcular `ρ_floor`. Si `ρ_target < ρ_floor`, la celda es **inalcanzable**:
+   registrar `rho_reachable = false` y aplicar la sección 9.3. El orquestador
+   MUST NOT satisfacer un objetivo inalcanzable recortando contenido
+   obligatorio; o procede en el piso, o reduce el número de microtareas y
+   replanifica.
+3. `slack ← max(0, B − Σᵢ mandatoryᵢ)`.
+4. Asignar `budgetᵢ ← mandatoryᵢ + slack · desiredᵢ / Σⱼ desiredⱼ`, donde
+   `desiredᵢ` son los tokens que el paquete *i* consumiría sin racionamiento
+   alguno. Un reparto uniforme de `B / N` no es conforme: hambrea precisamente
+   a los paquetes que llevan dependencias.
+5. Para cada paquete, fijar su presupuesto en `max(mandatoryᵢ, budgetᵢ)`, emitir
+   el contenido obligatorio y adjuntar después los bloques discrecionales por
+   orden de prioridad mientras quede sitio, truncando en un límite de token el
+   primer bloque que no quepa y deteniéndose ahí.
+6. Cuando un plan se despacha por niveles topológicos, cada nivel MUST recibir
+   al menos la suma de sus propios `mandatoryᵢ`, y `desiredᵢ` MUST calcularse
+   una sola vez a partir del plan. Recalcularlo por nivel permite que un nodo
+   de integración tardío reclame margen que un nivel anterior ya había
+   reservado, lo que sobrepasa ρ_target exactamente en esa cantidad y crece
+   con *N*.
+7. Ejecutar una pasada de corrección acotada para absorber el residuo que dejan
+   los límites de bloque atómicos, y verificar después las invariantes de la
+   sección 9.4.
 
 Las implementaciones SHOULD preferir fragmentos menos numerosos y más grandes antes que muchos pequeños cuando el presupuesto sea restrictivo.
+
+### 9.3 Una celda por debajo del piso no es una medición de ρ
+
+Por debajo de ρ_floor no hay contexto que racionar: todo paquete se reduce a su
+contenido obligatorio, de modo que **dos etiquetas ρ distintas producen paquetes
+idénticos byte a byte.** Una celda cuyo objetivo queda por debajo de su propio
+piso no lleva por tanto información alguna sobre ρ, sea cual sea el valor que
+nombre su etiqueta, y una curva trazada a través de tales celdas informa de que
+los paquetes que no llevan nada puntúan peor que los que llevan algo: una
+afirmación verdadera sobre el contenido, y no una medición del presupuesto de
+contexto.
+
+En consecuencia:
+
+- Una implementación MUST registrar `rho_reachable` por celda, a partir de un
+  piso que incluya la cabecera de contrato y todo acarreo obligatorio.
+- Una implementación **MUST rehusar reportar una cifra indexada por ρ calculada
+  a partir de una celda por debajo del piso**, incluido cualquier agregado,
+  media, tendencia o veredicto sobre un conjunto de celdas que contenga una.
+  Descartar la fila es conforme; anotarla y publicarla de todos modos, no.
+- Una implementación MUST NOT reportar `rho_reachable = true` a partir de un
+  piso optimista que omita un acarreo que existirá en el momento del despacho.
+
+### 9.4 Invariantes (normativo)
+
+Antes del despacho, y para toda celda alcanzable, el orquestador MUST rehusar
+continuar si no se cumplen las tres:
+
+1. Todo paquete contiene su cabecera de contrato.
+2. Toda microtarea que consuma el valor de un predecesor, y cuya dependencia
+   haya producido un resumen, lo lleva.
+3. La ρ alcanzada queda dentro de una tolerancia declarada respecto de
+   ρ_target (la implementación de referencia usa el 5 %). ρ es la variable
+   independiente; una celda fuera de tolerancia no es la celda que nombra su
+   etiqueta.
+
+Una violación es una negativa a despachar, no una advertencia. Estas
+comprobaciones se dispensan para una celda **inalcanzable**, cuyos paquetes
+están en el piso por definición y cuya ρ alcanzada sobrepasa necesariamente el
+objetivo que no podía cumplir; tal celda puede despacharse igualmente, y la
+sección 9.3 gobierna qué puede reportarse a partir de ella. Dispensar la
+comprobación no es permiso para publicar la celda.
 
 ---
 
@@ -379,6 +479,7 @@ Toda respuesta MUST incluir:
 ```json
 {
   "rho_achieved": 1.47,
+  "rho_target": 1.50, "rho_floor": 1.31, "rho_reachable": true,
   "n_tasks": 6, "n_levels": 2,
   "tau_sem": 0.71, "tau_source": "calibrated:2026-08-13:e5-base",
   "seams": [ { "left": "…", "right": "…", "similarity": 0.68, "path": "bridge" } ],
@@ -400,6 +501,8 @@ Toda respuesta MUST incluir:
 ```
 
 Omitir `coherence` es no conformante. Omitir `consensus` cuando `k > 1` es no conformante. Omitir `routing` es no conformante. Cuando `consensus` sea `null` porque el enjambre redujo *k* a 1, `consensus_waived_reason` MUST indicar por qué (sección 15c, regla 5).
+
+Omitir `rho_floor` o `rho_reachable` es no conformante. Sin ellos, quien consuma la respuesta no puede saber si la celda midió el presupuesto de contexto en absoluto, que es la condición sobre la que gira la sección 9.3.
 
 ---
 
@@ -428,7 +531,7 @@ Omitir `coherence` es no conformante. Omitir `consensus` cuando `k > 1` es no co
 4. La compresión del contrato es el problema abierto de mayor apalancamiento: como Γ es simultáneamente el mecanismo de coherencia, la exposición de privacidad y el término de coste dominante, cualquier reducción de `|Γ|` a igual efecto mejora tres propiedades a la vez.
 5. Que el orquestador pueda ser un modelo de clase 8 B con calidad aceptable está sin resolver y es objeto de la hipótesis H3 del whitepaper.
 6. La granularidad de una unidad semántica —oración frente a cláusula— está sin resolver, y afecta materialmente tanto a la calidad del alineamiento de la sección 14b como a los parámetros del modelo de cobertura.
-7. La correlación entre la puntuación de acuerdo de la sección 14b y la exactitud factual está sin medir, y MUST NOT suponerse hasta que se haya medido.
+7. La correlación entre la puntuación de acuerdo de la sección 14b y la exactitud factual ya se ha medido, y **no se encontró relación alguna.** Contra un juez de clase par salió en *r* = −0,030 sobre 597 unidades semánticas; tres ejecuciones posteriores calificadas contra una clave de respuestas situaron la razón de momios común de Mantel-Haenszel en 3,47, luego 0,26, luego 1,24: por encima, por debajo y a caballo del 1 en la misma pregunta, que es ninguna señal medida tres veces. El mapa de confianza queda por tanto **retirado** como afirmación de fiabilidad, y sale del banco de pruebas V7. El mecanismo de la sección 14b sigue especificado y MAY reportarse, pero una implementación MUST reportar su salida como *acuerdo* y MUST NOT presentarla como exactitud, confianza ni garantía de fiabilidad. Lo que queda abierto no es si la correlación está ahí, sino si es posible recuperar en absoluto alguna señal por unidad de este tipo; un instrumento nuevo, y no repetir este, es la condición previa para reabrirlo.
 8. La federación de registros de enjambres de confianza, la rotación de claves y la latencia de revocación están sin especificar. Mientras lo estén, el modo de fallo de la regla 1 de la sección 15c es una lista blanca desactualizada, no una sin autenticar.
 9. Si un modelo de triaje de entidades nombradas lo bastante pequeño para ejecutarse en el dispositivo solicitante alcanza una exhaustividad aceptable sobre clases de entidades reguladas está sin medir, y la bandera manual existe precisamente porque está sin medir.
 

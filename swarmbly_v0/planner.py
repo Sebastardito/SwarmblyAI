@@ -420,6 +420,24 @@ def _segment(prompt: str, n_tasks: int, answer_sheet: bool = True) -> list[str]:
     ]
 
 
+def expected_entities_for(text: str, limit: int = 3) -> list[str]:
+    """The entities a correct answer about ``text`` should name.
+
+    One extraction rule, applied either to a whole prompt or to one segment of
+    it, so that the standard a coherence metric holds an answer to can be
+    computed *without reference to the partition*. Applied to a segment it gives
+    that task's expected entities; applied to the whole prompt it gives the
+    arm-independent set both the monolithic and the fragmented arm are scored
+    against.
+
+    Before this existed the omission detector took its standard from the union
+    over ``plan.tasks[].expected_entities`` -- three per task, so the standard
+    grew with N: 6 entities at N=2 and 17 at N=8 on the table corpus, against 0
+    for a baseline that passes no plan at all.
+    """
+    return extract_entities(text, min_mentions=1)[:limit]
+
+
 def plan(
     prompt: str,
     backend: Any | None = None,
@@ -468,7 +486,7 @@ def plan(
     tasks: list[Task] = []
     for i, segment in enumerate(segments):
         task_id = f"t{i}"
-        local_entities = extract_entities(segment, min_mentions=1)[:3]
+        local_entities = expected_entities_for(segment)
         expected = [e for e in canonical if e.lower() in segment.lower()] or local_entities
         if not expected and canonical:
             expected = [canonical[i % len(canonical)]]
@@ -529,7 +547,23 @@ def consumes_predecessor(task_text: str) -> bool:
     return bool(_CONSUMES_RE.search(task_text or ""))
 
 
-_CARRY_RE = re.compile(r"^\s*[\[(]?(\d{1,3})[\]).:]\s*(.+?)\s*$", re.MULTILINE)
+# The bracketed form may be followed by anything. The BARE form -- ``07.`` or
+# ``07:`` with no bracket -- must be followed by whitespace, and that is not
+# cosmetic: written with ``\s*`` the pattern reads the decimal point of a number
+# as a label terminator, so a line reading "42.5 km is the remainder" is parsed
+# as item 42 with the value 5.
+#
+# This is the same defect as ``ITEM_LABEL_RE`` in grading.py, in the sibling
+# regex, and here it is worse. ``ITEM_LABEL_RE`` only mis-scores; this one
+# *writes*. ``carry_values`` feeds ``summarize_fragment(typed=True)``, whose
+# output goes into the successor's packet as its predecessor block -- so a
+# phantom ``[42]=5`` is handed to the next model as though a predecessor had
+# produced it. The successor then restates it, which is exactly the restatement
+# ``task_item_scope`` exists to remove, and the bias is one-sided, grows with N,
+# and exists only in the typed-carry arm: it points the same way as the headline
+# that arm was built to produce.
+_CARRY_RE = re.compile(
+    r"^\s*(?:[\[(](\d{1,3})[\])]|(\d{1,3})[.:](?=\s))\s*(.+?)\s*$", re.MULTILINE)
 _CARRY_VALUE_RE = re.compile(r"-?\d[\d,]*(?:\.\d+)?")
 
 
@@ -570,7 +604,9 @@ def carry_values(text: str) -> dict[str, str]:
     """
     out: dict[str, str] = {}
     for match in _CARRY_RE.finditer(text or ""):
-        item_id, body = match.group(1).zfill(2), match.group(2).strip()
+        # Two id groups: the bracketed form and the bare form.
+        item_id = (match.group(1) or match.group(2)).zfill(2)
+        body = match.group(3).strip()
         if not body:
             continue
         # The *last* number in the line, for the same reason grade_answer takes

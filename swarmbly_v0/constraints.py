@@ -48,9 +48,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Collection, Iterable, Mapping, Sequence
 
-from .grading import normalise_text
+from .grading import content_tokens, normalise_text
 from .textutil import count_tokens, split_sentences
 
 __all__ = [
@@ -122,6 +122,21 @@ class CompositionReport:
         it has not been checked.
         """
         return (self.n_satisfied / len(self.results)) if self.results else None
+
+    def score_excluding(self, kinds: "Collection[str]") -> float | None:
+        """The same share, over the checks whose kind is not in ``kinds``.
+
+        Used to drop the checks one arm satisfies mechanically. `paragraph_count`
+        and `words_per_paragraph` are enforced by the assembler in the fragmented
+        arm -- `select_then_splice` emits exactly the requested number of
+        paragraphs -- and by the model alone in the monolithic baseline, which
+        gets no post-processing at all. Comparing the two arms on a score that
+        includes them measures the formatter in one and the model in the other.
+        """
+        kept = [r for r in self.results if r.kind not in set(kinds)]
+        if not kept:
+            return None
+        return sum(1 for r in kept if r.satisfied) / len(kept)
 
     @property
     def failed(self) -> list[ConstraintResult]:
@@ -196,10 +211,27 @@ def check_constraint(text: str, spec: Mapping[str, Any]) -> ConstraintResult:
         # Duplication across fragments is the signature failure of assembly:
         # two workers each define the same term, and each definition is locally
         # fluent, so a transition-based coherence score sees nothing wrong.
-        term = normalise_text(str(spec["term"]))
-        seen = len(_ngrams(normalised.split(), len(term.split()))) and sum(
-            1 for g in _ngrams(normalised.split(), len(term.split())) if " ".join(g) == term
-        )
+        # Token sequences, with sentence-final punctuation stripped from each
+        # token before comparison.
+        #
+        # `normalise_text` deliberately keeps `.` so that `42.5` survives numeric
+        # grading, and this check compares whitespace-split token sequences. A
+        # term ending a sentence therefore yields the token `window.`, which
+        # never equals `window` -- so the check false-PASSED on exactly the
+        # duplication it exists to detect ("Work stops at the tide window. The
+        # tide window closes at noon." counted one occurrence of two) and
+        # false-FAILED a single correct mention that ended a sentence. The error
+        # runs both ways, so it does not cancel and does not bias the score in a
+        # predictable direction.
+        #
+        # It corrupted the editor too: `_describe` filled its repair instruction
+        # from `observed`, telling the editor to remove a term that appeared
+        # once, and the accept gate could not catch it because the gate
+        # re-scores with the same check. 51 `term_once` constraints across 43
+        # prompts were affected.
+        want = content_tokens(str(spec["term"]))
+        term = " ".join(want)
+        seen = sum(1 for g in _ngrams(content_tokens(text), len(want)) if " ".join(g) == term)
         return ConstraintResult(cid, kind, seen == 1, seen, 1, f"term={spec['term']!r}")
 
     if kind == "no_repeated_sentence":
@@ -213,7 +245,15 @@ def check_constraint(text: str, spec: Mapping[str, Any]) -> ConstraintResult:
                                 f"repeated={repeats[:2]}" if repeats else "")
 
     size = int(spec.get("size", 8))
-    tokens = normalised.split()
+    # ``content_tokens`` for the same reason as ``term_once`` fifteen lines above,
+    # and it matters more here. Under ``.split()`` a phrase repeated with its
+    # first occurrence at a sentence end was invisible: the same six-gram scored
+    # observed=0 when the first copy ended a sentence and observed=2 when both
+    # sat mid-sentence. That is one-sided UNDER-detection of repetition, and
+    # cross-fragment repetition is the signature failure this corpus exists to
+    # measure -- so the miss inflated the fragmented arm's constraint score
+    # against its own baseline.
+    tokens = content_tokens(text)
     counts = {}
     for gram in _ngrams(tokens, size):
         counts[gram] = counts.get(gram, 0) + 1

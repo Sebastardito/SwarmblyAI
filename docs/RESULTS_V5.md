@@ -1,5 +1,41 @@
 # V5 — power, the typed carry, and where the confidence map finally has a signal
 
+> ## ⚠ The coherence-tax figures in this document are SUPERSEDED (27 August 2026)
+>
+> The metric that produced them was not arm-neutral. The monolithic baseline was
+> held to a smaller expected-entity set than the fragmented arm, its omissions
+> dirtied one sentence where the fragmented arm's dirtied N, and it could not
+> incur a seam error at all — so the penalty grew with N by construction.
+> Scoring one identical answer through both conventions gives 0.9375 against
+> 0.5000. Every coherence tax and every "monotone in N" claim below is affected;
+> the accuracy, agreement and constraint figures are not.
+>
+> `scripts/rescore.py <run>` recomputes a finished run's tax with the corrected
+> metric from the run's own assembled answers — but only for runs whose traces
+> store the assembler's sentence offsets, which none written before 27 August do.
+> For those, the corrected figure can only come from running them again.
+
+> ## ⚠ Also SUPERSEDED: this document's confidence-map result
+>
+> The banner above exempts the agreement figures. **That exemption no longer
+> holds**, and this document's title and Section 3 are the reason it is stated
+> separately. The "first positive result the confidence map has ever had" was a
+> Mantel-Haenszel common odds ratio of 3.47 on aggregate claims. Two further
+> runs on the declared estimator returned **0.26** and then **1.24, CI
+> [0.25, 3.75]** — below 1, then astride 1 on the largest sample. Three
+> estimates spanning an order of magnitude with inconsistent signs are not a
+> signal that needs more data; they are no signal, measured three times.
+>
+> The confidence map is therefore **withdrawn** — not demoted, not awaiting
+> replication — and dropped from the V7 benchmark. Read this document's
+> agreement section as the first of three disagreeing measurements, and do not
+> quote its odds ratio as a result. The claim in Section 3 that "retiring the
+> confidence map on the earlier evidence would have been wrong" is left standing
+> because it was a fair reading at the time; the conclusion it defends is not.
+> The body below is unaltered, because a withdrawn result that has been deleted
+> cannot be checked.
+
+
 **Run:** `results/v4-20260824-214220`. Twenty prompts across three task shapes,
 five model families over Ollama, transport `openai-sdk`, 0 transport retries,
 embeddings not degraded, τ_sem calibrated to 0.575. ρ ∈ {2.0, 3.0}, N ∈ {2, 4, 6,

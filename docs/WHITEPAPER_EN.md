@@ -29,7 +29,7 @@ Second, I decompose swarm performance into **coverage** (does any worker produce
 
 Third, I specify the wire protocol, the assembly algorithm, the verification scheme and the parameter derivations in implementable detail.
 
-Fourth, I publish a reference harness that measures the **coherence tax** — quality lost to fragmentation and reassembly — as a function of *S*, together with an explicit go/no-go criterion under which the architecture should be abandoned. **That measurement has now been made.** Against three model families served locally, the coherence tax falls monotonically in *S* — 24.1 %, 20.4 %, 16.1 %, 13.7 % across the swept range — and the abandonment criterion is met in three task categories. In two of those the tax is **negative**: fragmenting the problem and reassembling it produced a *better* answer than the monolithic baseline, by as much as 9.0 %. The companion V3c run finds **no relationship between inter-replica agreement and judged quality** (*r* = −0.030 over 597 semantic units), which does not support the confidence map described below; Section 11.3 reports both results in full, including why the second is unsupported rather than refuted.
+Fourth, I publish a reference harness that measures the **coherence tax** — quality lost to fragmentation and reassembly — as a function of *S*, together with an explicit go/no-go criterion under which the architecture should be abandoned. **That measurement has now been made, and the criterion was not met.** On a corrected instrument, against a cell named before the run and a control required to fail, the tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is **+3.26 %, 95 % CI [−0.02 %, +6.93 %]** — the point estimate clears 5 % and the interval does not, and the criterion was written against the interval. The distribution is the more informative result: the median prompt loses 1.16 % and **8 of 16 lose nothing**, so fragmentation appears close to free on part of this corpus and clearly not free on the rest. An earlier version of this paper reported the tax falling 24.1 % → 13.7 % across *S* and called the prediction confirmed; that result is **withdrawn** — the ρ axis had not moved (13 of 96 cells sat above their packing floor) and the coherence metric was not arm-neutral (+46.7 % of apparent tax on text that never changed). The companion confidence-map claim is also **withdrawn**: agreement between independent replicas showed no relationship to judged quality (*r* = −0.030 over 597 units), and three subsequent ground-truth runs put the common odds ratio at 3.47, 0.26 and 1.24 — no signal, measured three times. Section 11.3 reports the withdrawal in full and §11.3a the measurement that replaces it.
 
 Fifth, I introduce a second routing axis, orthogonal to content sensitivity: a client-side privacy classifier assigns every request to a **tier** — an open volunteer mesh, a permissioned *trusted swarm* whose membership is a cryptographic public-key whitelist under mutual TLS, or purely local execution — and the same protocol and the same client run at all three. This is what makes the architecture deployable where an anonymous volunteer cannot lawfully be a data processor, and it separates two roles the replica count *k* had been serving at once: defence against dishonest workers, which a whitelist removes, and the independent replicas that the confidence map requires, which it does not.
 
@@ -77,11 +77,11 @@ The design vocabulary is borrowed deliberately from genome shotgun assembly. A r
 
 ### 1.3 What this makes possible
 
-The first measurement is now in, and the central prediction held: the coherence tax falls monotonically in the context budget, and in three task categories it clears the abandonment threshold that was fixed before any data existed — in two of them by producing a *better* answer than the monolithic baseline (Section 11.3). One run, at one scale, on eight prompts — one of which produced no usable baseline — does not make a protocol proven, and Section 11 still states the measurement under which I would conclude the design fails. What it does mean is that the falsifiable core of Section 4 survived its first contact with evidence, and that four things follow which are not available today.
+The first measurement is now in, and **the criterion was not met**: at ρ = 3.5, *N* = 2, *k* = 1 on 16 held-out prompts the coherence tax is +3.26 % with a 95 % CI of [−0.02 %, +6.93 %], and the criterion is written against the upper bound (Section 11.3a). An earlier version of this section said the central prediction held and cited a tax falling monotonically in the context budget; that claim is withdrawn — the ρ axis had not moved, because 13 of 96 cells sat above their own packing floor. What survives is narrower and better founded: the median prompt loses 1.16 %, **8 of 16 lose nothing**, and the control at *N* = 8 fails as it was required to. So fragmentation is close to free on part of this corpus and clearly not on the rest, the falsifiable core of Section 4 has now produced a real negative, and the four things that follow below are motivated by a measured bimodal cost rather than by a confirmed trend.
 
 **1. Serving capacity without owning it.** A participant contributes a machine that already exists and already draws power when idle. The entry requirement is a complete small model, not a shard of a large one, which places the addressable hardware pool orders of magnitude above what pipeline-parallel schemes can reach. Capacity then scales with *participation* rather than with capital expenditure — a growth curve that no centralized operator can match, because theirs is bounded by what they can build and finance.
 
-**2. A confidence map that centralization structurally cannot produce — a mechanism, not yet a demonstrated benefit.** Section 8.4b develops this. It was, in an earlier draft of this paper, described as the most immediately valuable user-facing property of the architecture; the first measurement (Section 11.3) does not support that description and it has been withdrawn. What remains is a mechanism whose value is unmeasured. Because a micro-task is answered by *k* nodes running *different* model families, the answers can be aligned against each other and the agreement scored per semantic unit. Regions where independent models converge are reported as such; regions where they diverge are surfaced as low-confidence, exactly as an assembler reports per-base quality rather than a uniformly confident sequence. **A provider running one model has nothing to align.** The redundancy that decentralization requires turns out to produce a signal that centralization cannot obtain at any price. **Whether that signal carries information about correctness is a separate question, and the first attempt to measure it came back flat** (Section 11.3). The mechanism is real; its usefulness is unproven, and the experiment that would settle it is specified in Section 11.4.
+**2. A confidence map that centralization structurally cannot produce — a mechanism whose claimed benefit has been measured and withdrawn.** Section 8.4b develops this. It was, in an earlier draft of this paper, described as the most immediately valuable user-facing property of the architecture; the measurements do not support that description and it has been withdrawn. What remains is a mechanism that reports *where* independent replicas diverged, with no established relationship between that signal and quality. Because a micro-task is answered by *k* nodes running *different* model families, the answers can be aligned against each other and the agreement scored per semantic unit. Regions where independent models converge are reported as such; regions where they diverge are surfaced as low-confidence, exactly as an assembler reports per-base quality rather than a uniformly confident sequence. **A provider running one model has nothing to align.** The redundancy that decentralization requires turns out to produce a signal that centralization cannot obtain at any price. **Whether that signal carries information about correctness is a separate question, and it has now been answered: no.** The first attempt came back flat (*r* = −0.030 over 597 units) against a judge too saturated to discriminate; the ground-truth experiment that was to settle it has since been run three times and returned common odds ratios of 3.47, 0.26 and 1.24 — above, below and astride 1 on the same question. The mechanism is real and the divergence report is a real capability. The reliability claim is **withdrawn** (Sections 8.4b, 11.3, L13), not awaiting further measurement.
 
 **3. Context bounded by the user's machine rather than by a vendor's product decision.** Fragmentation relocates the context limit from a fixed window set by a provider to a function of the client's assembly time and memory. With hierarchical assembly the working memory required grows logarithmically with total volume, so the practical ceiling for a modern personal machine sits far above what an individual user would exhaust — and, unlike a vendor's window, it rises when the user upgrades rather than when a price tier changes.
 
@@ -669,7 +669,7 @@ For a user, this is the difference between an answer and an answer that tells yo
 **Three honest caveats.**
 
 1. **Agreement is not truth.** Models trained on overlapping corpora share errors. Convergence on a common falsehood is a correlated failure that alignment cannot see. This is precisely why Section 7.6 mandates **cross-family diversity** among replicas: the signal is only as strong as the independence of the samples.
-2. **It must be validated, not assumed — and the first attempt to validate it failed.** The correlation between agreement score and factual correctness is an empirical quantity. Measured against a peer-class judge over 597 semantic units, it came back at *r* = −0.030 with flat, non-monotone bins (Section 11.3). That measurement is weak on its own terms — the judge accepted 93.3 % of units, leaving almost no variance for a correlation to appear against — so it leaves the mechanism **unsupported rather than refuted**. Section 11.4 specifies the experiment against ground-truth datasets that would settle it. Until that runs, confidence labels are reported as *agreement*, never as *accuracy*, and the map is not offered as a reliability guarantee.
+2. **It had to be validated, not assumed — it was, four times, and it is now withdrawn.** The correlation between agreement score and factual correctness is an empirical quantity. Measured against a peer-class judge over 597 semantic units it came back at *r* = −0.030 with flat, non-monotone bins (Section 11.3). That measurement was weak on its own terms — the judge accepted 93.3 % of units, leaving almost no variance for a correlation to appear against — so at the time it left the mechanism *unsupported rather than refuted*, and Section 11.4 specified the ground-truth experiment that would settle it. **That experiment has now run three times, and it settled it in the negative.** Graded against an answer key, the Mantel-Haenszel common odds ratio came out at **3.47, then 0.26, then 1.24** — above 1, below 1 and astride 1 on the same question. Three mutually contradictory estimates are not a weak signal; they are no signal, measured three times. The claim that agreement predicts quality is therefore **withdrawn, not demoted**, and it is dropped from the V7 benchmark. The mechanism remains specified and still reports *where* independent replicas diverged; what it may not do is present that as evidence of correctness. Confidence labels are reported as *agreement*, never as *accuracy*, and the map is not offered as a reliability guarantee.
 3. **It costs *k*×.** Consensus is applied by criticality, not universally.
 
 ### 8.5 Threshold calibration
@@ -851,11 +851,77 @@ It reports the entity-grid score, the seam-error taxonomy, an overall judge scor
 
 > **Go/no-go.** There must exist a ρ at which coherence degradation is **below 5 % relative to monolithic generation, in at least one task category.** If no such ρ exists, the architecture is not viable for generative assembly, and the project should either stop or restrict itself to workloads with no seam to break — classification, extraction, labelling. The harness prints this verdict on every run.
 
+**How that criterion is applied, and why the form matters.** "Below 5 %" is a claim about a quantity estimated from a finite corpus, so the criterion is discharged against an **interval, not a point estimate**: the upper bound of a 95 % bootstrap interval, clustered by prompt, must fall below 5 % in the named cell. That clause is part of the original pre-registration and not a later addition — which is the only reason it is worth anything, since a criterion tightened after the data arrive proves nothing and a criterion loosened after they arrive proves less. It is also what decides the case in §11.3a, where the point estimate falls below 5 % and the interval does not. Reading the criterion off the point estimate there would convert a pre-registered test into a post-hoc one.
+
 The intent of stating a stopping rule before collecting data is to make the result informative in both directions.
 
 ### 11.3 First measurements
 
-V0 and the agreement calibration have now been run against real models. What follows is the whole result, including the part that does not support a claim made earlier in this paper.
+> **§11.3 as originally written is WITHDRAWN. Its replacement is §11.3a below.**
+> The coherence-tax table in this section was produced by an instrument with two
+> independent defects, and no figure in it can be repaired from the stored data.
+>
+> **The ρ axis never moved.** A cell measures a context budget only if the budget
+> exceeds the prompt's *packing floor* — what the micro-tasks and their contract
+> headers cost before any context is added. Below it, `build_packet` falls back to
+> `budget = max(mandatory_tokens, …)`, every packet collapses to its bare task,
+> and two different ρ labels produce byte-identical packets. On this corpus the
+> floors are 1.42–1.68 at N = 2, 1.85–2.35 at N = 4, and 2.70–3.71 at N = 8,
+> against a sweep of ρ ∈ {1.00, 1.25, 1.50, 2.00}: **13 of 96 cells were above
+> floor, and the ρ = 1.00 and ρ = 1.25 rows contained none.** The overshoot is
+> visible in the published table itself — ρ achieved 1.17 against a target of
+> 1.00 — and was read as tolerance rather than as a packet that could not fit.
+> "The tax falls monotonically in ρ" therefore restates that packets holding
+> nothing score worse than packets holding something.
+>
+> **The coherence metric was not arm-neutral.** The expected-entity set grew with
+> N, omissions were attributed round-robin across fragment heads, and seam-local
+> error classes could only fire where seams existed. The same sixteen-sentence
+> text scored **0.9375 as monolithic and 0.5000 at N = 8: +46.7 % of apparent tax
+> on text that never changed.**
+>
+> Both are fixed and regression-tested, and `publishable()` now drops a
+> below-floor row from every figure rather than annotating it. The section is
+> kept unaltered below the replacement, because a withdrawn result that has been
+> deleted cannot be checked.
+
+### 11.3a The measurement that replaces it
+
+**Design.** One causal claim, one cell named before the run, a control required
+to fail, and a corpus split so that no threshold is fitted on the data it later
+judges. The statistical unit is the **prompt**, not the sentence — the earlier
+analysis treated sentences as independent within a prompt, which understates
+every interval — and intervals are bootstrap percentiles clustered by prompt.
+
+**Result.** `table_summary`, ρ = 3.5, N = 2, k = 1, on the 16 held-out prompts:
+
+| | |
+|---|---|
+| Coherence tax | **+3.26 %** |
+| 95 % CI (clustered by prompt) | **[−0.02 %, +6.93 %]** |
+| Criterion | upper bound below 5 % |
+| Verdict | **NOT MET** — 1.93 points short |
+| Median prompt effect | +1.16 % |
+| Prompts at or below zero | **8 of 16** |
+| Control, N = 8, k = 1 (required to fail) | +17.6 % — behaved |
+
+The point estimate clears the threshold and the interval does not. The criterion
+was written against the upper bound for exactly this case, and it is not being
+rewritten now that the case has arisen.
+
+The distribution is the more informative result. Half the corpus loses nothing
+at all; the rest carries the mean. That is not "fragmentation costs 3 %" — it is
+"fragmentation is free on some workloads and not on others, and the corpus does
+not yet say which is which." Identifying the split is the next measurement,
+and it is a better question than the one the criterion asks.
+
+**Scope.** 16 prompts, one seed, 2–3B models, N = 2. A result at the low end of
+the capability range the protocol targets, which bounds the architecture there
+and does not settle it at 8B.
+
+---
+
+**What follows is the withdrawn §11.3, unaltered.** V0 and the agreement calibration have now been run against real models. What follows is the whole result, including the part that does not support a claim made earlier in this paper.
 
 **Setup.** Three model families served by a local Ollama — `llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b` — with `nomic-embed-text` for embeddings. Eight prompts across eight categories, one seed, temperature 0. τ_sem was calibrated on **72 labelled pairs** (F₀·₅ = 0.988, precision 1.00, recall 0.944) and came out at **0.51**. The run metadata records that this was not the mock backend and that the embedding route did not degrade; the numbers below are void without both, which is why the harness reports them.
 
@@ -908,7 +974,7 @@ That distinction does not rescue the claim. An unsupported property cannot be ad
 
 **V3 — real network, 20–50 nodes.** Integrate the commitment scheme [68] and sampled audit [69]. Deliberately inject dishonest nodes: undersized models, plausible fabrications, prompt injection. Require >95 % detection at under 5 % verification overhead.
 
-**V3c — agreement calibration.** Measure the correlation between the per-unit agreement score of Section 8.4b and factual correctness, against ground-truth datasets, with replicas drawn from deliberately different model families. Report calibration curves per task category. Until this experiment runs, confidence labels are reported as *agreement* and never as *accuracy*; a flat or negative correlation would invalidate the confidence map as a reliability signal, and that outcome must be publishable.
+**V3c — agreement calibration. Run, and closed in the negative.** The specification was: measure the correlation between the per-unit agreement score of Section 8.4b and factual correctness, against ground-truth datasets, with replicas drawn from deliberately different model families, and treat a flat or negative correlation as invalidating the confidence map as a reliability signal — with that outcome required to be publishable. It has now been run three times against an answer key, returning common odds ratios of **3.47, 0.26 and 1.24**. Three mutually contradictory estimates on one question invalidate the signal exactly as the pre-registration said they would, so the confidence map is **withdrawn** (Sections 8.4b, 11.3, L13) and dropped from the V7 benchmark. Confidence labels remain reported as *agreement* and never as *accuracy*. This phase is closed; reopening it would require a new instrument, not a re-run of this one.
 
 **V4 — environmental measurement.** Instrument and publish SCI against a centralized baseline.
 
@@ -916,8 +982,8 @@ That distinction does not rescue the claim. An unsupported property cannot be ad
 
 | Metric | Definition | v1.0 target | Measured (Section 11.3) |
 |---|---|---|---|
-| Coherence tax | Δ seam-free sentence fraction vs monolithic | <5 % | **met in 3 of the 7 categories that produced a measurement**; 13.7 % overall at ρ = 2.0 |
-| Operating ρ | Input tokens per prompt token | <2.0 | not measured yet |
+| Coherence tax | Δ seam-free sentence fraction vs monolithic | upper bound of the 95 % CI below 5 % | **NOT MET** (§11.3a): +3.26 %, CI [−0.02 %, +6.93 %], 16 held-out prompts at ρ = 3.5, N = 2, k = 1 |
+| Operating ρ | Input tokens per prompt token | <2.0 | **not attainable on this corpus.** The packing floor at N = 2 is 1.20 on `tables24` and 1.42–1.68 on the V0 corpus, so a target of 2.0 leaves almost no context above the mandatory task and header. A target of <2.0 is not a target the design can meet at any useful N; the figure needs re-deriving from the floor rather than asserting. |
 | Effective speedup | vs monolithic, same model | >1.5× | not measured yet |
 | Speedup vs honest baseline | vs speculative decoding | Reported even when <1 | not measured yet |
 | p95 latency under churn | *p*=0.10, *N*=8 | <2× failure-free | not measured yet |
@@ -955,7 +1021,7 @@ Stated plainly and at length. A specification whose failure modes are documented
 
 **L12 — A trusted swarm relocates trust; it does not remove it.** See Section 9.5. Whoever controls the membership whitelist controls the swarm, so registry governance becomes a security-critical function; mutual TLS authenticates an identity, not the model behind it; and a swarm that lowers *k* to 1 gives up the confidence map of Section 8.4b along with the adversarial redundancy it no longer needs. The tier is a change of threat model, and the specification requires it to be declared rather than assumed.
 
-**L13 — The confidence map has no demonstrated value.** See Section 11.3. Measured against a peer-class judge, per-unit agreement did not predict judged acceptability (*r* = −0.030 over 597 units), and *k* > 1 cost 17 to 20 points of coherence on the same run. The mechanism is disclosed and specified; its benefit is not established, and the measurement that would establish it has not yet been run. Anyone building on E16 should treat it as an unvalidated hypothesis.
+**L13 — The confidence map is withdrawn.** See Section 11.3. Measured against a peer-class judge, per-unit agreement did not predict judged acceptability (*r* = −0.030 over 597 units), and *k* > 1 cost 17 to 20 points of coherence on the same run. That left it unsupported rather than refuted, against a judge too saturated to discriminate. The ground-truth experiment has since been run three times and returned common odds ratios of **3.47, 0.26 and 1.24** — above, below and astride 1 on the same question. This is no longer an unvalidated hypothesis awaiting its measurement; it is a claim that has been measured and has not survived, so it is **withdrawn** rather than demoted, and dropped from the V7 benchmark. The mechanism stays disclosed and specified, and reporting *where* replicas diverged is still a real capability; asserting that convergence indicates correctness is not. Anyone building on E16 should build on the divergence report, not on the reliability claim.
 
 **L14 — The second coherence instrument does not function on short answers.** See Section 11.3. The entity grid returned monolithic baselines between 0.000 and 0.114 across the whole corpus, which makes every relative comparison built on it a ratio over a near-zero denominator. Either the evaluation corpus moves to longer outputs or the instrument is replaced; until then this paper has one working coherence instrument, not two, and a single mechanical proxy is thinner evidence than the design deserves.
 
@@ -1013,7 +1079,7 @@ Three consequences follow that I did not anticipate when this work began, and th
 
 The case against is equally specific and is stated at length in Section 12. Independent generation loses quality for reasons that are theoretical rather than incidental. The client-side model on which the design depends sits at the weak end of measured planning ability. Volunteer computing has been contracting for twenty years, and no incentive design in this paper is yet a demonstrated answer to why that reverses.
 
-Both cases are real, and neither is settled by argument. What settles it is a measurement. The first one is now in: against three local model families the coherence tax falls monotonically as the context budget rises, and the abandonment threshold fixed in advance is cleared in three task categories — while the confidence map, the property this paper was proudest of, came back with no measurable relationship to quality. What remains to settle is whether a context budget exists that satisfies coherence, privacy, verifiability and worker capability simultaneously, at a cost below the value of the aggregated capacity. I have specified the protocol in enough detail to implement, stated the hypotheses that would falsify it, published the harness that measures the first of them, and committed in advance to the threshold at which I would conclude the design does not work.
+Both cases are real, and neither is settled by argument. What settles it is a measurement. The measurements are now in, and both went against the paper. The coherence tax at ρ = 3.5, *N* = 2, *k* = 1 over 16 held-out prompts is +3.26 % with a 95 % CI of [−0.02 %, +6.93 %], and the abandonment threshold fixed in advance is written against that upper bound: **it is not met**, by 1.93 points (§11.3a). An earlier version of this conclusion claimed a tax falling monotonically in the context budget and a threshold cleared in three task categories; that claim is withdrawn, because the ρ axis had not moved and the coherence metric was not arm-neutral. The confidence map, the property this paper was proudest of, is withdrawn outright. What survives is a measured, bimodal cost — the median prompt loses 1.16 % and 8 of 16 lose nothing — and a control that failed as it was required to. What remains to settle is what separates the half of the corpus that fragments for free from the half that does not, and whether a context budget exists that satisfies coherence, privacy, verifiability and worker capability simultaneously, at a cost below the value of the aggregated capacity. I have specified the protocol in enough detail to implement, stated the hypotheses that would falsify it, published the harness that measures the first of them, and committed in advance to the threshold at which I would conclude the design does not work.
 
 If it does work, the result is not a cheaper way to buy what is already sold. It is inference capacity that grows with the number of people who participate rather than with the amount of capital available to build, held under a licence and a governance structure designed so that no single party can enclose it. That is worth attempting even at a substantial probability of failure, and it is worth attempting in the open, where it can be checked.
 

@@ -8,7 +8,16 @@
 #   ./scripts/run_ollama.sh v3c-gt    ~4-6 h    agreement vs GROUND TRUTH (V3c proper)
 #                                               15 prompts x 150 items x 5 families
 #   ./scripts/run_ollama.sh v3c-ff    ~2-3 h    free-form answers + composition
+#   ./scripts/run_ollama.sh v4        ~16 h     the whole grid: size, editor, carry
+#   ./scripts/run_ollama.sh tables-dev   ~1 h   ONE hypothesis, on 8 prompts
+#   ./scripts/run_ollama.sh tables-final ~2 h   the same, evaluated once on 16
 #   ./scripts/run_ollama.sh all       ~5-7 h    v0 + v3c, sequentially
+#
+# tables-dev and tables-final are the shape the later work takes: one causal
+# claim per run, a declared cell, a control that can fail, and a corpus split so
+# that no threshold is fitted on the data it then judges. The wide grids above
+# answer the maximum-statistic question -- "does some cell pass?" -- which is
+# the question that made V0's go/no-go unfalsifiable.
 #
 # Run v3c-gt before v3c if you only have time for one. The v3c tier grades with
 # a peer-class judge, which is the instrument that made the 14 August result
@@ -84,6 +93,28 @@ k can never exceed the family count: the v3c tiers sweep k up to 5, so five \
 distinct families is the floor."
 echo "  families:     $NFAM distinct"
 
+# The highest k this tier will ask for. The header of this script has claimed
+# since it was written that the script "refuses to proceed ... if the highest k
+# in a tier exceeds the family count". It did not: only the >=5 check above
+# existed, and nothing read the tier's own --k list. That is not a hypothetical
+# gap -- it is exactly the contamination that ruined the 24 August k=5 arm, where
+# three families were loaded, k swept to 5, and `select_diverse_nodes` quietly
+# repeated two of them. Mean agreement moved 0.705 -> 0.700 from k=3 to k=5,
+# which is the signature of adding echoes rather than estimators, and the arm had
+# to be discarded after the fact. `n_families_mean` recorded the truth in a
+# column no gate read.
+case "$TIER" in
+  v3c|v3c-gt|v3c-ff|all) TIER_MAX_K=5 ;;
+  tables-dev|tables-final|v4) TIER_MAX_K=3 ;;
+  *) TIER_MAX_K=1 ;;
+esac
+[ "$NFAM" -ge "$TIER_MAX_K" ] || die "tier '$TIER' sweeps k up to $TIER_MAX_K but \
+only $NFAM distinct families are available. select_diverse_nodes would repeat a \
+family to fill k, and replicas drawn from one lineage share their errors: they \
+agree confidently on the same mistake. The k=$TIER_MAX_K arm would be \
+contaminated upward and unusable, which has already happened once."
+echo "  max k here:   $TIER_MAX_K (families available: $NFAM)"
+
 # pull what is missing
 HAVE="$(ollama list 2>/dev/null | tail -n +2 | awk '{print $1}')"
 for entry in $(echo "$MODELS" | tr ',' ' '); do
@@ -130,6 +161,49 @@ if not e.available:
 PY
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
+TIERS_FAILED=""
+
+# --------------------------------------------------------------------------- #
+# Every tier used to end its run line with `| tee "$out/run.log" || true`.
+#
+# `set -o pipefail` is on, and the Python layer raises PacketInvariantError when
+# a packet loses its contract header, when a dependent task loses its carry, or
+# when the achieved rho misses its target -- the three gates that exist to stop
+# an invalid run reaching a table. `|| true` discarded every one of them. The
+# tier then printed "-> report.html" and "== Done ==", and `all` proceeded to
+# the next tier, so an aborted run was reported to the operator as a completed
+# one and the only trace was a stack trace in the middle of a log nobody reads
+# after a six-hour sweep.
+#
+# `write_csv` runs once after the whole sweep, so an aborted tier leaves no
+# results.csv at all -- the data was never at risk. The operator was.
+#
+# So: a failed tier is recorded, its directory is stamped FAILED so that a
+# reader who finds the directory later cannot mistake it for a completed run,
+# and the script exits non-zero at the end. Subsequent tiers still run, because
+# they are independent measurements and an overnight sweep should not lose four
+# of them to the first one that broke.
+# --------------------------------------------------------------------------- #
+run_tier() {
+  local name="$1" out="$2"; shift 2
+  local status=0
+  "$@" 2>&1 | tee "$out/run.log" || status=$?
+  if [ "$status" -ne 0 ]; then
+    {
+      echo "tier=$name"
+      echo "exit_status=$status"
+      echo "stamp=$STAMP"
+      echo "This run ABORTED. Any file in this directory is partial output from"
+      echo "a run the harness refused to complete. Do not quote a number from it."
+    } > "$out/FAILED"
+    warn "TIER '$name' FAILED (exit $status). Marked $out/FAILED."
+    warn "Nothing in $out is publishable. See the end of $out/run.log."
+    TIERS_FAILED="$TIERS_FAILED $name"
+    return 1
+  fi
+  echo "  -> $out/report.html"
+  return 0
+}
 
 run_v0() {
   local out="results/v0-$STAMP"
@@ -139,12 +213,12 @@ run_v0() {
   echo "  fragmentation and reassembly, and whether any rho gets it under 5%."
   echo "  Output: $out"
   mkdir -p "$out"
-  python3 -m swarmbly_v0 run \
+  run_tier v0 "$out" \
+    python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --rho 1.0,1.25,1.5,2.0 --n 2,4,8 --k 1 \
     --candidates 2 --seed 0 \
-    --out "$out" 2>&1 | tee "$out/run.log" || true
-  echo "  -> $out/report.html"
+    --out "$out" || return 1
 }
 
 run_v3c_ff() {
@@ -181,12 +255,13 @@ run_v3c_ff() {
   echo "                                       repetition located."
   echo "  Output: $out"
   mkdir -p "$out"
-  python3 -m swarmbly_v0 run \
+  run_tier v3c-ff "$out" \
+    python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/free_form.json \
     --rho 1.5 --n 3 --k 1,3,5 \
     --candidates 2 --seed 0 \
-    --out "$out" 2>&1 | tee "$out/run.log" || true
+    --out "$out" || return 1
   echo "  -> $out/composition_traces.md"
   echo "  -> $out/summary.json"
 }
@@ -220,13 +295,13 @@ run_v3c_gt() {
   echo "                                         the block means anything."
   echo "  Output: $out  (see ground_truth_items.csv for every graded item)"
   mkdir -p "$out"
-  python3 -m swarmbly_v0 run \
+  run_tier v3c-gt "$out" \
+    python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/ground_truth.json \
     --rho 1.5 --n 4 --k 1,3,5 \
     --candidates 2 --seed 0 \
-    --out "$out" 2>&1 | tee "$out/run.log" || true
-  echo "  -> $out/report.html"
+    --out "$out" || return 1
   echo "  -> $out/summary.json  (truth_calibration)"
 }
 
@@ -240,12 +315,12 @@ run_v3c() {
   echo "  map is decoration and the paper must say so."
   echo "  Output: $out"
   mkdir -p "$out"
-  python3 -m swarmbly_v0 run \
+  run_tier v3c "$out" \
+    python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --rho 1.5 --n 4 --k 1,3,5 \
     --candidates 2 --seed 0 \
-    --out "$out" 2>&1 | tee "$out/run.log" || true
-  echo "  -> $out/report.html"
+    --out "$out" || return 1
 }
 
 run_v4() {
@@ -315,14 +390,209 @@ run_v4() {
   echo "  Output: $out"
   [ -f prompts/complex.json ] || python3 scripts/make_complex.py
   mkdir -p "$out"
-  python3 -m swarmbly_v0 run \
+  run_tier v4 "$out" \
+    python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/complex.json \
     --rho 3.5,4.5 --n 2,4,6,8 --k 1,3 --editor --typed-carry \
     --candidates 2 --seed 0 \
-    --out "$out" 2>&1 | tee "$out/run.log" || true
+    --out "$out" || return 1
   echo "  -> $out/summary.json"
   echo "  -> $out/composition_traces.md"
+}
+
+run_tables_dev() {
+  local out="results/tables-dev-$STAMP"
+  bold ""
+  bold "== tables-dev — ONE question, on the half of the corpus you may look at =="
+  echo ""
+  echo "  THE HYPOTHESIS, stated before the run so it can fail:"
+  echo "    table_summary at rho=3.5, N=2 costs less than 5 % against its"
+  echo "    monolithic baseline -- the upper bound of the interval below 0.05,"
+  echo "    not the point estimate."
+  echo ""
+  echo "  This is the only cell this project has produced that ever came close."
+  echo "  The run of 26 August put it at +5.8 % with a 95 % interval of"
+  echo "  [-2.2 %, +14.5 %]: not a pass, not a refutation. The interval is that"
+  echo "  wide because it rests on EIGHT prompts. Sixteen more roughly halve it."
+  echo ""
+  echo "  THE FAILING CONTROL: N=8 runs in the same grid. V6 put it at +12.1 %."
+  echo "  A test whose control cannot fail proves nothing, so if N=8 also passes"
+  echo "  the instrument is not discriminating and neither number is evidence."
+  echo ""
+  echo "  WHAT IS DELIBERATELY ABSENT: no editor, no typed carry, one rho. Each"
+  echo "  is a separate causal claim and this run makes one. The carry has"
+  echo "  nothing to type in a table -- V6 measured it at -0.003 there -- and"
+  echo "  the editor's effect on constraints is a different question from the"
+  echo "  cost of fragmentation."
+  echo ""
+  echo "  WHAT MAY BE DECIDED HERE, and nowhere after: tau_sem, the agreement"
+  echo "  bin edges, the flagging rate, and which arm gets reported. These eight"
+  echo "  prompts are the whole budget for looking at data. The sixteen in"
+  echo "  --split final are evaluated once, afterwards, with nothing left to"
+  echo "  choose, and the runner refuses to start them without --tau."
+  echo ""
+  echo "  SECONDARY, and dev-only: the aggregate AUC. V5 read 0.605, V6 read"
+  echo "  0.481 once the single-replica sentinel was removed -- at chance, with"
+  echo "  a curve that stops being monotonic in the bin holding 59 % of the"
+  echo "  items. k=1,3 is swept so that question has data, but it is not what"
+  echo "  this run is powered for and no threshold rides on it."
+  echo ""
+  echo "  Read, in order:"
+  echo "    go_no_go                        -- declared_cell must read"
+  echo "                                      {category: table_summary, rho: 3.5,"
+  echo "                                      n_tasks: 2}. n_prompts, not"
+  echo "                                      n_observations, is the sample size."
+  echo "    fragment_size_curve.points      -- N=2 against N=8, the control."
+  echo "    truth_calibration.by_claim      -- excluded_single_replica must be"
+  echo "                                      non-zero and the remaining n must"
+  echo "                                      be k=3 rows only."
+  echo "  Output: $out"
+  [ -f prompts/tables24.json ] || python3 scripts/make_tables.py
+  python3 scripts/make_tables.py --verify \
+    || die "prompts/tables24.json does not match what make_tables.py builds; a
+    threshold frozen against the old digest no longer applies."
+  mkdir -p "$out"
+  run_tier tables-dev "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/tables24.json --split dev \
+    --rho 3.5 --n 2,8 --k 1,3 \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  tau_sem fitted on dev. Carry it to the final half:"
+  python3 -c "import json,sys;print('    --tau', json.load(open('$out/run_metadata.json'))['tau_sem'])" 2>/dev/null || true
+  echo "  -> $out/summary.json"
+}
+
+run_tables_final() {
+  local out="results/tables-final-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "name the dev run this final run inherits its threshold from:
+    bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>
+
+  tau_sem is fitted inside a run. Passing it by hand as a number is one typo
+  away from a threshold that was never fitted on anything, and it cannot carry
+  WHICH CORPUS it was fitted on -- which matters, because the table corpus
+  changed on 27 August when a tense directive was added. Naming the dev run
+  lets this script read both the threshold and the corpus digest and check them."
+  [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist."
+
+  local tau dev_sha now_sha dev_split
+  tau="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json'))['tau_sem'])")"
+  dev_sha="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_frozen_sha256',''))")"
+  dev_split="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_split',''))")"
+  # The FROZEN digest -- over id, split and prompt text -- which is what
+  # make_tables.py --verify prints and what a frozen threshold is pinned to.
+  # Not the raw file digest: those differ, and comparing the wrong pair would
+  # either never match or match when it should not.
+  now_sha="$(python3 -c "import json;print(json.load(open('prompts/tables24.json'))['_frozen']['sha256'])")"
+
+  [ "$dev_split" = "dev" ] || die "$dev ran on '$dev_split', not on the dev split.
+  A threshold fitted on the final half, or on the whole corpus, is fitted on the
+  data it is about to judge. That is the leakage the split exists to close."
+
+  if [ -z "$dev_sha" ]; then
+    die "$dev has no corpus_frozen_sha256: it predates the digest being recorded, so
+  there is no way to confirm its threshold was fitted on THIS corpus. Re-run
+  tables-dev before the final half. Roughly one hour, and it also picks up the
+  coherence-metric correction of 27 August."
+  fi
+  if [ "$dev_sha" != "$now_sha" ]; then
+    die "the corpus changed since $dev ran.
+    dev:  $dev_sha
+    now:  $now_sha
+  tau_sem = $tau was fitted on different prompts, so applying it here would
+  carry a threshold across a corpus change. Re-run tables-dev on this corpus
+  first: bash scripts/run_ollama.sh tables-dev"
+  fi
+  bold ""
+  bold "== tables-final — evaluated once, with nothing left to choose =="
+  echo ""
+  echo "  THE HYPOTHESIS -- the original pre-registration, unchanged:"
+  echo ""
+  echo "    table_summary at rho=3.5, N=2, k=1 costs less than 5 % against its"
+  echo "    monolithic baseline."
+  echo ""
+  echo "    Estimator:  mean relative degradation on the ARM-COMPARABLE score."
+  echo "    Interval:   cluster bootstrap over prompts."
+  echo "    Passes if:  the UPPER bound of the 95 % interval is below 0.05."
+  echo ""
+  echo "  Nothing here was chosen after seeing data. The cell, the threshold and"
+  echo "  the estimator are the ones this project started with. What changed is"
+  echo "  the instrument: the coherence metric was not arm-neutral, and scoring"
+  echo "  one identical answer through the two arms conventions returned 0.9375"
+  echo "  and 0.5000 -- an apparent tax of +46.7 % on text that never changed."
+  echo ""
+  echo "  On the dev half of 27 August, with that corrected and a tense directive"
+  echo "  in the contract, the cell reads +1.57 % with an interval of"
+  echo "  [-4.69 %, +7.26 %]. THREE OF EIGHT PROMPTS ARE NEGATIVE. It fails only"
+  echo "  on the upper bound, on eight prompts; sixteen more roughly halve it."
+  echo "  This is the first time the final half has had a question worth spending"
+  echo "  on."
+  echo ""
+  echo "  THE FAILING CONTROL: N=8 in the same grid. Dev puts k=1 there at"
+  echo "  +14.0 %, interval [+7.9 %, +19.2 %], no overlap with N=2. If N=8 also"
+  echo "  clears 5 % the instrument is not discriminating and neither figure is"
+  echo "  evidence."
+  echo ""
+  echo "  CAVEAT ON THE CONTROL: N=8 ran at rho 3.90 against a target of 3.5 on"
+  echo "  both dev runs -- 11.5 % over, with rho_floor at 1.13, so the packer is"
+  echo "  overshooting rather than being forced. The N=8 arm therefore receives"
+  echo "  MORE context than N=2 and still does worse, which is conservative for"
+  echo "  the conclusion. Read rho_fidelity and say so rather than averaging it in."
+  echo ""
+  echo "  WHAT IS NO LONGER DECLARED: the aggregate-claim confidence map, which"
+  echo "  was the declared hypothesis for this tier on 26 August. It failed its"
+  echo "  first independent test -- OR 3.47 became 0.26, and the monotone"
+  echo "  accuracy curve that justified it inverted. Three non-replications now"
+  echo "  (V5 to V6, dev-1 to dev-2). It is still COMPUTED and reported below,"
+  echo "  because the data is free once the run happens, but nothing rides on it"
+  echo "  and no threshold is set against it."
+  echo ""
+  echo "  THE GRID: N=2 and N=8, k=1 and k=3. k=1 carries the headline -- k is a"
+  echo "  separate mechanism from fragmentation and a mean of the two belongs to"
+  echo "  neither arm. k=3 is swept so the confidence map has data to be"
+  echo "  reported from."
+  echo ""
+  echo "  Read, in order:"
+  echo "    falsifiable_go_no_go[table_summary@rho=3.5@N=2@k=1]"
+  echo "      ci95 upper bound against 0.05, and n_prompts -- NOT n_observations."
+  echo "    the same cell at N=8, k=1  -- the control, which must fail."
+  echo "    rho_fidelity               -- name any cell out of tolerance."
+  echo "    truth_calibration.flag_effect_by_claim  -- reported, not declared."
+  echo "  Output: $out"
+  python3 scripts/make_tables.py --verify \
+    || die "the corpus has moved since dev; the frozen threshold no longer applies."
+  mkdir -p "$out"
+  run_tier tables-final "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/tables24.json --split final \
+    --rho 3.5 --n 2,8 --k 1,3 --tau "$tau" \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  The declared test:"
+  python3 -c "
+import json
+s=json.load(open('$out/summary.json'))
+cells=s.get('falsifiable_go_no_go',{})
+for key,role in (('table_summary@rho=3.5@N=2@k=1','(UNDER TEST)'),
+                 ('table_summary@rho=3.5@N=8@k=1','(control, must fail)')):
+    c=cells.get(key)
+    if not c: print(f'    {key}: absent'); continue
+    ci=c.get('ci95')
+    ok = ci is not None and ci[1] < 0.05
+    print(f'    {key}')
+    print(f'      {role:<22} point={c.get(\"point_estimate\")}  CI95={ci}  '
+          f'prompts={c.get(\"n_prompts\")}  -> {\"PASS\" if ok else \"fail\"}')
+rf=s.get('rho_fidelity',{})
+print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
+      + ('' if rf.get('within_tolerance') else f\"  (worst: {rf.get('worst')})\"))
+" 2>/dev/null || true
+  echo "  -> $out/summary.json"
 }
 
 case "$TIER" in
@@ -339,14 +609,31 @@ case "$TIER" in
     bold "Smoke run finished. If the numbers above look sane, run:"
     echo "  ./scripts/run_ollama.sh all"
     ;;
-  v0)  run_v0 ;;
-  v3c) run_v3c ;;
-  v3c-gt) run_v3c_gt ;;
-  v3c-ff) run_v3c_ff ;;
-  v4) run_v4 ;;
-  all) run_v0; run_v3c ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | all" ;;
+  v0)  run_v0 || true ;;
+  v3c) run_v3c || true ;;
+  v3c-gt) run_v3c_gt || true ;;
+  v3c-ff) run_v3c_ff || true ;;
+  v4) run_v4 || true ;;
+  tables-dev) run_tables_dev || true ;;
+  tables-final) run_tables_final "$@" || true ;;
+  # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
+  # already recorded the failure
+  # in TIERS_FAILED and stamped the directory; this only stops `set -e` killing
+  # the script before the summary below can name what broke, and lets an
+  # overnight `all` finish its independent tiers. The exit status is restored at
+  # the bottom.
+  all) run_v0 || true; run_v3c || true ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | all" ;;
 esac
+
+if [ -n "$TIERS_FAILED" ]; then
+  bold ""
+  die "ABORTED TIERS:$TIERS_FAILED
+Each of those directories carries a FAILED marker and holds no results.csv.
+The harness refused to complete them, which is the gate working. Read the end
+of the tier's run.log for the invariant that was violated, fix it, and re-run.
+Do not quote a number from a run that appears in this list."
+fi
 
 bold ""
 bold "== Done =="

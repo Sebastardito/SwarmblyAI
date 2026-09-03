@@ -10,6 +10,8 @@ serialisable and diffable, which matters for a reproducibility experiment.
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Mapping, Sequence
 
@@ -236,3 +238,39 @@ def summarize_ids(ids: Sequence[str], limit: int = 6) -> str:
     if len(ids) <= limit:
         return ", ".join(ids)
     return ", ".join(ids[:limit]) + f" (+{len(ids) - limit} more)"
+
+
+# ---------------------------------------------------------------------------
+# Provenance: which code produced a result
+# ---------------------------------------------------------------------------
+
+def _source_files() -> list[Path]:
+    """Every .py file of the package, sorted — the thing that does the measuring.
+
+    Only the package. Tests do not change a measurement, and scripts are entry
+    points whose effect is already recorded by the arguments in the metadata.
+    """
+    package = Path(__file__).resolve().parent
+    return sorted(p for p in package.glob("*.py") if p.name != "__pycache__")
+
+
+def source_fingerprint() -> str:
+    """SHA-256 over the package's source, for the run's metadata.
+
+    A results directory that does not say what produced it cannot be trusted
+    once the code moves. On 27 August three ``tables-*`` runs sat side by side --
+    two scored by an arm-neutral coherence metric, one by the defective
+    predecessor -- and nothing in any of them said which. The directory
+    timestamp against a memory of when the fix landed was the only evidence, and
+    that is not evidence.
+
+    Hashing name-and-content in sorted order means a comment change moves the
+    digest too. That is the correct trade: a digest that only moved on
+    "important" changes would need someone to decide what is important, which is
+    exactly the judgement this is meant to remove.
+    """
+    digest = hashlib.sha256()
+    for path in _source_files():
+        digest.update(path.name.encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()

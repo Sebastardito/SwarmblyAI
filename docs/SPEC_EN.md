@@ -169,21 +169,114 @@ A packet with `lane` of `SENSITIVE` MUST NOT be transmitted to a node outside th
 ## 9. Packing and the context budget
 
 ```
-S       = |Γ| + E[ Σ |predecessors[].summary| ]
-ρ       = ( Σᵢ |Kᵢ| ) / |P|
+S           = |Γ| + E[ Σ |predecessors[].summary| ]
+ρ           = ( Σᵢ |Kᵢ| ) / |P|
+ρ_floor     = ( Σᵢ ( |taskᵢ| + |Γ_min| + |carryᵢ| ) ) / |P|
 ```
 
-The orchestrator MUST report the achieved ρ in the response metadata.
+The orchestrator MUST report the achieved ρ **and** ρ_floor in the response metadata.
 
-**Packing algorithm (normative).**
+### 9.1 Mandatory content: what a packet minimally is
 
-1. Include Γ in full.
-2. `budget ← S_target − |Γ|`. If negative, reduce the micro-task count and re-plan.
-3. Order predecessors by edge type (`result` before `statement`), then by recency.
-4. For each predecessor while budget remains, attach a summary of length `min(budget, cap_per_pred)`.
-5. Emit.
+Three parts of a packet are **mandatory**. They are counted into ρ_floor and are
+never funded out of discretionary slack, never trimmed, and never dropped:
 
-Implementations SHOULD prefer fewer, larger fragments over many small ones when the budget binds.
+1. **The micro-task block.** A packet without its task is not a packet.
+2. **The contract header `Γ_min`** — the minimal rendering of Γ (Section 5).
+   A fragment scored against a contract it never received measures the
+   contract's *absence*, not the cost of fragmenting. This is the same
+   requirement as the prohibition in Section 5 on trimming Γ, stated on the
+   packing side.
+3. **The carry**, for a dependent micro-task that *consumes a predecessor's
+   value*. A task whose text says "divide the net value from step 2" cannot be
+   answered without that value. A packet that cannot state the value its task
+   consumes is **unanswerable by construction**, and no fragment size repairs
+   it; **answerability outranks the budget.** So the carry is added to ρ_floor
+   on the same footing as the task text, rather than competing for slack with
+   the glossary as ordinary context.
+
+The carry is mandatory on the basis of the **micro-task text**, not the plan's
+shape. An enumerated plan of independent items is sequential in form but
+consumes nothing, and forcing predecessor output into packets with no use for
+it makes the successor restate it as its own. Implementations MUST gate the
+mandatory carry on whether the task consumes a predecessor value, and SHOULD
+use a typed carry (`[02]=2247`) rather than a prose summary: it is the same
+guarantee at a small fraction of the tokens, which is what makes the mandatory
+carry affordable rather than a new tax on ρ.
+
+Everything else — the length note, non-consumed predecessor summaries, the
+glossary, the forbidden-term list, and deterministic expansion material at high
+ρ — is **discretionary context**, attached in priority order from whatever
+remains.
+
+### 9.2 Packing algorithm (normative)
+
+Let *B* = ρ_target · |P| be the total budget for the tasks being dispatched.
+
+1. Compute `mandatoryᵢ` for each micro-task: task block + `Γ_min` + carry
+   (Section 9.1).
+2. Compute `ρ_floor`. If `ρ_target < ρ_floor`, the cell is **unreachable**:
+   record `rho_reachable = false` and apply Section 9.3. The orchestrator MUST
+   NOT satisfy an unreachable target by trimming mandatory content; it either
+   proceeds at the floor or reduces the micro-task count and re-plans.
+3. `slack ← max(0, B − Σᵢ mandatoryᵢ)`.
+4. Allocate `budgetᵢ ← mandatoryᵢ + slack · desiredᵢ / Σⱼ desiredⱼ`, where
+   `desiredᵢ` is the tokens packet *i* would consume with no rationing at all.
+   A uniform `B / N` split is non-conformant: it starves exactly the packets
+   that carry dependencies.
+5. For each packet, set its own budget to `max(mandatoryᵢ, budgetᵢ)`, emit the
+   mandatory content, then attach discretionary blocks in priority order while
+   room remains, truncating the first block that does not fit at a token
+   boundary and stopping there.
+6. When a plan is dispatched in topological levels, each level MUST be
+   allocated at least the sum of its own `mandatoryᵢ`, and `desiredᵢ` MUST be
+   computed once from the plan alone. Recomputing it per level lets a late
+   integration node claim slack an earlier level already reserved, which
+   overshoots ρ_target by exactly that amount and grows with *N*.
+7. Run a bounded correction pass to absorb the residue left by atomic block
+   boundaries, then verify the invariants of Section 9.4.
+
+Implementations SHOULD prefer fewer, larger fragments over many small ones when
+the budget binds.
+
+### 9.3 A below-floor cell is not a measurement of ρ
+
+Below ρ_floor there is no context to ration: every packet collapses to its
+mandatory content, so **two different ρ labels produce byte-identical packets.**
+A cell whose target is below its own floor therefore carries no information
+about ρ at all, whatever value its label names, and a curve drawn through such
+cells reports that packets holding nothing score worse than packets holding
+something — a true statement about content, and not a measurement of the context
+budget.
+
+Accordingly:
+
+- An implementation MUST record `rho_reachable` per cell, from a floor that
+  includes the contract header and any mandatory carry.
+- An implementation **MUST refuse to report a ρ-indexed figure computed from a
+  below-floor cell** — including any aggregate, mean, trend or verdict over a
+  set of cells that contains one. Dropping the row is conformant; annotating it
+  and publishing it anyway is not.
+- An implementation MUST NOT report `rho_reachable = true` from an optimistic
+  floor that omits a carry which will exist by dispatch time.
+
+### 9.4 Invariants (normative)
+
+Before dispatch, and for every reachable cell, the orchestrator MUST refuse to
+proceed unless all three hold:
+
+1. Every packet contains its contract header.
+2. Every micro-task that consumes a predecessor value, and whose dependency has
+   produced a summary, carries it.
+3. Achieved ρ is within a declared tolerance of ρ_target (the reference
+   implementation uses 5 %). ρ is the independent variable; a cell outside
+   tolerance is not the cell its label names.
+
+A violation is a refusal to dispatch, not a warning. These checks are waived
+for an **unreachable** cell, whose packets are at the floor by definition and
+whose achieved ρ necessarily overshoots the target it could not meet; such a
+cell may still be dispatched, and Section 9.3 governs what may be reported
+from it. Waiving the check is not permission to publish the cell.
 
 ---
 
@@ -379,6 +472,7 @@ Every response MUST include:
 ```json
 {
   "rho_achieved": 1.47,
+  "rho_target": 1.50, "rho_floor": 1.31, "rho_reachable": true,
   "n_tasks": 6, "n_levels": 2,
   "tau_sem": 0.71, "tau_source": "calibrated:2026-08-13:e5-base",
   "seams": [ { "left": "…", "right": "…", "similarity": 0.68, "path": "bridge" } ],
@@ -400,6 +494,8 @@ Every response MUST include:
 ```
 
 Omitting `coherence` is non-conformant. Omitting `consensus` when `k > 1` is non-conformant. Omitting `routing` is non-conformant. When `consensus` is `null` because the swarm reduced *k* to 1, `consensus_waived_reason` MUST state why (Section 15c, rule 5).
+
+Omitting `rho_floor` or `rho_reachable` is non-conformant. Without them a consumer of the response cannot tell whether the cell measured the context budget at all, which is the condition Section 9.3 turns on.
 
 ---
 
@@ -428,7 +524,7 @@ Omitting `coherence` is non-conformant. Omitting `consensus` when `k > 1` is non
 4. Contract compression is the highest-leverage open problem: because Γ is simultaneously the coherence mechanism, the privacy exposure and the dominant cost term, any reduction in `|Γ|` at equal effect improves three properties at once.
 5. Whether the orchestrator can be an 8B-class model at acceptable quality is unresolved and is the subject of hypothesis H3 in the whitepaper.
 6. The granularity of a semantic unit — sentence versus clause — is unresolved, and it materially affects both alignment quality in Section 14b and the parameters of the coverage model.
-7. The correlation between the agreement score of Section 14b and factual accuracy is unmeasured, and MUST NOT be assumed until it has been measured.
+7. The correlation between the agreement score of Section 14b and factual accuracy has now been measured, and **no relationship was found.** Against a peer-class judge it came back at *r* = −0.030 over 597 semantic units; three subsequent runs graded against an answer key put the Mantel-Haenszel common odds ratio at 3.47, then 0.26, then 1.24 — above, below and astride 1 on the same question, which is no signal measured three times. The confidence map is therefore **withdrawn** as a reliability claim, and it is dropped from the V7 benchmark. The mechanism of Section 14b remains specified and MAY be reported, but an implementation MUST report its output as *agreement* and MUST NOT present it as accuracy, confidence or a reliability guarantee. What remains open is not whether the correlation is there, but whether any per-unit signal of this kind can be recovered at all; a new instrument, not a re-run of this one, is the precondition for reopening it.
 8. Trusted-swarm registry federation, key rotation and revocation latency are unspecified. Until they are, the failure mode of rule 1 in Section 15c is a stale whitelist rather than an unauthenticated one.
 9. Whether a client-side named-entity triage model small enough to run on the requesting device reaches acceptable recall on regulated entity classes is unmeasured, and the manual flag exists because it is unmeasured.
 

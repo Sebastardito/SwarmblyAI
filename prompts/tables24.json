@@ -1,0 +1,2237 @@
+{
+  "_seed": 20260827,
+  "_frozen": {
+    "sha256": "0c5cb7e2a041cd231b020bb24d65f55251ece8fccce6a421638eccd953566b4b",
+    "dev": [
+      "tbl24_consolidation",
+      "tbl24_drayage",
+      "tbl24_groupage",
+      "tbl24_intake",
+      "tbl24_manifest",
+      "tbl24_recall",
+      "tbl24_reconciliation",
+      "tbl24_staging"
+    ],
+    "final": [
+      "tbl24_backlog",
+      "tbl24_bonded",
+      "tbl24_clearance",
+      "tbl24_closeout",
+      "tbl24_demurrage",
+      "tbl24_dispatch",
+      "tbl24_holdover",
+      "tbl24_layover",
+      "tbl24_outturn",
+      "tbl24_overspill",
+      "tbl24_prealert",
+      "tbl24_quarantine",
+      "tbl24_returns",
+      "tbl24_salvage",
+      "tbl24_transhipment",
+      "tbl24_transit"
+    ],
+    "rule": "Thresholds, bin edges, flagging rates, tau_sem and any choice of which arm to report are fixed on the dev prompts alone. The final prompts are evaluated once, afterwards, with nothing left to choose. A figure that moves after the final half is seen is not an estimate of anything."
+  },
+  "_length_note": "Canonical tokens per prompt: min 332, max 332, mean 332.",
+  "_corpus_note": "Twenty-four enclosed-table prompts, built by make_complex.table_prompt -- the identical builder the shared corpus uses -- from an independent generator and a wider destination pool. It exists to answer one question: whether table_summary at N=2 clears the 5 % threshold. The run of 26 August put that cell at +5.8 % with an interval of [-2.2 %, +14.5 %] on eight prompts; sixteen more roughly halve it. Nothing else should be swept on this corpus, because a corpus swept over many cells answers the maximum-statistic question, not this one.",
+  "prompts": [
+    {
+      "id": "tbl24_manifest",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the manifest table below for a duty manager.\n\n  ref | destination | weight | goods\n  A8557 | Fremantle | 360 kg | bearing sets\n  G1711 | Hobart | 505 kg | bearing sets\n  E3710 | Vigo | 130 kg | drive belts\n  C8145 | Puntarenas | 865 kg | pump seals\n  F2582 | Trieste | 880 kg | relay boards\n  G4798 | Kotka | 760 kg | valve kits\n  H7997 | Ostend | 365 kg | relay boards\n  G8415 | Dakar | 650 kg | pump seals\n  D1048 | Napier | 560 kg | filter packs\n  E8552 | Tromso | 515 kg | filter packs\n  H4640 | Rijeka | 745 kg | cable reels\n  H9588 | Busan | 835 kg | relay boards\n  H9737 | Recife | 370 kg | gasket sets\n  B8184 | Nairobi | 765 kg | relay boards\n  E9275 | Quito | 830 kg | valve kits\n  A1586 | Valparaiso | 480 kg | pump seals\n  C4425 | Nantes | 600 kg | cable reels\n  C5392 | Klaipeda | 765 kg | bearing sets\n  D8510 | Sfax | 845 kg | bearing sets\n  F2746 | Reykjavik | 820 kg | valve kits\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          130.0,
+          360.0,
+          365.0,
+          370.0,
+          480.0,
+          505.0,
+          515.0,
+          560.0,
+          600.0,
+          632,
+          632.2,
+          632.25,
+          632.3,
+          650.0,
+          745.0,
+          760.0,
+          765.0,
+          820.0,
+          830.0,
+          835.0,
+          845.0,
+          865.0,
+          880.0,
+          12645.0
+        ],
+        "total": 12645.0,
+        "heaviest_ref": "F2582"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_backlog",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the backlog table below for a duty manager.\n\n  ref | destination | weight | goods\n  D4767 | Nantes | 450 kg | filter packs\n  E2853 | Osaka | 740 kg | filter packs\n  B6184 | Tromso | 890 kg | valve kits\n  H4089 | Sfax | 175 kg | gasket sets\n  G8579 | Manzanillo | 215 kg | valve kits\n  C1253 | Halifax | 370 kg | cable reels\n  F3898 | Nairobi | 135 kg | valve kits\n  F4755 | Klaipeda | 765 kg | relay boards\n  A5703 | Cebu | 915 kg | pump seals\n  E5895 | Batumi | 350 kg | pump seals\n  G4963 | Fremantle | 565 kg | filter packs\n  C9777 | Quito | 730 kg | relay boards\n  B5671 | Split | 915 kg | relay boards\n  H2363 | Recife | 230 kg | bearing sets\n  B6807 | Lisbon | 155 kg | filter packs\n  A6847 | Kaohsiung | 935 kg | gasket sets\n  C3737 | Larvik | 240 kg | pump seals\n  E8973 | Constanta | 725 kg | pump seals\n  E9392 | Trieste | 240 kg | bearing sets\n  A7995 | Mombasa | 575 kg | cable reels\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          135.0,
+          155.0,
+          175.0,
+          215.0,
+          230.0,
+          240.0,
+          350.0,
+          370.0,
+          450.0,
+          515.0,
+          515.7,
+          515.75,
+          515.8,
+          516,
+          565.0,
+          575.0,
+          725.0,
+          730.0,
+          740.0,
+          765.0,
+          890.0,
+          915.0,
+          935.0,
+          10315.0
+        ],
+        "total": 10315.0,
+        "heaviest_ref": "A6847"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_dispatch",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the dispatch table below for a duty manager.\n\n  ref | destination | weight | goods\n  H3295 | Vigo | 400 kg | gasket sets\n  A6104 | Recife | 665 kg | gasket sets\n  F1669 | Halifax | 515 kg | valve kits\n  H3581 | Larvik | 835 kg | drive belts\n  G3604 | Fremantle | 300 kg | filter packs\n  A5933 | Lisbon | 120 kg | drive belts\n  E4411 | Nakhodka | 505 kg | pump seals\n  A1814 | Osaka | 400 kg | pump seals\n  F6595 | Cebu | 955 kg | cable reels\n  A9216 | Busan | 260 kg | bearing sets\n  H7524 | Gdansk | 355 kg | filter packs\n  H2842 | Mombasa | 415 kg | relay boards\n  G4255 | Ostend | 180 kg | gasket sets\n  A7728 | Hobart | 425 kg | pump seals\n  G1557 | Reykjavik | 570 kg | pump seals\n  G4362 | Nantes | 460 kg | relay boards\n  H3667 | Saskatoon | 360 kg | drive belts\n  D9439 | Nairobi | 660 kg | valve kits\n  G8858 | Kotka | 610 kg | gasket sets\n  D7821 | Napier | 165 kg | bearing sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          120.0,
+          165.0,
+          180.0,
+          260.0,
+          300.0,
+          355.0,
+          360.0,
+          400.0,
+          415.0,
+          425.0,
+          457.0,
+          457.7,
+          457.75,
+          457.8,
+          458,
+          460.0,
+          505.0,
+          515.0,
+          570.0,
+          610.0,
+          660.0,
+          665.0,
+          835.0,
+          955.0,
+          9155.0
+        ],
+        "total": 9155.0,
+        "heaviest_ref": "F6595"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_intake",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the intake table below for a duty manager.\n\n  ref | destination | weight | goods\n  G3238 | Iquique | 745 kg | valve kits\n  A6597 | Paranagua | 855 kg | gasket sets\n  A9994 | Cebu | 520 kg | bearing sets\n  H5548 | Hobart | 895 kg | filter packs\n  H9283 | Klaipeda | 825 kg | pump seals\n  F4163 | Manzanillo | 265 kg | filter packs\n  A2728 | Constanta | 245 kg | drive belts\n  G6575 | Busan | 925 kg | drive belts\n  G1258 | Quito | 840 kg | pump seals\n  G6218 | Sfax | 760 kg | gasket sets\n  E6077 | Vigo | 120 kg | cable reels\n  G7617 | Osaka | 750 kg | drive belts\n  F2012 | Split | 295 kg | filter packs\n  B6287 | Aqaba | 795 kg | bearing sets\n  F8922 | Puntarenas | 370 kg | cable reels\n  C6871 | Lisbon | 680 kg | relay boards\n  H6964 | Rijeka | 560 kg | valve kits\n  G6889 | Napier | 640 kg | cable reels\n  B9621 | Reykjavik | 685 kg | gasket sets\n  A7421 | Ostend | 540 kg | filter packs\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          120.0,
+          245.0,
+          265.0,
+          295.0,
+          370.0,
+          520.0,
+          540.0,
+          560.0,
+          615.0,
+          615.5,
+          616,
+          640.0,
+          680.0,
+          685.0,
+          745.0,
+          750.0,
+          760.0,
+          795.0,
+          825.0,
+          840.0,
+          855.0,
+          895.0,
+          925.0,
+          12310.0
+        ],
+        "total": 12310.0,
+        "heaviest_ref": "G6575"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_transit",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the transit table below for a duty manager.\n\n  ref | destination | weight | goods\n  B5776 | Valparaiso | 365 kg | relay boards\n  D4681 | Tromso | 455 kg | drive belts\n  A7401 | Lisbon | 265 kg | bearing sets\n  A7553 | Bergen | 165 kg | valve kits\n  H1580 | Batumi | 350 kg | filter packs\n  A3174 | Kaohsiung | 120 kg | bearing sets\n  G1591 | Durban | 330 kg | valve kits\n  A6345 | Dakar | 530 kg | pump seals\n  D6520 | Saskatoon | 655 kg | drive belts\n  G7981 | Aqaba | 555 kg | bearing sets\n  C5392 | Halifax | 545 kg | gasket sets\n  C3964 | Tallinn | 380 kg | filter packs\n  A7989 | Tuticorin | 570 kg | filter packs\n  A6270 | Aarhus | 950 kg | cable reels\n  H2291 | Nakhodka | 305 kg | drive belts\n  H5963 | Larvik | 940 kg | filter packs\n  C9681 | Nantes | 455 kg | relay boards\n  C1966 | Trieste | 260 kg | filter packs\n  G3608 | Osaka | 470 kg | drive belts\n  B2943 | Hobart | 895 kg | drive belts\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          120.0,
+          165.0,
+          260.0,
+          265.0,
+          305.0,
+          330.0,
+          350.0,
+          365.0,
+          380.0,
+          455.0,
+          470.0,
+          477.9,
+          478.0,
+          478.1,
+          530.0,
+          545.0,
+          555.0,
+          570.0,
+          655.0,
+          895.0,
+          940.0,
+          950.0,
+          9560.0
+        ],
+        "total": 9560.0,
+        "heaviest_ref": "A6270"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_holdover",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the holdover table below for a duty manager.\n\n  ref | destination | weight | goods\n  B9328 | Fremantle | 785 kg | filter packs\n  F5713 | Antofagasta | 840 kg | drive belts\n  A2767 | Kaohsiung | 860 kg | cable reels\n  B3117 | Nairobi | 925 kg | cable reels\n  H8133 | Bergen | 655 kg | cable reels\n  G9353 | Cebu | 760 kg | gasket sets\n  E3860 | Puntarenas | 315 kg | filter packs\n  A6330 | Klaipeda | 655 kg | bearing sets\n  A6605 | Lisbon | 955 kg | filter packs\n  E2866 | Busan | 940 kg | drive belts\n  A8060 | Osaka | 215 kg | bearing sets\n  F5372 | Larvik | 680 kg | valve kits\n  C5893 | Reykjavik | 920 kg | gasket sets\n  A6649 | Aarhus | 225 kg | valve kits\n  F8430 | Tallinn | 595 kg | valve kits\n  H5607 | Kotka | 150 kg | pump seals\n  H3754 | Vigo | 335 kg | gasket sets\n  F4841 | Trieste | 840 kg | cable reels\n  A5928 | Constanta | 530 kg | bearing sets\n  D5400 | Durban | 780 kg | gasket sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          150.0,
+          215.0,
+          225.0,
+          315.0,
+          335.0,
+          530.0,
+          595.0,
+          648.0,
+          655.0,
+          680.0,
+          760.0,
+          780.0,
+          785.0,
+          840.0,
+          860.0,
+          920.0,
+          925.0,
+          940.0,
+          955.0,
+          12960.0
+        ],
+        "total": 12960.0,
+        "heaviest_ref": "A6605"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_consolidation",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the consolidation table below for a duty manager.\n\n  ref | destination | weight | goods\n  A9846 | Manzanillo | 565 kg | cable reels\n  E1386 | Napier | 160 kg | gasket sets\n  H8136 | Aqaba | 490 kg | cable reels\n  H7112 | Cebu | 790 kg | pump seals\n  G6786 | Sfax | 615 kg | filter packs\n  D7357 | Osaka | 365 kg | bearing sets\n  D3149 | Ostend | 535 kg | bearing sets\n  C4026 | Mombasa | 785 kg | cable reels\n  A9321 | Valparaiso | 625 kg | drive belts\n  B5397 | Tromso | 775 kg | bearing sets\n  F1445 | Kaohsiung | 310 kg | filter packs\n  H1940 | Paranagua | 480 kg | pump seals\n  G4602 | Hobart | 290 kg | valve kits\n  A4755 | Antofagasta | 685 kg | relay boards\n  A6023 | Quito | 375 kg | pump seals\n  E1502 | Split | 390 kg | valve kits\n  B1608 | Lisbon | 695 kg | relay boards\n  A4669 | Nantes | 595 kg | valve kits\n  B9675 | Puntarenas | 955 kg | gasket sets\n  F6004 | Busan | 470 kg | drive belts\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          160.0,
+          290.0,
+          310.0,
+          365.0,
+          375.0,
+          390.0,
+          470.0,
+          480.0,
+          490.0,
+          535.0,
+          547.0,
+          547.5,
+          548,
+          565.0,
+          595.0,
+          615.0,
+          625.0,
+          685.0,
+          695.0,
+          775.0,
+          785.0,
+          790.0,
+          955.0,
+          10950.0
+        ],
+        "total": 10950.0,
+        "heaviest_ref": "B9675"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_clearance",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the clearance table below for a duty manager.\n\n  ref | destination | weight | goods\n  D1430 | Aqaba | 795 kg | pump seals\n  A6922 | Iquique | 420 kg | bearing sets\n  G6818 | Recife | 375 kg | relay boards\n  D3738 | Puntarenas | 515 kg | filter packs\n  D3614 | Dakar | 775 kg | valve kits\n  G8811 | Kaohsiung | 870 kg | valve kits\n  D7923 | Cebu | 185 kg | bearing sets\n  E7039 | Fremantle | 180 kg | drive belts\n  A8128 | Tallinn | 185 kg | bearing sets\n  E7798 | Reykjavik | 440 kg | relay boards\n  G2950 | Tromso | 565 kg | bearing sets\n  A7368 | Klaipeda | 905 kg | drive belts\n  B1201 | Quito | 695 kg | bearing sets\n  C8845 | Batumi | 700 kg | relay boards\n  G6396 | Nantes | 510 kg | pump seals\n  D5071 | Constanta | 655 kg | cable reels\n  A8621 | Rijeka | 670 kg | filter packs\n  B6147 | Kotka | 270 kg | pump seals\n  E2241 | Bergen | 405 kg | relay boards\n  B4543 | Larvik | 325 kg | relay boards\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          180.0,
+          185.0,
+          270.0,
+          325.0,
+          375.0,
+          405.0,
+          420.0,
+          440.0,
+          510.0,
+          515.0,
+          522.0,
+          565.0,
+          655.0,
+          670.0,
+          695.0,
+          700.0,
+          775.0,
+          795.0,
+          870.0,
+          905.0,
+          10440.0
+        ],
+        "total": 10440.0,
+        "heaviest_ref": "A7368"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_quarantine",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the quarantine table below for a duty manager.\n\n  ref | destination | weight | goods\n  H8558 | Nakhodka | 855 kg | relay boards\n  D3874 | Hobart | 660 kg | relay boards\n  D8711 | Dakar | 875 kg | drive belts\n  F6240 | Gdansk | 145 kg | pump seals\n  E3042 | Bergen | 675 kg | relay boards\n  D3189 | Tallinn | 645 kg | bearing sets\n  D2051 | Fremantle | 205 kg | cable reels\n  G2948 | Batumi | 795 kg | gasket sets\n  A8303 | Klaipeda | 655 kg | valve kits\n  A5590 | Recife | 825 kg | pump seals\n  D2101 | Paranagua | 920 kg | bearing sets\n  G3021 | Split | 295 kg | gasket sets\n  C1414 | Aqaba | 395 kg | cable reels\n  E9579 | Saskatoon | 820 kg | pump seals\n  A6207 | Kotka | 265 kg | relay boards\n  E5684 | Rijeka | 845 kg | gasket sets\n  E2932 | Osaka | 885 kg | gasket sets\n  E5680 | Vigo | 360 kg | filter packs\n  D8877 | Sfax | 715 kg | gasket sets\n  F2497 | Mombasa | 755 kg | cable reels\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          145.0,
+          205.0,
+          265.0,
+          295.0,
+          360.0,
+          395.0,
+          629.0,
+          629.5,
+          630,
+          645.0,
+          655.0,
+          660.0,
+          675.0,
+          715.0,
+          755.0,
+          795.0,
+          820.0,
+          825.0,
+          845.0,
+          855.0,
+          875.0,
+          885.0,
+          920.0,
+          12590.0
+        ],
+        "total": 12590.0,
+        "heaviest_ref": "D2101"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_reconciliation",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the reconciliation table below for a duty manager.\n\n  ref | destination | weight | goods\n  H2824 | Aqaba | 575 kg | cable reels\n  A4242 | Dakar | 435 kg | cable reels\n  H1192 | Gdansk | 945 kg | drive belts\n  B4143 | Split | 610 kg | pump seals\n  F7603 | Iquique | 655 kg | cable reels\n  G3603 | Manzanillo | 800 kg | drive belts\n  E7516 | Halifax | 860 kg | cable reels\n  F6290 | Durban | 395 kg | pump seals\n  F1566 | Nairobi | 185 kg | relay boards\n  G1823 | Tuticorin | 710 kg | gasket sets\n  H1277 | Reykjavik | 565 kg | filter packs\n  C7310 | Bilbao | 805 kg | drive belts\n  H4016 | Vigo | 520 kg | valve kits\n  B2993 | Napier | 625 kg | drive belts\n  F2382 | Fremantle | 725 kg | cable reels\n  D9185 | Kotka | 395 kg | gasket sets\n  C4827 | Busan | 910 kg | filter packs\n  E4194 | Hobart | 525 kg | bearing sets\n  F1216 | Kaohsiung | 910 kg | filter packs\n  B1070 | Bergen | 845 kg | filter packs\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          185.0,
+          395.0,
+          435.0,
+          520.0,
+          525.0,
+          565.0,
+          575.0,
+          610.0,
+          625.0,
+          649.0,
+          649.7,
+          649.75,
+          649.8,
+          650,
+          655.0,
+          710.0,
+          725.0,
+          800.0,
+          805.0,
+          845.0,
+          860.0,
+          910.0,
+          945.0,
+          12995.0
+        ],
+        "total": 12995.0,
+        "heaviest_ref": "H1192"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_outturn",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the outturn table below for a duty manager.\n\n  ref | destination | weight | goods\n  C6370 | Quito | 740 kg | filter packs\n  H1773 | Napier | 860 kg | pump seals\n  F8771 | Larvik | 425 kg | drive belts\n  A9982 | Manzanillo | 745 kg | gasket sets\n  B9552 | Constanta | 510 kg | cable reels\n  F3161 | Klaipeda | 905 kg | cable reels\n  F6484 | Cebu | 805 kg | valve kits\n  C4743 | Recife | 305 kg | valve kits\n  H7252 | Hobart | 745 kg | cable reels\n  F2650 | Dakar | 795 kg | relay boards\n  H4685 | Gdansk | 795 kg | pump seals\n  B8714 | Fremantle | 325 kg | cable reels\n  D7311 | Vigo | 315 kg | drive belts\n  B2094 | Iquique | 740 kg | relay boards\n  E7954 | Kotka | 325 kg | pump seals\n  F5702 | Rijeka | 735 kg | valve kits\n  H3807 | Sfax | 390 kg | valve kits\n  H8280 | Nakhodka | 570 kg | pump seals\n  D5235 | Trieste | 485 kg | relay boards\n  E9288 | Split | 340 kg | pump seals\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          305.0,
+          315.0,
+          325.0,
+          340.0,
+          390.0,
+          425.0,
+          485.0,
+          510.0,
+          570.0,
+          592.0,
+          592.7,
+          592.75,
+          592.8,
+          593,
+          735.0,
+          740.0,
+          745.0,
+          795.0,
+          805.0,
+          860.0,
+          905.0,
+          11855.0
+        ],
+        "total": 11855.0,
+        "heaviest_ref": "F3161"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_layover",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the layover table below for a duty manager.\n\n  ref | destination | weight | goods\n  A9008 | Batumi | 890 kg | bearing sets\n  D3873 | Vigo | 415 kg | relay boards\n  C6987 | Cebu | 935 kg | valve kits\n  A7560 | Aarhus | 280 kg | filter packs\n  A3511 | Larvik | 310 kg | filter packs\n  B3542 | Nakhodka | 450 kg | drive belts\n  C9856 | Durban | 190 kg | valve kits\n  F3889 | Kotka | 815 kg | cable reels\n  G8571 | Fremantle | 910 kg | drive belts\n  C7470 | Napier | 160 kg | relay boards\n  H1563 | Puntarenas | 775 kg | filter packs\n  D8005 | Ostend | 950 kg | relay boards\n  H1068 | Gdansk | 380 kg | relay boards\n  F1052 | Aqaba | 530 kg | gasket sets\n  B8903 | Klaipeda | 830 kg | cable reels\n  C8722 | Reykjavik | 405 kg | drive belts\n  E2577 | Iquique | 955 kg | cable reels\n  F8356 | Osaka | 670 kg | filter packs\n  A8821 | Split | 285 kg | filter packs\n  B9487 | Antofagasta | 600 kg | relay boards\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          160.0,
+          190.0,
+          280.0,
+          285.0,
+          310.0,
+          380.0,
+          405.0,
+          415.0,
+          450.0,
+          530.0,
+          586.0,
+          586.7,
+          586.75,
+          586.8,
+          587,
+          600.0,
+          670.0,
+          775.0,
+          815.0,
+          830.0,
+          890.0,
+          910.0,
+          935.0,
+          950.0,
+          955.0,
+          11735.0
+        ],
+        "total": 11735.0,
+        "heaviest_ref": "E2577"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_drayage",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the drayage table below for a duty manager.\n\n  ref | destination | weight | goods\n  E5938 | Cebu | 425 kg | pump seals\n  C9536 | Tuticorin | 645 kg | relay boards\n  D6161 | Gdansk | 170 kg | bearing sets\n  D8222 | Quito | 355 kg | valve kits\n  D6925 | Constanta | 355 kg | filter packs\n  G8376 | Saskatoon | 160 kg | gasket sets\n  D6783 | Hobart | 850 kg | cable reels\n  D4076 | Larvik | 705 kg | bearing sets\n  C9572 | Klaipeda | 340 kg | pump seals\n  A9969 | Valparaiso | 340 kg | gasket sets\n  H2682 | Durban | 635 kg | cable reels\n  D8491 | Osaka | 775 kg | gasket sets\n  F4277 | Tromso | 310 kg | gasket sets\n  A2285 | Puntarenas | 300 kg | drive belts\n  E2883 | Kotka | 375 kg | relay boards\n  D6764 | Halifax | 900 kg | cable reels\n  H9397 | Fremantle | 835 kg | pump seals\n  F3861 | Batumi | 260 kg | drive belts\n  E9356 | Aarhus | 810 kg | relay boards\n  E1986 | Paranagua | 440 kg | pump seals\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          160.0,
+          170.0,
+          260.0,
+          300.0,
+          310.0,
+          340.0,
+          355.0,
+          375.0,
+          425.0,
+          440.0,
+          499,
+          499.2,
+          499.25,
+          499.3,
+          635.0,
+          645.0,
+          705.0,
+          775.0,
+          810.0,
+          835.0,
+          850.0,
+          900.0,
+          9985.0
+        ],
+        "total": 9985.0,
+        "heaviest_ref": "D6764"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_demurrage",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the demurrage table below for a duty manager.\n\n  ref | destination | weight | goods\n  F2770 | Bergen | 495 kg | drive belts\n  B7809 | Lisbon | 400 kg | filter packs\n  E7748 | Constanta | 585 kg | drive belts\n  E7912 | Dakar | 150 kg | cable reels\n  D8408 | Puntarenas | 720 kg | cable reels\n  H6210 | Bilbao | 420 kg | filter packs\n  D5676 | Ostend | 685 kg | valve kits\n  B3674 | Recife | 365 kg | cable reels\n  D9939 | Kotka | 935 kg | drive belts\n  B1371 | Rijeka | 190 kg | cable reels\n  B3149 | Aarhus | 145 kg | cable reels\n  F2307 | Quito | 410 kg | filter packs\n  B2244 | Saskatoon | 780 kg | cable reels\n  E6869 | Durban | 335 kg | valve kits\n  B9277 | Fremantle | 120 kg | pump seals\n  F8472 | Hobart | 475 kg | valve kits\n  A1005 | Vigo | 435 kg | filter packs\n  G6093 | Halifax | 650 kg | drive belts\n  D9237 | Larvik | 895 kg | relay boards\n  F1835 | Antofagasta | 780 kg | bearing sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          120.0,
+          145.0,
+          150.0,
+          190.0,
+          335.0,
+          365.0,
+          400.0,
+          410.0,
+          420.0,
+          435.0,
+          475.0,
+          495.0,
+          498,
+          498.4,
+          498.5,
+          498.6,
+          585.0,
+          650.0,
+          685.0,
+          720.0,
+          780.0,
+          895.0,
+          935.0,
+          9970.0
+        ],
+        "total": 9970.0,
+        "heaviest_ref": "D9939"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_transhipment",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the transhipment table below for a duty manager.\n\n  ref | destination | weight | goods\n  G9457 | Bergen | 265 kg | relay boards\n  A2483 | Trieste | 705 kg | drive belts\n  C7105 | Vigo | 410 kg | valve kits\n  E4324 | Tallinn | 610 kg | bearing sets\n  A2618 | Tromso | 595 kg | drive belts\n  H1375 | Halifax | 505 kg | cable reels\n  D4504 | Klaipeda | 495 kg | valve kits\n  G4160 | Iquique | 610 kg | valve kits\n  E6358 | Reykjavik | 455 kg | relay boards\n  D8955 | Ostend | 875 kg | bearing sets\n  F4467 | Rijeka | 815 kg | drive belts\n  B1166 | Kaohsiung | 220 kg | filter packs\n  D9440 | Busan | 435 kg | cable reels\n  A1705 | Kotka | 515 kg | drive belts\n  F5466 | Split | 560 kg | bearing sets\n  B8591 | Batumi | 150 kg | drive belts\n  H3679 | Paranagua | 365 kg | drive belts\n  A1107 | Gdansk | 230 kg | filter packs\n  H7327 | Fremantle | 200 kg | gasket sets\n  C8292 | Antofagasta | 630 kg | valve kits\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          150.0,
+          200.0,
+          220.0,
+          230.0,
+          265.0,
+          365.0,
+          410.0,
+          435.0,
+          455.0,
+          482,
+          482.2,
+          482.25,
+          482.3,
+          495.0,
+          505.0,
+          515.0,
+          560.0,
+          595.0,
+          610.0,
+          630.0,
+          705.0,
+          815.0,
+          875.0,
+          9645.0
+        ],
+        "total": 9645.0,
+        "heaviest_ref": "D8955"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_groupage",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the groupage table below for a duty manager.\n\n  ref | destination | weight | goods\n  H9611 | Manzanillo | 735 kg | pump seals\n  D9798 | Dakar | 485 kg | cable reels\n  C3757 | Reykjavik | 930 kg | filter packs\n  D7854 | Aqaba | 140 kg | filter packs\n  C4432 | Iquique | 385 kg | valve kits\n  H8804 | Kotka | 565 kg | gasket sets\n  D7868 | Fremantle | 715 kg | gasket sets\n  E2134 | Paranagua | 605 kg | cable reels\n  E8540 | Lisbon | 230 kg | valve kits\n  B4470 | Vigo | 725 kg | filter packs\n  B7713 | Batumi | 225 kg | drive belts\n  F3228 | Valparaiso | 950 kg | drive belts\n  G5511 | Quito | 570 kg | gasket sets\n  E6222 | Saskatoon | 145 kg | relay boards\n  D6542 | Bergen | 720 kg | pump seals\n  F2697 | Halifax | 940 kg | bearing sets\n  F6157 | Trieste | 350 kg | drive belts\n  A4033 | Klaipeda | 550 kg | valve kits\n  F6862 | Mombasa | 150 kg | drive belts\n  H3367 | Nantes | 680 kg | cable reels\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          140.0,
+          145.0,
+          150.0,
+          225.0,
+          230.0,
+          350.0,
+          385.0,
+          485.0,
+          539.0,
+          539.7,
+          539.75,
+          539.8,
+          540,
+          550.0,
+          565.0,
+          570.0,
+          605.0,
+          680.0,
+          715.0,
+          720.0,
+          725.0,
+          735.0,
+          930.0,
+          940.0,
+          950.0,
+          10795.0
+        ],
+        "total": 10795.0,
+        "heaviest_ref": "F3228"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_bonded",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the bonded table below for a duty manager.\n\n  ref | destination | weight | goods\n  A9586 | Napier | 310 kg | relay boards\n  F9509 | Antofagasta | 180 kg | cable reels\n  G9515 | Bilbao | 755 kg | drive belts\n  E5571 | Tallinn | 690 kg | drive belts\n  F9592 | Fremantle | 560 kg | pump seals\n  B6771 | Iquique | 900 kg | bearing sets\n  F5552 | Valparaiso | 685 kg | drive belts\n  F7707 | Rijeka | 920 kg | relay boards\n  C8138 | Vigo | 280 kg | valve kits\n  G2946 | Kaohsiung | 240 kg | pump seals\n  A7381 | Durban | 670 kg | bearing sets\n  G1701 | Cebu | 515 kg | cable reels\n  B8847 | Hobart | 270 kg | bearing sets\n  B6419 | Quito | 225 kg | relay boards\n  B3830 | Tuticorin | 525 kg | bearing sets\n  D6370 | Puntarenas | 270 kg | cable reels\n  A2562 | Saskatoon | 565 kg | relay boards\n  G8069 | Sfax | 125 kg | gasket sets\n  D5842 | Paranagua | 955 kg | relay boards\n  G3224 | Ostend | 340 kg | filter packs\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          125.0,
+          180.0,
+          225.0,
+          240.0,
+          270.0,
+          280.0,
+          310.0,
+          340.0,
+          498.9,
+          499.0,
+          499.1,
+          515.0,
+          525.0,
+          560.0,
+          565.0,
+          670.0,
+          685.0,
+          690.0,
+          755.0,
+          900.0,
+          920.0,
+          955.0,
+          9980.0
+        ],
+        "total": 9980.0,
+        "heaviest_ref": "D5842"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_overspill",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the overspill table below for a duty manager.\n\n  ref | destination | weight | goods\n  H2907 | Nantes | 245 kg | bearing sets\n  A2138 | Aarhus | 675 kg | bearing sets\n  E2375 | Puntarenas | 825 kg | bearing sets\n  C1015 | Saskatoon | 375 kg | valve kits\n  A8094 | Manzanillo | 450 kg | cable reels\n  H4991 | Ostend | 840 kg | cable reels\n  C5719 | Rijeka | 195 kg | relay boards\n  H2408 | Valparaiso | 395 kg | valve kits\n  A4548 | Batumi | 945 kg | bearing sets\n  D9832 | Aqaba | 245 kg | drive belts\n  D8240 | Bergen | 915 kg | bearing sets\n  C9581 | Lisbon | 280 kg | relay boards\n  C7679 | Kaohsiung | 790 kg | filter packs\n  E1836 | Sfax | 455 kg | gasket sets\n  G1181 | Mombasa | 685 kg | drive belts\n  F8622 | Bilbao | 655 kg | gasket sets\n  H6453 | Tromso | 570 kg | cable reels\n  H7775 | Fremantle | 600 kg | relay boards\n  H4791 | Gdansk | 555 kg | pump seals\n  E3319 | Constanta | 750 kg | pump seals\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          195.0,
+          245.0,
+          280.0,
+          375.0,
+          395.0,
+          450.0,
+          455.0,
+          555.0,
+          570.0,
+          572,
+          572.2,
+          572.25,
+          572.3,
+          600.0,
+          655.0,
+          675.0,
+          685.0,
+          750.0,
+          790.0,
+          825.0,
+          840.0,
+          915.0,
+          945.0,
+          11445.0
+        ],
+        "total": 11445.0,
+        "heaviest_ref": "A4548"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_recall",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the recall table below for a duty manager.\n\n  ref | destination | weight | goods\n  H6645 | Nairobi | 330 kg | valve kits\n  D5631 | Napier | 660 kg | filter packs\n  H2780 | Sfax | 525 kg | relay boards\n  A7611 | Antofagasta | 465 kg | bearing sets\n  D1953 | Ostend | 305 kg | filter packs\n  D4776 | Tromso | 790 kg | bearing sets\n  A5283 | Halifax | 220 kg | gasket sets\n  D1530 | Osaka | 630 kg | pump seals\n  E9237 | Manzanillo | 700 kg | cable reels\n  H7327 | Puntarenas | 575 kg | cable reels\n  D6572 | Reykjavik | 930 kg | pump seals\n  D5235 | Mombasa | 150 kg | cable reels\n  A1596 | Klaipeda | 390 kg | drive belts\n  E7494 | Iquique | 135 kg | relay boards\n  E1789 | Lisbon | 140 kg | valve kits\n  H6409 | Gdansk | 750 kg | bearing sets\n  G8936 | Tallinn | 935 kg | valve kits\n  B4450 | Split | 675 kg | cable reels\n  E8014 | Fremantle | 655 kg | valve kits\n  C5433 | Paranagua | 795 kg | drive belts\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          135.0,
+          140.0,
+          150.0,
+          220.0,
+          305.0,
+          330.0,
+          390.0,
+          465.0,
+          525.0,
+          537.0,
+          537.7,
+          537.75,
+          537.8,
+          538,
+          575.0,
+          630.0,
+          655.0,
+          660.0,
+          675.0,
+          700.0,
+          750.0,
+          790.0,
+          795.0,
+          930.0,
+          935.0,
+          10755.0
+        ],
+        "total": 10755.0,
+        "heaviest_ref": "G8936"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_returns",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the returns table below for a duty manager.\n\n  ref | destination | weight | goods\n  D7953 | Fremantle | 575 kg | relay boards\n  G1343 | Nakhodka | 625 kg | filter packs\n  G3701 | Durban | 655 kg | gasket sets\n  C5565 | Lisbon | 300 kg | pump seals\n  G4926 | Reykjavik | 320 kg | gasket sets\n  F3204 | Napier | 500 kg | pump seals\n  F2201 | Klaipeda | 320 kg | drive belts\n  B4708 | Rijeka | 785 kg | valve kits\n  G7109 | Ostend | 770 kg | gasket sets\n  F8866 | Puntarenas | 380 kg | cable reels\n  G6424 | Constanta | 535 kg | bearing sets\n  B9144 | Aqaba | 400 kg | relay boards\n  D4953 | Antofagasta | 220 kg | pump seals\n  G6243 | Paranagua | 790 kg | drive belts\n  A9404 | Split | 850 kg | filter packs\n  C3622 | Bilbao | 465 kg | filter packs\n  E3924 | Hobart | 175 kg | cable reels\n  G6084 | Kaohsiung | 330 kg | bearing sets\n  F8516 | Busan | 820 kg | cable reels\n  G3759 | Gdansk | 610 kg | filter packs\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          175.0,
+          220.0,
+          300.0,
+          320.0,
+          330.0,
+          380.0,
+          400.0,
+          465.0,
+          500.0,
+          521,
+          521.2,
+          521.25,
+          521.3,
+          535.0,
+          575.0,
+          610.0,
+          625.0,
+          655.0,
+          770.0,
+          785.0,
+          790.0,
+          820.0,
+          850.0,
+          10425.0
+        ],
+        "total": 10425.0,
+        "heaviest_ref": "A9404"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_salvage",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the salvage table below for a duty manager.\n\n  ref | destination | weight | goods\n  A9168 | Valparaiso | 560 kg | filter packs\n  B4042 | Ostend | 425 kg | relay boards\n  D3979 | Kotka | 825 kg | relay boards\n  A9067 | Kaohsiung | 225 kg | drive belts\n  E3257 | Nakhodka | 445 kg | filter packs\n  G2621 | Halifax | 435 kg | gasket sets\n  D6790 | Tromso | 825 kg | gasket sets\n  D8645 | Sfax | 810 kg | gasket sets\n  B5254 | Paranagua | 850 kg | cable reels\n  A4077 | Durban | 315 kg | valve kits\n  A5130 | Tallinn | 430 kg | bearing sets\n  H6387 | Antofagasta | 430 kg | filter packs\n  D3401 | Vigo | 360 kg | pump seals\n  B4197 | Bergen | 890 kg | pump seals\n  F5751 | Klaipeda | 825 kg | cable reels\n  D1189 | Napier | 550 kg | cable reels\n  D3125 | Quito | 275 kg | gasket sets\n  C3328 | Trieste | 585 kg | relay boards\n  A7144 | Larvik | 825 kg | bearing sets\n  D3323 | Aarhus | 205 kg | bearing sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          205.0,
+          225.0,
+          275.0,
+          315.0,
+          360.0,
+          425.0,
+          430.0,
+          435.0,
+          445.0,
+          550.0,
+          554,
+          554.5,
+          560.0,
+          585.0,
+          810.0,
+          825.0,
+          850.0,
+          890.0,
+          11090.0
+        ],
+        "total": 11090.0,
+        "heaviest_ref": "B4197"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_staging",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the staging table below for a duty manager.\n\n  ref | destination | weight | goods\n  C9315 | Sfax | 490 kg | cable reels\n  F1460 | Tuticorin | 475 kg | relay boards\n  H7046 | Kotka | 525 kg | gasket sets\n  C4373 | Osaka | 740 kg | pump seals\n  F1048 | Mombasa | 455 kg | drive belts\n  E2685 | Vigo | 630 kg | gasket sets\n  A4402 | Busan | 200 kg | filter packs\n  G3722 | Manzanillo | 470 kg | bearing sets\n  C6033 | Bergen | 470 kg | drive belts\n  G3675 | Nairobi | 235 kg | pump seals\n  H9137 | Klaipeda | 470 kg | valve kits\n  H8465 | Durban | 925 kg | gasket sets\n  F4048 | Lisbon | 420 kg | filter packs\n  C1006 | Halifax | 150 kg | cable reels\n  D6869 | Nakhodka | 430 kg | gasket sets\n  H3161 | Cebu | 890 kg | filter packs\n  G5539 | Antofagasta | 135 kg | drive belts\n  A5814 | Tallinn | 720 kg | gasket sets\n  A5917 | Puntarenas | 195 kg | bearing sets\n  F3719 | Hobart | 565 kg | drive belts\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          135.0,
+          150.0,
+          195.0,
+          200.0,
+          235.0,
+          420.0,
+          430.0,
+          455.0,
+          470.0,
+          475.0,
+          479.0,
+          479.4,
+          479.5,
+          479.6,
+          480,
+          490.0,
+          525.0,
+          565.0,
+          630.0,
+          720.0,
+          740.0,
+          890.0,
+          925.0,
+          9590.0
+        ],
+        "total": 9590.0,
+        "heaviest_ref": "H8465"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "dev"
+    },
+    {
+      "id": "tbl24_prealert",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the prealert table below for a duty manager.\n\n  ref | destination | weight | goods\n  H6213 | Iquique | 250 kg | gasket sets\n  E8964 | Gdansk | 395 kg | cable reels\n  B9888 | Aarhus | 500 kg | pump seals\n  B7867 | Tuticorin | 515 kg | bearing sets\n  H9153 | Lisbon | 495 kg | valve kits\n  D6193 | Quito | 335 kg | bearing sets\n  B1356 | Durban | 435 kg | filter packs\n  B3601 | Halifax | 165 kg | pump seals\n  E8730 | Osaka | 225 kg | gasket sets\n  G1132 | Vigo | 880 kg | drive belts\n  B1003 | Bilbao | 670 kg | bearing sets\n  G9178 | Manzanillo | 935 kg | pump seals\n  G1448 | Fremantle | 505 kg | gasket sets\n  G8198 | Larvik | 590 kg | cable reels\n  F4393 | Hobart | 360 kg | filter packs\n  H2899 | Recife | 930 kg | drive belts\n  G2216 | Napier | 430 kg | filter packs\n  A9370 | Batumi | 445 kg | valve kits\n  F5053 | Constanta | 665 kg | cable reels\n  E3398 | Busan | 815 kg | pump seals\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          165.0,
+          225.0,
+          250.0,
+          335.0,
+          360.0,
+          395.0,
+          430.0,
+          435.0,
+          445.0,
+          495.0,
+          500.0,
+          505.0,
+          515.0,
+          527.0,
+          590.0,
+          665.0,
+          670.0,
+          815.0,
+          880.0,
+          930.0,
+          935.0,
+          10540.0
+        ],
+        "total": 10540.0,
+        "heaviest_ref": "G9178"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    },
+    {
+      "id": "tbl24_closeout",
+      "category": "table_summary",
+      "level": 3,
+      "expected_decomposable": true,
+      "prompt": "Summarise the closeout table below for a duty manager.\n\n  ref | destination | weight | goods\n  D3348 | Ostend | 910 kg | relay boards\n  C2264 | Klaipeda | 365 kg | gasket sets\n  D4238 | Trieste | 545 kg | gasket sets\n  H3718 | Sfax | 305 kg | filter packs\n  F5257 | Tuticorin | 625 kg | pump seals\n  G6532 | Valparaiso | 145 kg | filter packs\n  B6622 | Quito | 195 kg | valve kits\n  B9309 | Napier | 190 kg | relay boards\n  C6857 | Antofagasta | 560 kg | relay boards\n  A8065 | Nakhodka | 210 kg | relay boards\n  A5308 | Saskatoon | 670 kg | pump seals\n  H2258 | Reykjavik | 535 kg | gasket sets\n  E3519 | Rijeka | 420 kg | drive belts\n  D3648 | Aqaba | 940 kg | filter packs\n  H7116 | Osaka | 705 kg | filter packs\n  D2575 | Bilbao | 310 kg | drive belts\n  E9840 | Tallinn | 590 kg | cable reels\n  A7132 | Durban | 285 kg | filter packs\n  C7408 | Paranagua | 465 kg | cable reels\n  D9624 | Mombasa | 765 kg | bearing sets\n\nWrite exactly four paragraphs separated by blank lines, each between 70 and 130 words. Name the heaviest consignment and give the total weight, each exactly once. Every figure you state must come from the table above or be an arithmetic aggregate of it -- a total, a count, an average, the heaviest or the lightest. Do not estimate and do not round to a figure the table does not support. Write continuous prose only: do not reproduce the table, do not emit rows or pipe characters, and do not use bullet points or headings. Do not repeat any sentence or any phrase of eight words or more. Write in the present tense throughout, in a neutral professional register.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 4
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 70,
+          "max": 130
+        },
+        {
+          "id": "mentions_total",
+          "kind": "must_mention",
+          "term": "total"
+        },
+        {
+          "id": "heaviest_once",
+          "kind": "term_once",
+          "term": "heaviest"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        }
+      ],
+      "numeric_facts": {
+        "allowed": [
+          0.0,
+          1.0,
+          2.0,
+          3.0,
+          4.0,
+          5.0,
+          6.0,
+          7.0,
+          8.0,
+          9.0,
+          10.0,
+          11.0,
+          12.0,
+          13.0,
+          14.0,
+          15.0,
+          16.0,
+          17.0,
+          18.0,
+          19.0,
+          20.0,
+          145.0,
+          190.0,
+          195.0,
+          210.0,
+          285.0,
+          305.0,
+          310.0,
+          365.0,
+          420.0,
+          465.0,
+          486.0,
+          486.7,
+          486.75,
+          486.8,
+          487,
+          535.0,
+          545.0,
+          560.0,
+          590.0,
+          625.0,
+          670.0,
+          705.0,
+          765.0,
+          910.0,
+          940.0,
+          9735.0
+        ],
+        "total": 9735.0,
+        "heaviest_ref": "D3648"
+      },
+      "notes": "Twenty rows so a fragment can hold a coherent subset at every N in the sweep, including N=8. Every figure in allowed[] is either a row or a legitimate aggregate, so a sentence citing the table correctly cannot be graded a fabrication.",
+      "split": "final"
+    }
+  ]
+}

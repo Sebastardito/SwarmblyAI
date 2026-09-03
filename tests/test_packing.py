@@ -91,7 +91,13 @@ def test_context_grows_with_the_budget(backend: MockBackend) -> None:
     small = build_packet(contract, task, {}, 0.05)
     large = build_packet(contract, task, {}, 0.6)
 
-    assert small.context_tokens == 0
+    # The contract header is mandatory, not rationed context, so the smallest
+    # packet still carries it. This assertion used to read `== 0`, which encoded
+    # the assumption that a packet could be squeezed below its own contract --
+    # and a fragment scored against a contract it never received measures the
+    # contract's absence rather than the cost of fragmenting. What the budget
+    # buys is everything *above* the header.
+    assert small.blocks_included == ("contract_header",)
     assert large.context_tokens > small.context_tokens
     assert large.task_tokens == small.task_tokens
 

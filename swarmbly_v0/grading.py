@@ -66,6 +66,7 @@ __all__ = [
     "GradedItem",
     "GradeReport",
     "normalise_text",
+    "content_tokens",
     "extract_items",
     "grade_answer",
     "grade_unit",
@@ -78,7 +79,24 @@ __all__ = [
 # ``[07]`` at a line start, or inline after whitespace. Tolerant of ``(07)`` and
 # ``07.`` because small models substitute bracket styles freely, and the label
 # style is not what is under test.
-ITEM_LABEL_RE = re.compile(r"(?:^|[\s>*\-])[\[\(]?(\d{1,3})[\]\).:]\s*", re.MULTILINE)
+#
+# The bracketed forms may be followed by anything. The BARE form -- ``07.`` or
+# ``07:`` with no bracket -- must be followed by whitespace or the end of the
+# line, and that is not cosmetic. Written with ``\s*`` the pattern read the
+# decimal point of a number as a label terminator, so ``[05] 42500 m is 42.5 km``
+# parsed as item 05 with the answer "42500 m is", plus a phantom item 42 with the
+# answer "5 km". The real answer, 42.5, was correct and was recorded as never
+# attempted -- it left the accuracy denominator and landed in ``items_echoed``,
+# the statistic used to argue that fragmented workers restate their inputs
+# instead of answering.
+#
+# 20 of the 150 items in prompts/ground_truth.json have decimal answers, and the
+# failure is verbosity-dependent: a bare ``[05] 42.5`` was safe, anything with a
+# word before the decimal was not. Since verbosity is the documented difference
+# between the arms, that made it a candidate arm asymmetry rather than noise.
+ITEM_LABEL_RE = re.compile(
+    r"(?:^|[\s>*\-])(?:[\[(](\d{1,3})[\])]|(\d{1,3})[.:](?=\s|$))[\s]*",
+    re.MULTILINE)
 
 MATCH_MODES = ("exact_norm", "numeric", "date_iso", "boolean", "any_of")
 
@@ -107,6 +125,43 @@ def normalise_text(value: str) -> str:
     text = text.replace("–", "-").replace("—", "-").replace("−", "-")
     text = _PUNCT_RE.sub(" ", text.lower())
     return _WS_RE.sub(" ", text).strip()
+
+
+_TOKEN_EDGE = ".,;:!?"
+
+
+def content_tokens(value: str) -> list[str]:
+    """:func:`normalise_text`, split into tokens, with sentence punctuation off.
+
+    Every token-sequence comparison in this project must go through here, and the
+    reason is a defect that appeared independently in four places.
+
+    ``normalise_text`` deliberately keeps ``.`` -- it has to, or ``42.5`` folds to
+    ``425`` and numeric grading breaks. But the checks built on top of it compare
+    whitespace-split tokens, and a word that ends a sentence carries the stop
+    with it. ``window.`` never equals ``window``. So:
+
+    * ``term_once`` counted one occurrence of two where the first ended a
+      sentence, and failed a single correct mention that ended one;
+    * ``no_repeated_ngram`` could not see a repeated phrase whose first
+      occurrence ended a sentence -- under-detection of exactly the cross-fragment
+      duplication the composition corpus exists to measure;
+    * ``any_of`` scored "251 kg is under." wrong and "251 kg is under the limit"
+      right, on the same claim;
+    * ``boolean`` returned ``None`` for "the consignment was cleared: no.",
+      dropping a correct answer out of the accuracy denominator entirely and into
+      ``items_unintelligible``.
+
+    None of these is symmetric noise. Sentence-final position correlates with
+    terse answers, and terseness is the documented difference between the arms --
+    the monolithic baseline is the arm that writes prose, and on a non-enumerated
+    prompt it is the only one not handed ``BASELINE_FORMAT_DIRECTIVE``. So the
+    error is an arm asymmetry, not a wash.
+
+    ``_as_number`` already did this (it strips a trailing dot before ``float``),
+    which is the tell: the class was known and fixed in one place out of five.
+    """
+    return [t.strip(_TOKEN_EDGE) for t in normalise_text(value).split() if t.strip(_TOKEN_EDGE)]
 
 
 _NEGATORS = frozenset({
@@ -157,11 +212,14 @@ def _contains_accepted_phrase(got_n: str, accepted: set[str]) -> bool:
     the sentence, and an answer that states both members of an antonym pair
     ("not under -- over") is scored on the one that is not negated.
     """
-    tokens = got_n.split()
+    # Through ``content_tokens``, not ``.split()``: a phrase that ends the
+    # sentence carries the stop into its last token, and "is under." would not
+    # match the accepted ``under``. See ``content_tokens``.
+    tokens = content_tokens(got_n)
     if not tokens:
         return False
     for alternative in sorted(accepted, key=len, reverse=True):
-        want = alternative.split()
+        want = content_tokens(alternative)
         if not want:
             continue
         span = len(want)
@@ -203,8 +261,11 @@ def _as_iso_date(value: str) -> str | None:
 
 
 def _as_boolean(value: str) -> bool | None:
-    words = normalise_text(value).split()
-    for word in words:
+    # ``content_tokens``, so that a boolean stated at the end of a sentence --
+    # "the consignment was cleared: no." -- is read. Under ``.split()`` the token
+    # was ``no.``, no word matched, the function returned ``None``, and a correct
+    # answer left the accuracy denominator for ``items_unintelligible``.
+    for word in content_tokens(value):
         if word in _TRUE_WORDS:
             return True
         if word in _FALSE_WORDS:
@@ -369,7 +430,8 @@ def extract_items(text: str) -> list[tuple[str, str]]:
         # which the pattern consumes as a prefix; leaving them in would make
         # "Lisbon" and "Lisbon -" different answers.
         answer = text[m.end():end].strip().rstrip("-*>\u2022\u00b7 \t\n\r")
-        item_id = m.group(1).lstrip("0") or "0"
+        # Two capture groups: the bracketed form and the bare form.
+        item_id = (m.group(1) or m.group(2)).lstrip("0") or "0"
         out.append((item_id.zfill(2), answer))
     return out
 
@@ -482,6 +544,37 @@ def grade_unit(
     return graded
 
 
+def _optional_score(unit: Any, field: str) -> float | None:
+    """Read a per-unit score, preserving *absent* as ``None``.
+
+    ``getattr(unit, field, 0.0)`` was the old form and it manufactured a
+    measurement out of a missing one. A single-replica unit has no agreement --
+    there is no second reply for it to agree with -- and coercing that to 0.0
+    put it in the calibration as the *least confident* item in the dataset
+    rather than as an item with no confidence score at all.
+
+    The run of 26 August is what this cost. 8 984 single-replica rows, 45 % of
+    the graded mass, entered the agreement calibration pinned at 0.0. Mean
+    agreement read 0.392 and 0.391 for two claim classes whose accuracy differed
+    by 37 points -- two classes reading the same value to three decimals is the
+    signature of a constant, not of a measurement. Restricted to k=3 the same
+    data give 0.813 and 0.736, in line with the run before it. The "collapse"
+    was arithmetic.
+
+    ``None`` is returned instead, and every consumer already excludes it and
+    counts the exclusion.
+    """
+    if isinstance(unit, str):
+        return None
+    value = getattr(unit, field, None)
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return round(float(value), 6)
+    except (TypeError, ValueError):
+        return None
+
+
 def grade_units(
     units: Iterable[Any],
     key: Mapping[str, Mapping[str, str] | str],
@@ -515,14 +608,8 @@ def grade_units(
                 "unit_index": index,
                 "item_id": item.item_id,
                 "label": "" if isinstance(unit, str) else getattr(unit, "label", ""),
-                "agreement": (
-                    None if isinstance(unit, str)
-                    else round(float(getattr(unit, "agreement", 0.0)), 6)
-                ),
-                "judge_score": (
-                    None if isinstance(unit, str)
-                    else round(float(getattr(unit, "judge_score", 0.0)), 6)
-                ),
+                "agreement": _optional_score(unit, "agreement"),
+                "judge_score": _optional_score(unit, "judge_score"),
                 # The judge's verdict, kept next to the truth so the two can be
                 # compared. Quantifying how far the judge was from ground truth
                 # is the other thing this experiment settles.

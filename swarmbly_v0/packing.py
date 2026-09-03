@@ -41,6 +41,10 @@ __all__ = [
     "build_packets",
     "measure_rho",
     "packing_floor",
+    "task_budget_weights",
+    "task_budget_floors",
+    "assert_packet_invariants",
+    "PacketInvariantError",
     "build_monolithic_prompt",
 ]
 
@@ -250,20 +254,40 @@ def build_packet(
     carry = carry_block(task, predecessor_summaries, sequential)
     carry_tokens = count_tokens(carry) if carry else 0
 
-    budget = max(task_tokens + carry_tokens,
+    # The contract header is mandatory too, on the same footing as the task
+    # block and the carry. It used to be the highest-priority *context* block --
+    # kept first, but still fundable from slack and therefore droppable when the
+    # slack ran out. On `multi_hop_math_supply` at rho 2.0, N=4 a packet came
+    # back without it, and a fragment scored against a contract it never
+    # received measures the contract's absence: exactly the V6 defect that
+    # invalidated long_prose in two runs.
+    #
+    # This is also what makes packing_floor honest. The floor has always been
+    # DEFINED as tasks plus one header each; with the header rationable, a
+    # below-floor target produced packets cheaper than the floor and the two
+    # disagreed.
+    header = _contract_header(contract, verbose=False)
+    header_tokens = count_tokens(header)
+
+    mandatory_tokens = task_tokens + carry_tokens + header_tokens
+    budget = max(mandatory_tokens,
                  int(round(rho_budget * max(contract.prompt_tokens, 1))))
-    remaining = budget - task_tokens - carry_tokens
+    remaining = budget - mandatory_tokens
 
     candidates = [(name, text) for name, text in
                   _context_blocks(contract, task, predecessor_summaries)
-                  if not (carry and name == "predecessors")]
+                  if name != "contract_header"
+                  and not (carry and name == "predecessors")]
     natural_tokens = sum(count_tokens(text) for _, text in candidates if text)
     if remaining > natural_tokens:
         for i, block in enumerate(_expansion_blocks(contract, task, remaining - natural_tokens)):
             candidates.append((f"expansion_{i}", block))
 
-    included: list[str] = [carry] if carry else []
-    names: list[str] = ["predecessors"] if carry else []
+    included: list[str] = [header]
+    names: list[str] = ["contract_header"]
+    if carry:
+        included.append(carry)
+        names.append("predecessors")
     truncated = False
     for name, text in candidates:
         if not text:
@@ -331,7 +355,22 @@ def packing_floor(
     Reporting the optimistic floor as if it were final would let a run announce
     ``rho_reachable=true`` for a cell that then overshoots.
     """
-    total = sum(count_tokens(_task_block(task)) for task in plan.tasks)
+    # The module docstring has always defined this as
+    #
+    #     rho_floor = ( sum_i |task_i| + N * |header_i| ) / |P|
+    #
+    # and the implementation summed only the task blocks. The header term was
+    # missing, so the floor was under-reported by one header per packet and
+    # `rho_reachable` came back true for cells whose target could not in fact be
+    # hit. Those cells then overshot -- and because nothing checked, the overshoot
+    # was invisible. On `bulk_extraction_invoices` at rho 1.25, N=4, the run
+    # achieved 1.962 while reporting the target as reachable.
+    #
+    # A packet always carries its task block AND one contract header. That is
+    # what a packet minimally is; a fragment without the header is not a cheaper
+    # packet, it is a fragment that cannot be scored against its contract.
+    header = count_tokens(_contract_header(contract, verbose=False))
+    total = sum(count_tokens(_task_block(task)) + header for task in plan.tasks)
     if summaries and getattr(plan, "sequential", False):
         total += sum(
             count_tokens(carry_block(task, summaries, True)) for task in plan.tasks
@@ -350,6 +389,8 @@ def build_packets(
     plan: Plan,
     rho_target: float,
     summaries: Mapping[str, str] | None = None,
+    budget_tokens: float | None = None,
+    only_tasks: Sequence[str] | None = None,
 ) -> PackingResult:
     """Build every packet for ``plan`` so the *global* ``rho`` hits ``rho_target``.
 
@@ -368,16 +409,36 @@ def build_packets(
     bare task; the result is flagged ``reachable=False``. A correction pass then
     absorbs the residue left by atomic block boundaries.
     """
-    n = max(len(plan.tasks), 1)
     summaries = dict(summaries or {})
     prompt_tokens = max(contract.prompt_tokens, 1)
     floor = packing_floor(contract, plan)
     reachable = rho_target >= floor
 
-    mandatory = [count_tokens(_task_block(task)) for task in plan.tasks]
-    desired = [_desired_context_tokens(contract, task, summaries) for task in plan.tasks]
+    # Which tasks this call is responsible for, and what budget they share.
+    #
+    # Both parameters exist because of a defect that put achieved rho at 3.91
+    # against a target of 3.5 in four consecutive runs. The sweep calls this
+    # function ONCE PER TOPOLOGICAL LEVEL, each time with the summaries produced
+    # so far -- but each call budgeted all N tasks against the FULL budget, while
+    # only the tasks of that level were dispatched. On a plan of seven sections
+    # plus one integration node that meant the integration node was budgeted
+    # twice, and the second time its `desired` had grown (it now had seven
+    # predecessor summaries to want), so it took a much larger share of the slack
+    # than the first pass had reserved for it. The overshoot was exactly that
+    # extra, and it grew with N because the number of predecessors does.
+    #
+    # A caller sweeping levels now passes the tasks it is about to dispatch and
+    # the budget that remains, so the total across levels is the total that was
+    # asked for.
+    tasks = [t for t in plan.tasks
+             if only_tasks is None or str(t.task_id) in set(only_tasks)]
+    n = max(len(tasks), 1)
+
+    mandatory = [count_tokens(_task_block(task)) for task in tasks]
+    desired = [_desired_context_tokens(contract, task, summaries) for task in tasks]
     total_desired = sum(desired)
-    total_budget = rho_target * prompt_tokens
+    total_budget = (rho_target * prompt_tokens if budget_tokens is None
+                    else max(0.0, float(budget_tokens)))
     slack = max(0.0, total_budget - sum(mandatory))
 
     if total_desired > 0:
@@ -389,7 +450,7 @@ def build_packets(
         build_packet(contract, task, summaries,
                      (mandatory[i] + shares[i]) / prompt_tokens,
                      sequential=bool(getattr(plan, "sequential", False)))
-        for i, task in enumerate(plan.tasks)
+        for i, task in enumerate(tasks)
     ]
 
     # Correction pass: atomic blocks and truncation boundaries leave residue.
@@ -405,7 +466,7 @@ def build_packets(
             bonus = residual / len(elastic)
             for i in elastic:
                 new_budget = max(mandatory[i], packets[i].token_count + bonus) / prompt_tokens
-                packets[i] = build_packet(contract, plan.tasks[i], summaries, new_budget)
+                packets[i] = build_packet(contract, tasks[i], summaries, new_budget)
 
     achieved = measure_rho(packets, plan.prompt)
     return PackingResult(
@@ -433,3 +494,121 @@ def build_monolithic_prompt(contract: Contract, prompt: str) -> str:
         prompt,
     ]
     return "\n".join(part for part in parts if part)
+
+
+def task_budget_floors(contract: Contract, plan: Plan) -> dict[str, float]:
+    """The tokens each task must have: its own block plus one contract header.
+
+    A level allocated less than the sum of these cannot carry its headers, and a
+    fragment without its contract measures the contract's absence. The global
+    ``packing_floor`` guarantees this in aggregate; splitting a budget between
+    levels has to guarantee it per level, which is a stricter requirement and was
+    the one a proportional split quietly broke.
+    """
+    header = count_tokens(_contract_header(contract, verbose=False))
+    return {str(task.task_id): float(count_tokens(_task_block(task)) + header)
+            for task in plan.tasks}
+
+
+def task_budget_weights(contract: Contract, plan: Plan) -> dict[str, float]:
+    """How the global budget should divide between tasks, before any run.
+
+    Computed once, from the plan alone with no summaries, so that a level
+    dispatched later cannot claim a larger share merely because predecessor
+    summaries now exist for it to want. That is precisely what went wrong: the
+    integration node's `desired` grew between the first pass and the second, and
+    it took slack the first pass had reserved for the sections.
+
+    A task's weight is its mandatory block plus what it would consume unrationed.
+    Never zero, so a task can always be packed.
+    """
+    weights: dict[str, float] = {}
+    for task in plan.tasks:
+        mandatory = count_tokens(_task_block(task))
+        desired = _desired_context_tokens(contract, task, {})
+        weights[str(task.task_id)] = float(max(1, mandatory + desired))
+    return weights
+
+
+class PacketInvariantError(RuntimeError):
+    """A run was about to dispatch packets that cannot answer their own question.
+
+    Raised BEFORE generation, not after. A post-hoc warning is what the harness
+    had, and it did not work: ``rho_fidelity`` reported the same N=8 drift in
+    four consecutive runs and every one of them completed, was analysed, and had
+    a figure quoted from it. A check that has to be read is a check that gets
+    skipped; a check that costs seconds and refuses to start cannot be.
+    """
+
+
+def assert_packet_invariants(
+    packets: Sequence[Packet],
+    plan: Plan,
+    contract: Contract,
+    rho_target: float,
+    prompt: str,
+    tolerance: float = 0.05,
+    summaries: Mapping[str, str] | None = None,
+    reachable: bool = True,
+) -> None:
+    """Refuse to dispatch a set of packets that is not what the run claims.
+
+    Three conditions, each of which has silently corrupted a result:
+
+    1. **A packet without its contract.** V6: ``long_prose`` fragments received
+       an answer-sheet directive instead of their format block, so the
+       eight-paragraph, 70-to-130-word contract reached no fragment while the
+       baseline kept all of it. That invalidated long_prose in two runs and read,
+       downstream, as a cost of fragmentation.
+
+    2. **Achieved rho outside tolerance of target.** rho is the independent
+       variable, so a cell that did not run at its budget is not the cell its
+       label names.
+
+    3. **A dependent task without its mandatory carry.** V4: at rho = 2.0 not one
+       packet carried a predecessor block, so every successor was asked to divide
+       a number nobody had told it. That was reported as "+47.2 % coherence tax
+       for an ordered chain".
+
+    Raises:
+        PacketInvariantError: naming the packet and the condition, so the failure
+            is actionable rather than a bare assertion.
+    """
+    summaries = dict(summaries or {})
+    by_id = {str(p.task_id): p for p in packets}
+
+    # A target below packing_floor cannot carry the contract header in every
+    # packet -- the floor is DEFINED as the task text plus one header each. So
+    # an unreachable cell is not a defect, it is a cell the budget forbids, and
+    # `rho_reachable` already records it. Checking the header there would refuse
+    # every low-rho run for doing exactly what low rho means.
+    if not reachable:
+        return
+
+    for task in plan.tasks:
+        packet = by_id.get(str(task.task_id))
+        if packet is None:
+            continue
+        if "[GLOBAL CONTRACT]" not in packet.text:
+            raise PacketInvariantError(
+                f"packet {task.task_id} carries no [GLOBAL CONTRACT] header. A "
+                f"fragment scored against a contract it never received measures "
+                f"the contract's absence, not the cost of fragmenting.")
+        if consumes_predecessor(_task_text(task)):
+            expected = [d for d in task.depends_on if summaries.get(d)]
+            if expected and "[PREDECESSOR SUMMARIES]" not in packet.text:
+                raise PacketInvariantError(
+                    f"packet {task.task_id} consumes a predecessor value and its "
+                    f"carry is absent (depends on {expected}). The packet is "
+                    f"unanswerable by construction, and no fragment size fixes "
+                    f"a packet missing the one thing it needs.")
+
+    achieved = measure_rho(packets, prompt)
+    if rho_target > 0:
+        deviation = (achieved - rho_target) / rho_target
+        if abs(deviation) > tolerance:
+            raise PacketInvariantError(
+                f"achieved rho {achieved:.3f} against a target of {rho_target:.3f} "
+                f"({deviation:+.1%}, tolerance {tolerance:.0%}). rho is the "
+                f"independent variable; this cell would not measure what its "
+                f"label says.")
