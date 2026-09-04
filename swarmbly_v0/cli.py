@@ -94,6 +94,19 @@ def build_parser() -> argparse.ArgumentParser:
                           "and is expected to FAIL. Without this the console prints "
                           "curves and no verdict, and the verdict has to be dug out "
                           "of summary.json.")
+    run.add_argument("--declare-composition", action="append", default=None,
+                     metavar="CATEGORY@rho=R@N=n@k=K",
+                     help="the same declaration, judged on the CONSTRAINT SCORE "
+                          "instead of the coherence tax: a paired difference in "
+                          "points, clustered by prompt, verdict on the upper "
+                          "bound against experiment.COMPOSITION_THRESHOLD_POINTS. "
+                          "Use this on a composition corpus. The tax reads +0.000 "
+                          "on texts where the constraint score finds a 14-point "
+                          "failure, so on prose the tax is the wrong instrument "
+                          "and this is the criterion. May be given twice: the "
+                          "second cell is the control and is expected to FAIL. No "
+                          "verdict is printed below "
+                          "experiment.MIN_CLUSTERS_FOR_A_VERDICT prompts.")
     run.add_argument("--max-prompts", type=int, default=None,
                      help="use only the first K prompts (for smoke runs)")
     run.add_argument("--router-threshold", type=float, default=DEFAULT_THRESHOLD,
@@ -370,6 +383,68 @@ def _cmd_run(args: argparse.Namespace) -> int:
     if getattr(args, "declare", None):
         print("=" * 72)
 
+    # The same headline on the constraint score, for a composition corpus.
+    #
+    # Kept separate from `--declare` rather than folded into it, because the two
+    # criteria are not the same claim and must not be printed as though they
+    # were: the tax is a relative degradation in coherence against a saturated
+    # judge, and this is an absolute difference in checks a text either satisfies
+    # or does not. On the free-form run of 3 September the tax read +0.000 on the
+    # three compositions while this one found 14 to 21 points. A run that printed
+    # a single "verdict" pooling those would be reporting the mean of a
+    # measurement and a blind spot.
+    for position, key in enumerate(getattr(args, "declare_composition", None) or []):
+        cell = stats.get("composition_criterion", {}).get(key)
+        role = ("DECLARED CELL, constraint score"
+                if position == 0 else "CONTROL, constraint score (must fail)")
+        print(f"\n{'=' * 72}\n{role}: {key}")
+        if cell is None:
+            available = sorted(stats.get("composition_criterion", {}))
+            print("  NOT PRESENT in this run. The declared cell was not measured, so")
+            print("  this run has no verdict. Check the spelling against the grid:")
+            for name in available[:6]:
+                print(f"    {name}")
+            if len(available) > 6:
+                print(f"    ... and {len(available) - 6} more")
+            if not available:
+                print("    (none -- no fragmented row in this run carried a "
+                      "constraint score, so the corpus has no compositions)")
+            continue
+        threshold = float(cell["declared_cell"]["threshold_points"])
+        print(f"  monolithic          {cell['mean_baseline']:.3f}"
+              f"   (of which {cell['baseline_at_ceiling']} of "
+              f"{cell['n_observations']} at 1.000)")
+        print(f"  fragmented          {cell['mean_fragmented']:.3f}")
+        print(f"  paired difference   {cell['mean_delta'] * 100:+.2f} points"
+              f"   median {cell['median_delta'] * 100:+.2f}")
+        interval = cell.get("mean_ci95")
+        if interval:
+            print(f"  95% CI (by prompt)  [{interval[0] * 100:+.2f}, "
+                  f"{interval[1] * 100:+.2f}] points")
+        print(f"  criterion           upper bound below "
+              f"{threshold * 100:.0f} points")
+        print(f"  n_prompts           {cell['n_prompts']}   "
+              f"(floor {cell['declared_cell']['min_clusters']}; "
+              f"rows from one prompt share its difficulty)")
+        if cell.get("passed") is None:
+            # No verdict is a result, and it must not read like a near miss.
+            print("  VERDICT             NONE -- this run cannot answer the question")
+            print(f"  reason              {cell.get('note', '')}")
+            continue
+        passed = bool(cell["passed"])
+        print(f"  VERDICT             {'MET' if passed else 'NOT MET'}"
+              + ("" if passed else
+                 f"  -- over by {cell['short_by_points'] * 100:.2f} points on "
+                 f"the upper bound"))
+        if position > 0:
+            print("  control reading     "
+                  + ("*** THE CONTROL PASSED. The instrument is not separating "
+                     "the arms, so NEITHER number is evidence. ***"
+                     if passed else
+                     "fails as required -- the instrument separates the arms."))
+    if getattr(args, "declare_composition", None):
+        print("=" * 72)
+
     # The old criterion, printed as what it is.
     #
     # "exists (category, rho) with relative degradation < 5 %" is a maximum
@@ -452,3 +527,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _cmd_route(args)
     parser.error(f"unknown command {args.command!r}")
     return 2
+
+
+if __name__ == "__main__":  # pragma: no cover - process entry
+    # `python -m swarmbly_v0.cli run ...` used to import this module, define
+    # `main`, and exit 0 without running anything -- no output, no directory, no
+    # error. The supported spelling is `python -m swarmbly_v0`, which
+    # `__main__.py` dispatches, but a plausible near-miss that exits 0 having
+    # done nothing is the same failure shape as the comment inside a line
+    # continuation that silently truncated a six-hour run on 3 September. Both
+    # spellings now work.
+    raise SystemExit(main())

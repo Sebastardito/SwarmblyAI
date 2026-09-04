@@ -37,7 +37,8 @@ from .textutil import (
 )
 
 __all__ = ["BASELINE_FORMAT_DIRECTIVE", "carry_values", "consumes_predecessor",
-           "global_contract", "plan",
+           "global_contract", "ordering_text", "plan", "reference_map",
+           "references_are_recoverable",
            "split_enumerated", "summarize_fragment", "suggest_n_tasks"]
 
 _AUDIENCE_RE = re.compile(
@@ -366,20 +367,368 @@ def split_enumerated(prompt: str) -> tuple[str, list[str], str] | None:
     return preamble, items, postamble
 
 
+def ordering_text(prompt: str) -> str:
+    """The part of ``prompt`` that says in what ORDER the work must be done.
+
+    Used for the dependency decision in :func:`plan`, and for nothing else. An
+    enumerated batch has three parts (see :func:`split_enumerated`) and only two
+    of them are about the work: the preamble states the operation and the items
+    carry the data. The **postamble states the shape of the answer**, and reading
+    a dependency out of it is a category error with a measured cost.
+
+    ``prompts/ground_truth.json`` writes its format block as *"Begin the line
+    with the item number in square brackets, exactly as given, **then** a single
+    space, **then** the value."* That ``then`` means "next character", not "after
+    the previous step has finished". ``router._SEQUENTIAL_CUES`` contains
+    ``\\bthen\\b``, one cue is enough to clear the 0.45 gate
+    (``_saturate(1, 1.5) = 0.487``), and so **all fifteen** prompts of that
+    corpus were planned as four-deep CHAINS -- on a corpus whose every prompt
+    says, in as many words: *"Items are independent: the answer to one must not
+    depend on the answer to any other, and you must not reconcile them against
+    each other."*
+
+    Two things follow from the wrong topology, and the second is a measurement
+    defect rather than an inefficiency:
+
+    * ``n_levels`` is ``N`` instead of 2, so the critical path -- the thing that
+      bounds any achievable speedup -- is reported as admitting no parallelism
+      for a bag of items that is nothing but parallel.
+    * every task acquires a dependency edge, so **every fragment but the first**
+      is handed its predecessor's reply as context. On an answer sheet that reply
+      is a block of *answer lines* (``[01] 576``), sitting directly above a task
+      block that says "answer only the items listed here". In the v3c-gt cell
+      (rho 2.5, N=4) that put a predecessor's answers into **42 of 60**
+      dispatched packets, against **0 of 15** monolithic prompts. The harm is the
+      one :func:`~swarmbly_v0.packing.carry_block` already documents for the
+      mandatory path -- "the successor restates them as its own, and an
+      enumerated corpus reported 379 graded items against a key holding 150" --
+      arriving through the optional path instead.
+
+    The router's own feature vector is deliberately left alone: it reads the
+    whole prompt, its evaluation is published, and this is a question about the
+    plan, not about whether to fragment at all.
+    """
+    parts = split_enumerated(prompt or "")
+    if parts is None:
+        return prompt or ""
+    preamble, items, postamble = parts
+    if not postamble.strip():
+        return prompt or ""
+    return "\n".join([preamble, *items]).strip()
+
+
+_LABELLED_LINE_RE = re.compile(r"^\s*[\[(]([A-Za-z][\w\-]{0,30}|\d{1,3})[\])]\s*(.*)$")
+"""A line that opens with a bracketed label. Alphanumeric, unlike
+:data:`_ITEM_LABEL_RE`, which requires digits and is why the fact-graph corpus
+fell through to sentence packing."""
+
+_VALUE_RE = re.compile(r"(?<![\w.])\d[\d,]*(?:\.\d+)?(?![\w])")
+"""A standalone numeric VALUE, not a digit.
+
+The first version of this classifier asked whether a line contained a digit at
+all, and every ask line in the fact-graph corpus contains one -- ``[c_s1] the
+total for Depot group 1`` has two, in the label and in the ordinal. It
+classified every question as data, found no questions, and returned ``None``:
+the repair silently did nothing while its tests passed. What separates a
+question from a row of data is not the presence of digits but **how many
+values** it carries, and a value is a whole token, so ``c_s1`` and ``s1`` do not
+count and ``440`` does."""
+
+MAX_VALUES_IN_AN_ASK: int = 1
+"""Above this many numeric values a labelled line is data, not a question.
+
+One admits the ordinal a question needs -- "the total for Depot group 1" -- and
+excludes a table row. It is a crude line and it FAILS CLOSED: a
+misclassification leaves fewer than two asks or no material,
+:func:`reference_map` returns ``None``, and the segmenter behaves exactly as it
+did before. The risk this threshold carries is under-firing, which costs the
+repair; not over-firing, which would move an existing partition."""
+
+"""A reference is a token that names exactly ONE material unit.
+
+The first formulation required two consecutive shared content words, on the
+reasoning that one shared word is noise -- "total", "group", "value" appear in
+every prompt this project has. It was the wrong axis. It matched "depot group"
+against all four sections and nothing at all in the chain class, whose questions
+name a single proper noun: "the running total after adding Mombasa".
+
+What makes a token a reference is not its length but whether it DISCRIMINATES.
+A token appearing in exactly one material unit is that unit's name, whether it
+is ``mombasa`` or ``4``; a token appearing in all of them says only that they
+are the same kind of thing. So the rule is uniqueness, and it covers both cases
+with one mechanism instead of two thresholds."""
+
+
+def _content_sequence(text: str) -> list[str]:
+    """Content words AND standalone numerals, in order.
+
+    ``textutil.content_words`` drops any token not starting with a letter, and
+    that dropped the only token that discriminates. The four section titles of a
+    fact-graph instance are "Depot group 1" ... "Depot group 4", and the four
+    questions say "the total for Depot group N": on content words alone every
+    question shares "depot group" with every section, every referent set is
+    identical, and the partition cannot be built. The numeral is the name.
+    """
+    from .textutil import STOPWORDS
+
+    out: list[str] = []
+    for token in re.findall(r"[\w']+", text.lower()):
+        if token.isdigit():
+            out.append(token)
+        elif token[0].isalpha() and token not in STOPWORDS and len(token) > 2:
+            out.append(token)
+    return out
+
+
+def _discriminating_tokens(material: dict[int, str]) -> dict[str, int]:
+    """``{token: the one material unit it names}``, for tokens naming exactly one.
+
+    A token in every unit ("group", "units", "dwell") carries no information
+    about which is meant; a token in exactly one is that unit's name. Computed
+    over the material as a whole rather than per unit, because uniqueness is a
+    property of the set.
+    """
+    owners: dict[str, set[int]] = {}
+    for index, text in material.items():
+        for token in set(_content_sequence(text)):
+            owners.setdefault(token, set()).add(index)
+    return {token: next(iter(units)) for token, units in owners.items()
+            if len(units) == 1}
+
+
+def _labelled_units(prompt: str) -> dict[int, str]:
+    """``{line index: that unit's full text}`` for every bracket-labelled line.
+
+    A unit is the labelled line plus the unlabelled lines beneath it, because a
+    table's rows sit under their section header and carry no label of their own.
+    Attaching them BEFORE anything is counted is what lets a section be told
+    from a question at all: the header alone carries one value, the header with
+    its four rows carries five.
+    """
+    units: dict[int, str] = {}
+    current: int | None = None
+    for index, line in enumerate((prompt or "").split("\n")):
+        match = _LABELLED_LINE_RE.match(line)
+        if match is not None:
+            units[index] = line.strip()
+            current = index
+        elif current is not None and line.strip():
+            units[current] += " " + line.strip()
+        elif not line.strip():
+            current = None
+    return units
+
+
+def reference_map(prompt: str) -> dict[int, set[int]] | None:
+    """Which material lines each ASK line refers to, or ``None`` if unrecoverable.
+
+    The repair for the defect of 4 September, and the honest half of it is the
+    ``None``.
+
+    ``_segment`` partitions a prompt by position and token count. On a prompt
+    that states its questions in one place and its material in another -- a
+    brief plus an appendix, a question list plus a document -- a contiguous cut
+    falls between them. Measured on ``benchmark_v7``'s ``map`` class, the most
+    partitionable task available: one packet received all four questions and
+    none of the data, the three holding the data were asked nothing, and one
+    section was split across two of them. The oracle arm scored 1.000 on the
+    same instances with the same worker, so the partition was viable and the
+    implementation lost everything.
+
+    Six versions did not see it because every corpus this project has run puts a
+    question and its data in the SAME item -- ``[01] 21 crates, 16 units per
+    crate`` -- so a contiguous cut keeps them together by accident of format.
+
+    **The rule.** A line is an *ask* when it carries a bracketed label and no
+    digit; it is *material* when it carries a label and a digit, or sits under
+    one that does. An ask REFERS to a material line when the two share a phrase
+    of :data:`MIN_REFERENCE_PHRASE_WORDS` consecutive content words -- a name,
+    not a keyword. No model, no semantics, and nothing that can drift.
+
+    **The refusal.** ``None`` whenever the shape is not present, and -- this is
+    the load-bearing case -- whenever the shape IS present but some ask refers
+    to nothing. A prompt whose questions cannot be linked to their material
+    must not be fragmented at all, and :func:`plan` propagates that: see
+    :func:`references_are_recoverable`.
+
+    Returns:
+        ``{ask line index: {material line indices}}`` over the prompt's lines,
+        or ``None``. An empty dict is never returned: no asks means no shape.
+    """
+    units = _labelled_units(prompt)
+    asks = {index: text for index, text in units.items()
+            if len(_VALUE_RE.findall(text)) <= MAX_VALUES_IN_AN_ASK}
+    material = {index: text for index, text in units.items() if index not in asks}
+
+    # Both kinds must exist, or there is nothing to keep together. Two asks and
+    # one material unit is the smallest shape where a contiguous cut can
+    # separate a question from its data.
+    if len(asks) < 2 or not material:
+        return None
+
+    names = _discriminating_tokens(material)
+    if not names:
+        # Nothing in the material is nameable, so no map over it is
+        # trustworthy -- four identical-looking sections, say.
+        return None
+
+    mapping: dict[int, set[int]] = {}
+    for ask_index, ask_text in asks.items():
+        hits = {names[token] for token in set(_content_sequence(ask_text))
+                if token in names}
+        if not hits:
+            # One ask with no recoverable referent poisons the whole map. Not a
+            # partial map: a partition that keeps three questions with their
+            # data and strands the fourth is worse than refusing, because it
+            # produces a figure with one silently unanswerable claim in it.
+            return None
+        mapping[ask_index] = hits
+    return mapping
+
+
+def references_are_recoverable(prompt: str) -> bool:
+    """``False`` only when the question/material shape is present and unlinkable.
+
+    The gate half of the fused repair, and the asymmetry is deliberate. A prompt
+    with no such shape returns ``True``: it is the ordinary case, six corpora
+    are built that way, and refusing it would withdraw every figure this project
+    has. A prompt WITH the shape returns ``True`` when every ask can be linked
+    to its material and ``False`` when one cannot.
+
+    So the scope is preserved wherever the dependency is recoverable and
+    narrowed only where it is not, which is the difference between saying "this
+    architecture fragments problems" and "this architecture fragments problems
+    whose items are self-contained".
+    """
+    if not _has_question_material_shape(prompt):
+        return True
+    mapping = reference_map(prompt)
+    if mapping is None:
+        return False
+    # A map is not enough: the partition has to be BUILDABLE. Two questions
+    # that need the same rows cannot both have them without emitting those rows
+    # twice, and duplicating a unit inflates ``sum(|task_i|)`` above ``|P|`` and
+    # raises the reachable rho floor -- which is why `_segment` has always
+    # refused to do it.
+    #
+    # This is the residual of the repair and it is worth naming precisely. The
+    # ORACLE partition duplicates freely: `_oracle_partition` hands each claim
+    # exactly the facts it requires and those sets overlap. So the partition
+    # that is viable in principle is a COVERING, not a partition, and rho --
+    # defined as sum(|K_i|)/|P| -- charges for every duplicated token. The
+    # architecture's low-rho pitch and its own oracle are in tension, and no
+    # segmenter can resolve that; it is an architecture decision. Until it is
+    # made, a prompt whose questions need overlapping material is refused rather
+    # than mis-packed.
+    return _segment_by_reference(prompt, 2, mapping) is not None
+
+
+def _has_question_material_shape(prompt: str) -> bool:
+    """Are there at least two label-only lines and one line carrying data?
+
+    Cheap and deliberately separate from :func:`reference_map`, because "the
+    shape is absent" and "the shape is present and unlinkable" are different
+    answers and the router treats them differently.
+    """
+    units = _labelled_units(prompt)
+    asks = sum(1 for text in units.values()
+               if len(_VALUE_RE.findall(text)) <= MAX_VALUES_IN_AN_ASK)
+    return asks >= 2 and (len(units) - asks) >= 1
+
+
+def _segment_by_reference(prompt: str, n_tasks: int,
+                          mapping: dict[int, set[int]]) -> list[str] | None:
+    """Group the prompt's lines so every ask travels with what it refers to.
+
+    Each group is one ask plus the material it names. ``n_tasks`` is honoured
+    exactly, as everywhere else in this module -- the sweep needs ``N`` to be the
+    independent variable and not a suggestion -- so groups are merged when there
+    are more asks than tasks, and the largest is split when there are fewer.
+
+    ``None`` when a material line is referred to by more than one ask. Emitting
+    it twice would inflate ``sum(|task_i|)`` above ``|P|`` and raise the
+    reachable ``rho`` floor -- the same reason ``_segment`` refuses to duplicate
+    a unit -- and emitting it once would strand the other ask. Refusing is the
+    honest answer and the router turns it into a refusal to fragment.
+    """
+    seen: set[int] = set()
+    for referents in mapping.values():
+        if seen & referents:
+            return None
+        seen |= referents
+
+    lines = prompt.split("\n")
+    blocks: list[list[int]] = []
+    for ask_index in sorted(mapping):
+        blocks.append([ask_index, *sorted(mapping[ask_index])])
+    if not blocks:
+        return None
+
+    # Lines belonging to no block -- the preamble and the format directive --
+    # ride with the nearest block rather than becoming a task of their own. A
+    # packet holding only an output-format directive is the t1 of the V7 map
+    # instance: it was dispatched, it cost tokens, and it could answer nothing.
+    claimed = {i for block in blocks for i in block}
+    for index, line in enumerate(lines):
+        if index in claimed or not line.strip():
+            continue
+        nearest = min(blocks, key=lambda b: min(abs(index - i) for i in b))
+        nearest.append(index)
+
+    groups = [sorted(set(block)) for block in blocks]
+    while len(groups) > n_tasks:
+        smallest = min(range(len(groups) - 1),
+                       key=lambda i: len(groups[i]) + len(groups[i + 1]))
+        groups[smallest] = sorted(set(groups[smallest] + groups[smallest + 1]))
+        del groups[smallest + 1]
+    while len(groups) < n_tasks:
+        largest = max(range(len(groups)), key=lambda i: len(groups[i]))
+        block = groups[largest]
+        if len(block) < 2:
+            return None
+        half = len(block) // 2
+        groups[largest:largest + 1] = [block[:half], block[half:]]
+
+    return ["\n".join(lines[i] for i in group).strip() or "Answer the request."
+            for group in groups]
+
+
 def _segment(prompt: str, n_tasks: int, answer_sheet: bool = True) -> list[str]:
     """Split ``prompt`` into exactly ``n_tasks`` non-empty units of work.
 
-    Enumerated prompts split on their own bullets; otherwise sentences are
-    packed into ``n_tasks`` roughly equal-token groups. When there is less
-    material than requested tasks, the prompt is sliced by *tokens* instead of
-    duplicating sentences: duplicating would inflate ``sum(|task_i|)`` above
-    ``|P|`` and make ``rho = 1.0`` unreachable, destroying the floor of the
-    sweep. ``N`` is always honoured exactly -- the sweep needs ``N`` to be the
-    independent variable, not a suggestion.
+    Three paths, in order of how much they know about the prompt:
+
+    1. **An enumerated batch** splits on its own bullets. The preamble travels
+       with every fragment (see :func:`split_enumerated`).
+    2. **A question/material shape** splits so that every question travels with
+       the material it refers to (see :func:`reference_map`). Added 4 September
+       2026, after the token-balanced path below put all four questions of a
+       ``map`` instance in one packet and all the data in the other three.
+    3. **Otherwise** sentences are packed into ``n_tasks`` roughly equal-token
+       groups.
+
+    When there is less material than requested tasks, the prompt is sliced by
+    *tokens* instead of duplicating sentences: duplicating would inflate
+    ``sum(|task_i|)`` above ``|P|`` and make ``rho = 1.0`` unreachable,
+    destroying the floor of the sweep. ``N`` is always honoured exactly -- the
+    sweep needs ``N`` to be the independent variable, not a suggestion.
+
+    Path 2 is **never** reached on a prompt that has no such shape, which is
+    every corpus this project has run: their questions and data sit in the same
+    item. That is asserted rather than assumed --
+    ``test_no_existing_corpus_prompt_changes_partition`` compares the partition
+    before and after on all five corpora, because a segmenter change that moved
+    an existing partition would silently invalidate every published figure.
     """
     enumerated = split_enumerated(prompt)
     if enumerated is not None:
         return _segment_enumerated(enumerated, n_tasks, answer_sheet=answer_sheet)
+
+    mapping = reference_map(prompt)
+    if mapping is not None:
+        grouped = _segment_by_reference(prompt, n_tasks, mapping)
+        if grouped is not None:
+            return grouped
 
     units = [u.strip() for u in _ENUM_SPLIT_RE.split(prompt) if u.strip()]
     if len(units) < n_tasks:
@@ -474,8 +823,36 @@ def plan(
     count = max(1, int(count))
     gamma = contract or global_contract(prompt, backend)
 
+    # The gate half of the fused repair of 4 September. See
+    # `references_are_recoverable`.
+    #
+    # A prompt that states its questions apart from its material can only be
+    # fragmented if each question can be linked to the material that answers
+    # it. Where the link is recoverable, `_segment` builds the partition and
+    # nothing here changes. Where it is NOT -- every question needs every
+    # section, or one question refers to nothing nameable -- the honest plan is
+    # a single task, because the alternative is what was measured on 4
+    # September: one packet holding four questions and no data, three holding
+    # the data and asked nothing, and a claim split across two of them.
+    #
+    # N is otherwise honoured exactly everywhere in this module, and this is the
+    # one place it is not. That is deliberate and it is visible: `plan.n_tasks`
+    # comes back as 1, `rho_achieved` follows, and a sweep cell that collapsed
+    # says so in its own row rather than reporting a fragmented figure for a
+    # prompt that was never fragmented.
+    #
+    # It fires on NOTHING in any existing corpus: 0 of 456 partitions move
+    # across five corpora at N in {2,3,4,8}, asserted by
+    # `test_no_existing_corpus_partition_moves`. A gate that silently re-planned
+    # published cells would invalidate every figure this project has.
+    if count > 1 and not references_are_recoverable(prompt):
+        count = 1
+
     if force_sequential is None:
-        features = extract_features(prompt)
+        # From the work, not from the answer's format block. See `ordering_text`:
+        # "then a single space, then the value" is typography, and reading it as
+        # a dependency made every prompt in the ground-truth corpus a chain.
+        features = extract_features(ordering_text(prompt))
         sequential = features["sequential_cues"] >= 0.45 or features["continuity_cues"] >= 0.55
     else:
         sequential = bool(force_sequential)

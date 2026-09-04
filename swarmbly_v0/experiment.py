@@ -99,6 +99,15 @@ __all__ = [
     "TRUTH_CSV_COLUMNS",
     "write_truth_csv",
     "AGREEMENT_BINS",
+    "ASSEMBLER_ENFORCED",
+    "fill_constraint_columns",
+    "composition_criterion",
+    "COMPOSITION_THRESHOLD_POINTS",
+    "MIN_CLUSTERS_FOR_A_VERDICT",
+    "falsifiable_go_no_go",
+    "paired_absolute_effect",
+    "is_reachable",
+    "publishable",
 ]
 
 DEFAULT_PROMPTS_PATH = Path(__file__).resolve().parent.parent / "prompts" / "prompts.json"
@@ -122,6 +131,43 @@ Excluded from `mean_constraint_score_comparable`, which is the figure to read
 across arms. `mean_constraint_score` keeps every check so the record stays
 comparable with what was published."""
 
+
+def fill_constraint_columns(row: dict[str, Any], trace: Any) -> dict[str, Any]:
+    """Put one composition's constraint score into the row, per prompt.
+
+    Until this existed the constraint score lived only inside ``_trace`` and was
+    reported as a **mean over a condition** by :func:`_composition_summary`. A
+    mean over a condition cannot be paired, cannot be clustered by prompt and
+    cannot carry an interval, so the strongest measurement this project has --
+    monolithic 1.000 against fragmented 0.864 on prose composition, counted from
+    the text with no judge in the loop -- had no apparatus behind it. The
+    coherence tax had one; the better instrument did not.
+
+    Four columns. ``constraint_score`` keeps every check so the record stays
+    comparable with what was published; ``constraint_score_comparable`` drops
+    :data:`ASSEMBLER_ENFORCED` and is the only one that may appear in a
+    cross-arm figure. ``n_constraints_checked`` travels with them because a
+    score of 1.000 over two checks and over nine are different facts, and a
+    reader cannot tell them apart from the score.
+
+    Blank rather than zero when a prompt is not a composition: a row with no
+    constraints has no score, and a zero would read as "every check failed".
+    """
+    report = getattr(trace, "report", None)
+    if report is None:
+        row["constraint_score"] = ""
+        row["constraint_score_comparable"] = ""
+        row["n_constraints_checked"] = ""
+        return row
+    raw = report.score
+    comparable = report.score_excluding(ASSEMBLER_ENFORCED)
+    row["constraint_score"] = round(float(raw), 6) if raw is not None else ""
+    row["constraint_score_comparable"] = (
+        round(float(comparable), 6) if comparable is not None else "")
+    row["n_constraints_checked"] = len(getattr(report, "results", ()) or ())
+    return row
+
+
 def is_reachable(row: Mapping[str, Any]) -> bool:
     """Did this cell's rho target sit at or above its own honest packing floor?
 
@@ -134,12 +180,35 @@ def is_reachable(row: Mapping[str, Any]) -> bool:
     A row with no ``rho_reachable`` column is treated as reachable: CSVs written
     before the column existed must not be silently emptied by this guard. That is
     a deliberate asymmetry -- it fails open on old data and closed on new.
+
+    ``plan_refused`` is the second reason a row is not a measurement, added 4
+    September 2026 with the fused segmenter repair. When a prompt states its
+    questions apart from its material and the link between them is not
+    recoverable, ``plan`` returns a SINGLE task rather than mis-packing it (see
+    :func:`~swarmbly_v0.planner.references_are_recoverable`). Such a row is
+    labelled ``fragmented`` and holds the whole prompt in one packet, so its
+    coherence tax is near zero -- it would enter a cross-arm figure as evidence
+    that fragmentation is cheap, on a prompt that was never fragmented. That is
+    the wrong direction, and it is the direction all twelve instrument defects
+    in ``REVISION_2026-08-12.md`` leaned.
     """
-    value = row.get("rho_reachable", True)
+    return _flag(row, "rho_reachable") and not _flag(row, "plan_refused",
+                                                      default=False)
+
+
+def _flag(row: Mapping[str, Any], column: str, default: bool = True) -> bool:
+    """One column read as a boolean, tolerant of a CSV round trip.
+
+    ``default`` is what a MISSING column means, and the two callers need
+    opposite answers. ``rho_reachable`` fails open, so a CSV written before the
+    column existed is not silently emptied. ``plan_refused`` also fails open --
+    default ``False`` means "not refused" -- for the same reason.
+    """
+    value = row.get(column, default)
     if isinstance(value, bool):
         return value
     if value in ("", None):
-        return True
+        return default
     return str(value).strip().lower() in ("true", "1", "yes")
 
 
@@ -198,6 +267,7 @@ CSV_COLUMNS: list[str] = [
     "rho_achieved",
     "rho_floor",
     "rho_reachable",
+    "plan_refused",
     "tau_sem",
     "k",
     "n_families",
@@ -229,6 +299,11 @@ CSV_COLUMNS: list[str] = [
     "baseline_booook_comparable",
     "baseline_entity_grid",
     "baseline_judge",
+    "constraint_score",
+    "constraint_score_comparable",
+    "n_constraints_checked",
+    "baseline_constraint_score",
+    "baseline_constraint_score_comparable",
     "typed_carry",
     "editor_applied",
     "editor_reason",
@@ -920,6 +995,9 @@ def run_monolithic(
     # and counted as such.
     if spec.is_composition:
         row["_trace"] = build_trace(spec.prompt_id, "monolithic", text, spec.constraints or [])
+        fill_constraint_columns(row, row["_trace"])
+    else:
+        fill_constraint_columns(row, None)
 
     if spec.is_grounded:
         # Grounded prose was graded in the fragmented arms only, because the gate
@@ -1004,6 +1082,19 @@ def run_fragmented(
     # postamble is boilerplate that may be replaced by the compressed directive.
     plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=gamma,
                       answer_sheet=spec.has_ground_truth)
+    # The planner may REFUSE to fragment. It does so when the prompt states its
+    # questions apart from its material and the link between the two cannot be
+    # recovered -- see `planner.references_are_recoverable`. The alternative,
+    # measured on 4 September, is one packet holding four questions and no data
+    # while three hold the data and are asked nothing.
+    #
+    # A refused row is labelled `fragmented` and holds the whole prompt in one
+    # packet, so its coherence tax is near zero. Left in a cross-arm figure it
+    # would read as evidence that fragmentation is cheap, on a prompt that was
+    # never fragmented -- the wrong direction, and the direction all twelve
+    # instrument defects leaned. `is_reachable` drops it, at the same
+    # chokepoint as a below-floor row.
+    plan_refused = bool(n_tasks > 1 and len(plan.tasks) < n_tasks)
 
     per_task_target = max(24, round(gamma.target_length_tokens / max(len(plan.tasks), 1)))
     packing_contract = replace(gamma, target_length_tokens=per_task_target)
@@ -1147,8 +1238,15 @@ def run_fragmented(
     # target overshoots BY DESIGN, and that is a property of the cell, not a
     # violation. `packing_floor` has always accepted summaries for exactly this;
     # the check has to use it, or it refuses a run for doing the right thing.
+    # A REFUSED plan cannot honour rho either, and for a reason that is not a
+    # violation: one packet holding the whole prompt has rho near 1 whatever the
+    # target says. Raising here would turn a deliberate refusal to fragment into
+    # a crash, and an operator would read the traceback as a harness fault
+    # rather than as the planner declining a prompt it cannot partition. The row
+    # is already marked `plan_refused` and dropped by `is_reachable`, which is
+    # the honest handling: not a measurement, not an error.
     truthful_floor = packing_floor(packing_contract, plan, summaries)
-    if rho_target >= truthful_floor and rho_target > 0:
+    if not plan_refused and rho_target >= truthful_floor and rho_target > 0:
         deviation = (rho_achieved - rho_target) / rho_target
         if abs(deviation) > RHO_TOLERANCE:
             raise PacketInvariantError(
@@ -1198,6 +1296,9 @@ def run_fragmented(
         "n_tasks": len(plan.tasks),
         "n_levels": len(plan.topological_levels()),
         "sequential_plan": plan.sequential,
+        # True when the planner refused to fragment: see above, and
+        # `is_reachable`, which drops such a row from every figure.
+        "plan_refused": plan_refused,
         "rho_target": rho_target,
         "rho_achieved": round(rho_achieved, 6),
         # The floor computed WITH the summaries. The optimistic floor -- taken
@@ -1241,7 +1342,25 @@ def run_fragmented(
             else assembly.fragment_sentence_offsets,
             seams=assembly.seams,
         )
+        fill_constraint_columns(row, row["_trace"])
+    else:
+        fill_constraint_columns(row, None)
 
+    # The arm's own output, recoverable from the row, exactly as `run_monolithic`
+    # has always kept it.
+    #
+    # It was missing here, and the asymmetry is the kind this project keeps
+    # withdrawing results for: the monolithic arm's text could be re-read from a
+    # completed row and the fragmented arm's could not. On a composition corpus
+    # `_trace` carried it, which hid the gap -- and `_trace` exists only when the
+    # prompt has constraints, so on every answer-key or fact-graph corpus the
+    # fragmented output was unrecoverable. Any INDEPENDENT scorer -- which is the
+    # entire purpose of benchmark_v7 and of ADR-001 -- could therefore see one
+    # arm and not the other, and would have scored the fragmented arm as having
+    # produced nothing at all.
+    #
+    # Dropped by write_csv, like `_text` on the baseline: not in CSV_COLUMNS.
+    row["_text"] = assembled_text
     row["_unit_records"] = _unit_records(spec, row, consensus_results)
     truth_records, truth_report = _truth_records(
         spec, row, consensus_results or single_results, scope=task_item_scope(plan))
@@ -1276,12 +1395,27 @@ def run_fragmented(
             float(baseline.get("booook_comparable", baseline["booook_like_score"])), 6)
         row["baseline_entity_grid"] = round(float(baseline["entity_grid"]), 6)
         row["baseline_judge"] = round(float(baseline["judge_score"]), 6)
+        # The constraint score's denominator, for the same reason and one
+        # instrument later. Without it the strongest figure this project has --
+        # a mechanical count, no judge, monolithic 1.000 against fragmented
+        # 0.864 -- could only be reported as two means over two conditions.
+        # Two means cannot be paired, and unpaired is how the coherence tax
+        # spent four runs being sensitive to prompt difficulty rather than to
+        # fragmentation. `constraint_score_comparable` is the cross-arm figure;
+        # the raw one is carried so the record stays readable.
+        for src, dest in (("constraint_score", "baseline_constraint_score"),
+                          ("constraint_score_comparable",
+                           "baseline_constraint_score_comparable")):
+            value = baseline.get(src)
+            row[dest] = (round(float(value), 6)
+                         if isinstance(value, (int, float)) else "")
     else:
         for field_name in ("coherence_tax_booook", "coherence_tax_booook_full",
                            "seam_error_rate_delta", "coherence_tax_entity_grid",
                            "quality_tax_judge", "baseline_booook",
                            "baseline_booook_comparable", "baseline_entity_grid",
-                           "baseline_judge"):
+                           "baseline_judge", "baseline_constraint_score",
+                           "baseline_constraint_score_comparable"):
             row[field_name] = ""
     return row
 
@@ -3214,6 +3348,191 @@ def falsifiable_go_no_go(
     }
 
 
+COMPOSITION_THRESHOLD_POINTS: float = 0.05
+"""The declared cost ceiling for prose composition, in points, frozen here.
+
+It is the existing criterion translated onto the better metric, not a new one
+chosen for it: SPEC's go/no-go says fragmentation must cost under 5 % of
+coherence, and this says it must cost under 5 points of the constraints a text
+either satisfies or does not. Same number, a metric that is counted rather than
+judged.
+
+**It is declared against data that fails it.** The free-form pilot of
+3 September put the gap at 14 to 21 points -- three to four times this ceiling
+-- and the threshold is written down anyway, at the value the old criterion
+implies, precisely so that nobody can later say it was set where the result
+happened to land. A threshold chosen after seeing 14 points would have been
+0.25, and a criterion that passes because its threshold was fitted to its own
+outcome is the maximum statistic wearing different clothes.
+
+Frozen against the dev half of the corpus. Moving it after the final half has
+been seen invalidates the split, and the number is here rather than on the
+command line so that moving it shows up in a diff."""
+
+MIN_CLUSTERS_FOR_A_VERDICT: int = 20
+"""Prompts below which this file refuses to publish a bootstrap verdict.
+
+Not a convention borrowed from a textbook -- a number this project paid for. On
+3 September the free-form run reported the first non-null measurement of the
+confidence map in six attempts: AUC 0.602, a clustered 95 % interval of
+[0.5014, 0.7243], and a permutation p of 0.0026. The lower bound excluded chance
+by 0.0014 **on eight clusters**, where a cluster bootstrap's coverage is not
+close to nominal and the interval is an ornament. The result was published with
+its own caveat attached, and a caveat beside a number does not travel with the
+number: what a reader takes away is 0.602.
+
+So the refusal is in the code, and it returns ``passed: None`` with the count in
+the note rather than a bound a reader can quote. A criterion that reports a
+verdict on eight prompts has the same defect the maximum statistic had -- it
+cannot fail for the right reason."""
+
+
+def composition_criterion(
+    rows: Sequence[Mapping[str, Any]],
+    category: str,
+    rho: float,
+    threshold_points: float,
+    n_tasks: int | None = None,
+    k: int | None = None,
+    min_clusters: int = MIN_CLUSTERS_FOR_A_VERDICT,
+    score: str = "constraint_score_comparable",
+    baseline: str = "baseline_constraint_score_comparable",
+) -> dict[str, Any]:
+    """The declared criterion for prose composition, in points not per cent.
+
+    This is the apparatus ``tables-final`` has and the constraint score lacked.
+    The composition run of 3 September produced the project's strongest
+    measurement -- a monolithic arm satisfying **every** checkable constraint,
+    a three-way fragmentation losing 14 to 21 points, counted from the text with
+    no model in the verdict -- and it had no pre-registered cell, no control and
+    no corpus split behind it. It was therefore a description of three prompts,
+    not evidence about a workload.
+
+    Four ways this differs from :func:`falsifiable_go_no_go`, each forced by
+    something that went wrong:
+
+    * **Absolute, not relative.** Ten of eleven monolithic baselines on that run
+      scored exactly 1.000. A ratio ``(baseline - fragmented) / baseline``
+      against a denominator pinned at the ceiling can only be non-negative, has
+      almost no resolution, and makes one lost check the entire numerator. The
+      paired difference in points has no denominator to be sensitive to.
+    * **Paired within prompt.** The two arms answer the *same* prompt, so the
+      prompt's difficulty cancels. Comparing two condition means -- which is all
+      ``_composition_summary`` could do before ``constraint_score_comparable``
+      existed as a column -- leaves that difficulty in the estimate.
+    * **A cluster floor.** See :data:`MIN_CLUSTERS_FOR_A_VERDICT`. Three
+      compositions cannot support an interval and this function says so instead
+      of printing one.
+    * **The comparable score only.** ``paragraph_count`` and
+      ``words_per_paragraph`` are decided by the assembler in one arm and by the
+      model in the other, and the sign of that bias is set by prompt wording:
+      +23 points in favour of the fragmented arm on the free-form corpus, the
+      other way on the table corpus. They cannot appear in a cross-arm figure at
+      all, so the default ``score`` excludes them.
+
+    The verdict is on the **upper** bound: the claim under test is that
+    fragmentation costs at most ``threshold_points``, so the interval must clear
+    the threshold from above, exactly as the relative criterion requires.
+
+    Args:
+        threshold_points: The declared cost ceiling, in points of constraint
+            satisfaction (0.05 is five points, not five per cent of the
+            baseline). Must be declared before the run; it is an argument rather
+            than a constant so the declaration lives in the invocation.
+
+    Returns:
+        The verdict, the interval, the per-prompt pairs, and the two counts that
+        say whether the verdict may be read: ``n_prompts`` and
+        ``baseline_at_ceiling``.
+    """
+    rows = publishable(rows)
+    cells = [r for r in rows
+             if str(r.get("condition", "")).startswith("fragmented")
+             and str(r.get("category")) == category
+             and _close(r.get("rho_target"), rho)
+             and (n_tasks is None or _same_number(r.get("n_tasks"), n_tasks))
+             and (k is None or _same_number(r.get("k"), k))
+             and isinstance(r.get(score), (int, float))
+             and isinstance(r.get(baseline), (int, float))]
+    examined = len({(str(r.get("category")), r.get("rho_target"),
+                     r.get("n_tasks"), r.get("k")) for r in rows
+                    if str(r.get("condition", "")).startswith("fragmented")
+                    and isinstance(r.get(score), (int, float))})
+    declared = {"category": category, "rho": rho, "n_tasks": n_tasks, "k": k,
+                "threshold_points": threshold_points, "score": score,
+                "min_clusters": min_clusters}
+
+    pairs = [{"prompt_id": str(r.get("prompt_id", "")),
+              "delta": float(r[baseline]) - float(r[score]),
+              "fragmented": float(r[score]),
+              "baseline": float(r[baseline]),
+              "n_checks": r.get("n_constraints_checked", "")}
+             for r in cells]
+    if not pairs:
+        return {"declared_cell": declared, "passed": None, "n_observations": 0,
+                "n_cells_examined": examined,
+                "note": "no rows in the declared cell; this run has no verdict"}
+
+    deltas = [p["delta"] for p in pairs]
+    mean_ci = cluster_bootstrap(
+        pairs, lambda rs: sum(x["delta"] for x in rs) / len(rs) if rs else None,
+        cluster_key="prompt_id")
+    median_ci = cluster_bootstrap(
+        pairs, lambda rs: float(np.median([x["delta"] for x in rs])) if rs else None,
+        cluster_key="prompt_id")
+    n_prompts = int(mean_ci.get("n_clusters") or 0)
+    at_ceiling = sum(1 for p in pairs if p["baseline"] >= 0.999)
+
+    result: dict[str, Any] = {
+        "declared_cell": declared,
+        "n_observations": len(pairs),
+        "n_prompts": n_prompts,
+        "n_cells_examined": examined,
+        "mean_delta": round(sum(deltas) / len(deltas), 6),
+        "mean_ci95": mean_ci.get("ci95"),
+        "median_delta": round(float(np.median(deltas)), 6),
+        "median_ci95": median_ci.get("ci95"),
+        "mean_baseline": round(sum(p["baseline"] for p in pairs) / len(pairs), 6),
+        "mean_fragmented": round(sum(p["fragmented"] for p in pairs) / len(pairs), 6),
+        "baseline_at_ceiling": at_ceiling,
+        "n_at_or_below_zero": sum(1 for d in deltas if d <= 0),
+        "pairs": sorted(pairs, key=lambda p: -p["delta"]),
+    }
+
+    if n_prompts < min_clusters:
+        result["passed"] = None
+        result["note"] = (
+            f"{n_prompts} prompts against a floor of {min_clusters}: no verdict. "
+            f"A cluster bootstrap on this few clusters does not have its nominal "
+            f"coverage, and the free-form run of 3 September is why the floor is "
+            f"enforced here rather than noted -- it excluded chance by 0.0014 on "
+            f"eight clusters and the caveat did not travel with the number. The "
+            f"point estimate and the pairs are reported so the cell can be read "
+            f"as a description; the interval must not be quoted as a bound.")
+        return result
+
+    ci = mean_ci.get("ci95")
+    if ci is None:
+        result["passed"] = None
+        result["note"] = mean_ci.get("note", "no interval estimable")
+        return result
+
+    lo, hi = ci
+    result["passed"] = bool(hi < threshold_points)
+    result["short_by_points"] = round(float(hi) - float(threshold_points), 6)
+    result["note"] = (
+        f"Fragmentation is claimed to cost at most {threshold_points:.3f} of "
+        f"constraint satisfaction; the verdict is on the UPPER bound of a "
+        f"bootstrap clustered by prompt, so the cell passes only when the "
+        f"interval clears the threshold from above. baseline_at_ceiling="
+        f"{at_ceiling} of {len(pairs)} says how much room the metric had: where "
+        f"the baseline is 1.000 the paired difference can only be non-negative, "
+        f"so a pass is a real bound on the cost and a fail cannot be read as "
+        f"fragmentation helping. n_cells_examined={examined} states how many "
+        f"chances the run had even though one cell was declared.")
+    return result
+
+
 def _close(value: Any, target: float, tol: float = 1e-9) -> bool:
     try:
         return abs(float(value) - float(target)) <= tol
@@ -3441,6 +3760,29 @@ def summarize(
             f"{cat}@rho={rho}@N={n}@k={k}": paired_absolute_effect(
                 fragmented_all, category=cat, rho=rho, n_tasks=n, k=k)
             for cat in sorted({str(r.get("category", "")) for r in fragmented_all})
+            for rho in sorted({float(r["rho_target"]) for r in fragmented_all
+                               if isinstance(r.get("rho_target"), (int, float))})
+            for n in sorted({int(r["n_tasks"]) for r in fragmented_all
+                             if str(r.get("n_tasks", "")).isdigit()})
+            for k in sorted({int(r["k"]) for r in fragmented_all
+                             if str(r.get("k", "")).isdigit()})
+        },
+        # The same discipline, on the better instrument. The constraint score is
+        # mechanical -- no judge, no model in the verdict -- and on prose
+        # composition the coherence tax read +0.000 on texts where this one
+        # found a 14-point failure. Until `constraint_score_comparable` became a
+        # column it could only be reported as two condition means, which is why
+        # the stronger measurement had the weaker apparatus.
+        "composition_criterion": {
+            f"{cat}@rho={rho}@N={n}@k={k}": composition_criterion(
+                fragmented_all, category=cat, rho=rho, n_tasks=n, k=k,
+                threshold_points=COMPOSITION_THRESHOLD_POINTS)
+            # Categories with a constraint score only. Every other category
+            # would contribute an entry saying "no rows in the declared cell",
+            # and a summary padded with empty verdicts is one a reader skims.
+            for cat in sorted({str(r.get("category", "")) for r in fragmented_all
+                               if isinstance(r.get("constraint_score_comparable"),
+                                             (int, float))})
             for rho in sorted({float(r["rho_target"]) for r in fragmented_all
                                if isinstance(r.get("rho_target"), (int, float))})
             for n in sorted({int(r["n_tasks"]) for r in fragmented_all

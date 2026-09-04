@@ -255,16 +255,56 @@ run_v0() {
   local out="results/v0-$STAMP"
   bold ""
   bold "== V0 — the coherence tax as a function of rho (hypothesis H1) =="
-  echo "  This is the make-or-break measurement: how much quality is lost to"
-  echo "  fragmentation and reassembly, and whether any rho gets it under 5%."
+  echo "  How much quality is lost to fragmentation and reassembly, and whether"
+  echo "  any rho gets it under 5 %."
+  echo ""
+  echo "  THE GRID MOVED, and the old one is why V0's published result was"
+  echo "  withdrawn. It swept rho 1.0-2.0 at N=2,4,8 against packing floors that"
+  echo "  run 1.43-1.68 at N=2, 1.85-2.36 at N=4 and 2.70-3.71 at N=8. Thirteen"
+  echo "  of ninety-six cells were reachable; the rho=1.00 and rho=1.25 rows had"
+  echo "  ZERO. Below the floor every packet collapses to its bare task, so the"
+  echo "  rho axis does not move and two rho labels produce byte-identical"
+  echo "  packets -- the 24.1 % -> 13.7 % curve was reading a variable that was"
+  echo "  not varying. publishable() now drops those rows, so the old grid would"
+  echo "  burn hours and emit almost nothing."
+  echo ""
+  echo "  WHY THE GRID IS UNEVEN ACROSS N, and why that is not a defect: the"
+  echo "  floor is roughly LINEAR IN N -- one contract header per packet -- so no"
+  echo "  single rho is both above the floor at N=8 and a low-context condition"
+  echo "  at N=2. The grid below is the union, chosen so every N keeps at least"
+  echo "  three reachable rho points and the three highest are reachable at ALL"
+  echo "  of them:"
+  echo ""
+  echo "    N=2  (floor <=1.68)   1.75  2.5  3.0  3.75  4.5  5.5   -- 6 points"
+  echo "    N=4  (floor <=2.36)         2.5  3.0  3.75  4.5  5.5   -- 5 points"
+  echo "    N=8  (floor <=3.71)                   3.75  4.5  5.5   -- 3 points"
+  echo ""
+  echo "  Read the rho curve WITHIN one N. Comparing N at fixed rho is only"
+  echo "  honest in the overlap -- 3.75 and above -- and the console prints [n=]"
+  echo "  beside each point so a curve resting on two cells cannot be mistaken"
+  echo "  for one resting on eight. At 2.5 and 3.0 the N=8 arm keeps only the"
+  echo "  prompts whose own floor is below the target, so those points rest on a"
+  echo "  DIFFERENT prompt subset and must not be joined to the others."
+  echo ""
+  echo "  THAT THE GRID HAS TO START AT 1.75 IS ITSELF THE RESULT. SPEC 11.5"
+  echo "  asks for rho < 2.0 and the floor at N=8 is 3.71 on this corpus: the"
+  echo "  target is unattainable, not merely unmet, and no sweep can reach it."
   echo "  Output: $out"
   mkdir -p "$out"
   run_tier v0 "$out" \
     python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
-    --rho 1.0,1.25,1.5,2.0 --n 2,4,8 --k 1 \
+    --rho 1.75,2.5,3.0,3.75,4.5,5.5 --n 2,4,8 --k 1 \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
+  echo ""
+  bold "  Check FIRST, before reading any curve:"
+  echo "    rows_excluded_below_floor  -- expected non-zero and concentrated in"
+  echo "                                  the N=8 rows at 1.75-3.0. A count near"
+  echo "                                  the row total means the floors moved"
+  echo "                                  and this grid needs recomputing."
+  echo "    rho_fidelity               -- achieved against target, per cell."
+  echo "  -> $out/summary.json"
 }
 
 run_v3c_ff() {
@@ -489,6 +529,50 @@ run_v4() {
   echo "  -> $out/composition_traces.md"
 }
 
+assert_same_code_as_dev() {
+  # A frozen split freezes the PROMPTS. Nothing froze the code.
+  #
+  # Both final tiers check the corpus digest, the split and tau_sem, and none of
+  # them checked which code fitted tau. On 27 August three tables-* runs sat
+  # side by side, two scored by an arm-neutral coherence metric and one by the
+  # defective predecessor, and nothing in any of them said which -- the
+  # directory timestamp against a memory of when the fix landed was the only
+  # evidence. `source_fingerprint` was added for exactly that and is recorded in
+  # every run's metadata as `code_sha256`. It was recorded and never compared.
+  #
+  # This matters most on the day the code is moving. A dev half fitted this
+  # morning and a final half judged this evening, across an edit to the planner,
+  # is a threshold carried across a code change -- the same leakage as carrying
+  # it across a corpus change, and invisible because both halves name the same
+  # corpus digest.
+  #
+  # No override flag. The fingerprint deliberately moves on a comment change,
+  # because a digest that only moved on "important" edits needs someone to
+  # decide what is important, which is the judgement it exists to remove. So the
+  # remedy is to re-run dev -- about an hour -- and the error says so. A --force
+  # here is how the discipline erodes.
+  local dev="$1" dev_code now_code
+  dev_code="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('code_sha256',''))")"
+  now_code="$(python3 -c "import sys;sys.path.insert(0,'.');from swarmbly_v0.schema import source_fingerprint;print(source_fingerprint())")"
+  [ -n "$dev_code" ] || die "$dev has no code_sha256: it predates the fingerprint
+  being recorded, so there is no way to confirm its threshold was fitted by THIS
+  code. Re-run the dev tier before the final half."
+  if [ "$dev_code" != "$now_code" ]; then
+    die "the CODE changed since $dev ran.
+    dev:  $dev_code
+    now:  $now_code
+  tau_sem = ${2:-?} was fitted by different code, so applying it here carries a
+  threshold across a code change. The corpus digest cannot see this: both halves
+  name the same prompts.
+
+  Re-run the dev tier on this code first -- about an hour -- then hand the new
+  directory to the final tier. There is no override: the fingerprint moves on any
+  edit on purpose, because deciding which edits 'matter' is the judgement it
+  exists to remove."
+  fi
+  echo "  code fingerprint matches dev: ${dev_code:0:12}..."
+}
+
 run_tables_dev() {
   local out="results/tables-dev-$STAMP"
   bold ""
@@ -632,6 +716,7 @@ $(ls -1dt results/tables-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '
   carry a threshold across a corpus change. Re-run tables-dev on this corpus
   first: bash scripts/run_ollama.sh tables-dev"
   fi
+  assert_same_code_as_dev "$dev" "$tau"
   bold ""
   bold "== tables-final — evaluated once, with nothing left to choose =="
   echo ""
@@ -722,6 +807,201 @@ print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
   echo "  -> $out/summary.json"
 }
 
+run_comp_dev() {
+  local out="results/comp-dev-$STAMP"
+  bold ""
+  bold "== comp-dev — the composition criterion, on the half you may look at =="
+  echo ""
+  echo "  THE HYPOTHESIS, stated before the run so it can fail:"
+  echo ""
+  echo "    composition at rho=4.0, N=3, k=1 costs less than 5 POINTS of"
+  echo "    constraint satisfaction against its monolithic baseline -- the UPPER"
+  echo "    bound of the interval below 0.05, not the point estimate."
+  echo ""
+  echo "  Points, not per cent, and the constraint score, not the coherence tax."
+  echo "  The free-form run of 3 September is why. On three compositions the"
+  echo "  monolithic arm satisfied EVERY checkable constraint -- 1.000 -- and"
+  echo "  fragmenting into three cost 14 to 21 points, while on the same texts"
+  echo "  the coherence tax read +0.000 at every k. The tax is saturated against"
+  echo "  a ceiling baseline and blind to the failures that actually occur, which"
+  echo "  are duplication and omission. On prose it is the wrong instrument."
+  echo ""
+  echo "  WHAT THAT RUN LACKED, and this tier supplies: three prompts, no"
+  echo "  pre-registered cell, no control, no corpus split. The coherence tax had"
+  echo "  that apparatus and the better instrument did not."
+  echo ""
+  echo "  THE FAILING CONTROL: N=8 runs in the same grid. If eight-way"
+  echo "  fragmentation also costs under 5 points the instrument is not"
+  echo "  separating the arms and NEITHER number is evidence."
+  echo ""
+  echo "  WHY rho=4.0, which is far above what SPEC asks for: the packing floor"
+  echo "  at N=8 on this corpus runs 3.32-3.84. There is no lower rho at which"
+  echo "  the control arm exists at all. That is itself a finding -- the floor"
+  echo "  rises with N, so fragmenting harder FORCES more context, which is the"
+  echo "  opposite of the pitch -- and it is conservative here: more context can"
+  echo "  only help the fragmented arm, so a FAIL at rho 4.0 is strong and a PASS"
+  echo "  is weak."
+  echo ""
+  echo "  NO VERDICT IS PRINTED HERE. The dev half is twelve prompts and"
+  echo "  experiment.MIN_CLUSTERS_FOR_A_VERDICT is 20, so the criterion returns"
+  echo "  'NONE' by design and reports the pairs instead. Eight clusters is what"
+  echo "  produced the withdrawn AUC interval of 3 September; the floor is in the"
+  echo "  code so a caveat does not have to travel beside a number."
+  echo ""
+  echo "  WHAT MAY BE DECIDED HERE, and nowhere after: tau_sem, and whether the"
+  echo "  three difficulty tiers behave as intended -- specifically whether the"
+  echo "  monolithic baseline has room to move. Check baseline_at_ceiling: if it"
+  echo "  is 12 of 12 the corpus saturated like the last one and the tiers need"
+  echo "  rebuilding BEFORE the final half is touched."
+  echo ""
+  echo "  Read, in order:"
+  echo "    composition_criterion[composition@rho=4.0@N=3@k=1]"
+  echo "      mean_delta and the pairs. NOT the interval -- 12 clusters."
+  echo "      baseline_at_ceiling is the number that decides whether to proceed."
+  echo "    the same cell at N=8   -- the control's point estimate must be worse."
+  echo "    composition.by_condition.constraints_failed  -- which families bind."
+  echo "    composition_traces.md -- which micro-task wrote which sentence."
+  echo "  Output: $out"
+  [ -f prompts/composition.json ] || python3 scripts/make_composition.py
+  python3 scripts/make_composition.py --verify \
+    || die "prompts/composition.json does not match what make_composition.py builds; a
+    threshold frozen against the old digest no longer applies."
+  mkdir -p "$out"
+  run_tier comp-dev "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split dev \
+    --rho 4.0 --n 3,8 --k 1 \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  tau_sem fitted on dev. Carry it to the final half by naming THIS RUN:"
+  echo ""
+  echo "    bash scripts/run_ollama.sh comp-final $out"
+  echo ""
+  echo "  Not the number. The directory. It carries the threshold, the corpus"
+  echo "  digest it was fitted against, and the split -- and the final tier checks"
+  echo "  all three before it starts."
+  python3 -c "import json;print('  (for the record, tau_sem =', json.load(open('$out/run_metadata.json'))['tau_sem'], ')')" 2>/dev/null || true
+  echo "  -> $out/summary.json"
+}
+
+run_comp_final() {
+  local out="results/comp-final-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "name the dev run this final run inherits its threshold from:
+    bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>
+
+  tau_sem is fitted inside a run. Passing it by hand as a number is one typo
+  away from a threshold that was never fitted on anything, and it cannot carry
+  WHICH CORPUS it was fitted on. Naming the dev run lets this script read both
+  the threshold and the corpus digest and check them."
+  case "$dev" in
+    --tau|--tau=*|-t)
+      die "this tier takes the dev run's DIRECTORY, not a tau value:
+    bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>
+
+  Latest dev run on disk:
+$(ls -1dt results/comp-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
+    -*)
+      die "unexpected option '$dev'. This tier takes the dev run's directory:
+    bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>" ;;
+  esac
+  [ -d "$dev" ] || die "'$dev' is not a directory. This tier takes the dev run's
+  directory, not a threshold and not a file:
+    bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>"
+  [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist.
+  That run did not complete, or it is not a swarmbly results directory."
+
+  local tau dev_sha now_sha dev_split
+  tau="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json'))['tau_sem'])")"
+  dev_sha="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_frozen_sha256',''))")"
+  dev_split="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_split',''))")"
+  now_sha="$(python3 -c "import json;print(json.load(open('prompts/composition.json'))['_frozen']['sha256'])")"
+
+  [ "$dev_split" = "dev" ] || die "$dev ran on '$dev_split', not on the dev split.
+  A threshold fitted on the final half, or on the whole corpus, is fitted on the
+  data it is about to judge. That is the leakage the split exists to close."
+  [ -n "$dev_sha" ] || die "$dev has no corpus_frozen_sha256, so there is no way to
+  confirm its threshold was fitted on THIS corpus. Re-run comp-dev first."
+  if [ "$dev_sha" != "$now_sha" ]; then
+    die "the corpus changed since $dev ran.
+    dev:  $dev_sha
+    now:  $now_sha
+  tau_sem = $tau was fitted on different prompts. Re-run comp-dev on this
+  corpus first: bash scripts/run_ollama.sh comp-dev"
+  fi
+  assert_same_code_as_dev "$dev" "$tau"
+
+  bold ""
+  bold "== comp-final — evaluated once, with nothing left to choose =="
+  echo ""
+  echo "  THE HYPOTHESIS -- unchanged from comp-dev:"
+  echo ""
+  echo "    composition at rho=4.0, N=3, k=1 costs less than 5 points of"
+  echo "    constraint satisfaction against its monolithic baseline."
+  echo ""
+  echo "    Estimator:  mean PAIRED difference, monolithic minus fragmented, on"
+  echo "                constraint_score_comparable. Paired because both arms"
+  echo "                answer the same prompt, so its difficulty cancels."
+  echo "    Interval:   cluster bootstrap over prompts, 24 clusters."
+  echo "    Passes if:  the UPPER bound of the 95 % interval is below 0.05."
+  echo ""
+  echo "  Absolute, not relative, and that choice was forced by the last run:"
+  echo "  ten of eleven monolithic baselines scored exactly 1.000, and a ratio"
+  echo "  against a denominator pinned at the ceiling makes one lost check the"
+  echo "  whole numerator and can never read below zero."
+  echo ""
+  echo "  THE FAILING CONTROL: N=8, k=1 in the same grid."
+  echo ""
+  echo "  WHAT baseline_at_ceiling MEANS FOR THE VERDICT: where the baseline is"
+  echo "  1.000 the paired difference cannot go negative, so a PASS is a real"
+  echo "  bound on the cost, while a FAIL cannot be read as fragmentation"
+  echo "  helping. Report the count, do not average it away."
+  echo ""
+  echo "  Read, in order:"
+  echo "    composition_criterion[composition@rho=4.0@N=3@k=1]"
+  echo "      mean_ci95 upper bound against 0.05, and n_prompts -- which must be"
+  echo "      at least 20 or there is no verdict at all."
+  echo "    the same cell at N=8, k=1  -- the control, which must fail."
+  echo "    rho_fidelity               -- name any cell out of tolerance."
+  echo "  Output: $out"
+  python3 scripts/make_composition.py --verify \
+    || die "the corpus has moved since dev; the frozen threshold no longer applies."
+  mkdir -p "$out"
+  run_tier comp-final "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split final \
+    --rho 4.0 --n 3,8 --k 1 --tau "$tau" \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  The declared test:"
+  python3 -c "
+import json
+s=json.load(open('$out/summary.json'))
+cells=s.get('composition_criterion',{})
+for key,role in (('composition@rho=4.0@N=3@k=1','(UNDER TEST)'),
+                 ('composition@rho=4.0@N=8@k=1','(control, must fail)')):
+    c=cells.get(key)
+    if not c: print(f'    {key}: absent'); continue
+    ci=c.get('mean_ci95')
+    print(f'    {key}')
+    print(f'      {role:<22} delta={c.get(\"mean_delta\")}  CI95={ci}  '
+          f'prompts={c.get(\"n_prompts\")}  ceiling={c.get(\"baseline_at_ceiling\")}'
+          f'  -> {c.get(\"passed\")}')
+rf=s.get('rho_fidelity',{})
+print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
+      + ('' if rf.get('within_tolerance') else f\"  (worst: {rf.get('worst')})\"))
+" 2>/dev/null || true
+  echo "  -> $out/summary.json"
+}
+
 case "$TIER" in
   smoke)
     out="results/smoke-$STAMP"
@@ -760,6 +1040,8 @@ case "$TIER" in
   v4) run_v4 || true ;;
   tables-dev) run_tables_dev || true ;;
   tables-final) run_tables_final "$@" || true ;;
+  comp-dev) run_comp_dev || true ;;
+  comp-final) run_comp_final "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
   # already recorded the failure
   # in TIERS_FAILED and stamped the directory; this only stops `set -e` killing
@@ -767,7 +1049,7 @@ case "$TIER" in
   # overnight `all` finish its independent tiers. The exit status is restored at
   # the bottom.
   all) run_v0 || true; run_v3c || true ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-final | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then

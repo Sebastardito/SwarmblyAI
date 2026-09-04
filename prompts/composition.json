@@ -1,0 +1,2287 @@
+{
+  "_seed": 20260904,
+  "_frozen": {
+    "sha256": "e9e382b92b1af6e3beac15ccc091794a031f6cb9b8f20a1677b40ac70a105a1c",
+    "dev": [
+      "comp36_archive_digitise",
+      "comp36_cheese_cave",
+      "comp36_dairy_collect",
+      "comp36_granary_dry",
+      "comp36_harbour_storm",
+      "comp36_hatchery_water",
+      "comp36_library_move",
+      "comp36_museum_loan",
+      "comp36_printworks_run",
+      "comp36_relay_winter",
+      "comp36_theatre_turnaround",
+      "comp36_tramway_track"
+    ],
+    "final": [
+      "comp36_abattoir_chill",
+      "comp36_airfield_light",
+      "comp36_bakery_supply",
+      "comp36_boatyard_survey",
+      "comp36_brewery_tanks",
+      "comp36_cablecar_service",
+      "comp36_cannery_line",
+      "comp36_clinic_intake",
+      "comp36_depot_night",
+      "comp36_ferry_fog",
+      "comp36_hostel_rooms",
+      "comp36_kennels_intake",
+      "comp36_laundry_hospital",
+      "comp36_marina_lift",
+      "comp36_nursery_plants",
+      "comp36_orchard_frost",
+      "comp36_post_sorting",
+      "comp36_quarry_haul",
+      "comp36_recycling_sort",
+      "comp36_sawmill_dry",
+      "comp36_smokehouse_batch",
+      "comp36_stables_feed",
+      "comp36_vineyard_pick",
+      "comp36_windfarm_access"
+    ],
+    "rule": "tau_sem, any choice of which arm to report, and any check on whether the constraint families behave as intended are fixed on the dev prompts alone. The final prompts are evaluated once, afterwards, with nothing left to choose. A figure that moves after the final half is seen is not an estimate of anything.",
+    "threshold": "NOT stored here. experiment.COMPOSITION_THRESHOLD_POINTS is 0.05 -- five points of constraint satisfaction, the existing 5% go/no-go translated onto a metric that is counted rather than judged. It was frozen knowing the pilot of 3 September put the gap at 14 to 21 points, so it is declared at a value that data fails."
+  },
+  "_about": "Thirty-six two-paragraph compositions in three difficulty tiers, checked mechanically by swarmbly_v0.constraints. Built for one declared question: how many points of constraint satisfaction fragmentation costs on prose.",
+  "_why": "The composition finding of 3 September -- monolithic 1.000, fragmented N=3 at 0.864, and a coherence tax of +0.000 on the same texts -- rested on three prompts with no pre-registered cell, no control and no split. The coherence tax had that apparatus and the better instrument did not. experiment.MIN_CLUSTERS_FOR_A_VERDICT is 20, so a corpus that wants a verdict needs a final half of at least twenty prompts; this one has twenty-four.",
+  "_difficulty_note": "Ten of eleven monolithic baselines in the pilot scored exactly 1.000. A saturated baseline survives a paired absolute difference -- there is no denominator -- but it can never show fragmentation costing nothing, and it cannot be checked for arm-neutrality. The three tiers vary the checks the pilot showed actually bind: how many required terms must appear exactly once (1/2/3), the repeated-phrase window (8/7/5), and how many terms are required at all (2/3/4). term_once is hard for the monolithic arm too, which is the point.",
+  "_scope_note": "Nothing else should be swept on this corpus. A corpus swept over many cells answers the maximum-statistic question -- does SOME cell clear the threshold -- which has P(pass) = 100% under its own null. One cell, named before the run, plus a control required to fail.",
+  "_generator": "scripts/make_composition.py, seed 20260904",
+  "prompts": [
+    {
+      "id": "comp36_harbour_storm",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a small harbour reschedules cargo when a storm closes the outer channel.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: tide window, berth. Each of these must appear exactly once, not twice: tide window. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_tide",
+          "kind": "must_mention",
+          "term": "tide window"
+        },
+        {
+          "id": "mentions_berth",
+          "kind": "must_mention",
+          "term": "berth"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "tide_once",
+          "kind": "term_once",
+          "term": "tide window"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_archive_digitise",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a municipal archive decides which paper records to digitise first.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: retention period, condition survey, reading room. Each of these must appear exactly once, not twice: retention period, condition survey. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_retention",
+          "kind": "must_mention",
+          "term": "retention period"
+        },
+        {
+          "id": "mentions_condition",
+          "kind": "must_mention",
+          "term": "condition survey"
+        },
+        {
+          "id": "mentions_reading",
+          "kind": "must_mention",
+          "term": "reading room"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "retention_once",
+          "kind": "term_once",
+          "term": "retention period"
+        },
+        {
+          "id": "condition_once",
+          "kind": "term_once",
+          "term": "condition survey"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_relay_winter",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a mountain relay station keeps a radio link open through a winter outage.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: battery bank, line of sight, duty cycle, ice load. Each of these must appear exactly once, not twice: battery bank, line of sight, duty cycle. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_battery",
+          "kind": "must_mention",
+          "term": "battery bank"
+        },
+        {
+          "id": "mentions_line",
+          "kind": "must_mention",
+          "term": "line of sight"
+        },
+        {
+          "id": "mentions_duty",
+          "kind": "must_mention",
+          "term": "duty cycle"
+        },
+        {
+          "id": "mentions_ice",
+          "kind": "must_mention",
+          "term": "ice load"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "battery_once",
+          "kind": "term_once",
+          "term": "battery bank"
+        },
+        {
+          "id": "line_once",
+          "kind": "term_once",
+          "term": "line of sight"
+        },
+        {
+          "id": "duty_once",
+          "kind": "term_once",
+          "term": "duty cycle"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_depot_night",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a bus depot rebuilds the morning roster after a night of breakdowns.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: spare vehicle, shift handover. Each of these must appear exactly once, not twice: spare vehicle. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_spare",
+          "kind": "must_mention",
+          "term": "spare vehicle"
+        },
+        {
+          "id": "mentions_shift",
+          "kind": "must_mention",
+          "term": "shift handover"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "spare_once",
+          "kind": "term_once",
+          "term": "spare vehicle"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_ferry_fog",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a river ferry runs a reduced service in persistent fog.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: sailing slot, radar watch, vehicle deck. Each of these must appear exactly once, not twice: sailing slot, radar watch. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_sailing",
+          "kind": "must_mention",
+          "term": "sailing slot"
+        },
+        {
+          "id": "mentions_radar",
+          "kind": "must_mention",
+          "term": "radar watch"
+        },
+        {
+          "id": "mentions_vehicle",
+          "kind": "must_mention",
+          "term": "vehicle deck"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "sailing_once",
+          "kind": "term_once",
+          "term": "sailing slot"
+        },
+        {
+          "id": "radar_once",
+          "kind": "term_once",
+          "term": "radar watch"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_orchard_frost",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how an orchard co-operative allocates frost protection over one cold week.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: frost fan, bud stage, block rotation, water draw. Each of these must appear exactly once, not twice: frost fan, bud stage, block rotation. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_frost",
+          "kind": "must_mention",
+          "term": "frost fan"
+        },
+        {
+          "id": "mentions_bud",
+          "kind": "must_mention",
+          "term": "bud stage"
+        },
+        {
+          "id": "mentions_block",
+          "kind": "must_mention",
+          "term": "block rotation"
+        },
+        {
+          "id": "mentions_water",
+          "kind": "must_mention",
+          "term": "water draw"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "frost_once",
+          "kind": "term_once",
+          "term": "frost fan"
+        },
+        {
+          "id": "bud_once",
+          "kind": "term_once",
+          "term": "bud stage"
+        },
+        {
+          "id": "block_once",
+          "kind": "term_once",
+          "term": "block rotation"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_clinic_intake",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a rural clinic triages a morning's walk-in patients with one doctor.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: waiting list, triage nurse. Each of these must appear exactly once, not twice: waiting list. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_waiting",
+          "kind": "must_mention",
+          "term": "waiting list"
+        },
+        {
+          "id": "mentions_triage",
+          "kind": "must_mention",
+          "term": "triage nurse"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "waiting_once",
+          "kind": "term_once",
+          "term": "waiting list"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_bakery_supply",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a bakery adjusts production when a flour delivery arrives two days late.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: proving time, standing order, flour blend. Each of these must appear exactly once, not twice: proving time, standing order. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_proving",
+          "kind": "must_mention",
+          "term": "proving time"
+        },
+        {
+          "id": "mentions_standing",
+          "kind": "must_mention",
+          "term": "standing order"
+        },
+        {
+          "id": "mentions_flour",
+          "kind": "must_mention",
+          "term": "flour blend"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "proving_once",
+          "kind": "term_once",
+          "term": "proving time"
+        },
+        {
+          "id": "standing_once",
+          "kind": "term_once",
+          "term": "standing order"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_quarry_haul",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a quarry sequences haulage when one of two weighbridges fails.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: load ticket, haul road, tare weight, queue bay. Each of these must appear exactly once, not twice: load ticket, haul road, tare weight. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_load",
+          "kind": "must_mention",
+          "term": "load ticket"
+        },
+        {
+          "id": "mentions_haul",
+          "kind": "must_mention",
+          "term": "haul road"
+        },
+        {
+          "id": "mentions_tare",
+          "kind": "must_mention",
+          "term": "tare weight"
+        },
+        {
+          "id": "mentions_queue",
+          "kind": "must_mention",
+          "term": "queue bay"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "load_once",
+          "kind": "term_once",
+          "term": "load ticket"
+        },
+        {
+          "id": "haul_once",
+          "kind": "term_once",
+          "term": "haul road"
+        },
+        {
+          "id": "tare_once",
+          "kind": "term_once",
+          "term": "tare weight"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_library_move",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a branch library plans a move into a smaller building.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: shelf run, loan history. Each of these must appear exactly once, not twice: shelf run. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_shelf",
+          "kind": "must_mention",
+          "term": "shelf run"
+        },
+        {
+          "id": "mentions_loan",
+          "kind": "must_mention",
+          "term": "loan history"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "shelf_once",
+          "kind": "term_once",
+          "term": "shelf run"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_hatchery_water",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a fish hatchery manages tank stocking through a low-water summer.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: oxygen level, grading run, inflow rate. Each of these must appear exactly once, not twice: oxygen level, grading run. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_oxygen",
+          "kind": "must_mention",
+          "term": "oxygen level"
+        },
+        {
+          "id": "mentions_grading",
+          "kind": "must_mention",
+          "term": "grading run"
+        },
+        {
+          "id": "mentions_inflow",
+          "kind": "must_mention",
+          "term": "inflow rate"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "oxygen_once",
+          "kind": "term_once",
+          "term": "oxygen level"
+        },
+        {
+          "id": "grading_once",
+          "kind": "term_once",
+          "term": "grading run"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_theatre_turnaround",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a small theatre turns the stage around between two productions in a day.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: fly bar, get-out call, focus session, crew break. Each of these must appear exactly once, not twice: fly bar, get-out call, focus session. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_fly",
+          "kind": "must_mention",
+          "term": "fly bar"
+        },
+        {
+          "id": "mentions_getout",
+          "kind": "must_mention",
+          "term": "get-out call"
+        },
+        {
+          "id": "mentions_focus",
+          "kind": "must_mention",
+          "term": "focus session"
+        },
+        {
+          "id": "mentions_crew",
+          "kind": "must_mention",
+          "term": "crew break"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "fly_once",
+          "kind": "term_once",
+          "term": "fly bar"
+        },
+        {
+          "id": "getout_once",
+          "kind": "term_once",
+          "term": "get-out call"
+        },
+        {
+          "id": "focus_once",
+          "kind": "term_once",
+          "term": "focus session"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_cannery_line",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a cannery reallocates a shift when one filling line stops.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: seam check, batch code. Each of these must appear exactly once, not twice: seam check. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_seam",
+          "kind": "must_mention",
+          "term": "seam check"
+        },
+        {
+          "id": "mentions_batch",
+          "kind": "must_mention",
+          "term": "batch code"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "seam_once",
+          "kind": "term_once",
+          "term": "seam check"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_kennels_intake",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how boarding kennels absorb an unplanned intake over a holiday weekend.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: quarantine pen, feed chart, exercise slot. Each of these must appear exactly once, not twice: quarantine pen, feed chart. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_quarantine",
+          "kind": "must_mention",
+          "term": "quarantine pen"
+        },
+        {
+          "id": "mentions_feed",
+          "kind": "must_mention",
+          "term": "feed chart"
+        },
+        {
+          "id": "mentions_exercise",
+          "kind": "must_mention",
+          "term": "exercise slot"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "quarantine_once",
+          "kind": "term_once",
+          "term": "quarantine pen"
+        },
+        {
+          "id": "feed_once",
+          "kind": "term_once",
+          "term": "feed chart"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_vineyard_pick",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a vineyard orders its picking when rain is forecast midweek.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: sugar reading, picking gang, press capacity, row block. Each of these must appear exactly once, not twice: sugar reading, picking gang, press capacity. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_sugar",
+          "kind": "must_mention",
+          "term": "sugar reading"
+        },
+        {
+          "id": "mentions_picking",
+          "kind": "must_mention",
+          "term": "picking gang"
+        },
+        {
+          "id": "mentions_press",
+          "kind": "must_mention",
+          "term": "press capacity"
+        },
+        {
+          "id": "mentions_row",
+          "kind": "must_mention",
+          "term": "row block"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "sugar_once",
+          "kind": "term_once",
+          "term": "sugar reading"
+        },
+        {
+          "id": "picking_once",
+          "kind": "term_once",
+          "term": "picking gang"
+        },
+        {
+          "id": "press_once",
+          "kind": "term_once",
+          "term": "press capacity"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_sawmill_dry",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a sawmill schedules kiln loads after a wet felling season.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: moisture target, kiln charge. Each of these must appear exactly once, not twice: moisture target. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_moisture",
+          "kind": "must_mention",
+          "term": "moisture target"
+        },
+        {
+          "id": "mentions_kiln",
+          "kind": "must_mention",
+          "term": "kiln charge"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "moisture_once",
+          "kind": "term_once",
+          "term": "moisture target"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_laundry_hospital",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a hospital laundry keeps ward supply steady when a washer is down.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: clean side, trolley count, wash cycle. Each of these must appear exactly once, not twice: clean side, trolley count. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_clean",
+          "kind": "must_mention",
+          "term": "clean side"
+        },
+        {
+          "id": "mentions_trolley",
+          "kind": "must_mention",
+          "term": "trolley count"
+        },
+        {
+          "id": "mentions_wash",
+          "kind": "must_mention",
+          "term": "wash cycle"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "clean_once",
+          "kind": "term_once",
+          "term": "clean side"
+        },
+        {
+          "id": "trolley_once",
+          "kind": "term_once",
+          "term": "trolley count"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_marina_lift",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a marina sequences winter lift-outs with one travel hoist.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: cradle stock, keel depth, lift window, yard space. Each of these must appear exactly once, not twice: cradle stock, keel depth, lift window. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_cradle",
+          "kind": "must_mention",
+          "term": "cradle stock"
+        },
+        {
+          "id": "mentions_keel",
+          "kind": "must_mention",
+          "term": "keel depth"
+        },
+        {
+          "id": "mentions_lift",
+          "kind": "must_mention",
+          "term": "lift window"
+        },
+        {
+          "id": "mentions_yard",
+          "kind": "must_mention",
+          "term": "yard space"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "cradle_once",
+          "kind": "term_once",
+          "term": "cradle stock"
+        },
+        {
+          "id": "keel_once",
+          "kind": "term_once",
+          "term": "keel depth"
+        },
+        {
+          "id": "lift_once",
+          "kind": "term_once",
+          "term": "lift window"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_printworks_run",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a printworks re-plans a week when a press needs an unplanned service.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: make-ready, plate set. Each of these must appear exactly once, not twice: make-ready. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_makeready",
+          "kind": "must_mention",
+          "term": "make-ready"
+        },
+        {
+          "id": "mentions_plate",
+          "kind": "must_mention",
+          "term": "plate set"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "makeready_once",
+          "kind": "term_once",
+          "term": "make-ready"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_dairy_collect",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a dairy re-routes tanker collection when a bridge closes.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: cooling limit, collection round, tank volume. Each of these must appear exactly once, not twice: cooling limit, collection round. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_cooling",
+          "kind": "must_mention",
+          "term": "cooling limit"
+        },
+        {
+          "id": "mentions_collection",
+          "kind": "must_mention",
+          "term": "collection round"
+        },
+        {
+          "id": "mentions_tank",
+          "kind": "must_mention",
+          "term": "tank volume"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "cooling_once",
+          "kind": "term_once",
+          "term": "cooling limit"
+        },
+        {
+          "id": "collection_once",
+          "kind": "term_once",
+          "term": "collection round"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_museum_loan",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a museum prepares an outgoing loan of fragile objects.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: condition report, courier trip, crate design, display case. Each of these must appear exactly once, not twice: condition report, courier trip, crate design. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_condition",
+          "kind": "must_mention",
+          "term": "condition report"
+        },
+        {
+          "id": "mentions_courier",
+          "kind": "must_mention",
+          "term": "courier trip"
+        },
+        {
+          "id": "mentions_crate",
+          "kind": "must_mention",
+          "term": "crate design"
+        },
+        {
+          "id": "mentions_display",
+          "kind": "must_mention",
+          "term": "display case"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "condition_once",
+          "kind": "term_once",
+          "term": "condition report"
+        },
+        {
+          "id": "courier_once",
+          "kind": "term_once",
+          "term": "courier trip"
+        },
+        {
+          "id": "crate_once",
+          "kind": "term_once",
+          "term": "crate design"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_brewery_tanks",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a brewery allocates fermenting capacity before a seasonal peak.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: tank turn, yeast pitch. Each of these must appear exactly once, not twice: tank turn. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_tank",
+          "kind": "must_mention",
+          "term": "tank turn"
+        },
+        {
+          "id": "mentions_yeast",
+          "kind": "must_mention",
+          "term": "yeast pitch"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "tank_once",
+          "kind": "term_once",
+          "term": "tank turn"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_airfield_light",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a small airfield manages movements while runway lighting is repaired.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: daylight limit, circuit pattern, notice period. Each of these must appear exactly once, not twice: daylight limit, circuit pattern. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_daylight",
+          "kind": "must_mention",
+          "term": "daylight limit"
+        },
+        {
+          "id": "mentions_circuit",
+          "kind": "must_mention",
+          "term": "circuit pattern"
+        },
+        {
+          "id": "mentions_notice",
+          "kind": "must_mention",
+          "term": "notice period"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "daylight_once",
+          "kind": "term_once",
+          "term": "daylight limit"
+        },
+        {
+          "id": "circuit_once",
+          "kind": "term_once",
+          "term": "circuit pattern"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_recycling_sort",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a recycling depot handles a week of contaminated loads.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: reject rate, picking line, bale weight, tip floor. Each of these must appear exactly once, not twice: reject rate, picking line, bale weight. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_reject",
+          "kind": "must_mention",
+          "term": "reject rate"
+        },
+        {
+          "id": "mentions_picking",
+          "kind": "must_mention",
+          "term": "picking line"
+        },
+        {
+          "id": "mentions_bale",
+          "kind": "must_mention",
+          "term": "bale weight"
+        },
+        {
+          "id": "mentions_tip",
+          "kind": "must_mention",
+          "term": "tip floor"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "reject_once",
+          "kind": "term_once",
+          "term": "reject rate"
+        },
+        {
+          "id": "picking_once",
+          "kind": "term_once",
+          "term": "picking line"
+        },
+        {
+          "id": "bale_once",
+          "kind": "term_once",
+          "term": "bale weight"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_nursery_plants",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a plant nursery stages potting-on through a short labour shortage.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: root ball, potting bench. Each of these must appear exactly once, not twice: root ball. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_root",
+          "kind": "must_mention",
+          "term": "root ball"
+        },
+        {
+          "id": "mentions_potting",
+          "kind": "must_mention",
+          "term": "potting bench"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "root_once",
+          "kind": "term_once",
+          "term": "root ball"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_smokehouse_batch",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a smokehouse plans batches around a single kiln.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: brine time, smoke cycle, core temperature. Each of these must appear exactly once, not twice: brine time, smoke cycle. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_brine",
+          "kind": "must_mention",
+          "term": "brine time"
+        },
+        {
+          "id": "mentions_smoke",
+          "kind": "must_mention",
+          "term": "smoke cycle"
+        },
+        {
+          "id": "mentions_core",
+          "kind": "must_mention",
+          "term": "core temperature"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "brine_once",
+          "kind": "term_once",
+          "term": "brine time"
+        },
+        {
+          "id": "smoke_once",
+          "kind": "term_once",
+          "term": "smoke cycle"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_boatyard_survey",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a boatyard fits an unexpected insurance survey into its schedule.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: slip booking, hull access, survey list, launch date. Each of these must appear exactly once, not twice: slip booking, hull access, survey list. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_slip",
+          "kind": "must_mention",
+          "term": "slip booking"
+        },
+        {
+          "id": "mentions_hull",
+          "kind": "must_mention",
+          "term": "hull access"
+        },
+        {
+          "id": "mentions_survey",
+          "kind": "must_mention",
+          "term": "survey list"
+        },
+        {
+          "id": "mentions_launch",
+          "kind": "must_mention",
+          "term": "launch date"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "slip_once",
+          "kind": "term_once",
+          "term": "slip booking"
+        },
+        {
+          "id": "hull_once",
+          "kind": "term_once",
+          "term": "hull access"
+        },
+        {
+          "id": "survey_once",
+          "kind": "term_once",
+          "term": "survey list"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_granary_dry",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a granary manages intake during a damp harvest.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: drying floor, intake pit. Each of these must appear exactly once, not twice: drying floor. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_drying",
+          "kind": "must_mention",
+          "term": "drying floor"
+        },
+        {
+          "id": "mentions_intake",
+          "kind": "must_mention",
+          "term": "intake pit"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "drying_once",
+          "kind": "term_once",
+          "term": "drying floor"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_tramway_track",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a heritage tramway plans track work between running days.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: running day, rail joint, possession slot. Each of these must appear exactly once, not twice: running day, rail joint. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_running",
+          "kind": "must_mention",
+          "term": "running day"
+        },
+        {
+          "id": "mentions_rail",
+          "kind": "must_mention",
+          "term": "rail joint"
+        },
+        {
+          "id": "mentions_possession",
+          "kind": "must_mention",
+          "term": "possession slot"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "running_once",
+          "kind": "term_once",
+          "term": "running day"
+        },
+        {
+          "id": "rail_once",
+          "kind": "term_once",
+          "term": "rail joint"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_cheese_cave",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a cheese maker allocates cave space across two maturing batches.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: turning schedule, rind wash, shelf board, humidity range. Each of these must appear exactly once, not twice: turning schedule, rind wash, shelf board. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_turning",
+          "kind": "must_mention",
+          "term": "turning schedule"
+        },
+        {
+          "id": "mentions_rind",
+          "kind": "must_mention",
+          "term": "rind wash"
+        },
+        {
+          "id": "mentions_shelf",
+          "kind": "must_mention",
+          "term": "shelf board"
+        },
+        {
+          "id": "mentions_humidity",
+          "kind": "must_mention",
+          "term": "humidity range"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "turning_once",
+          "kind": "term_once",
+          "term": "turning schedule"
+        },
+        {
+          "id": "rind_once",
+          "kind": "term_once",
+          "term": "rind wash"
+        },
+        {
+          "id": "shelf_once",
+          "kind": "term_once",
+          "term": "shelf board"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "dev"
+    },
+    {
+      "id": "comp36_post_sorting",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a sorting office absorbs a parcel surge with fixed van capacity.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: walk sequence, van load. Each of these must appear exactly once, not twice: walk sequence. Do not use the word \"obviously\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_walk",
+          "kind": "must_mention",
+          "term": "walk sequence"
+        },
+        {
+          "id": "mentions_van",
+          "kind": "must_mention",
+          "term": "van load"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "obviously"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "walk_once",
+          "kind": "term_once",
+          "term": "walk sequence"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_hostel_rooms",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a hostel reallocates rooms when a heating zone fails in winter.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: room block, booking hold, heat zone. Each of these must appear exactly once, not twice: room block, booking hold. Do not use the word \"clearly\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_room",
+          "kind": "must_mention",
+          "term": "room block"
+        },
+        {
+          "id": "mentions_booking",
+          "kind": "must_mention",
+          "term": "booking hold"
+        },
+        {
+          "id": "mentions_heat",
+          "kind": "must_mention",
+          "term": "heat zone"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "clearly"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "room_once",
+          "kind": "term_once",
+          "term": "room block"
+        },
+        {
+          "id": "booking_once",
+          "kind": "term_once",
+          "term": "booking hold"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_windfarm_access",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a small wind farm plans turbine access in a short weather window.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: access track, crane pad, wind limit, spares run. Each of these must appear exactly once, not twice: access track, crane pad, wind limit. Do not use the word \"simply\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_access",
+          "kind": "must_mention",
+          "term": "access track"
+        },
+        {
+          "id": "mentions_crane",
+          "kind": "must_mention",
+          "term": "crane pad"
+        },
+        {
+          "id": "mentions_wind",
+          "kind": "must_mention",
+          "term": "wind limit"
+        },
+        {
+          "id": "mentions_spares",
+          "kind": "must_mention",
+          "term": "spares run"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "simply"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "access_once",
+          "kind": "term_once",
+          "term": "access track"
+        },
+        {
+          "id": "crane_once",
+          "kind": "term_once",
+          "term": "crane pad"
+        },
+        {
+          "id": "wind_once",
+          "kind": "term_once",
+          "term": "wind limit"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_abattoir_chill",
+      "category": "composition",
+      "tier": "easy",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how an abattoir schedules chilling capacity after a delivery backlog.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: chill space, kill floor. Each of these must appear exactly once, not twice: chill space. Do not use the word \"essentially\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 8 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_chill",
+          "kind": "must_mention",
+          "term": "chill space"
+        },
+        {
+          "id": "mentions_kill",
+          "kind": "must_mention",
+          "term": "kill floor"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "essentially"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 8
+        },
+        {
+          "id": "chill_once",
+          "kind": "term_once",
+          "term": "chill space"
+        }
+      ],
+      "notes": "Tier easy: 2 required terms, 1 of them exactly once, repeated-phrase window 8. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_stables_feed",
+      "category": "composition",
+      "tier": "mid",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Explain how a livery yard plans feed and turnout through a wet month.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: turnout paddock, feed store, ground condition. Each of these must appear exactly once, not twice: turnout paddock, feed store. Do not use the word \"basically\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 7 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_turnout",
+          "kind": "must_mention",
+          "term": "turnout paddock"
+        },
+        {
+          "id": "mentions_feed",
+          "kind": "must_mention",
+          "term": "feed store"
+        },
+        {
+          "id": "mentions_ground",
+          "kind": "must_mention",
+          "term": "ground condition"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "basically"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 7
+        },
+        {
+          "id": "turnout_once",
+          "kind": "term_once",
+          "term": "turnout paddock"
+        },
+        {
+          "id": "feed_once",
+          "kind": "term_once",
+          "term": "feed store"
+        }
+      ],
+      "notes": "Tier mid: 3 required terms, 2 of them exactly once, repeated-phrase window 7. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    },
+    {
+      "id": "comp36_cablecar_service",
+      "category": "composition",
+      "tier": "hard",
+      "level": 2,
+      "expected_decomposable": true,
+      "prompt": "Describe how a cable car plans its annual inspection around visitor numbers.\n\nWrite exactly two paragraphs, separated by a blank line, each between 60 and 140 words. Mention all of these: haul rope, cabin count, inspection day, queue hall. Each of these must appear exactly once, not twice: haul rope, cabin count, inspection day. Do not use the word \"of course\" anywhere. Do not repeat any sentence, and do not repeat any phrase of 5 words or more: the two paragraphs must not each introduce the subject and must not each conclude.",
+      "constraints": [
+        {
+          "id": "paragraphs",
+          "kind": "paragraph_count",
+          "count": 2
+        },
+        {
+          "id": "length",
+          "kind": "words_per_paragraph",
+          "min": 60,
+          "max": 140
+        },
+        {
+          "id": "mentions_haul",
+          "kind": "must_mention",
+          "term": "haul rope"
+        },
+        {
+          "id": "mentions_cabin",
+          "kind": "must_mention",
+          "term": "cabin count"
+        },
+        {
+          "id": "mentions_inspection",
+          "kind": "must_mention",
+          "term": "inspection day"
+        },
+        {
+          "id": "mentions_queue",
+          "kind": "must_mention",
+          "term": "queue hall"
+        },
+        {
+          "id": "avoids_forbidden",
+          "kind": "must_not_mention",
+          "term": "of course"
+        },
+        {
+          "id": "no_repeated_sentence",
+          "kind": "no_repeated_sentence"
+        },
+        {
+          "id": "no_repeated_phrase",
+          "kind": "no_repeated_ngram",
+          "size": 5
+        },
+        {
+          "id": "haul_once",
+          "kind": "term_once",
+          "term": "haul rope"
+        },
+        {
+          "id": "cabin_once",
+          "kind": "term_once",
+          "term": "cabin count"
+        },
+        {
+          "id": "inspection_once",
+          "kind": "term_once",
+          "term": "inspection day"
+        }
+      ],
+      "notes": "Tier hard: 4 required terms, 3 of them exactly once, repeated-phrase window 5. Graded by swarmbly_v0.constraints -- no judge and no key, every check is a fact about the string. Read constraint_score_comparable across arms: paragraph_count and words_per_paragraph are enforced by the assembler in one arm and by the model alone in the other.",
+      "split": "final"
+    }
+  ]
+}

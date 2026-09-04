@@ -1,5 +1,48 @@
 # V3c against ground truth — the confidence map fails, and this run says why
 
+> # ⚠ WITHDRAWN — 4 September 2026
+>
+> **Every figure in this document was produced under an arm asymmetry in the
+> STIMULUS, not in the metric. Do not quote a number from it, in either
+> direction.**
+>
+> All 15 prompts in `ground_truth.json` end with: *"Begin the line with the item
+> number in square brackets, exactly as given, **then** a single space, **then**
+> the value."* The router's `_SEQUENTIAL_CUES` matches `\bthen\b`. One cue
+> clears the gate, so **every prompt was planned as a four-deep chain** — on a
+> corpus whose every prompt says, in the same sentence, *"Items are independent:
+> the answer to one must not depend on the answer to any other."*
+>
+> The consequence: **42 of 60 fragment packets carried another packet's ANSWER
+> LINES** — `- t0: [01] 576` — directly above a task block reading *"Answer only
+> the items listed here."* The monolithic prompt carried none.
+>
+> **What this invalidates, and it is more than the arm comparisons.**
+>
+> - Every fragmented-vs-monolithic figure here. The two arms were dispatched
+>   different questions.
+> - **The calibration too, and in a direction that cuts against this document's
+>   own conclusion.** At k > 1 every replica of one task receives the *same*
+>   packet, so a shared predecessor block gives them something to converge on.
+>   Mean agreement 0.966 may be inflated by the defect. If it is, the verdict
+>   "the predictor has no variance, AUC 0.525, the map is retired" rests on
+>   variance that was artificially suppressed — so **this document's central
+>   finding is not safe in either direction.**
+> - §2's mechanism claim — five families agreeing almost always, and wrong 29 %
+>   of the time where they agree — is the part most exposed to this, because it is
+>   a claim *about the agreement distribution*.
+>
+> **What survives.** Nothing about agreement. The item-attrition arithmetic in §4
+> is explained by this defect rather than invalidated by it: the "missing" items
+> were restatements of the predecessor block, correctly discarded by
+> `task_item_scope`, which is why they recovered with k.
+>
+> Fixed in `planner.ordering_text()` and `packing.answers_by_item_label()`; after
+> the fix 0 of 15 prompts plan as chains and the genuine `chain_*` prompts in
+> `complex.json` still do. **This tier must be re-run before any figure from it is
+> used.** See `docs/INCIDENT_2026-09-04_chain_misplan.md`.
+
+
 **Run:** `results/v3c-gt-20260903-201624`. 15 prompts × 150 items,
 `prompts/ground_truth.json`, ρ = 2.5, N = 4, k ∈ {1, 3, 5}, five distinct model
 families. Graded mechanically against an answer key by `swarmbly_v0.grading` —

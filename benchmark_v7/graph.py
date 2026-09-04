@@ -187,6 +187,48 @@ class Instance:
         }
 
 
+def _asked(preamble: str, claims: Sequence[Claim],
+           trailer: str = "") -> str:
+    """An instruction that NAMES the item ids the answer key uses.
+
+    Found while building ``scripts/run_benchmark_v7.py``, and it is the defect
+    this project keeps finding in a new place: a key whose identifiers are not
+    the ones the prompt asks the model to emit.
+
+    The instructions used to read "Give one line per group as **[group id]**
+    followed by the value alone", and the group ids in the material are ``s1``,
+    ``s2`` -- ``Section.as_text`` writes them. The claim ids are ``c_s1``,
+    ``c_s2``. So a **perfectly compliant** answer was ``[s1] 440``, which
+    ``parse_claims`` cannot read: its pattern accepts ``c_``-prefixed ids and
+    bare digits, and ``s1`` is neither. The benchmark's evaluator could not parse
+    the answer the benchmark's own instruction asked for, and every arm would
+    have scored zero coverage for a reason that has nothing to do with
+    fragmentation.
+
+    It was invisible because ``test_the_parser_accepts_the_shapes_a_model
+    _actually_emits`` fed the parser ``c_``-prefixed ids by hand instead of the
+    shape the corpus asks for. A round-trip over the real corpus is now asserted
+    instead -- the same repair, and for the same reason, as
+    ``test_every_answer_in_the_corpus_round_trips_through_every_label_style`` in
+    the harness's own suite.
+
+    The claim namespace stays distinct from the section namespace on purpose: a
+    model that echoes the section header ``[s1] Depot group 1`` must not have
+    that read as an answer, which is the strictness ``parse_claims`` exists for.
+    Naming the ids in the instruction is what makes both true at once.
+
+    It also makes the *packets* name them, which is what lets a runner attribute
+    a claim to the packet that was asked for it. Without that the localisation
+    the oracle arm exists to provide has nothing to attribute to.
+    """
+    listed = "\n".join(f"  [{c.claim_id}] {c.prose}" for c in claims)
+    tail = trailer or ("Give one line per item, beginning with the item id in "
+                       "square brackets exactly as written above, followed by "
+                       "the value alone.")
+    return (f"{preamble}\n\nState each of these, using the item id given:\n"
+            f"{listed}\n\n{tail}")
+
+
 def _sections(rng: random.Random, n_sections: int, rows: int) -> tuple[Section, ...]:
     sites = rng.sample(_SITES, min(n_sections * rows, len(_SITES)))
     out: list[Section] = []
@@ -241,8 +283,8 @@ def build_instance(
                 unit="units",
                 prose=f"the total for {section.title}",
             ))
-        instruction = ("For each depot group below, state its total. Give one "
-                       "line per group as [group id] followed by the value alone.")
+        instruction = _asked(
+            "For each depot group below, state its total.", claims)
 
     elif task_class == "reduce":
         # Claims spanning sections. No packet holding one section can answer.
@@ -262,9 +304,9 @@ def build_instance(
             requires=tuple(f.fact_id for f in all_facts),
             answer=round(grand / len(all_facts), 2), unit="units",
             prose="the mean value across every group"))
-        instruction = ("State the overall total, the single largest value, and "
-                       "the mean, using every group below. Give one line per "
-                       "item as [item id] followed by the value alone.")
+        instruction = _asked(
+            "State the overall total, the single largest value, and the mean, "
+            "using every group below.", claims)
 
     elif task_class == "chain":
         # Step i consumes step i-1. Arithmetic the models solve monolithically:
@@ -284,10 +326,9 @@ def build_instance(
                 requires_claims=(f"c_{step - 1}",),
                 answer=running, unit="units",
                 prose=f"the running total after adding {source.subject}"))
-        instruction = ("Work the chain below one step at a time. Each step adds "
-                       "one value to the running total from the step before it. "
-                       "Give one line per step as [step id] followed by the "
-                       "value alone.")
+        instruction = _asked(
+            "Work the chain below one step at a time. Each step adds one value "
+            "to the running total from the step before it.", claims)
 
     else:  # compose
         grand = sum(f.value for f in all_facts)
@@ -301,11 +342,12 @@ def build_instance(
                 requires=tuple(f.fact_id for f in section.facts),
                 answer=sum(f.value for f in section.facts), unit="units",
                 prose=f"the total for {section.title}"))
-        instruction = ("Write a short operational brief covering the material "
-                       "below. State the total across every group, and the total "
-                       "for the first two groups. Write continuous prose in the "
-                       "present tense, in a neutral professional register. Do "
-                       "not reproduce the table and do not repeat any sentence.")
+        instruction = _asked(
+            "Write a short operational brief covering the material below. "
+            "Write continuous prose in the present tense, in a neutral "
+            "professional register. Do not reproduce the table and do not "
+            "repeat any sentence.", claims,
+            trailer="State each figure on its own line after the brief.")
 
     constraints: tuple[dict[str, Any], ...] = ()
     if task_class == "compose":

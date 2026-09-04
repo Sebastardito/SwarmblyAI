@@ -1,5 +1,41 @@
 # The first composition measurement — and the coherence tax cannot see it
 
+> # ⚠ PARTIALLY WITHDRAWN — 4 September 2026
+>
+> **Sections 1–4 stand. Section 5 is withdrawn.** The split is exact and worth
+> stating precisely.
+>
+> The router's `_SEQUENTIAL_CUES` matches `\bthen\b`, which appears in the
+> output-format directive of every *enumerated* prompt ("…**then** a single
+> space, **then** the value"). Those prompts were planned as chains and their
+> fragments were handed other packets' answer lines as context.
+>
+> | prompt | enumerated | planned as a chain | affected |
+> |---|---|---|---|
+> | `ff_overunder_L1/L2`, `ff_fieldname_L1/L2`, `ff_rulecheck_L1/L2` | yes | **yes** | **withdrawn** |
+> | `comp_harbour`, `comp_archive`, `comp_relay` | no | no | **stands** |
+> | `grounded_manifest`, `grounded_backlog` | no | no | stands |
+>
+> **§1–4 — the composition result — are unaffected.** The three `comp_*` prompts
+> match no sequential cue before or after the fix; they were never planned as
+> chains and their fragments never received a predecessor block. The
+> 14-to-21-point constraint gap, the coherence tax reading zero on the same
+> texts, the duplication-and-omission mechanism, and the baseline saturation all
+> stand exactly as written.
+>
+> **§5 — the agreement result — is withdrawn.** Six of the eight prompts
+> contributing calibration items are the affected enumerated ones. At k > 1 every
+> replica of a task gets the same packet, so a shared predecessor block gives them
+> something to converge on, which plausibly *inflates* agreement. AUC 0.602,
+> flagging lift 2.15, p = 0.0026 and the clustered interval all rest on that. Only
+> `grounded_manifest` and `grounded_backlog` are clean — two clusters, far too few
+> to re-derive anything from.
+>
+> **The first non-null in six measurements is therefore not a result yet.** It was
+> the outcome most worth being sceptical of, and this is why. Re-run the tier
+> after the fix before treating any of §5 as evidence.
+
+
 **Run:** `results/v3c-ff-20260903-224021`. `prompts/free_form.json`, 11 prompts —
 six free-form answer items, three two-paragraph compositions, two grounded
 summaries — at ρ = 2.5, N = 3, k ∈ {1, 3, 5}, five model families. 44 rows.

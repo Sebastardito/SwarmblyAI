@@ -28,6 +28,7 @@ which sits slightly above 1.0. :func:`packing_floor` reports it, and
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Mapping, Sequence
 
@@ -43,6 +44,7 @@ __all__ = [
     "packing_floor",
     "task_budget_weights",
     "task_budget_floors",
+    "answers_by_item_label",
     "assert_packet_invariants",
     "PacketInvariantError",
     "build_monolithic_prompt",
@@ -93,6 +95,35 @@ def _predecessor_block(task: Task, summaries: Mapping[str, str]) -> str:
         return ""
     lines = "\n".join(f"- {dep}: {text}" for dep, text in relevant)
     return "[PREDECESSOR SUMMARIES]\n" + lines
+
+
+_ITEM_KEYED_RE = re.compile(r"(?:^|\s)[\[(]\d{1,3}[\])]\s", re.MULTILINE)
+
+
+def answers_by_item_label(task: Task) -> bool:
+    """Does this task's answer belong to numbered items rather than to prose?
+
+    A packet whose task block names its own items as ``[04]``, ``[05]`` is an
+    **answer sheet**: what the grader reads back is one labelled line per item,
+    and ``swarmbly_v0.experiment.task_item_scope`` will confine it to exactly the
+    labels appearing here.
+
+    For such a packet a predecessor's summary is not context. It is *the answers
+    to somebody else's items*, in the same notation, immediately above a task
+    block that says "answer only the items listed here" -- and a fragment that
+    reads on and restates them has its restatements thrown away by the scope
+    filter while its own items go unanswered. :func:`carry_block` already refuses
+    to make that block mandatory, and says why: "forcing a predecessor's answers
+    into packets with no use for them is actively harmful ... an enumerated
+    corpus reported 379 graded items against a key holding 150". The *optional*
+    path was ungated, so at any rho with slack -- which is every cell above the
+    packing floor -- the same content went in anyway.
+
+    Prose fragments are untouched. There the predecessor summary is a sentence
+    about what the previous section said, which is the shared context rho exists
+    to buy, and it stays exactly where it was.
+    """
+    return bool(_ITEM_KEYED_RE.search(_task_text(task)))
 
 
 def _task_text(task: Task) -> str:
@@ -158,10 +189,16 @@ def _context_blocks(
     fixable. Tasks with no dependencies have no predecessor block at all, so
     for them the whole budget goes to the contract.
     """
+    # An answer sheet is the exception, and it is not a rationing decision: see
+    # `answers_by_item_label`. A predecessor's reply to an item batch is a block
+    # of answer lines, and handing it to the next packet contaminates the arm
+    # whose denominator this run reads.
+    predecessors = ("" if answers_by_item_label(task)
+                    else _predecessor_block(task, predecessor_summaries))
     return [
         ("contract_header", _contract_header(contract, verbose=False)),
         ("length", _length_block(contract.target_length_tokens)),
-        ("predecessors", _predecessor_block(task, predecessor_summaries)),
+        ("predecessors", predecessors),
         ("glossary", _glossary_block(contract)),
         ("forbidden", _forbidden_block(contract)),
     ]

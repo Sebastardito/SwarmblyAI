@@ -19,7 +19,16 @@ So this package is a benchmark, not a laboratory:
   partition; a benchmark sharing that scorer inherits the risk. The first test
   in ``test_evaluate.py`` is the arm-neutrality invariant.
 * **A minimal runner** over the protocol's public interfaces. Router, packing,
-  assembler and consensus are reused, not rewritten.
+  assembler and consensus are reused, not rewritten -- and the runner therefore
+  lives in ``scripts/run_benchmark_v7.py``, **outside this package**, because a
+  file inside it may not import any of them. Read together with the bullet
+  above that looks like a contradiction, and the first person to hit
+  ``test_the_benchmark_does_not_import_the_harness_it_is_checking`` will be
+  tempted to widen the ban. They should not: the *benchmark* must be able to
+  disagree with the harness, and the *runner* must drive the shipped protocol
+  and nothing else. Those are different requirements and they need different
+  files. ``test_the_runner_is_outside_the_package_and_stays_there`` states the
+  intended shape so that the tempting repair is obviously wrong.
 
 What V7 can and cannot establish
 --------------------------------
@@ -51,6 +60,21 @@ asked to predict error.
 **The oracle arm is the point.** Every packaging failure this project spent weeks
 on would have read as *oracle fine, real broken*, which localises the fault to
 planning, packing or assembly in a single reading. It is implemented first.
+
+It read exactly that, on the first instance it was pointed at. On the ``map``
+class -- four independent per-section totals, the most partitionable task here
+-- at rho 3.0, N=4, well above the packing floor, with a worker that answers
+what it is asked and answers it correctly: monolithic 1.000, oracle 1.000, real
+**0.000 coverage and 1.000 unanswerable**. The segmenter had put all four
+questions in one packet and all the data in the other three, because it
+partitions by position and token count and has no representation of the
+dependency between a question and the material that answers it.
+
+That is an architectural limitation rather than a bug -- ``planner._segment``
+does what it documents -- and it is left unfixed on purpose, because the three
+available repairs are not equivalent and choosing between them is an
+architecture decision. See
+``docs/FINDING_2026-09-04_segmenter_splits_question_from_data.md``.
 """
 
 from __future__ import annotations
