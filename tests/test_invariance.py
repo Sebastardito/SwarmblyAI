@@ -530,3 +530,150 @@ def test_a_tier_that_wrote_nothing_into_its_own_directory_is_a_failure() -> None
     assert '[ -f "$out/$artefact" ] && continue' in body
     assert 'TIERS_FAILED="$TIERS_FAILED $name"' in body.split("for artefact")[1], \
         "and a missing artefact must reach the end-of-run summary"
+
+
+# --------------------------------------------------------------------------- #
+# class 4: an attempt must not be recorded as a non-attempt
+#
+# `returns_input_value` exists to keep a model that copies an input back out of
+# the accuracy denominator. On the v3c-gt run of 4 September it also took every
+# two-step arithmetic answer that showed its operands with it. The failure is
+# silent by construction: the item leaves `items_graded` for
+# `items_unintelligible`, and the accuracy of everything that survives goes up.
+# --------------------------------------------------------------------------- #
+
+
+def test_an_answer_that_shows_working_is_graded_not_discarded() -> None:
+    """The rows that exposed it, verbatim from ground_truth_items.csv.
+
+    ``gt_arith_L2`` item 01 reads "21 crates of pump seals, 16 units per crate,
+    80 units removed for inspection" and keys to 256. The reply was ``21 - 80``:
+    the outer operands with the multiplication dropped. That is a wrong attempt.
+
+    ``_as_number`` takes the LAST number of an answer, so what
+    ``returns_input_value`` compared against the item's inputs was 80 -- one of
+    the item's own numbers -- and the item was recorded ``correct=None,
+    echoed=True``. Five of five sampled rows behaved this way, in the family
+    where the arithmetic has two steps and an answer therefore has two operands
+    to show.
+
+    An answer holding two numbers and an operator has attempted the item. A
+    restatement hands the value back and stops.
+    """
+    from swarmbly_v0.grading import grade_unit, returns_input_value
+
+    corpus = json.loads(GROUND_TRUTH.read_text(encoding="utf-8"))
+    key = [p for p in corpus["prompts"] if p["id"] == "gt_arith_L2"][0]["key"]
+    given = {"01": "21 - 80", "02": "37 - 72", "03": "23 - 42",
+             "04": "17 - 50", "05": "17 - 18"}
+
+    for item_id, answer in given.items():
+        entry = key[item_id]
+        assert not returns_input_value(answer, entry["source"], entry["expected"]), (
+            f"item {item_id}: {answer!r} states two numbers and an operator; it is a "
+            f"wrong attempt at {entry['expected']}, not a restatement of an input")
+
+    graded = grade_unit("\n".join(f"[{i}] {a}" for i, a in given.items()), key)
+    assert len(graded) == 5
+    for item in graded:
+        assert item.correct is False, f"item {item.item_id} must be WRONG, not unintelligible"
+        assert item.graded is True
+        assert item.echoed is False
+
+
+def test_a_restatement_of_a_single_input_is_still_unanswered() -> None:
+    """The defect the guard was built for, which the narrowing must not reopen.
+
+    A worker holding data and no operation answered ``[05] 30000 m`` to an item
+    whose source line was ``[05] 30000 m`` and whose answer was ``30``. Two
+    tokens is far below the length at which ``is_echo`` calls anything a
+    restatement, so before the guard existed the item was graded *wrong* and
+    ``unit_conversion`` read 3.5 % against 80 % unfragmented.
+
+    One stated number, and that number is the input: still a non-attempt.
+    """
+    from swarmbly_v0.grading import grade_unit, returns_input_value
+
+    source = "[05] 30000 m"
+    assert returns_input_value("30000 m", source, "30")
+    assert returns_input_value("30,000 m", source, "30"), "thousands separators too"
+    assert not returns_input_value("30", source, "30"), \
+        "an answer equal to the key is correct, whatever it coincides with"
+
+    key = {"05": {"expected": "30", "mode": "numeric", "source": source}}
+    item = grade_unit("[05] 30000 m", key)[0]
+    assert item.correct is None and item.echoed is True
+
+
+def test_the_grading_denominators_conserve_every_item_seen() -> None:
+    """Nothing may fall out of the report between ``items_seen`` and its parts.
+
+    Every item occurrence is graded, unintelligible, or an unknown label -- there
+    is no fourth class. The v3c-gt run moved 50 attempts into the unintelligible
+    column, and because the columns still added up nothing in the summary said so.
+    This asserts the partition holds on answers of every shape at once, so the
+    next such move has to show as a count that changed rather than as arithmetic
+    that still balances.
+    """
+    from swarmbly_v0.grading import grade_units
+
+    source = "[01] 21 crates of pump seals, 16 units per crate, 80 units removed"
+    key = {"01": {"expected": "256", "mode": "numeric", "source": source}}
+    replies = [
+        "[01] 256",                       # correct
+        "[01] 21 - 80",                   # wrong, shows its operands
+        "[01] 336",                       # wrong, forgot the removal
+        "[01] 21 crates of pump seals, 16 units per crate, 80 units removed",  # echo
+        "[01] no idea",                   # unintelligible
+        "[99] 256",                       # unknown label
+        "Here are the answers:",          # no label at all
+    ]
+    _, report = grade_units(replies, key)
+    d = report.as_dict()
+
+    assert d["items_seen"] == (d["items_graded"] + d["items_unintelligible"]
+                               + d["items_unknown_id"]), \
+        "items_seen must partition into graded, unintelligible and unknown-label"
+    assert d["units_total"] == len(replies)
+    assert d["units_with_no_label"] == 1
+    assert d["items_graded"] == 3 and d["items_correct"] == 1, \
+        "the shown-working answer belongs in the denominator, scored wrong"
+    assert d["items_unintelligible"] == 2 and d["items_echoed"] == 1
+
+
+def test_units_with_no_label_is_not_a_count_of_lost_answers() -> None:
+    """``units_with_no_label`` measures LINES, and a preamble is a line.
+
+    Read as attrition it is badly wrong, and at N=4 it is wrong by a factor
+    large enough to be mistaken for a defect: a model that answers every item,
+    in exactly the asked format, and gets every one right, but opens with "Here
+    are the answers:" and closes with a sign-off, reports 40 % of its units
+    unlabelled while losing nothing at all.
+
+    The ratio grows with fragmentation for a purely structural reason -- the
+    per-reply overhead is paid N times against N-way-smaller answer lists -- so
+    it must never be compared between arms either. The count of *items* is the
+    only attrition figure in the report.
+
+    This is a characterisation test: it passes before and after the
+    ``returns_input_value`` fix, and it is here so that the next reader of a 45 %
+    figure checks the denominator before rewriting the packet contract.
+    """
+    from swarmbly_v0.grading import grade_units
+
+    key = {f"{i:02d}": {"expected": str(100 + i), "mode": "numeric",
+                        "source": f"[{i:02d}] {i} crates, 10 units per crate"}
+           for i in range(1, 4)}
+    reply = ("Here are the answers:\n"
+             + "\n".join(f"[{i:02d}] {100 + i}" for i in range(1, 4))
+             + "\nLet me know if you need anything else.")
+
+    _, report = grade_units([u for u in reply.split("\n")], key)
+    d = report.as_dict()
+
+    assert d["items_seen"] == 3 and d["items_graded"] == 3 and d["items_correct"] == 3
+    assert d["accuracy"] == 1.0, "every item was answered and every answer was right"
+    assert d["units_with_no_label"] == 2 and d["units_total"] == 5
+    assert d["units_with_no_label"] / d["units_total"] == 0.4, (
+        "40 % of units carried no item label and NOTHING was lost -- the ratio is "
+        "not attrition, and the run report's 45 % must not be read as one")

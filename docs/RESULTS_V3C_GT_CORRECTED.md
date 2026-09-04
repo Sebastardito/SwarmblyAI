@@ -23,10 +23,10 @@ between replicas answering *context-free* micro-tasks. Their odds ratios of 3.47
 
 | statistic | value | reading |
 |---|---|---|
-| **AUC, pooled** | **0.507** | 0.500 is chance |
+| **AUC, pooled** | **0.525** | 0.500 is chance. Was 0.507 before the `returns_input_value` fix of 4 September; see §4. |
 | **Flagging lift** at 10 / 20 / 30 % flag rate | **1.12 / 1.21 / 0.99** | 1.0 is random |
 | Pearson *r* | +0.117 | see §3 — it rests on three items |
-| items in the calibration | 181 (127 right, 54 wrong) | |
+| items in the calibration | 183 (127 right, 56 wrong) | |
 
 The tier's own instructions, written before the run: *"lift near 1.0 means the
 flag is no better than random, and that result retires the confidence map."*
@@ -45,8 +45,10 @@ what flagging 30 % of items at random does.
 | field_extraction | 17 | 1.000 | — (no errors) |
 
 `threshold_decision` is **below** chance: there, higher agreement predicts a
-*wrong* answer. Categories landing on both sides of 0.5 and pooling to 0.507 is
-the signature of no signal, not of a weak one.
+*wrong* answer. Categories landing on both sides of 0.5 and pooling to chance is
+the signature of no signal, not of a weak one. (This table is computed before
+the grading fix of §4, which moves `arithmetic` accuracy to 0.478 and the pooled
+AUC to 0.525; the pattern is unchanged.)
 
 **And adding families does not help.** k=3 gives AUC 0.483, k=5 gives 0.527. Two
 more independent lineages bought nothing.
@@ -56,8 +58,8 @@ more independent lineages bought nothing.
 The earlier verdict was "agreement does not predict correctness". This run shows
 the mechanism, and it is worse than a weak relationship.
 
-**Mean agreement is 0.966. One hundred and seventy-three of 181 items sit in the
-top bin.**
+**Mean agreement is 0.966. One hundred and seventy-three of 183 items sit in the
+top bin, and the grading fix of §4 leaves that bin untouched.**
 
 | agreement bin | items | accuracy |
 |---|---|---|
@@ -91,38 +93,82 @@ quoted. It rests on the 0.2–0.6 range, which holds **three items** in total, a
 of them wrong. Remove those three and the predictor is a constant.
 
 Read AUC before *r* — which is what the tier's instructions say, and why they say
-it. AUC 0.507 is the honest summary.
+it. AUC 0.525 is the honest summary.
 
-## 4. A separate problem this run exposes: format compliance
+## 4. Correction — and the compliance finding that survives it
 
-The denominators, which the tier's instructions say to read before anything else:
+> **The first version of this section, published 3 September, was wrong.** It
+> read `units_with_no_label: 323 of 719` as a 45 % attrition rate and concluded
+> that "three quarters of the dispatched work does not reach the calibration".
+> That is a misreading of the statistic, and it is exactly the class of error
+> this project keeps correcting: a count read as though it measured something it
+> does not.
 
-| | |
+A **unit is a line**, not an answer opportunity. `units_with_no_label` counts
+every line that is not an answer — a preamble, a sign-off, a blank. It discards
+nothing. Running the real pipeline over the real corpus with a model that answers
+**every item, in the asked format, correctly**:
+
+| arm | units | unlabelled | items seen | correct |
+|---|---|---|---|---|
+| monolithic | 180 | 30 (16.7 %) | 150 | 150 |
+| fragmented N=2 | 210 | 60 (28.6 %) | 150 | 150 |
+| **fragmented N=4** | 270 | **120 (44.4 %)** | 150 | 150 |
+| fragmented N=8 | 390 | 240 (61.5 %) | 150 | 150 |
+
+44.4 % at N = 4 against the run's 45 %, with **zero items lost and accuracy
+1.000**. The ratio is a pure function of N — a fixed per-reply overhead paid N
+times against N-way-smaller answer lists — so it is not an error rate and it must
+never be compared between arms.
+
+### The real attrition, which is smaller and more interesting
+
+`items_seen` is 387 against a ceiling of 600 (150 key items × 4 conditions).
+Broken out, it is not a uniform 35 % loss — it is almost entirely one arm at low
+k, and it *improves* as replicas are added:
+
+| condition | items seen / 150 |
 |---|---|
-| units produced | 719 |
-| **units with no parsable item label** | **323 (45 %)** |
-| items seen | 387 |
-| items graded | 308 |
-| items unintelligible | 79 (20 % of items seen) |
-| items echoed | 50 |
-| reaching the calibration | **181** |
+| monolithic | **150 (100 %)** |
+| fragmented, k = 1 | **24 (16 %)** |
+| fragmented, k = 3 | 82 (55 %) |
+| fragmented, k = 5 | 131 (87 %) |
 
-**Three quarters of the dispatched work does not reach the calibration.** Nearly
-half of all units emitted nothing a parser could label, and a fifth of the items
-that were labelled were unintelligible.
+The monolithic arm is perfectly compliant. A single fragmented worker produces a
+parsable answer for **one item in six**. Adding replicas recovers most of it,
+because an item counts as seen if *any* replica labelled it.
 
-This is a real defect and it is not the confidence map's. At N = 4 on 2–3B
-models, format compliance is poor enough that most of the run is thrown away
-before any question is asked. Two consequences:
+This is a large arm asymmetry in a denominator, which is the shape of defect this
+project has withdrawn results for twice. **It is stated here and not
+interpreted.** Two readings are live and this run cannot separate them: either
+fragmented workers genuinely fail to emit the format, or `task_item_scope` is
+removing in-scope items it should keep. It needs its own diagnosis before any
+figure that compares arms on this corpus is quoted.
 
-- **It weakens nothing in §1–2, and arguably strengthens them.** The surviving
-  181 items are the subset where the models *did* behave. Even there, agreement
-  is uninformative. If attrition selected for easier items — the likely
-  direction — then this is the friendliest possible sample for the confidence
-  map, and it still fails.
-- **It is the next thing worth fixing.** A protocol that discards 75 % of
-  dispatched work to format failure has a cost that no coherence metric measures.
-  It belongs in the packet contract, not in the analysis.
+### The grading defect this investigation found
+
+`returns_input_value` reduced an answer to `_as_number` — the **last** number —
+and called it a restatement whenever that number appeared in the item's source
+line. `21 - 80`, against a source reading *"21 crates, 16 units per crate, 80
+removed"* and a key of 256, was filed as a restatement. It is an attempt: it
+states two numbers and a dropped operator. A restatement hands one value back and
+stops, so the guard now requires the answer to state exactly one number.
+
+Recomputed from this run's stored answers, the fix returns **12 items** to the
+denominator, all in `arithmetic`, all wrong by construction:
+
+| | before | after |
+|---|---|---|
+| items graded | 308 | 320 |
+| pooled accuracy | 0.7175 | **0.6906** |
+| `arithmetic` accuracy | 0.647 | **0.478** |
+| calibration items | 181 | 183 |
+| calibration accuracy | 0.7017 | 0.6940 |
+| **pooled AUC** | 0.5073 | **0.5249** |
+
+The direction is the one that matters: **the reported accuracy was too high.**
+The top-agreement bin is unchanged at 173 items and 0.711 accuracy, so §2 stands
+exactly as written.
 
 ## 5. What this settles
 
@@ -132,7 +178,7 @@ below-floor runs (common odds ratios 3.47, 0.26, 1.24 — above, below and astri
 1), and once here, above the floor, with five genuine families and a mechanical
 verdict.
 
-**AUC 0.507. Flagging lift 1.0. It is retired.**
+**AUC 0.525. Flagging lift 1.0. It is retired.**
 
 The mechanism stays in the protocol: replicas are still dispatched, agreement is
 still computed and reported, and a low-agreement region is still a place a reader

@@ -335,10 +335,35 @@ def returns_input_value(given: str, source: str, expected: str) -> bool:
     must differ from the expected answer. When the two coincide -- an item whose
     result happens to equal one of its inputs -- the answer is simply correct and
     is left alone.
+
+    **The answer must state exactly one number.** That guard is the difference
+    between "handed back an input" and "did the arithmetic and got it wrong", and
+    without it the second was being counted as the first. On the v3c-gt run the
+    two-step arithmetic items came back as ``21 - 80`` against a key of ``256``:
+    the item's outer operands with the multiplication dropped, which is a wrong
+    attempt at the task and nothing else. ``_as_number`` takes the LAST number of
+    an answer, so the value this function tested was ``80`` -- one of the item's
+    own inputs -- and every such attempt was recorded ``correct=None``,
+    ``echoed=True``: removed from the accuracy denominator as a non-attempt.
+
+    That is the error class this project has already withdrawn results for twice,
+    arriving through the guard built to prevent it. An answer holding two numbers
+    and an operator has *attempted* the item; a restatement hands back the value
+    and stops. So a multi-number answer is graded -- wrong, if it is wrong --
+    while ``[05] 30000 m`` against an item reading ``[05] 30000 m`` still fires,
+    because it states one number and that number is the input.
+
+    The direction matters and is worth stating: this makes reported accuracy
+    *lower*, because every item it restores to the denominator is one the model
+    got wrong.
     """
     if not source:
         return False
-    got = _as_number(given)
+    stated = [n for n in (_as_number(token) for token in _NUM_RE.findall(str(given)))
+              if n is not None]
+    if len(stated) != 1:
+        return False
+    got = stated[0]
     want = _as_number(expected)
     if got is None or want is None or abs(got - want) <= max(abs(want) * 1e-6, 1e-9):
         return False
