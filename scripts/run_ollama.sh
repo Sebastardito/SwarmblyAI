@@ -218,6 +218,35 @@ run_tier() {
     TIERS_FAILED="$TIERS_FAILED $name"
     return 1
   fi
+  # The run exited 0. That is not the same as the run having happened.
+  #
+  # A comment placed inside a `\` line continuation ends the command there, so
+  # `run_tier v3c-gt "$out" python3 -m swarmbly_v0 run --prompts ...` dispatched
+  # with NO --rho, NO --n, NO --k and NO --out. It swept the default grid at k=1
+  # -- so the tier's entire question, agreement against ground truth, had zero
+  # data -- wrote into `results/` instead of `$out`, exited 0, and was reported
+  # as a completed v3c-gt run. Four to six hours.
+  #
+  # Exit status could not catch that, because nothing failed. This can: a tier
+  # that did not write a summary into its own output directory did not run.
+  for artefact in summary.json results.csv; do
+    [ -f "$out/$artefact" ] && continue
+    {
+      echo "tier=$name"
+      echo "exit_status=0 (the command succeeded and wrote nothing here)"
+      echo "missing=$out/$artefact"
+      echo "stamp=$STAMP"
+      echo "The invocation exited cleanly but did not produce this tier's output"
+      echo "in this directory. The usual cause is a truncated command line -- a"
+      echo "comment inside a backslash continuation, or a lost --out. Check"
+      echo "results/ for files written to the wrong place before re-running."
+    } > "$out/FAILED"
+    warn "TIER '$name' produced NO $artefact in $out, despite exiting 0."
+    warn "The command line was probably truncated. Marked $out/FAILED."
+    warn "Check whether output landed in results/ instead."
+    TIERS_FAILED="$TIERS_FAILED $name"
+    return 1
+  done
   echo "  -> $out/report.html"
   return 0
 }
@@ -272,24 +301,24 @@ run_v3c_ff() {
   echo "                                       repetition located."
   echo "  Output: $out"
   mkdir -p "$out"
+  # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
+  # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own floor
+  # -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
+  # prompts.json. Below the floor a packet holds its bare task and nothing else,
+  # so these tiers were measuring agreement between replicas answering
+  # context-free micro-tasks, which is not the configuration the protocol
+  # proposes. `publishable()` now drops those rows, so at 1.5 the tier would burn
+  # hours and emit nothing at all.
+  #
+  # This makes the run NOT comparable to the v3c runs of August, which were all
+  # at 1.5 and therefore all below floor. That is the point: those runs measured
+  # a degenerate configuration. It does not resurrect the confidence map -- no
+  # signal is no signal -- but the odds ratios of 3.47, 0.26 and 1.24 describe a
+  # condition nobody chose.
   run_tier v3c-ff "$out" \
     python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/free_form.json \
-    # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
-    # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own
-    # floor -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
-    # prompts.json. Below the floor a packet holds its bare task and nothing
-    # else, so these tiers were measuring agreement between replicas answering
-    # context-free micro-tasks, which is not the configuration the protocol
-    # proposes. `publishable()` now drops those rows, so at 1.5 the tier would
-    # burn four to six hours and emit nothing at all.
-    #
-    # This makes the run NOT comparable to the v3c runs of August, which were all
-    # at 1.5 and therefore all below floor. That is the point: those runs
-    # measured a degenerate configuration. It does not resurrect the confidence
-    # map -- no signal is no signal -- but it does mean the odds ratios of 3.47,
-    # 0.26 and 1.24 describe a condition nobody chose.
     --rho 2.5 --n 3 --k 1,3,5 \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
@@ -326,24 +355,24 @@ run_v3c_gt() {
   echo "                                         the block means anything."
   echo "  Output: $out  (see ground_truth_items.csv for every graded item)"
   mkdir -p "$out"
+  # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
+  # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own floor
+  # -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
+  # prompts.json. Below the floor a packet holds its bare task and nothing else,
+  # so these tiers were measuring agreement between replicas answering
+  # context-free micro-tasks, which is not the configuration the protocol
+  # proposes. `publishable()` now drops those rows, so at 1.5 the tier would burn
+  # hours and emit nothing at all.
+  #
+  # This makes the run NOT comparable to the v3c runs of August, which were all
+  # at 1.5 and therefore all below floor. That is the point: those runs measured
+  # a degenerate configuration. It does not resurrect the confidence map -- no
+  # signal is no signal -- but the odds ratios of 3.47, 0.26 and 1.24 describe a
+  # condition nobody chose.
   run_tier v3c-gt "$out" \
     python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
     --prompts prompts/ground_truth.json \
-    # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
-    # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own
-    # floor -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
-    # prompts.json. Below the floor a packet holds its bare task and nothing
-    # else, so these tiers were measuring agreement between replicas answering
-    # context-free micro-tasks, which is not the configuration the protocol
-    # proposes. `publishable()` now drops those rows, so at 1.5 the tier would
-    # burn four to six hours and emit nothing at all.
-    #
-    # This makes the run NOT comparable to the v3c runs of August, which were all
-    # at 1.5 and therefore all below floor. That is the point: those runs
-    # measured a degenerate configuration. It does not resurrect the confidence
-    # map -- no signal is no signal -- but it does mean the odds ratios of 3.47,
-    # 0.26 and 1.24 describe a condition nobody chose.
     --rho 2.5 --n 4 --k 1,3,5 \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
@@ -360,23 +389,23 @@ run_v3c() {
   echo "  map is decoration and the paper must say so."
   echo "  Output: $out"
   mkdir -p "$out"
+  # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
+  # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own floor
+  # -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
+  # prompts.json. Below the floor a packet holds its bare task and nothing else,
+  # so these tiers were measuring agreement between replicas answering
+  # context-free micro-tasks, which is not the configuration the protocol
+  # proposes. `publishable()` now drops those rows, so at 1.5 the tier would burn
+  # hours and emit nothing at all.
+  #
+  # This makes the run NOT comparable to the v3c runs of August, which were all
+  # at 1.5 and therefore all below floor. That is the point: those runs measured
+  # a degenerate configuration. It does not resurrect the confidence map -- no
+  # signal is no signal -- but the odds ratios of 3.47, 0.26 and 1.24 describe a
+  # condition nobody chose.
   run_tier v3c "$out" \
     python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
-    # rho 2.5, not 1.5. Recomputed from the code: the packing floors on this
-    # tier's corpus run 1.51-2.37, so EVERY cell at rho=1.5 sat below its own
-    # floor -- 0 of 15 reachable on ground_truth, 0 of 11 on free_form, 0 of 8 on
-    # prompts.json. Below the floor a packet holds its bare task and nothing
-    # else, so these tiers were measuring agreement between replicas answering
-    # context-free micro-tasks, which is not the configuration the protocol
-    # proposes. `publishable()` now drops those rows, so at 1.5 the tier would
-    # burn four to six hours and emit nothing at all.
-    #
-    # This makes the run NOT comparable to the v3c runs of August, which were all
-    # at 1.5 and therefore all below floor. That is the point: those runs
-    # measured a degenerate configuration. It does not resurrect the confidence
-    # map -- no signal is no signal -- but it does mean the odds ratios of 3.47,
-    # 0.26 and 1.24 describe a condition nobody chose.
     --rho 2.5 --n 4 --k 1,3,5 \
     --candidates 2 --seed 0 \
     --out "$out" || return 1

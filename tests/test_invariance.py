@@ -487,3 +487,46 @@ def test_the_runner_does_not_instruct_an_invocation_it_refuses() -> None:
     assert "--tau|--tau=*|-t)" in final, \
         "passing a tau must be named as the mistake, not reported as a missing file"
     assert 'is not a directory' in final
+
+
+def test_no_comment_sits_inside_a_line_continuation() -> None:
+    """A comment after a trailing backslash silently truncates the command.
+
+    This cost a four-to-six-hour v3c-gt run. The comment block explaining the rho
+    change was placed between `run_tier v3c-gt "$out" \\` and its `--rho` line, so
+    bash ended the command at the comment and dispatched with no --rho, no --n,
+    no --k and NO --out. It swept the default grid at k=1 -- the tier's whole
+    question, agreement against ground truth, had zero data -- wrote into
+    `results/` instead of the timestamped directory, and exited 0.
+
+    `bash -n` does not catch it: the result is syntactically valid, just not the
+    command anyone wrote.
+    """
+    script = (Path(__file__).resolve().parent.parent
+              / "scripts" / "run_ollama.sh").read_text(encoding="utf-8")
+    lines = script.split("\n")
+    offences = [
+        f"line {i + 2}: {nxt.strip()[:60]}"
+        for i, (cur, nxt) in enumerate(zip(lines, lines[1:]))
+        if cur.rstrip().endswith("\\") and not cur.rstrip().endswith("\\\\")
+        and nxt.lstrip().startswith("#")
+    ]
+    assert not offences, (
+        "a comment after a trailing backslash truncates the command:\n  "
+        + "\n  ".join(offences))
+
+
+def test_a_tier_that_wrote_nothing_into_its_own_directory_is_a_failure() -> None:
+    """Exit status could not catch the truncation, because nothing failed.
+
+    The post-condition can: a tier that did not write a summary into its own
+    output directory did not run, whatever its exit code says.
+    """
+    script = (Path(__file__).resolve().parent.parent
+              / "scripts" / "run_ollama.sh").read_text(encoding="utf-8")
+    body = script[script.index("run_tier() {"):script.index("\n}\n", script.index("run_tier() {"))]
+    assert 'for artefact in summary.json results.csv; do' in body, \
+        "run_tier must verify the tier wrote its own output, not just its exit code"
+    assert '[ -f "$out/$artefact" ] && continue' in body
+    assert 'TIERS_FAILED="$TIERS_FAILED $name"' in body.split("for artefact")[1], \
+        "and a missing artefact must reach the end-of-run summary"
