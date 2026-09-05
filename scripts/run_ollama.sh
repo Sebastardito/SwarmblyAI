@@ -68,7 +68,43 @@ die()  { printf '\033[31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 # --------------------------------------------------------------------------
 # Preflight. Every check here is one that would otherwise fail three hours in.
 # --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# REHEARSAL MODE. SWARMBLY_REHEARSE=1 runs the tier end to end against the mock
+# backend, with no Ollama and no models, in seconds.
+#
+# It exists because of the day this comment was written. Four tiers failed in a
+# row -- a grid above the packing ceiling, a chain drifting, a declared cell
+# that could not be packed, and finally a missing `mkdir` in `run_tier` that
+# marked a COMPLETED sweep as failed. The unit suite could not see any of them:
+# three were about how a grid meets a corpus, and the fourth was shell.
+#
+# The tier that never failed is the one I rehearsed. comp-dev and comp-final
+# were run end to end before being handed over and worked first time; v0 was
+# checked with unit tests and a packing check and failed three times. The
+# difference is not care, it is coverage: nothing but running the tier runs the
+# tier.
+#
+# So: no tier is handed to an operator until it has been rehearsed. It costs
+# seconds and the alternative costs five hours.
+#
+#   SWARMBLY_REHEARSE=1 bash scripts/run_ollama.sh v0
+#
+# Everything downstream is real -- the same functions, the same invocations, the
+# same run_tier wrapper, the same post-conditions. Only the backend and the
+# preflight are stubbed, and every run is stamped harness_validation_only=true
+# so a rehearsal can never be mistaken for evidence.
+REHEARSE="${SWARMBLY_REHEARSE:-0}"
+if [ "$REHEARSE" = "1" ]; then
+  bold "== REHEARSAL: mock backend, no Ollama. Proves the tier RUNS. =="
+  warn "  Every number this produces is harness validation, not evidence."
+fi
+
 bold "== Preflight =="
+
+if [ "$REHEARSE" = "1" ]; then
+  echo "  ollama:       skipped (rehearsal)"
+  echo "  families:     skipped (rehearsal)"
+else
 
 command -v ollama >/dev/null 2>&1 || die "ollama is not on PATH. https://ollama.com/download"
 
@@ -131,8 +167,10 @@ family to fill k, and replicas drawn from one lineage share their errors: they \
 agree confidently on the same mistake. The k=$TIER_MAX_K arm would be \
 contaminated upward and unusable, which has already happened once."
 echo "  max k here:   $TIER_MAX_K (families available: $NFAM)"
+fi
 
 # pull what is missing
+if [ "$REHEARSE" = "1" ]; then HAVE=""; else
 HAVE="$(ollama list 2>/dev/null | tail -n +2 | awk '{print $1}')"
 for entry in $(echo "$MODELS" | tr ',' ' '); do
   model="${entry#*:}"
@@ -150,6 +188,8 @@ else
   echo "  present:      $EMBED_MODEL"
 fi
 
+fi   # end of the ollama-only preflight
+
 # python side
 python3 -c "import swarmbly_v0" 2>/dev/null || {
   bold "  installing swarmbly_v0 in editable mode"
@@ -164,6 +204,9 @@ export SWARMBLY_EMBED_MODEL="$EMBED_MODEL"
 export SWARMBLY_REPLICA_MODELS="$MODELS"
 
 # end-to-end smoke of the actual transport, before committing hours to it
+if [ "$REHEARSE" = "1" ]; then
+  echo "  round-trip:   skipped (rehearsal)"
+else
 bold "  round-trip test"
 python3 - <<'PY' || die "the endpoint is reachable but the round trip failed"
 from swarmbly_v0 import get_backend, get_embedder
@@ -176,9 +219,30 @@ print(f"  embeddings:   shape {v.shape}  available={e.available}")
 if not e.available:
     print("  WARNING: embeddings degraded to hashing; tau_sem will be meaningless.")
 PY
+fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
 TIERS_FAILED=""
+
+# Where a tier writes.
+#
+# A rehearsal writes into results/rehearsal/ and NOT into results/. Every reader
+# -- the runbook's snippets, the -final tiers' "recent dev runs" hint, every
+# `sorted(glob("results/comp-dev-*"))[-1]` anyone will ever type -- picks a run
+# by glob and takes the last one. A mock run landing beside a real one is
+# therefore the newest run, and reads as evidence.
+#
+# `harness_validation_only: true` in run_metadata.json is a label the reader has
+# to remember to look at. A directory the glob does not match is a fact it
+# cannot cross. This project has withdrawn four documents; every one of them was
+# a number that reached a table because a reader trusted the shape of the thing
+# rather than checking its provenance.
+RESULTS_ROOT="results"
+if [ "$REHEARSE" = "1" ]; then
+  RESULTS_ROOT="results/rehearsal"
+  mkdir -p "$RESULTS_ROOT"
+  echo "  output:       $RESULTS_ROOT/ (not results/, so no glob can pick it up)"
+fi
 
 # --------------------------------------------------------------------------- #
 # Every tier used to end its run line with `| tee "$out/run.log" || true`.
@@ -204,6 +268,38 @@ TIERS_FAILED=""
 run_tier() {
   local name="$1" out="$2"; shift 2
   local status=0
+  # In rehearsal, swap the real backend for the mock at the point of dispatch,
+  # so the tier's own invocation is otherwise byte-identical to the real one.
+  # Rewriting the arguments here rather than in each tier means a tier cannot be
+  # rehearsed with a different command than it runs with.
+  if [ "${REHEARSE:-0}" = "1" ]; then
+    local rewritten=() skip=0 arg
+    for arg in "$@"; do
+      if [ "$skip" = "1" ]; then skip=0; continue; fi
+      case "$arg" in
+        --backend)  rewritten+=(--backend mock); skip=1 ;;
+        --embedder) rewritten+=(--embedder hash); skip=1 ;;
+        *)          rewritten+=("$arg") ;;
+      esac
+    done
+    set -- "${rewritten[@]}"
+  fi
+  # The wrapper creates its own output directory.
+  #
+  # It used to require the CALLER to have done it, and on 4 September the
+  # rewritten v0 tier created only the parent -- results/v0-STAMP -- and not the
+  # per-N subdirectories it then passed in. `tee "$out/run.log"` failed on a
+  # missing directory, `pipefail` turned that into a non-zero pipeline status,
+  # and a sweep that had ALREADY WRITTEN results.csv, summary.json and
+  # report.html was marked FAILED and thrown away.
+  #
+  # The command succeeded and the wrapper destroyed the run. That is the mirror
+  # of the defect the post-condition below was written for, and it is worse:
+  # there the output was missing, here it was sitting on disk, complete, beside
+  # a FAILED marker telling the operator not to quote it.
+  #
+  # No caller can forget this now.
+  mkdir -p "$out"
   "$@" 2>&1 | tee "$out/run.log" || status=$?
   if [ "$status" -ne 0 ]; then
     {
@@ -252,7 +348,7 @@ run_tier() {
 }
 
 run_v0() {
-  local out="results/v0-$STAMP"
+  local out="$RESULTS_ROOT/v0-$STAMP"
   bold ""
   bold "== V0 — the coherence tax as a function of rho (hypothesis H1) =="
   echo "  How much quality is lost to fragmentation and reassembly, and whether"
@@ -329,7 +425,7 @@ run_v0() {
 }
 
 run_v3c_ff() {
-  local out="results/v3c-ff-$STAMP"
+  local out="$RESULTS_ROOT/v3c-ff-$STAMP"
   bold ""
   bold "== V3c on free-form answers, and the first composition measurement =="
   echo "  The ground-truth run of 24 August fixed the pipeline -- fragmented"
@@ -388,7 +484,7 @@ run_v3c_ff() {
 }
 
 run_v3c_gt() {
-  local out="results/v3c-gt-$STAMP"
+  local out="$RESULTS_ROOT/v3c-gt-$STAMP"
   bold ""
   bold "== V3c against ground truth — does agreement predict CORRECTNESS? =="
   echo "  The experiment Section 11.4 specifies, and the one the 14 August run"
@@ -441,7 +537,7 @@ run_v3c_gt() {
 }
 
 run_v3c() {
-  local out="results/v3c-$STAMP"
+  local out="$RESULTS_ROOT/v3c-$STAMP"
   bold ""
   bold "== V3c — does agreement predict quality? =="
   echo "  k complete replicas per micro-task, one per family, aligned and scored."
@@ -464,16 +560,29 @@ run_v3c() {
   # a degenerate configuration. It does not resurrect the confidence map -- no
   # signal is no signal -- but the odds ratios of 3.47, 0.26 and 1.24 describe a
   # condition nobody chose.
+  # rho 3.0, not 2.5, and check_grid is why.
+  #
+  # 2.5 was chosen on 3 September by reading the packing FLOOR, which on this
+  # corpus at N=4 is 1.90 for multi_hop_math_supply -- so 2.5 looked
+  # comfortable. It is not: that prompt is a chain, its mandatory carries are
+  # added to the floor rather than funded from slack, and in the band above the
+  # floor the cell cannot hit its target. At 2.5 it lands on 2.71, +8.6 %, and
+  # the drift invariant aborts the tier. The usable range at N=4 starts at 2.95.
+  #
+  # Found by REHEARSING this tier against the mock backend before shipping it,
+  # not by running it for three hours. See the header of scripts/check_grid.py.
+  python3 scripts/check_grid.py --rho 3.0 --n 4 --quiet \
+    || die "the v3c grid would not measure its own labels. Nothing was dispatched."
   run_tier v3c "$out" \
     python3 -m swarmbly_v0 run \
     --backend openai --embedder api \
-    --rho 2.5 --n 4 --k 1,3,5 \
+    --rho 3.0 --n 4 --k 1,3,5 \
     --candidates 2 --seed 0 \
     --out "$out" || return 1
 }
 
 run_v4() {
-  local out="results/v4-$STAMP"
+  local out="$RESULTS_ROOT/v4-$STAMP"
   bold ""
   bold "== V4 — how big is a semantic fragment, and can an editor repair the seam? =="
   echo "  Three questions in one grid, because they are the same question seen"
@@ -595,7 +704,7 @@ assert_same_code_as_dev() {
 }
 
 run_tables_dev() {
-  local out="results/tables-dev-$STAMP"
+  local out="$RESULTS_ROOT/tables-dev-$STAMP"
   bold ""
   bold "== tables-dev — ONE question, on the half of the corpus you may look at =="
   echo ""
@@ -675,7 +784,7 @@ run_tables_dev() {
 }
 
 run_tables_final() {
-  local out="results/tables-final-$STAMP"
+  local out="$RESULTS_ROOT/tables-final-$STAMP"
   local dev="${2:-}"
   [ -n "$dev" ] || die "name the dev run this final run inherits its threshold from:
     bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>
@@ -698,7 +807,7 @@ run_tables_final() {
   changed once already. Naming the run lets this script read the threshold, the
   frozen corpus digest and the split, and refuse if any of the three disagrees
   with the corpus about to be judged. Latest dev run on disk:
-$(ls -1dt results/tables-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
+$(ls -1dt "$RESULTS_ROOT"/tables-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
     -*)
       die "unexpected option '$dev'. This tier takes the dev run's directory:
     bash scripts/run_ollama.sh tables-final results/tables-dev-<stamp>" ;;
@@ -829,7 +938,7 @@ print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
 }
 
 run_comp_dev() {
-  local out="results/comp-dev-$STAMP"
+  local out="$RESULTS_ROOT/comp-dev-$STAMP"
   bold ""
   bold "== comp-dev — the composition criterion, on the half you may look at =="
   echo ""
@@ -910,7 +1019,7 @@ run_comp_dev() {
 }
 
 run_comp_final() {
-  local out="results/comp-final-$STAMP"
+  local out="$RESULTS_ROOT/comp-final-$STAMP"
   local dev="${2:-}"
   [ -n "$dev" ] || die "name the dev run this final run inherits its threshold from:
     bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>
@@ -925,7 +1034,7 @@ run_comp_final() {
     bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>
 
   Latest dev run on disk:
-$(ls -1dt results/comp-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
+$(ls -1dt "$RESULTS_ROOT"/comp-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
     -*)
       die "unexpected option '$dev'. This tier takes the dev run's directory:
     bash scripts/run_ollama.sh comp-final results/comp-dev-<stamp>" ;;
@@ -1025,14 +1134,20 @@ print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
 
 case "$TIER" in
   smoke)
-    out="results/smoke-$STAMP"
+    out="$RESULTS_ROOT/smoke-$STAMP"
     bold ""
     bold "== Smoke — two prompts, minimal grid. Proves the wiring, measures nothing. =="
-    mkdir -p "$out"
-    python3 -m swarmbly_v0 run \
+    # Through `run_tier`, like every other tier.
+    #
+    # It was the one tier dispatching `python3 -m swarmbly_v0` directly, so it
+    # had NO FAILED marker, NO post-condition and no wrapper -- on the tier an
+    # operator runs FIRST to find out whether anything is wrong. A smoke run
+    # that aborted would have printed a traceback and then "Done".
+    run_tier smoke "$out" \
+      python3 -m swarmbly_v0 run \
       --backend openai --embedder api \
       --rho 1.0,1.5 --n 2 --k 1,3 --max-prompts 2 \
-      --out "$out" 2>&1 | tee "$out/run.log"
+      --out "$out" || true
     bold ""
     bold "Smoke run finished. It proved the wiring; it measured nothing."
     echo ""

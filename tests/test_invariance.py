@@ -29,6 +29,7 @@ seven others are what that cost.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -1981,3 +1982,150 @@ def test_every_declared_cell_in_the_runner_is_inside_its_packing_window() -> Non
                 f"it hit under the label it was given.")
             checked += 1
     assert checked >= 8, f"only {checked} declared cells checked"
+
+
+# --------------------------------------------------------------------------- #
+# class 10: a tier is not verified until the TIER has been run
+#
+# Four tiers failed in a row on 4-5 September. The unit suite saw none of them:
+# three were about how a grid meets a corpus, and the fourth was a missing
+# `mkdir` in a shell function, which no Python test can reach.
+#
+# The tier that never failed is the one that was rehearsed. comp-dev and
+# comp-final were run end to end before being handed over and worked first time;
+# v0 was checked with unit tests and a packing check, and failed three times.
+# The difference is not care, it is coverage: nothing but running the tier runs
+# the tier.
+# --------------------------------------------------------------------------- #
+
+
+def test_every_tier_dispatches_through_run_tier() -> None:
+    """A tier outside the wrapper has no FAILED marker and no post-condition.
+
+    `smoke` was dispatching `python3 -m swarmbly_v0` directly, so the one tier
+    an operator runs FIRST -- to find out whether anything is wrong -- was the
+    one tier where an abort would print a traceback and then "Done". Found by
+    rehearsing it, because rehearsal rewrites the backend inside `run_tier` and
+    smoke never went through there.
+    """
+    import re as _re
+
+    script = RUNNER.read_text(encoding="utf-8")
+    # Comment lines excluded: `run_tier`'s own docstring quotes a dispatch as
+    # the example of the truncated command line it exists to catch.
+    dispatches = [line for line in script.splitlines()
+                  if _re.search(r"python3 -m swarmbly_v0 run", line)
+                  and not line.lstrip().startswith("#")]
+    assert dispatches, "no dispatch found; this test is not reading the script"
+    for line in dispatches:
+        index = script.index(line)
+        window = script[max(0, index - 400):index]
+        assert "run_tier" in window, (
+            f"this invocation does not go through run_tier, so it has no FAILED "
+            f"marker and no post-condition:\n  {line.strip()}")
+
+
+def test_run_tier_creates_its_own_output_directory() -> None:
+    """The wrapper must not require the caller to have made the directory.
+
+    On 4 September the rewritten v0 tier created only the parent and passed in
+    per-N subdirectories. `tee "$out/run.log"` failed on the missing directory,
+    `pipefail` turned that into a non-zero pipeline, and a sweep that had
+    already written results.csv, summary.json and report.html was marked FAILED
+    and thrown away.
+
+    The command succeeded and the wrapper destroyed the run -- the mirror of the
+    defect the post-condition guards against, and worse, because the output was
+    sitting on disk beside a marker telling the operator not to quote it.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+    body = script[script.index("run_tier() {"):]
+    body = body[:body.index('\n  "$@" 2>&1')]
+    assert 'mkdir -p "$out"' in body, (
+        "run_tier must create its own output directory before it tees into it")
+
+
+def test_the_runner_has_a_rehearsal_mode_and_it_stays_honest() -> None:
+    """Rehearsal must run the REAL tier, and must never look like evidence.
+
+    It is only worth anything if the thing rehearsed is the thing that runs: the
+    same functions, the same invocations, the same wrapper, the same
+    post-conditions. Only the backend and the preflight are stubbed, and the
+    swap happens inside `run_tier` so a tier cannot be rehearsed with a
+    different command than it ships with.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+    assert "SWARMBLY_REHEARSE" in script, "no rehearsal mode"
+    body = script[script.index("run_tier() {"):]
+    body = body[:body.index("\n}\n")]
+    assert "--backend mock" in body and "--embedder hash" in body, (
+        "the backend swap must happen inside run_tier, so the rehearsed "
+        "invocation is otherwise byte-identical to the real one")
+    assert "harness_validation_only" in script, (
+        "a rehearsal must be stamped so it cannot be mistaken for evidence")
+
+
+@pytest.mark.parametrize("tier", ["smoke", "v0", "v3c", "v3c-gt", "v3c-ff",
+                                  "tables-dev", "comp-dev"])
+def test_every_tier_rehearses_clean(tier: str) -> None:
+    """Run the tier. End to end. Through the runner. Every one of them.
+
+    This is the test the last four failures needed and did not have. It is slow
+    by the standards of this file -- seconds per tier rather than milliseconds
+    -- and that is the correct trade against five hours.
+
+    `tables-final` and `comp-final` are excluded because they take a completed
+    dev run as an argument; rehearsing their dev halves covers the shared path.
+    """
+    import os
+    import subprocess
+    import tempfile
+
+    root = RUNNER.parent.parent
+    results = root / "results"
+    before = set(results.glob(f"{tier}-*")) if results.exists() else set()
+
+    environment = {**os.environ, "SWARMBLY_REHEARSE": "1"}
+    with tempfile.TemporaryDirectory() as scratch:
+        environment["TMPDIR"] = scratch
+        result = subprocess.run(["bash", str(RUNNER), tier], cwd=str(root),
+                                capture_output=True, text=True, env=environment,
+                                timeout=900)
+    assert result.returncode == 0, (
+        f"tier {tier} does not survive its own runner:\n"
+        + "\n".join(result.stdout.splitlines()[-15:]))
+    assert "harness_validation_only" in result.stdout or "REHEARSAL" in result.stdout
+
+    # And it must be invisible to the glob every reader uses. See
+    # test_a_rehearsal_is_invisible_to_the_glob_that_selects_a_run.
+    after = set(results.glob(f"{tier}-*")) if results.exists() else set()
+    assert after == before, (
+        "the rehearsal wrote into results/ under the tier's own name, so "
+        "`sorted(glob('results/%s-*'))[-1]` now returns a mock run:\n  %s"
+        % (tier, "\n  ".join(str(p) for p in sorted(after - before))))
+
+
+def test_a_rehearsal_is_invisible_to_the_glob_that_selects_a_run() -> None:
+    """A mock run must not be able to become "the latest run".
+
+    Every reader picks a run by glob and takes the last one -- the runbook's
+    snippets, the -final tiers' "recent dev runs" hint, and every
+    `sorted(glob("results/comp-dev-*"))[-1]` anyone will type at a prompt. A
+    rehearsal is stamped `harness_validation_only: true`, but that is a label
+    the reader has to remember to check, and on 5 September seven rehearsal
+    directories sat in `results/` with timestamps newer than the real
+    composition runs they were named after.
+
+    So the stamp is not the guard. The directory is: rehearsals write into
+    `results/rehearsal/`, which `results/<tier>-*` does not match.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+
+    assert 'RESULTS_ROOT="results/rehearsal"' in script, (
+        "a rehearsal must write somewhere results/<tier>-* cannot reach")
+
+    stray = [line for line in script.splitlines()
+             if re.search(r'^\s*(local\s+)?out="results/', line)]
+    assert not stray, (
+        "these tiers write to results/ directly, so they land beside real runs "
+        "when rehearsed:\n  " + "\n  ".join(s.strip() for s in stray))
