@@ -1681,3 +1681,83 @@ def test_a_question_that_names_nothing_refuses_rather_than_guessing() -> None:
         "[c_mean] the total for Depot group 2")
     assert reference_map(named) is not None
     assert references_are_recoverable(named) is True
+
+
+def test_every_invocation_the_runner_prints_is_one_it_accepts() -> None:
+    """The same defect, closed as a class this time.
+
+    ``test_the_runner_does_not_instruct_an_invocation_it_refuses`` was written on
+    3 September after ``tables-dev`` printed ``tables-final --tau 0.68``, which
+    ``tables-final`` refuses by name. It checked the two functions it knew about.
+
+    On 4 September the **smoke** tier -- the one an operator runs first, to find
+    out whether anything is wrong -- was still printing exactly that line, plus
+    advice to redefine a rho grid that had been redefined that morning. The test
+    written for the defect could not see it, because it was anchored on the two
+    places the defect had already been fixed.
+
+    So this one reads **every** ``run_ollama.sh <tier>`` the script prints,
+    wherever it appears, and checks two things about each: the tier exists, and
+    a tier that takes a directory is not handed a flag. Anchored on nothing.
+    """
+    import re as _re
+
+    script = RUNNER.read_text(encoding="utf-8")
+    known = {"smoke", "v0", "v3c", "v3c-gt", "v3c-ff", "v4",
+             "tables-dev", "tables-final", "comp-dev", "comp-final", "all"}
+    takes_a_directory = {"tables-final", "comp-final"}
+
+    # Only lines the script PRINTS -- echo, bold, die, and the printed body of a
+    # die. The dispatch table and the header comment are not instructions.
+    printed = [line for line in script.splitlines()
+               if _re.search(r"run_ollama\.sh\s+\S", line)
+               and not line.lstrip().startswith("#")
+               and not _re.match(r"\s*[a-z0-9-]+\)\s+run_", line)]
+    assert len(printed) >= 8, (
+        f"only {len(printed)} printed invocations found; the scan is not "
+        f"reaching them and this test would pass vacuously")
+
+    offences: list[str] = []
+    for line in printed:
+        for tier, rest in _re.findall(r"run_ollama\.sh\s+(\S+)\s*([^\"']*)", line):
+            # A printed line ends in the shell quote that opened it, and the
+            # closing quote lands on the last token. Stripped rather than
+            # excluded from the regex: the point is to read what the operator
+            # SEES, and the operator does not see the quote.
+            tier = tier.strip("\"'")
+            if tier not in known:
+                offences.append(f"unknown tier {tier!r}: {line.strip()}")
+                continue
+            argument = rest.strip().split()[0] if rest.strip() else ""
+            if tier in takes_a_directory and argument.startswith("-"):
+                offences.append(
+                    f"{tier} takes the dev run's DIRECTORY and refuses "
+                    f"{argument!r}: {line.strip()}")
+    assert not offences, (
+        "the runner instructs invocations it refuses:\n  " + "\n  ".join(offences))
+
+
+def test_the_smoke_tier_points_at_the_tiers_that_carry_a_verdict() -> None:
+    """Closing advice is the most-read text in the script and the least checked.
+
+    An operator runs `smoke` first and follows what it says next. It was still
+    naming `tables-dev`/`tables-final` as the pair a claim rests on, and telling
+    the reader to redefine v0's grid above the floor -- both true when written,
+    neither true on 4 September once `comp-dev`/`comp-final` existed and v0's
+    grid had been recomputed.
+
+    A stale instruction is not a wrong measurement, which is why nothing caught
+    it. It is the same class as the two documents that kept saying a token was
+    embedded in a remote URL after it had been removed: true when written, never
+    re-checked, and repeated to someone who then acts on it.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+    smoke = script[script.index('bold "Smoke run finished'):]
+    smoke = smoke[:smoke.index("\n    ;;")]
+
+    assert "comp-dev" in smoke and "comp-final" in smoke, (
+        "smoke must point at the tiers that currently carry a declared verdict")
+    assert "--tau <T>" not in smoke, "the form comp-final and tables-final refuse"
+    assert ">=2.7 at N=8" not in smoke, (
+        "that advice was acted on when v0's grid was recomputed on 4 September; "
+        "an instruction to do work already done sends an operator to redo it")
