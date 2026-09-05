@@ -10,29 +10,60 @@ end-to-end, and it carries a stated limit which this script exists to remove:
     wrote a complete answer. So the 22.4 points measure THIS IMPLEMENTATION
     fragmenting prose, not the cost of fragmenting prose.
 
-Three arms, the same corpus, the same mechanical scorer, no judge anywhere.
+Five arms, one corpus, one mechanical scorer, no judge anywhere.
 
-``monolithic``  one call, the whole prompt. The ceiling.
-``oracle``      fragmented, and every global constraint ALLOCATED across the
-                fragments by construction: each required term is owned by
-                exactly one fragment, and where the term is also `term_once`
-                the others are told to avoid it. No router, no planner, no
-                packer. Answers "how much of the loss is a coordination
-                failure the planner could in principle fix?"
-``real``        the shipped router, planner, packer and assembler.
+``monolithic``               one call, the whole prompt. The ceiling.
+``oracle-exclusive``         each required term owned by exactly one fragment;
+                             where it is also ``term_once`` the others are
+                             forbidden it.
+``oracle-redundant``         every fragment required to mention every term.
+``oracle-redundant-dedup``   the redundant arm's TEXT, with ``term_once``
+                             enforced mechanically at assembly.
+``real``                     the shipped router, planner, packer, assembler.
 
-**The reading is the gap structure, not any single number.**
+WHY FIVE, AND NOT THE THREE THIS FILE STARTED WITH
+--------------------------------------------------
 
-* ``oracle`` near ``monolithic`` and ``real`` far below both -> the loss is
-  allocation. Workers are not told about each other, and that is a planner
-  defect with a planner fix.
-* ``oracle`` and ``real`` both far below ``monolithic`` -> the loss is
-  parallel prose. No allocation scheme recovers it, because the fragments
-  cannot see each other's text at all, and the answer is that this workload is
-  not fragmentable rather than that this implementation is bad at it.
+The run of 5 September dispatched one oracle, under the exclusive policy, and
+it scored BELOW the shipped pipeline: 0.571 against 0.649, with monolithic at
+0.844. The guard refused to decompose -- correctly -- and named the oracle's
+briefs as the thing to check. They were.
 
-Both readings are useful and they are opposite. Without this arm the +22.40 is
-compatible with either, which is why it was published with a limit attached.
+The whole collapse was in one bucket. Splitting ``must_mention`` by whether the
+term is also ``term_once``:
+
+    must_mention, term is ALSO term_once   mono 21/24   oracle 11/24   real 21/24
+    must_mention, term is NOT term_once    mono 11/12   oracle  8/12   real  8/12
+
+On the terms exclusivity does not touch, the oracle and the shipped pipeline are
+IDENTICAL. On the terms it forbids to every non-owner, the oracle halves. The
+exclusivity clause converts a term with N chances into a term with one, and a 3B
+owner complies about half the time.
+
+And it did buy what it was for -- ``term_once`` 9/24 against real's 6/24 -- for
+three satisfied constraints against ten lost. A bad trade, and the reason the
+policy is now a parameter with both halves measured rather than a rule.
+
+THE TRADE, WHICH IS THE ACTUAL FINDING
+--------------------------------------
+
+A term that must APPEAR and must appear EXACTLY ONCE is a conjunction that
+parallel workers cannot satisfy blind:
+
+* redundancy makes it appear and guarantees it appears twice;
+* exclusivity makes it appear once and often not at all.
+
+Only a writer who can see the finished text satisfies both, and monolithic does
+-- 21/24 on mention, 13/24 on once. No allocation over parallel fragments closes
+that gap, because the information each worker is missing is the other worker's
+output.
+
+``oracle-redundant-dedup`` is the proposal that falls out of it, and it is an
+ASSEMBLY change rather than a planning one. ``paragraph_count`` and
+``words_per_paragraph`` are already satisfied mechanically by the assembler
+rather than by asking a model nicely. ``term_once`` is the same shape of
+constraint -- a property of the finished text, checkable by counting -- and only
+history puts it on the generation side.
 
 What the oracle deliberately does NOT fix
 -----------------------------------------
@@ -78,8 +109,23 @@ from swarmbly_v0.experiment import (ASSEMBLER_ENFORCED, PromptSpec,  # noqa: E40
                                     SweepConfig, _answer_budget,
                                     run_fragmented, run_monolithic)
 from swarmbly_v0.planner import global_contract  # noqa: E402
+from swarmbly_v0.textutil import split_sentences  # noqa: E402
 
-ARMS = ("monolithic", "oracle", "real")
+ARMS = ("monolithic", "oracle-exclusive", "oracle-redundant",
+        "oracle-redundant-dedup", "real")
+"""Five arms, because the run of 5 September showed the ALLOCATION POLICY is
+itself under test rather than a detail of the oracle.
+
+``oracle-exclusive``        one owner per term, others forbidden it.
+``oracle-redundant``        every fragment required to mention every term.
+``oracle-redundant-dedup``  the same generation, with `term_once` enforced
+                            mechanically at assembly instead of by asking.
+
+The first two are the two halves of a trade nobody had measured: exclusivity
+buys "exactly once" and loses "appears at all"; redundancy does the reverse.
+The third is the proposal that falls out of the trade."""
+
+ORACLE_ARMS = ("oracle-exclusive", "oracle-redundant", "oracle-redundant-dedup")
 
 DECLARED = {"rho": 4.0, "n_tasks": 3, "k": 1}
 """The cell comp-final declared. The oracle decomposes THAT cell or nothing.
@@ -93,11 +139,40 @@ the axis with the largest effect, reported under one label."""
 # The allocation
 # --------------------------------------------------------------------------- #
 
-def allocate(constraints: Sequence[Mapping[str, Any]], n_fragments: int
-             ) -> list[dict[str, Any]]:
-    """Give each fragment its own share of the global constraints.
+def allocate(constraints: Sequence[Mapping[str, Any]], n_fragments: int,
+             policy: str = "exclusive") -> list[dict[str, Any]]:
+    """Give each fragment its share of the global constraints, under a POLICY.
 
-    The rule, and it is the whole oracle:
+    The policy is the thing under test, and the run of 5 September is why it is
+    a parameter rather than a rule. `exclusive` was the only policy then, and it
+    scored BELOW the shipped pipeline: `must_mention` fell to 11/24 on the terms
+    it makes exclusive, against 21/24 for both monolithic and real. Telling every
+    non-owner "do not write this term" converts a term with N chances into a term
+    with ONE, and a 3B owner complies about half the time.
+
+    It bought what it was supposed to buy -- `term_once` 9/24 against real's 6/24
+    -- and paid ten `must_mention` for three `term_once`. A bad trade, and not
+    one to hardcode.
+
+    ``exclusive``
+        Every required term owned by exactly one fragment; where the term is
+        also ``term_once`` the others are forbidden it. Maximises "exactly
+        once", minimises the chance the term appears at all.
+
+    ``redundant``
+        Every fragment required to mention every required term. Maximises the
+        chance the term appears, and guarantees ``term_once`` fails whenever
+        more than one fragment complies -- which is what the shipped pipeline
+        already does by accident, since every fragment sees the whole prompt.
+
+    Neither satisfies both. That is the finding, not a defect in either: a term
+    that must appear AND appear exactly once is a conjunction parallel workers
+    cannot satisfy blind, and only a writer who can see the whole text --
+    monolithic, at 21/24 and 13/24 -- satisfies both. The third arm,
+    ``redundant`` generation plus a mechanical dedup at assembly, is the
+    proposal that falls out of it.
+
+    The rule, in either policy:
 
     * every ``must_mention`` term is **owned by exactly one** fragment, assigned
       round-robin over the sorted terms so the allocation is a function of the
@@ -127,10 +202,18 @@ def allocate(constraints: Sequence[Mapping[str, Any]], n_fragments: int
     forbidden = sorted({str(c.get("term")) for c in constraints
                         if c.get("kind") == "must_not_mention"})
 
+    if policy not in ("exclusive", "redundant"):
+        raise ValueError(f"unknown allocation policy {policy!r}")
+
     briefs: list[dict[str, Any]] = [
         {"must_mention": [], "must_avoid": list(forbidden)}
         for _ in range(n_fragments)
     ]
+    if policy == "redundant":
+        for brief in briefs:
+            brief["must_mention"] = list(required)
+        return briefs
+
     for position, term in enumerate(required):
         owner = position % n_fragments
         briefs[owner]["must_mention"].append(term)
@@ -139,6 +222,57 @@ def allocate(constraints: Sequence[Mapping[str, Any]], n_fragments: int
                 if index != owner:
                     brief["must_avoid"].append(term)
     return briefs
+
+
+def deduplicate_term_once(text: str, constraints: Sequence[Mapping[str, Any]]
+                          ) -> tuple[str, int]:
+    """Keep the FIRST sentence carrying each ``term_once`` term, drop the rest.
+
+    The architecture proposal this run produced, made testable rather than
+    argued. ``paragraph_count`` and ``words_per_paragraph`` are already
+    satisfied mechanically by the assembler rather than by asking a model
+    nicely; ``term_once`` is the same shape of constraint -- a property of the
+    finished text, checkable by counting -- and nothing but history puts it on
+    the generation side.
+
+    So: let every fragment mention every term (``redundant``, which scores 21/24
+    on `must_mention` because the term gets N chances), then delete the
+    duplicates at assembly.
+
+    Deleting the whole SENTENCE rather than the term, because removing a noun
+    phrase from a sentence leaves a sentence that no longer parses, and this is
+    a mechanical step with no model in it. The cost is that a deleted sentence
+    may carry another required term or a needed clause -- which is exactly why
+    this is measured rather than assumed. ``sentences_removed`` travels with the
+    score.
+    """
+    once_terms = [str(c.get("term")) for c in constraints
+                  if c.get("kind") == "term_once"]
+    if not once_terms:
+        return text, 0
+
+    removed = 0
+    paragraphs_out: list[str] = []
+    seen: set[str] = set()
+    for paragraph in [p for p in text.split("\n\n") if p.strip()]:
+        kept: list[str] = []
+        for sentence in split_sentences(paragraph):
+            if not sentence.strip():
+                continue
+            lowered = sentence.lower()
+            present = [t for t in once_terms if t.lower() in lowered]
+            # A sentence carrying two once-terms, one already seen and one not,
+            # must not mark the second as seen on its way to being deleted --
+            # that would consume the term's only surviving occurrence and turn a
+            # duplicate into an omission. Decide first, record after.
+            if any(term in seen for term in present):
+                removed += 1
+                continue
+            seen.update(present)
+            kept.append(sentence.strip())
+        if kept:
+            paragraphs_out.append(" ".join(kept))
+    return "\n\n".join(paragraphs_out), removed
 
 
 def _length_bounds(constraints: Sequence[Mapping[str, Any]]) -> tuple[int, int]:
@@ -204,6 +338,26 @@ def _score(text: str, constraints: Sequence[Mapping[str, Any]]) -> dict[str, Any
     by_kind: dict[str, list[bool]] = defaultdict(list)
     for result in report.results:
         by_kind[result.kind].append(bool(result.satisfied))
+
+    # `must_mention`, split by whether the term is ALSO `term_once`.
+    #
+    # This split is the diagnosis of 5 September and it is computed rather than
+    # noted, because it was invisible in the mean: the exclusive oracle read
+    # 19/36 on must_mention against real's 29/36, which looks like a worse
+    # oracle. Split, it is 11/24 against 21/24 on the terms exclusivity touches
+    # and 8/12 against 8/12 -- identical -- on the terms it does not. One bucket
+    # carries the entire gap, and only one policy creates it.
+    once_terms = {str(c.get("term")) for c in constraints
+                  if c.get("kind") == "term_once"}
+    failed_ids = {r.constraint_id for r in report.failed}
+    buckets: dict[str, list[bool]] = defaultdict(list)
+    for constraint in constraints:
+        if constraint.get("kind") != "must_mention":
+            continue
+        name = ("must_mention_also_term_once" if str(constraint.get("term")) in once_terms
+                else "must_mention_repetition_allowed")
+        buckets[name].append(str(constraint.get("id")) not in failed_ids)
+
     return {
         "constraint_score": report.score,
         "constraint_score_comparable": report.score_excluding(ASSEMBLER_ENFORCED),
@@ -212,16 +366,19 @@ def _score(text: str, constraints: Sequence[Mapping[str, Any]]) -> dict[str, Any
         "failed": [r.constraint_id for r in report.failed],
         "by_kind": {kind: {"satisfied": sum(v), "checked": len(v)}
                     for kind, v in sorted(by_kind.items())},
+        "must_mention_split": {name: {"satisfied": sum(v), "checked": len(v)}
+                               for name, v in sorted(buckets.items())},
     }
 
 
 def run_oracle(spec: PromptSpec, backend: Any, *, n_tasks: int,
+               policy: str = "exclusive",
                max_tokens: int = 420) -> tuple[str, list[str]]:
     """Dispatch one fragment per paragraph and splice them with blank lines."""
     constraints = list(spec.constraints or [])
     paragraphs = _paragraph_count(constraints, n_tasks)
     low, high = _length_bounds(constraints)
-    briefs = allocate(constraints, paragraphs)
+    briefs = allocate(constraints, paragraphs, policy=policy)
     topic = topic_of(spec.text)
 
     written: list[str] = []
@@ -257,14 +414,34 @@ def run_instance(spec: PromptSpec, backend: Any, embedder: Any, *,
         if "monolithic" in arms:
             out["monolithic"] = _score(str(baseline.get("_text", "")), constraints)
 
-    if "oracle" in arms:
-        text, dispatched = run_oracle(spec, backend, n_tasks=n_tasks)
-        out["oracle"] = _score(text, constraints)
-        out["oracle"]["n_fragments"] = len(dispatched)
-        # rho is undefined for this arm and must not be reported as though it
-        # were: the oracle never goes through the packer, so there is no packet
-        # whose size could be divided by anything.
-        out["oracle"]["rho_achieved"] = None
+    # The two generation policies are dispatched once each; the dedup arm reuses
+    # the redundant arm's TEXT rather than generating again, so the comparison
+    # between them is the assembly step alone and not two samples of a model.
+    redundant_text: str | None = None
+    for arm, policy in (("oracle-exclusive", "exclusive"),
+                        ("oracle-redundant", "redundant")):
+        if arm not in arms and not (arm == "oracle-redundant"
+                                    and "oracle-redundant-dedup" in arms):
+            continue
+        text, dispatched = run_oracle(spec, backend, n_tasks=n_tasks,
+                                      policy=policy)
+        if policy == "redundant":
+            redundant_text = text
+        if arm in arms:
+            out[arm] = _score(text, constraints)
+            out[arm]["n_fragments"] = len(dispatched)
+            out[arm]["allocation_policy"] = policy
+            # rho is undefined for these arms and must not be reported as though
+            # it were: an oracle never goes through the packer, so there is no
+            # packet whose size could be divided by anything.
+            out[arm]["rho_achieved"] = None
+
+    if "oracle-redundant-dedup" in arms and redundant_text is not None:
+        deduped, removed = deduplicate_term_once(redundant_text, constraints)
+        out["oracle-redundant-dedup"] = _score(deduped, constraints)
+        out["oracle-redundant-dedup"]["allocation_policy"] = "redundant+dedup"
+        out["oracle-redundant-dedup"]["sentences_removed"] = removed
+        out["oracle-redundant-dedup"]["rho_achieved"] = None
 
     if "real" in arms:
         row = run_fragmented(spec, backend, embedder, config, rho_target=rho,
@@ -318,6 +495,14 @@ def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
                 by_kind[kind][arm]["satisfied"] += counts["satisfied"]
                 by_kind[kind][arm]["checked"] += counts["checked"]
 
+    split: dict[str, dict[str, dict[str, int]]] = defaultdict(
+        lambda: defaultdict(lambda: {"satisfied": 0, "checked": 0}))
+    for row in rows:
+        for arm, report in row["arms"].items():
+            for bucket, counts in report.get("must_mention_split", {}).items():
+                split[bucket][arm]["satisfied"] += counts["satisfied"]
+                split[bucket][arm]["checked"] += counts["checked"]
+
     kinds = {
         kind: {arm: {**counts,
                      "rate": (round(counts["satisfied"] / counts["checked"], 6)
@@ -326,16 +511,44 @@ def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         for kind, arms_counts in sorted(by_kind.items())
     }
 
-    mono = (per_arm.get("monolithic") or {}).get("mean_constraint_score_comparable")
-    oracle = (per_arm.get("oracle") or {}).get("mean_constraint_score_comparable")
-    real = (per_arm.get("real") or {}).get("mean_constraint_score_comparable")
+    def _of(arm: str) -> float | None:
+        return (per_arm.get(arm) or {}).get("mean_constraint_score_comparable")
+
+    mono, real = _of("monolithic"), _of("real")
+
+    # Which oracle. There are three policies now, and picking the best one AFTER
+    # seeing the scores is choosing a result -- the defect `falsifiable_go_no_go`
+    # exists to stop. So every oracle gets its own decomposition, reported side
+    # by side and named, and the headline `decomposition` stays on the policy
+    # that was declared first: exclusive, the one the 5 September run used.
+    per_policy = {arm: _decompose(mono, _of(arm), real)
+                  for arm in ORACLE_ARMS if _of(arm) is not None}
+    headline = (per_policy.get("oracle-exclusive")
+                or (next(iter(per_policy.values())) if per_policy else
+                    _decompose(mono, None, real)))
 
     return {
         "declared_cell": DECLARED,
         "by_arm": per_arm,
         "by_constraint_kind": kinds,
         "assembler_enforced_and_excluded": sorted(ASSEMBLER_ENFORCED),
-        "decomposition": _decompose(mono, oracle, real),
+        "decomposition": headline,
+        "decomposition_by_policy": per_policy,
+        "must_mention_split": {
+            bucket: {arm: {**counts,
+                           "rate": (round(counts["satisfied"] / counts["checked"], 6)
+                                    if counts["checked"] else None)}
+                     for arm, counts in sorted(arms_counts.items())}
+            for bucket, arms_counts in sorted(split.items())
+        },
+        "must_mention_split_note": (
+            "Read by_constraint_kind's must_mention beside term_once, and split "
+            "must_mention by whether the term is ALSO term_once. On 5 September "
+            "the exclusive oracle scored 11/24 on the terms it makes exclusive "
+            "and 8/12 on the ones it does not -- identical to the shipped "
+            "pipeline on the second bucket. The whole gap was the exclusivity "
+            "clause, and a mean over both buckets hid it."
+        ),
         "note": (
             "Scores are constraint_score_comparable: paragraph_count and "
             "words_per_paragraph are dropped because the assembler satisfies "
@@ -488,8 +701,21 @@ def main(argv: Sequence[str] | None = None) -> int:
                           for arm, c in per_arm.items())
         marker = "  [assembler-enforced]" if kind in ASSEMBLER_ENFORCED else ""
         print(f"  {kind:22} {cells}{marker}")
+    print("\nMUST_MENTION, SPLIT BY WHETHER THE TERM IS ALSO term_once")
+    for bucket, per_arm in summary["must_mention_split"].items():
+        cells = "  ".join(f"{arm}={c['satisfied']}/{c['checked']}"
+                          for arm, c in per_arm.items())
+        print(f"  {bucket:34} {cells}")
+
+    print("\nDECOMPOSITION, PER ALLOCATION POLICY")
+    for arm, d in summary.get("decomposition_by_policy", {}).items():
+        print(f"  {arm}")
+        print(f"    parallelism (mono->oracle) {d.get('parallelism_cost_monolithic_to_oracle')}"
+              f"   allocation (oracle->real) {d.get('allocation_cost_oracle_to_real')}")
+        print(f"    {d.get('reading')}")
+
     decomposition = summary["decomposition"]
-    print("\nDECOMPOSITION")
+    print("\nDECOMPOSITION (headline: the policy declared first)")
     for key, value in decomposition.items():
         print(f"  {key:38} {value}")
 

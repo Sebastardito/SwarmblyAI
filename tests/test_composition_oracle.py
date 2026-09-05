@@ -45,7 +45,7 @@ HARBOUR = [
 
 def test_every_required_term_is_owned_by_exactly_one_fragment():
     """`must_mention` failed 9 -> 64 from N=3 to N=8 because nobody owned it."""
-    briefs = oracle.allocate(HARBOUR, 2)
+    briefs = oracle.allocate(HARBOUR, 2, policy="exclusive")
     owners = [term for brief in briefs for term in brief["must_mention"]]
     assert sorted(owners) == ["berth", "tide window"]
     assert len(owners) == len(set(owners)), "a term owned twice is not allocated"
@@ -207,7 +207,9 @@ def test_the_three_arms_run_end_to_end_and_are_scored_by_one_scorer():
 
     result = oracle.run_instance(spec, get_backend("mock"), get_embedder("hash"),
                                  rho=4.0, n_tasks=3, tau_sem=0.6, arms=oracle.ARMS)
-    assert "monolithic" in result and "oracle" in result
+    assert "monolithic" in result
+    for arm in oracle.ORACLE_ARMS:
+        assert arm in result, f"{arm} was requested and did not run"
     assert "real" in result or "real-refused" in result
     for arm, report in result.items():
         assert report["constraint_score_comparable"] is not None, arm
@@ -227,8 +229,10 @@ def test_the_oracle_arm_reports_no_rho_rather_than_a_plausible_one():
                       text="Describe a harbour.\n\nWrite exactly two paragraphs.",
                       constraints=HARBOUR, split="dev")
     result = oracle.run_instance(spec, get_backend("mock"), get_embedder("hash"),
-                                 rho=4.0, n_tasks=3, tau_sem=0.6, arms=("oracle",))
-    assert result["oracle"]["rho_achieved"] is None
+                                 rho=4.0, n_tasks=3, tau_sem=0.6,
+                                 arms=oracle.ORACLE_ARMS)
+    for arm in oracle.ORACLE_ARMS:
+        assert result[arm]["rho_achieved"] is None, arm
 
 
 def test_the_declared_cell_is_the_one_comp_final_declared():
@@ -249,3 +253,129 @@ def test_the_runner_lives_outside_the_benchmark_package():
     assert not (root / "benchmark_v7" / "run_composition_oracle.py").exists()
     source = (root / "scripts" / "run_composition_oracle.py").read_text(encoding="utf-8")
     assert "ADR-001" in source, "the reason must travel with the file"
+
+
+# --------------------------------------------------------------------------
+# The allocation POLICY, which the 5 September run showed is the thing under
+# test rather than a detail
+#
+# The exclusive oracle scored 0.571 against the shipped pipeline's 0.649, with
+# monolithic at 0.844 -- below the arm it was built to be an upper bound for.
+# Split by whether the term is also `term_once`:
+#
+#     also term_once   mono 21/24   oracle 11/24   real 21/24
+#     not term_once    mono 11/12   oracle  8/12   real  8/12
+#
+# On the terms exclusivity does not touch, oracle and real are IDENTICAL. The
+# exclusivity clause converts a term with N chances into a term with one, and
+# it bought three satisfied `term_once` for ten lost `must_mention`.
+# --------------------------------------------------------------------------
+
+
+def test_the_redundant_policy_requires_every_term_of_every_fragment():
+    briefs = oracle.allocate(HARBOUR, 2, policy="redundant")
+    for brief in briefs:
+        assert sorted(brief["must_mention"]) == ["berth", "tide window"], (
+            "redundancy is the policy that gives a term N chances instead of 1")
+
+
+def test_the_redundant_policy_forbids_nothing_but_the_prohibition():
+    """Its whole point is that no fragment is told to withhold a term."""
+    briefs = oracle.allocate(HARBOUR, 2, policy="redundant")
+    for brief in briefs:
+        assert brief["must_avoid"] == ["obviously"]
+
+
+def test_an_unknown_policy_is_refused_rather_than_defaulted():
+    with pytest.raises(ValueError):
+        oracle.allocate(HARBOUR, 2, policy="whatever")
+
+
+def test_the_two_policies_actually_differ():
+    assert (oracle.allocate(HARBOUR, 2, policy="exclusive")
+            != oracle.allocate(HARBOUR, 2, policy="redundant"))
+
+
+# --------------------------------------------------------------------------
+# The dedup, which is the proposal the trade produced
+# --------------------------------------------------------------------------
+
+
+def test_dedup_keeps_the_first_sentence_carrying_a_term_and_drops_the_rest():
+    text = ("The tide window closes at noon. Berths are reassigned.\n\n"
+            "The tide window matters again here. Cargo waits.")
+    out, removed = oracle.deduplicate_term_once(text, HARBOUR)
+    assert removed == 1
+    assert out.lower().count("tide window") == 1
+    assert "Berths are reassigned." in out and "Cargo waits." in out
+
+
+def test_dedup_leaves_a_text_that_already_complies_untouched():
+    text = "The tide window closes at noon.\n\nBerths are reassigned."
+    out, removed = oracle.deduplicate_term_once(text, HARBOUR)
+    assert removed == 0
+    assert out == text
+
+
+def test_dedup_does_not_consume_a_terms_only_occurrence():
+    """A sentence carrying two once-terms, one already seen and one not, must
+    not mark the second as seen on its way to being deleted -- that turns a
+    duplicate into an omission, which is the failure the whole arm is about."""
+    constraints = [
+        {"id": "a_once", "kind": "term_once", "term": "alpha"},
+        {"id": "b_once", "kind": "term_once", "term": "beta"},
+    ]
+    text = ("Alpha is introduced here.\n\n"
+            "Alpha and beta appear together.\n\n"
+            "Beta stands alone at the end.")
+    out, removed = oracle.deduplicate_term_once(text, constraints)
+    assert removed == 1
+    assert out.lower().count("alpha") == 1
+    assert out.lower().count("beta") == 1, (
+        "beta's only surviving sentence must not have been marked seen while "
+        "the sentence that carried it was being deleted")
+
+
+def test_dedup_is_a_no_op_when_the_prompt_has_no_term_once():
+    text = "One sentence. Another sentence."
+    assert oracle.deduplicate_term_once(text, [
+        {"id": "m", "kind": "must_mention", "term": "x"}]) == (text, 0)
+
+
+# --------------------------------------------------------------------------
+# The reporting: a split that a mean hides, and a policy chosen in advance
+# --------------------------------------------------------------------------
+
+
+def test_must_mention_is_split_by_whether_the_term_is_also_term_once():
+    """19/36 against 29/36 looks like a worse oracle. 11/24 against 21/24 on
+    one bucket and 8/12 against 8/12 on the other is a diagnosis."""
+    text = "The berth is ready.\n\nNothing else is said."
+    report = oracle._score(text, HARBOUR)
+    split = report["must_mention_split"]
+    assert split["must_mention_also_term_once"]["checked"] == 1   # tide window
+    assert split["must_mention_repetition_allowed"]["checked"] == 1  # berth
+    assert split["must_mention_repetition_allowed"]["satisfied"] == 1
+    assert split["must_mention_also_term_once"]["satisfied"] == 0
+
+
+def test_the_headline_decomposition_is_the_policy_declared_first():
+    """Three oracles now. Picking the best one after seeing the scores is
+    choosing a result, which is what falsifiable_go_no_go exists to stop."""
+    rows = [{"prompt_id": "p1", "split": "dev", "arms": {
+        "monolithic": _fake(0.90), "real": _fake(0.60),
+        "oracle-exclusive": _fake(0.50), "oracle-redundant": _fake(0.88),
+    }}]
+    summary = oracle.summarise(rows)
+    assert set(summary["decomposition_by_policy"]) == {
+        "oracle-exclusive", "oracle-redundant"}
+    assert (summary["decomposition"]
+            == summary["decomposition_by_policy"]["oracle-exclusive"]), (
+        "the headline must stay on the declared policy even when another "
+        "policy scores better")
+
+
+def _fake(score: float) -> dict:
+    return {"constraint_score": score, "constraint_score_comparable": score,
+            "n_constraints": 8, "n_paragraphs": 2, "failed": [],
+            "by_kind": {}, "must_mention_split": {}}

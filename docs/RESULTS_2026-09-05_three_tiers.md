@@ -225,9 +225,12 @@ including the baseline-of-1.0 case where the two must coincide.
 
 ## What is still open — and what was built for it
 
-Both of the follow-ups this document called for now exist as tiers, rehearse
-clean, and are in the runbook at Step 4b. Neither has been run against real
-models yet.
+Both of the follow-ups this document called for were built, run, and written up
+in **`docs/RESULTS_2026-09-05_oracle_and_k3.md`**. In short: `comp-dev-k3`
+confirmed its prediction (+19.38 against k=1's +18.40 — consensus is not a
+lever), and `comp-oracle` refused to decompose because its allocation policy was
+the wrong one, which produced a sharper finding than the decomposition would
+have. The oracle now has five arms and is worth re-running.
 
 ```bash
 bash scripts/run_ollama.sh comp-oracle    # ~1-2 h
