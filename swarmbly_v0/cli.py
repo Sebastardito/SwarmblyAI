@@ -244,11 +244,26 @@ def _cmd_run(args: argparse.Namespace) -> int:
     # gate the operator cannot see is a gate that gets argued with later.
     excluded = int(stats.get("rows_excluded_below_floor") or 0)
     if excluded:
-        print(f"\n*** {excluded} row(s) DROPPED: rho_target below the packing floor. ***")
-        print("    Below the floor every packet collapses to its bare task, so the rho")
-        print("    axis does not move and two rho labels give byte-identical cells.")
-        print("    They are in results.csv with rho_reachable=false. Nothing below")
-        print("    appears in any figure that used them.")
+        by_reason = stats.get("rows_excluded_by_reason") or {}
+        below = int(by_reason.get("below_packing_floor") or 0)
+        above = int(by_reason.get("above_packing_ceiling") or 0)
+        refused = int(by_reason.get("plan_refused") or 0)
+        print(f"\n*** {excluded} row(s) DROPPED and they are not one problem. ***")
+        if below:
+            print(f"    {below} BELOW the packing floor. Every packet collapses to its bare")
+            print("      task, so the rho axis does not move and two rho labels give")
+            print("      byte-identical cells. Raise the grid.")
+        if above:
+            print(f"    {above} ABOVE the packing ceiling. The expansion block list is FINITE,")
+            print("      so a packet cannot spend that budget and the cell undershoots its")
+            print("      own label. Lower the grid. This used to ABORT the whole tier: on")
+            print("      4 September one unreachable cell of 144 destroyed 143 measured")
+            print("      ones after five hours.")
+        if refused:
+            print(f"    {refused} the planner REFUSED to fragment. No rho would have helped;")
+            print("      the prompt states its questions apart from its material and the")
+            print("      link is not recoverable.")
+        print("    All of them are in results.csv. None appears in any figure.")
 
     print("\ncoherence tax (relative degradation vs monolithic), mean over prompts and N:")
     def _pct(value: float | None) -> str:

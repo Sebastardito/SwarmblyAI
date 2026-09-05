@@ -64,7 +64,9 @@ from .metrics import (
     redundancy_between,
     seam_error_taxonomy,
 )
-from .packing import (PacketInvariantError, assert_packet_invariants,
+from .packing import (
+    packing_ceiling,
+    PacketInvariantError, assert_packet_invariants,
                       build_monolithic_prompt, build_packets, packing_floor,
                       task_budget_floors as _task_budget_floors,
                       task_budget_weights as _task_budget_weights)
@@ -181,7 +183,14 @@ def is_reachable(row: Mapping[str, Any]) -> bool:
     before the column existed must not be silently emptied by this guard. That is
     a deliberate asymmetry -- it fails open on old data and closed on new.
 
-    ``plan_refused`` is the second reason a row is not a measurement, added 4
+    ``rho_above_ceiling`` is the mirror of the floor, added the same day the v0
+    grid ran off the top of it. A packet cannot hold more than its mandatory
+    blocks plus its natural context plus a FINITE expansion list, so a target
+    above :func:`~swarmbly_v0.packing.packing_ceiling` cannot be spent and the
+    cell undershoots its own label. Two labels above the ceiling produce the
+    same packets, which is the same argument as the floor, on the other side.
+
+    ``plan_refused`` is the third reason a row is not a measurement, added 4
     September 2026 with the fused segmenter repair. When a prompt states its
     questions apart from its material and the link between them is not
     recoverable, ``plan`` returns a SINGLE task rather than mis-packing it (see
@@ -192,8 +201,9 @@ def is_reachable(row: Mapping[str, Any]) -> bool:
     the wrong direction, and it is the direction all twelve instrument defects
     in ``REVISION_2026-08-12.md`` leaned.
     """
-    return _flag(row, "rho_reachable") and not _flag(row, "plan_refused",
-                                                      default=False)
+    return (_flag(row, "rho_reachable")
+            and not _flag(row, "rho_above_ceiling", default=False)
+            and not _flag(row, "plan_refused", default=False))
 
 
 def _flag(row: Mapping[str, Any], column: str, default: bool = True) -> bool:
@@ -266,7 +276,9 @@ CSV_COLUMNS: list[str] = [
     "rho_target",
     "rho_achieved",
     "rho_floor",
+    "rho_ceiling",
     "rho_reachable",
+    "rho_above_ceiling",
     "plan_refused",
     "tau_sem",
     "k",
@@ -1246,7 +1258,29 @@ def run_fragmented(
     # is already marked `plan_refused` and dropped by `is_reachable`, which is
     # the honest handling: not a measurement, not an error.
     truthful_floor = packing_floor(packing_contract, plan, summaries)
-    if not plan_refused and rho_target >= truthful_floor and rho_target > 0:
+    # The OTHER bound, and the reason this is a drop rather than a crash.
+    #
+    # `_expansion_blocks` is a finite list -- six style exemplars, one line per
+    # canonical entity, one per expected entity -- and it takes `needed` as an
+    # argument and ignores it. So a packet asked for more than that cannot spend
+    # it, and the cell undershoots for a structural reason rather than a defect.
+    #
+    # On 4 September the v0 tier asked rho 5.5 at N=2, where the worst prompt
+    # tops out at 4.90. It ran five hours, hit `long_report_energy` at the fifth
+    # of six rho points, undershot by 6.5 %, and this invariant aborted the whole
+    # tier. That was the gate working as written and the outcome was still wrong:
+    # ONE cell of 144 was unreachable and 143 measured cells died with it.
+    #
+    # So the invariant now fires only when the target was IN RANGE. In range and
+    # drifting is a defect and still raises -- that is what it was added for,
+    # after four runs completed at 3.91 against a target of 3.5. Out of range is
+    # a property of the cell, recorded on the row and dropped by `is_reachable`
+    # exactly like a below-floor row, and counted in the summary so the drop
+    # cannot be silent.
+    truthful_ceiling = packing_ceiling(packing_contract, plan, summaries)
+    row_out_of_range = rho_target > truthful_ceiling
+    if (not plan_refused and not row_out_of_range
+            and rho_target >= truthful_floor and rho_target > 0):
         deviation = (rho_achieved - rho_target) / rho_target
         if abs(deviation) > RHO_TOLERANCE:
             raise PacketInvariantError(
@@ -1299,6 +1333,10 @@ def run_fragmented(
         # True when the planner refused to fragment: see above, and
         # `is_reachable`, which drops such a row from every figure.
         "plan_refused": plan_refused,
+        # Both bounds travel with the row. A reader checking whether a cell was
+        # a measurement of rho needs the window, not just the target.
+        "rho_ceiling": round(float(truthful_ceiling), 6),
+        "rho_above_ceiling": row_out_of_range,
         "rho_target": rho_target,
         "rho_achieved": round(rho_achieved, 6),
         # The floor computed WITH the summaries. The optimistic floor -- taken
@@ -3568,7 +3606,14 @@ def summarize(
             when summarising rows that came back from disk.
     """
     # Below-floor rows never enter a published figure. See `publishable`.
-    n_unreachable = len(rows) - len(publishable(rows))
+    #
+    # The excluded rows are captured HERE, before `rows` is rebound, because the
+    # rebind is what made the first version of the by-reason counters read zero:
+    # they ran two hundred lines later, against a list the excluded rows had
+    # already left. A counter that reports 8 dropped and 0+0+0 reasons is worse
+    # than no counter -- it says the drop had no cause.
+    excluded_rows = [r for r in rows if not is_reachable(r)]
+    n_unreachable = len(excluded_rows)
     rows = publishable(rows)
     fragmented_all = [r for r in rows if r.get("condition") == "fragmented"]
     # The tax headline already refuses to average k, on the stated grounds that a
@@ -3718,8 +3763,30 @@ def summarize(
         record for row in rows for record in row.get("_unit_records", [])
     ]
 
+    # Broken out by REASON. One counter for three different reasons is a number
+    # a reader cannot act on: below-floor means the grid is too low, above-
+    # ceiling means it is too high, and refused means the planner declined the
+    # prompt. Those are three different repairs.
+    n_below = sum(1 for r in excluded_rows if not _flag(r, "rho_reachable"))
+    n_above = sum(1 for r in excluded_rows
+                  if _flag(r, "rho_above_ceiling", default=False))
+    n_refused = sum(1 for r in excluded_rows
+                    if _flag(r, "plan_refused", default=False))
+
     summary: dict[str, Any] = {
         "rows_excluded_below_floor": n_unreachable,
+        "rows_excluded_by_reason": {
+            "below_packing_floor": n_below,
+            "above_packing_ceiling": n_above,
+            "plan_refused": n_refused,
+            "note": (
+                "rows_excluded_below_floor is the TOTAL dropped, kept under its "
+                "original name so old runs stay comparable. These are the "
+                "reasons. Below floor: lower the grid is wrong, raise it. Above "
+                "ceiling: a packet cannot hold that much -- the expansion block "
+                "list is finite -- so lower it. Refused: the planner declined "
+                "the prompt and no rho would have helped."),
+        },
         "rows_excluded_note": (
             "Rows whose rho_target sat below their own packing floor. Below the "
             "floor every packet collapses to its bare task, so the rho axis does "

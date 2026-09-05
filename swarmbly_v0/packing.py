@@ -37,6 +37,7 @@ from .schema import Contract, Packet, Plan, Task
 from .textutil import count_tokens, truncate_tokens
 
 __all__ = [
+    "packing_ceiling",
     "PackingResult",
     "build_packet",
     "build_packets",
@@ -419,6 +420,51 @@ def measure_rho(packets: Sequence[Packet], prompt: str) -> float:
     """Achieved ``rho = sum_i |K_i| / |P|`` for a set of dispatched packets."""
     prompt_tokens = max(count_tokens(prompt), 1)
     return sum(p.token_count for p in packets) / prompt_tokens
+
+
+def packing_ceiling(
+    contract: Contract,
+    plan: Plan,
+    summaries: Mapping[str, str] | None = None,
+) -> float:
+    """Largest ``rho`` reachable for this plan -- the other bound, added 4 Sept 2026.
+
+    ``packing_floor`` says a target below it is not a measurement of ``rho``,
+    because every packet collapses to its bare task and two labels give
+    byte-identical output. **The same is true above the ceiling and nothing
+    said so.** A packet cannot hold more than its mandatory blocks plus its
+    natural context plus :func:`_expansion_blocks`, and that last list is
+    FINITE: six style exemplars, one line per canonical entity, one per
+    expected entity. It takes ``needed`` as an argument and ignores it. So a
+    packet asked for three times the prompt simply cannot spend it.
+
+    The cost of not having this: the v0 tier of 4 September asked for rho 5.5
+    at N=2, where the worst prompt tops out at 4.90. It ran for five hours,
+    reached ``long_report_energy`` at the fifth of six rho points, undershot by
+    6.5 %, and the drift invariant -- correctly, on its own terms -- aborted the
+    whole tier. One cell out of 144 was unreachable and 143 measured cells were
+    thrown away with it.
+
+    The grid was mine and I checked one bound and not the other, which is the
+    same mistake the floor was added to fix, on the other side.
+
+    **Measured, not derived.** It builds the packets at an absurd target and
+    reads what the packer actually achieved, rather than re-deriving the sum of
+    block sizes. A derived ceiling can disagree with the packer, and that has
+    already happened once on this file: ``packing_floor`` was defined as tasks
+    plus one header each and implemented as tasks alone, so it under-reported by
+    one header per packet and ``rho_reachable`` came back true for cells that
+    then overshot. One packing pass costs no model calls and cannot drift.
+    """
+    return build_packets(contract, plan, rho_target=_UNREACHABLY_HIGH_RHO,
+                         summaries=summaries).rho_achieved
+
+
+_UNREACHABLY_HIGH_RHO: float = 999.0
+"""A target no plan can reach, used to ask the packer for everything it has.
+
+Not ``inf``: the budget is multiplied by the prompt length and rounded to an
+int, and an infinity there is a crash rather than a large number."""
 
 
 def build_packets(

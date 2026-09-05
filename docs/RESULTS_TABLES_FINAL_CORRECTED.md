@@ -16,6 +16,76 @@ metadata and refuses to start if its corpus digest or split disagrees. 80 rows.
 > `4abed34a…`, seed 0. Five distinct model families, `n_families_mean` 3.0 in the
 > k > 1 rows.
 
+> # ⚠ THE DECLARED CELL WAS ABOVE THE PACKING CEILING — 4 September 2026
+>
+> **The cell named in the pre-registration, `table_summary@rho=3.5@N=2@k=1`,
+> cannot be run. It is above what the packer can produce, and what was measured
+> is the ceiling cell at ρ ≈ 3.38.**
+>
+> `packing_ceiling` was added on 4 September after the v0 tier died asking for a
+> ρ no packet could hold. Applied to this corpus it says the N=2 arm on
+> `tables24` tops out at **3.37**: a packet cannot hold more than its mandatory
+> blocks plus its natural context plus `_expansion_blocks`, and that list is
+> finite.
+>
+> The run's own numbers agree, and the pattern is unmistakable once looked for:
+>
+> | arm | target | achieved | drift |
+> |---|---|---|---|
+> | **N=2, k=1** | 3.5 | 3.358 – 3.386 | **−3.42 % mean, never once above** |
+> | N=2, k=3 | 3.5 | 3.370 – 3.386 | −3.30 %, never above |
+> | N=8, k=1 | 3.5 | **3.506** | +0.17 % |
+> | N=8, k=3 | 3.5 | **3.506** | +0.17 % |
+>
+> Every N=2 row undershot. Not one overshot. A cell that merely drifts scatters
+> on both sides; a cell pinned at its ceiling can only fall short. The N=8 arm,
+> with a ceiling of 10.5, hit its target exactly.
+>
+> **`rho_fidelity.within_tolerance: true` is not wrong** — the drift is 3.4 %
+> against a 5 % tolerance. The check was asking whether the packer had
+> misbehaved, and it had not. Nothing was asking whether the target was
+> *achievable*, and that is the gap.
+>
+> **What this costs, stated precisely and without inflation.**
+>
+> - **The label is wrong.** The cell is not "ρ = 3.5, N = 2". It is "N = 2 at
+>   the most context a two-way split of this corpus can hold". Any ρ above 3.37
+>   would have produced the same packets, which is the same argument the floor
+>   rests on, from the other side.
+> - **The pre-registration named a cell that does not exist.** That is the
+>   honest description, and it is uncomfortable: the apparatus was built to stop
+>   a cell being chosen after the fact, and it did — it just did not check that
+>   the cell chosen in advance was reachable.
+> - **The two arms were not at the same ρ.** N=2 ran at 3.38 and N=8 at 3.51, so
+>   the arm under test received about 4 % less context than its control.
+> - **The direction is the awkward one.** Less context makes the fragmented arm
+>   worse, which pushes the tax up, which pushes toward NOT MET. The verdict and
+>   the artefact point the same way. That is exactly the configuration that
+>   requires caution rather than confidence, and it is why this is a banner and
+>   not a footnote.
+>
+> **What is NOT affected.**
+>
+> - The N=8 control, which was nowhere near its ceiling.
+> - `comp-dev` and `comp-final` of 4 September. Checked: their achieved ρ
+>   scatters **symmetrically** around 4.000 — 7 cells above and 6 below at N=3,
+>   mean 4.0004 — and a ceiling-pinned cell can only undershoot. The composition
+>   verdict stands.
+> - The qualitative finding of §2 onward, that the mean is the wrong statistic
+>   here. That argument is about the distribution across prompts and does not
+>   depend on the exact ρ.
+>
+> **Not withdrawn, and the distinction is deliberate.** V0's ρ curve was
+> withdrawn because its cells sat *below* the floor, where the ρ axis is dead
+> and a curve plotted against it is a curve against nothing. This document
+> reports one cell rather than a curve, so a dead axis does not empty it — the
+> comparison it makes was real, at a ρ it did not name correctly. **Re-run the
+> cell at ρ = 3.0, inside the window [1.20, 3.35], before quoting the figure as
+> a test of the declared criterion.** Roughly three hours, dev and final.
+>
+> Found by the v0 tier failing, which is the second time this week a gate
+> firing has been worth more than the run it stopped.
+
 ---
 
 ## 1. The verdict

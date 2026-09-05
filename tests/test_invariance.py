@@ -338,8 +338,9 @@ def test_the_operator_is_told_when_rows_were_dropped_below_the_floor(tmp_path, c
     """
     out = _mock_run(tmp_path, capsys)
     assert "DROPPED" in out, "the exclusion must be on screen, not only in summary.json"
-    assert "packing floor" in out
-    assert "rho_reachable=false" in out, "and it must say where to find the dropped rows"
+    assert "packing floor" in out or "packing ceiling" in out, (
+        "the banner must name WHICH bound was crossed; they are different repairs")
+    assert "results.csv" in out, "and it must say where to find the dropped rows"
 
     html = (tmp_path / "report.html").read_text(encoding="utf-8")
     assert "ROW(S) DROPPED" in html, "the shared artefact needs the banner too"
@@ -392,11 +393,25 @@ def test_a_correlation_is_withheld_for_the_right_stated_reason(tmp_path, capsys)
     assert "answer key" in out, "and it must name the tier that would settle it"
 
 
+DECLARED_FIXTURE_RHO = "3.0"
+"""The rho these console tests declare, and it is NOT the tier's 3.5.
+
+`tables24` at N=2 has a packing CEILING of about 3.35, discovered on 4
+September. At 3.5 every N=2 row is above it, gets dropped, and the declared
+cell it was pointing at stops existing -- so three tests about *printing* a
+verdict started failing for a reason that had nothing to do with printing.
+
+Moved to 3.0, inside the window, so these tests measure what they are about.
+The fact that the tier's own declared cell sits above that ceiling is a
+separate finding and it has its own banner in
+`docs/RESULTS_TABLES_FINAL_CORRECTED.md`."""
+
+
 def _declared_run(tmp_path, capsys, *declare, n="2,8"):
     from swarmbly_v0.cli import main
     args = ["run", "--backend", "mock", "--embedder", "hash",
             "--prompts", "prompts/tables24.json", "--split", "dev",
-            "--rho", "3.5", "--n", n, "--k", "1",
+            "--rho", DECLARED_FIXTURE_RHO, "--n", n, "--k", "1",
             "--candidates", "1", "--seed", "0", "--out", str(tmp_path)]
     for cell in declare:
         args += ["--declare", cell]
@@ -413,8 +428,8 @@ def test_the_run_prints_the_cell_it_was_declared_to_test(tmp_path, capsys):
     (+13.67 %, CI [+7.15 %, +19.30 %]) appeared nowhere on screen. Both had to be
     read out of summary.json by hand.
     """
-    out = _declared_run(tmp_path, capsys, "table_summary@rho=3.5@N=2@k=1")
-    assert "DECLARED CELL: table_summary@rho=3.5@N=2@k=1" in out
+    out = _declared_run(tmp_path, capsys, "table_summary@rho=3.0@N=2@k=1")
+    assert "DECLARED CELL: table_summary@rho=3.0@N=2@k=1" in out
     assert "point estimate" in out and "95% CI (by prompt)" in out
     assert "upper bound below" in out, "the criterion is on the bound, not the estimate"
     assert "n_prompts" in out, "the sample size that matters must be named"
@@ -426,8 +441,8 @@ def test_the_control_is_labelled_as_one_and_flagged_if_it_passes(tmp_path, capsy
     says the instrument cannot separate the arms, so neither number is
     evidence. That has to be impossible to read past."""
     out = _declared_run(tmp_path, capsys,
-                        "table_summary@rho=3.5@N=2@k=1",
-                        "table_summary@rho=3.5@N=8@k=1")
+                        "table_summary@rho=3.0@N=2@k=1",
+                        "table_summary@rho=3.0@N=8@k=1")
     assert "CONTROL (must fail)" in out
     control = out[out.index("CONTROL (must fail)"):]
     assert "control reading" in control
@@ -442,7 +457,7 @@ def test_a_declared_cell_that_was_never_measured_is_not_silently_skipped(tmp_pat
     out = _declared_run(tmp_path, capsys, "table_summary@rho=9.9@N=2@k=1", n="2")
     assert "NOT PRESENT in this run" in out
     assert "no verdict" in out
-    assert "table_summary@rho=3.5@N=2@k=1" in out, "it must list what was measured"
+    assert "table_summary@rho=3.0@N=2@k=1" in out, "it must list what was measured"
 
 
 def test_both_tables_tiers_declare_their_cell_in_the_runner() -> None:
@@ -459,8 +474,8 @@ def test_both_tables_tiers_declare_their_cell_in_the_runner() -> None:
                  "--prompts prompts/tables24.json --split final"):
         assert script.count(tier) == 1, f"{tier}: expected exactly one invocation"
         block = script[script.index(tier):script.index(tier) + 600]
-        assert "--declare 'table_summary@rho=3.5@N=2@k=1'" in block, tier
-        assert "--declare 'table_summary@rho=3.5@N=8@k=1'" in block, \
+        assert "--declare 'table_summary@rho=3.0@N=2@k=1'" in block, tier
+        assert "--declare 'table_summary@rho=3.0@N=8@k=1'" in block, \
             f"{tier}: the control must be declared too, or nothing checks it failed"
 
 
@@ -1372,24 +1387,38 @@ def _grid(body: str) -> tuple[list[float], list[int]]:
             [int(v) for v in n_match.group(1).split(",")])
 
 
-def _floors(corpus: Path | None, n_values: list[int]) -> dict[int, float]:
-    """Worst-case packing floor per N, over the corpus, from the real code."""
+def _windows(corpus: Path | None,
+             n_values: list[int]) -> dict[int, tuple[float, float]]:
+    """``{N: (worst floor, worst ceiling)}`` over the corpus, from the real code.
+
+    A WINDOW, not a floor, and the second bound cost a five-hour run. The first
+    version of this helper returned floors only, so the v0 grid was checked
+    against one end and topped out at 5.5 where the N=2 ceiling is 4.90.
+    """
     from swarmbly_v0.backends import MockBackend
     from swarmbly_v0.experiment import DEFAULT_PROMPTS_PATH, load_prompts, _answer_budget
-    from swarmbly_v0.packing import packing_floor
+    from swarmbly_v0.packing import packing_ceiling, packing_floor
     from swarmbly_v0.planner import global_contract, plan as build_plan
 
     backend = MockBackend()
     specs = load_prompts(str(corpus or DEFAULT_PROMPTS_PATH))
-    worst: dict[int, float] = {}
+    floors: dict[int, float] = {}
+    ceilings: dict[int, float] = {}
     for spec in specs:
         contract = global_contract(spec.text, backend,
                                    target_length_tokens=_answer_budget(spec, 420))
         for n_tasks in n_values:
             plan = build_plan(spec.text, backend, n_tasks=n_tasks, contract=contract)
-            floor = packing_floor(contract, plan)
-            worst[n_tasks] = max(worst.get(n_tasks, 0.0), floor)
-    return worst
+            floors[n_tasks] = max(floors.get(n_tasks, 0.0),
+                                  packing_floor(contract, plan))
+            ceilings[n_tasks] = min(ceilings.get(n_tasks, float("inf")),
+                                    packing_ceiling(contract, plan))
+    return {n: (floors[n], ceilings[n]) for n in n_values}
+
+
+def _floors(corpus: Path | None, n_values: list[int]) -> dict[int, float]:
+    """Worst-case packing floor per N. Kept for the tests written against it."""
+    return {n: lo for n, (lo, _) in _windows(corpus, n_values).items()}
 
 
 def test_every_N_in_the_v0_grid_keeps_at_least_three_reachable_rho_points() -> None:
@@ -1761,3 +1790,183 @@ def test_the_smoke_tier_points_at_the_tiers_that_carry_a_verdict() -> None:
     assert ">=2.7 at N=8" not in smoke, (
         "that advice was acted on when v0's grid was recomputed on 4 September; "
         "an instruction to do work already done sends an operator to redo it")
+
+
+# --------------------------------------------------------------------------- #
+# class 9: rho has a CEILING as well as a floor, and a grid must clear both
+#
+# `packing_floor` says a target below it is not a measurement of rho: every
+# packet collapses to its bare task and two labels give identical output. The
+# same argument applies above the ceiling and nothing made it. A packet cannot
+# hold more than its mandatory blocks plus its natural context plus
+# `_expansion_blocks`, and that list is FINITE -- it takes `needed` and ignores
+# it -- so a target above it cannot be spent.
+#
+# The v0 tier of 4 September asked rho 5.5 at N=2 where the worst prompt tops
+# out at 4.90. Five hours in, at the fifth of six rho points, it undershot by
+# 6.5 % and the drift invariant aborted the whole tier: one unreachable cell of
+# 144 destroyed 143 measured ones.
+#
+# The grid was mine. I checked one bound and not the other, which is the same
+# mistake the floor exists to prevent, on the other side.
+# --------------------------------------------------------------------------- #
+
+
+def test_every_v0_rho_point_sits_inside_its_window_with_margin() -> None:
+    """Both bounds, with more headroom than the drift tolerance.
+
+    6 % on each end against a 5 % tolerance, because a point that merely clears
+    the ceiling still fails when the packer lands slightly under it -- which is
+    exactly how the tables corpus produced a systematic -3.4 % undershoot that
+    passed the fidelity check and left the declared cell mislabelled.
+    """
+    from swarmbly_v0.experiment import RHO_TOLERANCE
+
+    margin = 1.06
+    assert margin > 1 + RHO_TOLERANCE, (
+        f"the grid margin {margin} must exceed the drift tolerance "
+        f"{RHO_TOLERANCE}, or a point can clear the check and still drift out")
+
+    rhos, ns = _grid(_tier_body("v0"))
+    windows = _windows(None, ns)
+    for n_tasks in ns:
+        low, high = windows[n_tasks]
+        usable = [r for r in rhos if low * margin <= r <= high / margin]
+        assert len(usable) >= 3, (
+            f"N={n_tasks} has window [{low:.3f}, {high:.3f}] and only "
+            f"{len(usable)} of {len(rhos)} rho points inside it with margin "
+            f"({usable}); a rho curve cannot be read from fewer than three")
+    for rho in rhos:
+        for n_tasks in ns:
+            low, high = windows[n_tasks]
+            if rho > high:
+                assert rho > windows[min(ns)][1] or True
+    # No point may sit above the ceiling of the SMALLEST N it is swept at, which
+    # is the specific mistake: 5.5 was fine at N=8 and impossible at N=2.
+    worst_ceiling = min(high for _, high in windows.values())
+    assert max(rhos) <= worst_ceiling, (
+        f"the grid tops out at {max(rhos)} and the tightest ceiling across "
+        f"N={ns} is {worst_ceiling:.3f}. That cell cannot be packed, and before "
+        f"4 September it aborted the entire tier rather than being dropped.")
+
+
+def test_a_target_above_the_ceiling_is_dropped_and_not_raised() -> None:
+    """One unreachable cell must not destroy the run it is in.
+
+    The drift invariant exists because four runs completed at 3.91 against a
+    target of 3.5 while it was only a warning. It is right, and on 4 September
+    it was also catastrophic: it aborted a five-hour tier over a single cell
+    whose target could not be packed for a structural reason.
+
+    So it now fires only when the target was IN RANGE. In range and drifting is
+    a defect and still raises. Out of range is a property of the cell: recorded,
+    dropped by `is_reachable`, and counted in the summary by reason.
+    """
+    from swarmbly_v0.backends import HashEmbedder, MockBackend
+    from swarmbly_v0.experiment import (SweepConfig, load_prompts, run_fragmented,
+                                        run_monolithic, is_reachable,
+                                        _answer_budget)
+    from swarmbly_v0.packing import packing_ceiling
+    from swarmbly_v0.planner import global_contract, plan as build_plan
+
+    backend, embedder = MockBackend(), HashEmbedder()
+    spec = load_prompts(str(GROUND_TRUTH.parent / "tables24.json"))[0]
+    contract = global_contract(spec.text, backend,
+                               target_length_tokens=_answer_budget(spec, 420))
+    ceiling = packing_ceiling(
+        contract, build_plan(spec.text, backend, n_tasks=2, contract=contract))
+    target = ceiling * 3
+
+    config = SweepConfig(rhos=(target,), ns=(2,), ks=(1,), n_candidates=1,
+                         seed=0, tau_sem=0.5)
+    baseline = run_monolithic(spec, backend, embedder, config, contract=contract)
+    # Must not raise. Before the fix this was PacketInvariantError and it took
+    # the tier with it.
+    row = run_fragmented(spec, backend, embedder, config, rho_target=target,
+                         n_tasks=2, tau_sem=0.5, k=1, contract=contract,
+                         baseline=baseline)
+    assert row["rho_above_ceiling"] is True
+    assert is_reachable(row) is False, "an unpackable cell must not enter a figure"
+    assert float(row["rho_achieved"]) < target
+
+
+def test_a_target_inside_the_window_that_drifts_still_raises() -> None:
+    """CONTROL. Relaxing the invariant must not disarm it.
+
+    Four consecutive runs completed with achieved rho 3.91 against a target of
+    3.5 because this was a warning. If the ceiling change made every drift
+    survivable, that is a worse defect than the one it fixed.
+    """
+    import inspect
+    from swarmbly_v0 import experiment
+
+    source = inspect.getsource(experiment.run_fragmented)
+    assert "raise PacketInvariantError" in source, "the invariant was removed"
+    guard = source[source.index("row_out_of_range = "):
+                   source.index("raise PacketInvariantError")]
+    assert "not row_out_of_range" in guard and "truthful_floor" in guard, (
+        "the invariant must be skipped only for a target outside the window; "
+        "skipping it for an in-range drift is the defect it was added for")
+
+
+def test_the_drop_counters_name_three_different_repairs() -> None:
+    """A total without its reasons is a number a reader cannot act on.
+
+    Below floor means raise the grid, above ceiling means lower it, refused
+    means no rho would have helped. The first version of these counters read
+    zero for all three while the total read 8, because they ran after `rows` had
+    been rebound to the filtered list -- so the drop appeared to have no cause.
+    """
+    from swarmbly_v0.experiment import summarize
+
+    rows = [
+        {"prompt_id": "a", "condition": "fragmented", "rho_reachable": False},
+        {"prompt_id": "b", "condition": "fragmented", "rho_above_ceiling": True},
+        {"prompt_id": "c", "condition": "fragmented", "plan_refused": True},
+        {"prompt_id": "d", "condition": "monolithic"},
+    ]
+    by_reason = summarize(rows)["rows_excluded_by_reason"]
+    assert by_reason["below_packing_floor"] == 1
+    assert by_reason["above_packing_ceiling"] == 1
+    assert by_reason["plan_refused"] == 1
+    assert summarize(rows)["rows_excluded_below_floor"] == 3, (
+        "the total keeps its original name so old runs stay comparable")
+
+
+def test_every_declared_cell_in_the_runner_is_inside_its_packing_window() -> None:
+    """A pre-registered cell that cannot be packed is not a cell.
+
+    `tables-dev` and `tables-final` declared `table_summary@rho=3.5@N=2@k=1`.
+    The `tables24` ceiling at N=2 is about 3.35, so that cell does not exist:
+    every N=2 row undershot by a systematic 3.4 %, never once overshooting, and
+    the fidelity check passed because 3.4 % is inside the 5 % tolerance. The
+    apparatus was built to stop a cell being chosen AFTER the data; nothing
+    checked that the cell chosen in advance was reachable.
+
+    This reads the declared cells out of the runner's own invocations and checks
+    each one against the window of the corpus that tier actually runs.
+    """
+    import re as _re
+
+    runner = RUNNER.read_text(encoding="utf-8")
+    corpus_of = {"run_tables_dev": "tables24.json",
+                 "run_tables_final": "tables24.json",
+                 "run_comp_dev": "composition.json",
+                 "run_comp_final": "composition.json"}
+    checked = 0
+    for tier, corpus in corpus_of.items():
+        body = _tier_body(tier[len("run_"):])
+        cells = _re.findall(r"@rho=([\d.]+)@N=(\d+)@k=", body)
+        assert cells, f"{tier} declares no cell"
+        windows = _windows(GROUND_TRUTH.parent / corpus,
+                           sorted({int(n) for _, n in cells}))
+        for rho_text, n_text in cells:
+            rho, n_tasks = float(rho_text), int(n_text)
+            low, high = windows[n_tasks]
+            assert low <= rho <= high, (
+                f"{tier} declares rho={rho} at N={n_tasks} on {corpus}, whose "
+                f"window is [{low:.3f}, {high:.3f}]. A declared cell outside "
+                f"its window cannot be measured, and the run reports the bound "
+                f"it hit under the label it was given.")
+            checked += 1
+    assert checked >= 8, f"only {checked} declared cells checked"
