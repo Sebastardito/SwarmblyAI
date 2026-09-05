@@ -293,8 +293,21 @@ def _cmd_run(args: argparse.Namespace) -> int:
             f"           absolute difference   "
             f"BooookScore-like {point['abs_delta_booook']:+7.4f}    "
             f"entity-grid {point['abs_delta_entity_grid']:+7.4f}   "
-            f"(denominator-free)"
+            f"(same scores, no denominator)"
         )
+        # The full score -- seams and assembler-enforced classes included -- is
+        # the figure of record from before 26 August, and it charges the
+        # fragmented arm for structure that exists only because it was
+        # fragmented. It is printed only where it disagrees with the comparable
+        # one, so the disagreement is the visible thing rather than the number.
+        full = point.get("abs_delta_booook_full")
+        if full is not None and abs(full - point["abs_delta_booook"]) >= 0.005:
+            print(
+                f"           on the FULL score       "
+                f"BooookScore-like {full:+7.4f}   "
+                f"(seams and assembler-enforced classes included -- "
+                f"not comparable across arms)"
+            )
     unstable = stats.get("unstable_cells", {})
     dropped = unstable.get("excluded_booook", 0) + unstable.get("excluded_entity_grid", 0)
     if dropped:
@@ -493,6 +506,30 @@ def _cmd_run(args: argparse.Namespace) -> int:
           "judged on the")
     print("             upper bound of a bootstrap clustered by prompt, with a "
           "control that must fail.")
+
+    # ... except when that block is empty, which the reader must not have to
+    # discover by opening it. On the v0 run of 4 September all forty entries
+    # returned `passed: null` -- one prompt per category, and a cell is
+    # (category, rho, N, k), so the interval could never be formed. The line
+    # above sent the reader to a structurally empty block while the superseded
+    # statistic sat on screen reading "passes".
+    census = stats.get("falsifiable_go_no_go_census")
+    if census and census["with_a_verdict"] == 0:
+        print(f"\n             AND IT IS EMPTY: 0 of {census['cells']} declared cells "
+              f"returned a verdict.")
+        if census["max_observations_in_any_cell"] <= 1:
+            print("             This corpus holds ONE prompt per category, so a cell "
+                  "of (category, rho,")
+            print("             N, k) has one observation and no interval can be "
+                  "formed. No grid and no")
+            print("             rerun changes that. THIS TIER PRODUCES CURVES, NOT A "
+                  "VERDICT -- read the")
+            print("             rho curve above and the composition tiers for anything "
+                  "declared.")
+        else:
+            print("             Too few observations per cell to form an interval. Do "
+                  "not quote a verdict.")
+
     if metadata.get("harness_validation_only"):
         print("\n*** MockBackend: these numbers validate the harness. They are NOT "
               "evidence about real models. ***")

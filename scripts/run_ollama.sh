@@ -343,7 +343,11 @@ run_tier() {
     TIERS_FAILED="$TIERS_FAILED $name"
     return 1
   done
-  echo "  -> $out/report.html"
+  # Only if it is there. Not every tier renders one -- `comp-oracle` writes a
+  # summary and a CSV and no HTML -- and printing a path to a file that does not
+  # exist is the same species of defect as the rest of this file guards against,
+  # just smaller: a line an operator would act on that is not true.
+  [ -f "$out/report.html" ] && echo "  -> $out/report.html"
   return 0
 }
 
@@ -360,7 +364,7 @@ run_v0() {
   echo ""
   echo "    N=2   usable 1.95 - 4.90    sweeping 2.0  2.7  3.4  4.1  4.8"
   echo "    N=4   usable 2.95 - 6.95    sweeping 3.0  3.9  4.8  5.7  6.6"
-  echo "    N=8   usable 4.45 - 6.95    sweeping 4.5  5.0  5.5  6.0  6.5"
+  echo "    N=8   usable 4.45 - 6.95    sweeping 4.5  4.8  5.5  6.0  6.5"
   echo ""
   echo "  The floor rises with N because every packet pays its own contract"
   echo "  header. The ceiling rises too, but from a much lower base, because a"
@@ -372,8 +376,15 @@ run_v0() {
   echo ""
   echo "  A single grid across all three N is therefore impossible on this"
   echo "  corpus. N=8 cannot start below 4.45 and N=2 cannot go above 4.90:"
-  echo "  the common window is 0.45 wide. Comparing N at fixed rho is honest"
-  echo "  only at 4.5 and 4.8, and nowhere else."
+  echo "  the common window is 0.45 wide: [4.45, 4.90], and rho = 4.8 is the"
+  echo "  ONE point inside it that all three grids sample. That is the only"
+  echo "  honest comparison of N at fixed rho this corpus permits."
+  echo ""
+  echo "  The run of 4 September did not have it. N=8 swept 5.0 where N=2 and"
+  echo "  N=4 swept 4.8, so the three arms shared no grid point at all while"
+  echo "  this text claimed 4.5 and 4.8 were both comparable -- 4.5 was in no"
+  echo "  other arm and 4.8 was not in N=8. N=8 now samples 4.8 in place of 5.0;"
+  echo "  check_grid packs it at -0.5 % worst case across the eight prompts."
   echo ""
   echo "  THAT THIS IS TRUE AT ALL IS THE FINDING. SPEC 11.5 asks for rho < 2.0."
   echo "  The N=8 arm cannot be run below 4.45 on this corpus. The target is not"
@@ -393,7 +404,7 @@ run_v0() {
     case "$n" in
       2) rhos="2.0,2.7,3.4,4.1,4.8" ;;
       4) rhos="3.0,3.9,4.8,5.7,6.6" ;;
-      8) rhos="4.5,5.0,5.5,6.0,6.5" ;;
+      8) rhos="4.5,4.8,5.5,6.0,6.5" ;;
     esac
     python3 scripts/check_grid.py --rho "$rhos" --n "$n" --quiet \
       || die "the v0 grid at N=$n would not measure its own labels. Nothing was
@@ -406,7 +417,7 @@ run_v0() {
     case "$n" in
       2) rhos="2.0,2.7,3.4,4.1,4.8" ;;
       4) rhos="3.0,3.9,4.8,5.7,6.6" ;;
-      8) rhos="4.5,5.0,5.5,6.0,6.5" ;;
+      8) rhos="4.5,4.8,5.5,6.0,6.5" ;;
     esac
     bold "  -- N=$n, rho $rhos"
     run_tier "v0-N$n" "$out/N$n" \
@@ -418,9 +429,10 @@ run_v0() {
   done
   echo ""
   bold "  Read the rho curve WITHIN one N."
-  echo "  Comparing N at fixed rho is honest only at 4.5 and 4.8, where all three"
-  echo "  windows overlap. Anywhere else the arms are at different rho and the"
-  echo "  comparison is confounded -- which is what happened to tables-final."
+  echo "  Comparing N at fixed rho is honest ONLY at rho = 4.8, the single point"
+  echo "  all three grids sample inside the common window [4.45, 4.90]."
+  echo "  Anywhere else the arms are at different rho and the comparison is"
+  echo "  confounded -- which is what happened to tables-final."
   echo "  -> $out/N2 $out/N4 $out/N8"
 }
 
@@ -1018,6 +1030,133 @@ run_comp_dev() {
   echo "  -> $out/summary.json"
 }
 
+run_comp_oracle() {
+  local out="$RESULTS_ROOT/comp-oracle-$STAMP"
+  bold ""
+  bold "== comp-oracle — what are the 22.4 points MADE OF? =="
+  echo ""
+  echo "  comp-final measured composition at rho 4.0, N 3, k 1 as costing"
+  echo "  +22.40 points against monolithic, CI [+16.15, +28.51], NOT MET on the"
+  echo "  upper bound. It was published with a limit attached, and this tier"
+  echo "  exists to remove the limit rather than to restate the number:"
+  echo ""
+  echo "    mean_paragraphs was 2.0 monolithic against 7.96 fragmented. Each"
+  echo "    fragment wrote a COMPLETE ANSWER. So 22.4 points measures this"
+  echo "    implementation fragmenting prose, not the cost of fragmenting prose."
+  echo ""
+  echo "  THREE ARMS, one scorer, no judge:"
+  echo ""
+  echo "    monolithic   one call, whole prompt. The ceiling."
+  echo "    oracle       fragmented, every global constraint ALLOCATED by"
+  echo "                 construction: each required term owned by exactly one"
+  echo "                 fragment, and where it is also term_once the others are"
+  echo "                 told to avoid it. No router, no planner, no packer."
+  echo "    real         the shipped pipeline."
+  echo ""
+  echo "  THE READING IS THE GAP STRUCTURE, and the two possible answers are"
+  echo "  opposite:"
+  echo ""
+  echo "    oracle near monolithic, real far below  -> the loss is ALLOCATION."
+  echo "      Workers are not told about each other. A planner defect with a"
+  echo "      planner fix, and the 22.4 points are largely recoverable."
+  echo "    oracle and real both far below          -> the loss is PARALLELISM."
+  echo "      No allocation scheme recovers it, and the honest conclusion is"
+  echo "      that this workload is not fragmentable rather than badly"
+  echo "      fragmented."
+  echo ""
+  echo "  Without this arm the +22.40 is compatible with either. That is why it"
+  echo "  was published with a limit rather than as a claim about architecture."
+  echo ""
+  echo "  WHAT THE ORACLE DELIBERATELY DOES NOT FIX: it is PARALLEL. No fragment"
+  echo "  sees another's text, because that is the architecture's actual claim."
+  echo "  A sequential oracle showing fragment i the output of 1..i-1 would be"
+  echo "  monolithic with extra steps and would recover the repetition"
+  echo "  constraints by abolishing the thing under test. So no_repeated_ngram"
+  echo "  and no_repeated_sentence are the classes allocation cannot reach, and"
+  echo "  what the oracle loses on them is the price of parallelism itself."
+  echo ""
+  echo "  Read, in order:"
+  echo "    decomposition.reading           -- which of the two answers it is."
+  echo "    by_constraint_kind              -- satisfied/checked per arm. This is"
+  echo "                                      where the decomposition lives:"
+  echo "                                      term_once and must_mention are the"
+  echo "                                      classes allocation should repair."
+  echo "    by_arm.mean_paragraphs          -- the limit itself. If the oracle"
+  echo "                                      still writes 7 paragraphs the"
+  echo "                                      brief is not being obeyed and"
+  echo "                                      nothing below it means anything."
+  echo ""
+  echo "  NO INTERVAL AND NO VERDICT. Three arms over twelve dev prompts is not"
+  echo "  a sample to resample, and MIN_CLUSTERS_FOR_A_VERDICT is 20. This tier"
+  echo "  decomposes a verdict that already has its interval; it does not carry"
+  echo "  one of its own."
+  echo "  Output: $out"
+  [ -f prompts/composition.json ] || python3 scripts/make_composition.py
+  python3 scripts/make_composition.py --verify \
+    || die "prompts/composition.json does not match what make_composition.py builds."
+  run_tier comp-oracle "$out" \
+    python3 scripts/run_composition_oracle.py \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split dev \
+    --rho 4.0 --n 3 \
+    --out "$out" || return 1
+  echo "  -> $out/summary.json"
+}
+
+run_comp_dev_k3() {
+  local out="$RESULTS_ROOT/comp-dev-k3-$STAMP"
+  bold ""
+  bold "== comp-dev-k3 — does consensus recover the composition cost? =="
+  echo ""
+  echo "  A PREDICTION, stated before the run so it can fail:"
+  echo ""
+  echo "    comp-final's headline does NOT improve at k=3."
+  echo ""
+  echo "  v3c-ff on 4 September showed what k does to a composition. At k=1 the"
+  echo "  fragmented arm wrote 7.40 paragraphs against monolithic's 2.00; at k=3"
+  echo "  and k=5 it wrote EXACTLY 2.00. Consensus removes the paragraph"
+  echo "  inflation completely, and the raw constraint score rises with it:"
+  echo "  0.633 -> 0.711 -> 0.756."
+  echo ""
+  echo "  But constraint_score_comparable -- which drops paragraph_count and"
+  echo "  words_per_paragraph precisely because the assembler enforces them --"
+  echo "  did not move: 0.864, 0.786, 0.857 on five compositions."
+  echo ""
+  echo "  So k repairs the assembler-enforced constraints and nothing else,"
+  echo "  which is exactly the part the headline already excludes. v3c-gt says"
+  echo "  the same from the other side: its comparable tax RISES with k, +21.2%"
+  echo "  -> +37.4% -> +44.6%."
+  echo ""
+  echo "  If the prediction is wrong -- if k=3 recovers a large share of the"
+  echo "  22.4 points -- then consensus is a real answer to the composition cost"
+  echo "  and the architecture has a lever nobody has pulled. That is worth an"
+  echo "  hour to find out, and it is worth stating in advance which result"
+  echo "  would be the interesting one."
+  echo ""
+  echo "  Same corpus, same split, same rho and N as comp-dev. ONLY k changes."
+  echo "  Compare against a comp-dev run, not against comp-final: dev to dev."
+  echo "  Output: $out"
+  [ -f prompts/composition.json ] || python3 scripts/make_composition.py
+  python3 scripts/make_composition.py --verify \
+    || die "prompts/composition.json does not match what make_composition.py builds."
+  run_tier comp-dev-k3 "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split dev \
+    --rho 4.0 --n 3,8 --k 3 \
+    --declare-composition 'composition@rho=4.0@N=3@k=3' \
+    --declare-composition 'composition@rho=4.0@N=8@k=3' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  echo "  Read composition_criterion[composition@rho=4.0@N=3@k=3].mean_delta"
+  echo "  against the k=1 dev run's. Twelve clusters either way, so it is a"
+  echo "  point estimate and the tier prints no verdict -- but the k=1 dev run"
+  echo "  put it at +18.40, and a k=3 estimate near that confirms the"
+  echo "  prediction while one near zero refutes it."
+  echo "  -> $out/summary.json"
+}
+
 run_comp_final() {
   local out="$RESULTS_ROOT/comp-final-$STAMP"
   local dev="${2:-}"
@@ -1189,6 +1328,8 @@ case "$TIER" in
   tables-dev) run_tables_dev || true ;;
   tables-final) run_tables_final "$@" || true ;;
   comp-dev) run_comp_dev || true ;;
+  comp-dev-k3) run_comp_dev_k3 || true ;;
+  comp-oracle) run_comp_oracle || true ;;
   comp-final) run_comp_final "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
   # already recorded the failure
@@ -1197,7 +1338,7 @@ case "$TIER" in
   # overnight `all` finish its independent tiers. The exit status is restored at
   # the bottom.
   all) run_v0 || true; run_v3c || true ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-final | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-oracle | comp-final | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then

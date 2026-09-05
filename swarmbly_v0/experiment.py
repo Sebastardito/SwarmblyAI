@@ -3747,6 +3747,7 @@ def summarize(
     rho_achieved: dict[float, list[float]] = {}
 
     abs_booook: dict[float, list[float]] = {}
+    abs_booook_full: dict[float, list[float]] = {}
     abs_grid: dict[float, list[float]] = {}
     unstable = {"booook": 0, "entity_grid": 0}
 
@@ -3756,10 +3757,27 @@ def summarize(
         category = str(row["category"])
         rho_achieved.setdefault(rho, []).append(float(row["rho_achieved"]))
 
-        base_b = _f(row, "baseline_booook")
+        base_b = _f(row, "baseline_booook_comparable", _f(row, "baseline_booook"))
         base_g = _f(row, "baseline_entity_grid")
-        # Absolute differences are stable whatever the denominator does.
-        abs_booook.setdefault(rho, []).append(base_b - _f(row, "booook_like_score"))
+        # Absolute differences are stable whatever the denominator does. They must
+        # be the SAME COMPARISON as the relative headline, differing only in
+        # whether a denominator is applied -- that is what the summary claims of
+        # them, and what a reader seeing the two side by side will assume.
+        #
+        # Until 5 September this line used booook_like_score while the headline
+        # used booook_comparable, so the pair differed by the score as well as by
+        # the denominator. On the v3c-gt run of 4 September every baseline was
+        # exactly 1.000 -- where relative and absolute must coincide -- and the
+        # two printed as +21.15 % and +0.4335. The gap was the assembler-enforced
+        # and seam-anchored classes that `booook_comparable` exists to remove,
+        # which charge the fragmented arm more the more it is fragmented (5.7
+        # points at N=2 and 10.1 at N=8 on the table run of 26 August).
+        #
+        # The full-score absolute is kept beside it under its own name.
+        abs_booook.setdefault(rho, []).append(
+            base_b - _f(row, "booook_comparable", _f(row, "booook_like_score")))
+        abs_booook_full.setdefault(rho, []).append(
+            _f(row, "baseline_booook") - _f(row, "booook_like_score"))
         abs_grid.setdefault(rho, []).append(base_g - _f(row, "entity_grid"))
 
         if _stable(row, "baseline_booook"):
@@ -3785,6 +3803,7 @@ def summarize(
             "coherence_tax_entity_grid": (
                 round(_mean(by_rho_grid.get(rho, [])), 6) if by_rho_grid.get(rho) else None),
             "abs_delta_booook": round(_mean(abs_booook.get(rho, [])), 6),
+            "abs_delta_booook_full": round(_mean(abs_booook_full.get(rho, [])), 6),
             "abs_delta_entity_grid": round(_mean(abs_grid.get(rho, [])), 6),
             "n_cells": len(values),
             "n_cells_entity_grid": len(by_rho_grid.get(rho, [])),
@@ -3989,12 +4008,50 @@ def summarize(
             "note": (
                 "cells whose monolithic baseline fell below min_baseline are "
                 "excluded from the relative means: a ratio over a near-zero "
-                "denominator is not a measurement. They are counted here rather "
+                "denominator is not a measurement. abs_delta_booook is the same "
+                "score as coherence_tax_booook -- booook_comparable -- with no "
+                "denominator applied, so where the baseline is 1.0 the two must "
+                "agree; abs_delta_booook_full is the full score and is NOT "
+                "comparable across arms. They are counted here rather "
                 "than dropped quietly, and abs_delta_* in the curve is the "
                 "denominator-free version of the same comparison."
             ),
         },
     }
+
+    # How many of the declared cells actually returned a verdict.
+    #
+    # On the v0 run of 4 September all forty entries came back `passed: null`
+    # with `n_observations: 1`, because v0's corpus holds exactly one prompt per
+    # category and a cell is (category, rho, N, k). The criterion needs at least
+    # two clusters to form an interval, so on that corpus it can never fire --
+    # not for this grid, not for any grid. The tier nevertheless told the reader
+    # to "read falsifiable_go_no_go instead", pointing at a block that was
+    # structurally empty, while printing a superseded maximum statistic that
+    # passes on random data.
+    #
+    # A criterion that cannot fire is not a criterion that passed. Counting the
+    # refusals here makes the emptiness a number rather than something a reader
+    # has to notice for themselves.
+    for block in ("falsifiable_go_no_go", "composition_criterion"):
+        entries = [v for v in summary.get(block, {}).values() if isinstance(v, dict)]
+        if not entries:
+            continue
+        decided = [e for e in entries if e.get("passed") is not None]
+        summary[f"{block}_census"] = {
+            "cells": len(entries),
+            "with_a_verdict": len(decided),
+            "refused": len(entries) - len(decided),
+            "max_observations_in_any_cell": max(
+                (int(e.get("n_observations") or 0) for e in entries), default=0),
+            "note": (
+                "A cell is (category, rho, N, k). Where with_a_verdict is 0 the "
+                "criterion did not fail -- it was never able to run, and no "
+                "reading of this tier is a declared result. Check "
+                "max_observations_in_any_cell: 1 means the corpus holds one "
+                "prompt per category, so no grid and no rerun changes this."
+            ),
+        }
 
     if prompts:
         evaluation = evaluate_router(

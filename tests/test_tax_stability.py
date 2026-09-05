@@ -182,3 +182,98 @@ def test_the_html_report_survives_an_unmeasured_curve_point():
     # explains it. That table is the audit surface; hiding the input would be
     # the worse failure.
     assert "-3.0" in body and "0.02" in body
+
+
+# --------------------------------------------------------------------------
+# The relative headline and the absolute must be the SAME comparison
+#
+# On the v3c-gt run of 4 September every monolithic baseline was exactly 1.000
+# -- the case where a relative difference and an absolute difference must
+# coincide -- and the summary printed +21.15 % beside +0.4335.
+#
+# The gap was not the denominator. `coherence_tax_booook` is computed on
+# `booook_comparable`, which drops the seam-anchored and assembler-enforced
+# classes because a monolithic text has no seams and so cannot incur them; the
+# absolute was computed on `booook_like_score`, which does. Those classes charge
+# the fragmented arm more the more it is fragmented -- 5.7 points at N=2 and
+# 10.1 at N=8 on the table run of 26 August -- so the "denominator-free version
+# of the same comparison" was silently the biased figure the comparable score
+# was introduced to retire.
+# --------------------------------------------------------------------------
+
+
+def _paired(**kw):
+    """A cell whose baseline is 1.0, where relative and absolute must agree."""
+    row = {
+        "booook_like_score": 0.40, "booook_comparable": 0.70,
+        "baseline_booook": 1.0, "baseline_booook_comparable": 1.0,
+        "coherence_tax_booook": 0.30,     # 1.0 -> 0.70 on the comparable score
+    }
+    row.update(kw)
+    return _cell(**row)
+
+
+def test_the_absolute_difference_uses_the_same_score_as_the_headline():
+    point = summarize([_paired()])["curve"][0]
+    assert point["coherence_tax_booook"] == 0.30
+    assert point["abs_delta_booook"] == 0.30, (
+        "with a baseline of exactly 1.0 the relative and absolute figures are "
+        "arithmetically the same number; a disagreement means they are not the "
+        "same score, and the summary calls them the same comparison")
+
+
+def test_the_full_score_absolute_is_kept_but_under_its_own_name():
+    """The figure of record from before 26 August is not deleted, only named."""
+    point = summarize([_paired()])["curve"][0]
+    assert point["abs_delta_booook_full"] == 0.60, (
+        "the full score keeps the seam and assembler-enforced classes, so it "
+        "must still be available -- it is simply not the headline's absolute")
+    assert point["abs_delta_booook_full"] != point["abs_delta_booook"]
+
+
+def test_a_run_without_the_comparable_column_falls_back_to_the_full_score():
+    """Runs recorded before booook_comparable existed must still summarise.
+
+    Both sides fall back together. Taking the comparable baseline against a
+    missing comparable score would read the absent column as 0.0 and report a
+    total loss of 1.0000 for a cell that scored 0.4.
+    """
+    row = _cell(booook_like_score=0.4, baseline_booook=1.0,
+                coherence_tax_booook=0.6)
+    row.pop("booook_comparable", None)
+    point = summarize([row])["curve"][0]
+    assert point["abs_delta_booook"] == 0.6, (
+        "a legacy row must fall back on both sides at once")
+
+
+# --------------------------------------------------------------------------
+# A criterion that cannot fire is not a criterion that passed
+#
+# v0's corpus holds one prompt per category and the declared cell is
+# (category, rho, N, k). `falsifiable_go_no_go` needs two clusters to form an
+# interval, so on that corpus it returns `passed: null` for every cell -- forty
+# of them on the run of 4 September -- while the tier printed "read
+# falsifiable_go_no_go instead" and a superseded maximum statistic reading
+# "passes (20 passing cells)".
+# --------------------------------------------------------------------------
+
+
+def test_a_census_counts_the_cells_that_returned_no_verdict():
+    """One prompt per category: every cell refuses, and the count says so."""
+    rows = [_cell(category="bulk_extraction", prompt_id="p1"),
+            _cell(category="long_report", prompt_id="p2")]
+    census = summarize(rows)["falsifiable_go_no_go_census"]
+    assert census["with_a_verdict"] == 0
+    assert census["refused"] == census["cells"] > 0
+    assert census["max_observations_in_any_cell"] == 1, (
+        "1 is the diagnosis: no grid and no rerun can form an interval here")
+
+
+def test_the_census_records_a_verdict_when_the_cell_can_form_one():
+    rows = [_cell(category="bulk_extraction", prompt_id="p1",
+                  coherence_tax_booook=0.01),
+            _cell(category="bulk_extraction", prompt_id="p2",
+                  coherence_tax_booook=0.02)]
+    census = summarize(rows)["falsifiable_go_no_go_census"]
+    assert census["with_a_verdict"] == 1
+    assert census["max_observations_in_any_cell"] == 2

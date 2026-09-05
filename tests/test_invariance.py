@@ -1494,14 +1494,22 @@ def test_the_v0_windows_barely_overlap_and_the_runner_says_so() -> None:
 
     `tables-final` is what happens when this is not said. Its two arms ran at
     3.38 and 3.51 under one label.
+
+    This test used to assert the literal sentence "honest only at 4.5 and 4.8",
+    which was false: 4.5 was in no arm but N=8 and 4.8 was in every arm but N=8,
+    so the intersection of the three grids was empty and the comparison the
+    sentence recommended could not be made. The assertion held anyway, because a
+    string is not a fact about the grid. It now checks the grid.
     """
     body = _tier_body("v0")
-    assert "4.5" in body and "4.8" in body, (
-        "the overlap points must actually be swept, or no cross-N comparison "
-        "is possible at all")
-    assert "honest only at 4.5 and 4.8" in body, (
+    grid = _v0_grid_by_n()
+    shared = set(grid[2]) & set(grid[4]) & set(grid[8])
+    assert shared, "no rho is sampled by all three arms; see test_the_three_v0_arms_share_a_rho_point"
+    assert all(str(rho) in body for rho in shared), (
         "the runner must tell the operator where a cross-N comparison is valid; "
         "tables-final compared two arms at different rho under one label")
+    assert "honest" in body.lower(), (
+        "and it must say so in words, not leave the reader to intersect the grids")
 
 
 def test_the_spec_target_is_recorded_as_unattainable_and_not_merely_unmet() -> None:
@@ -2066,7 +2074,8 @@ def test_the_runner_has_a_rehearsal_mode_and_it_stays_honest() -> None:
 
 
 @pytest.mark.parametrize("tier", ["smoke", "v0", "v3c", "v3c-gt", "v3c-ff",
-                                  "tables-dev", "comp-dev"])
+                                  "tables-dev", "comp-dev", "comp-dev-k3",
+                                  "comp-oracle"])
 def test_every_tier_rehearses_clean(tier: str) -> None:
     """Run the tier. End to end. Through the runner. Every one of them.
 
@@ -2129,3 +2138,35 @@ def test_a_rehearsal_is_invisible_to_the_glob_that_selects_a_run() -> None:
     assert not stray, (
         "these tiers write to results/ directly, so they land beside real runs "
         "when rehearsed:\n  " + "\n  ".join(s.strip() for s in stray))
+
+
+def test_the_three_v0_arms_share_a_rho_point() -> None:
+    """Comparing N at fixed rho needs a rho that every arm actually sampled.
+
+    On 4 September the tier printed "Comparing N at fixed rho is honest only at
+    4.5 and 4.8" while sweeping 4.5,5.0,5.5,6.0,6.5 at N=8 and 4.8 at N=2 and
+    N=4. Neither named point was in all three grids -- the intersection was
+    empty -- so the one comparison the text told the reader to make could not be
+    made from the data, and nothing on screen said so.
+
+    The windows genuinely barely overlap ([4.45, 4.90] across the three), which
+    is the finding. That makes the shared point scarce, not optional.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+    body = script[script.index("run_v0()"):]
+    body = body[:body.index("\n}\n")]
+
+    grids = {int(n): {float(x) for x in rhos.split(",")}
+             for n, rhos in re.findall(r'(\d+)\)\s*rhos="([\d.,]+)"', body)}
+    assert set(grids) == {2, 4, 8}, f"expected three arms, found {sorted(grids)}"
+
+    shared = grids[2] & grids[4] & grids[8]
+    assert shared, (
+        "the three arms sample no common rho, so N cannot be compared at fixed "
+        "rho anywhere:\n" + "\n".join(f"  N={n}: {sorted(v)}" for n, v in sorted(grids.items())))
+
+    # And the narration must name only points that are in all three.
+    for claimed in re.findall(r"honest ONLY at rho = ([\d.]+)", body):
+        assert float(claimed) in shared, (
+            f"the tier tells the reader to compare N at rho {claimed}, which is "
+            f"not in every grid. Shared points: {sorted(shared)}")
