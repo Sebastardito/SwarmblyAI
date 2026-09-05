@@ -259,6 +259,14 @@ def _cmd_run(args: argparse.Namespace) -> int:
             print("      own label. Lower the grid. This used to ABORT the whole tier: on")
             print("      4 September one unreachable cell of 144 destroyed 143 measured")
             print("      ones after five hours.")
+        forced = int(by_reason.get("forced_above_target_by_carry") or 0)
+        if forced:
+            print(f"    {forced} FORCED above the target by mandatory carries. On a chain the")
+            print("      predecessor value a task consumes is not optional, so the packet")
+            print("      pays for it whatever the budget says. rho was never the independent")
+            print("      variable in those cells. This used to ABORT the tier as a drift")
+            print("      violation, on the one configuration the packer documents as")
+            print("      overshooting BY DESIGN.")
         if refused:
             print(f"    {refused} the planner REFUSED to fragment. No rho would have helped;")
             print("      the prompt states its questions apart from its material and the")

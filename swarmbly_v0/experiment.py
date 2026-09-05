@@ -104,6 +104,8 @@ __all__ = [
     "ASSEMBLER_ENFORCED",
     "fill_constraint_columns",
     "composition_criterion",
+    "predict_rho",
+    "WORST_CASE_SUMMARY_TOKENS",
     "COMPOSITION_THRESHOLD_POINTS",
     "MIN_CLUSTERS_FOR_A_VERDICT",
     "falsifiable_go_no_go",
@@ -277,8 +279,10 @@ CSV_COLUMNS: list[str] = [
     "rho_achieved",
     "rho_floor",
     "rho_ceiling",
+    "rho_floor_realised",
     "rho_reachable",
     "rho_above_ceiling",
+    "rho_forced_above_target",
     "plan_refused",
     "tau_sem",
     "k",
@@ -1044,6 +1048,63 @@ def run_monolithic(
     return row
 
 
+WORST_CASE_SUMMARY_TOKENS: int = 40
+"""The cap `summarize_fragment` truncates a predecessor summary to.
+
+It is what makes a rho PREDICTION possible rather than a sample. A real
+summary can be shorter than this and never longer, so packing with every
+summary at the cap gives an upper bound on the achieved rho -- and a grid that
+holds inside tolerance at the bound holds for any run."""
+
+
+def predict_rho(spec: PromptSpec, contract: Contract, plan: Plan,
+                rho_target: float, summary_tokens: int = WORST_CASE_SUMMARY_TOKENS
+                ) -> float:
+    """Achieved rho for this cell, WITHOUT dispatching anything.
+
+    Three tiers died on 4 September for three different reasons -- a target
+    below the floor, a target above the ceiling, and a level-by-level chain
+    drifting +5.6 % -- and each cost hours because the only way to find out was
+    to run it. I patched the grid twice from a hypothesis and was wrong twice.
+    This stops guessing: it mirrors the allocation `run_fragmented` performs and
+    returns the number, in milliseconds.
+
+    **It is a BOUND, not a sample.** A mock sweep does not work: the drift scales
+    with how verbose the predecessor summaries are, and a mock's are short. The
+    cell that aborted the second tier read +3.9 % under a mock and +5.6 % against
+    real models. `summarize_fragment` truncates to
+    :data:`WORST_CASE_SUMMARY_TOKENS`, so packing at that cap is the worst any
+    run can do.
+
+    It duplicates the allocation in `run_fragmented`, which is a real risk --
+    two copies of a rule drift apart, and this file has paid for that. So
+    `test_the_rho_prediction_matches_what_the_sweep_actually_packs` runs both
+    over the corpus and requires them to agree.
+    """
+    filler = " ".join(["summary"] * summary_tokens)
+    summaries = {str(task.task_id): filler for task in plan.tasks}
+    per_task_target = max(24, round(contract.target_length_tokens / max(len(plan.tasks), 1)))
+    packing_contract = replace(contract, target_length_tokens=per_task_target)
+
+    prompt_tokens = max(count_tokens(spec.text), 1)
+    total_budget = rho_target * prompt_tokens
+    weights = _task_budget_weights(packing_contract, plan)
+    floors = _task_budget_floors(packing_contract, plan)
+    total_weight = sum(weights.values()) or 1.0
+    global_slack = max(0.0, total_budget - sum(floors.values()))
+
+    dispatched = 0
+    for level in plan.topological_levels():
+        level_ids = [str(t) for t in level]
+        share = (sum(floors.get(t, 0.0) for t in level_ids)
+                 + global_slack * sum(weights.get(t, 1.0) for t in level_ids) / total_weight)
+        packing = build_packets(packing_contract, plan, rho_target, summaries,
+                                budget_tokens=share, only_tasks=level_ids)
+        by_task = {p.task_id: p for p in packing.packets}
+        dispatched += sum(by_task[t].token_count for t in level_ids if t in by_task)
+    return dispatched / prompt_tokens
+
+
 def run_fragmented(
     spec: PromptSpec,
     backend: Backend,
@@ -1117,6 +1178,7 @@ def run_fragmented(
     summaries: dict[str, str] = {}
     fragments: list[Fragment] = []
     packet_tokens_total = 0
+    mandatory_tokens_total = 0
     order_index = {tid: i for i, tid in enumerate(plan.topological_order())}
     consensus_results: list[tuple[str, ConsensusResult]] = []
     # Grading and consensus are different questions and need different inputs.
@@ -1181,6 +1243,11 @@ def run_fragmented(
             # orthogonal cost reported by k and by input_tokens below. Folding
             # k into rho would make the two indistinguishable in the results.
             packet_tokens_total += packet.token_count
+            # What this packet could not be trimmed out of carrying, summed as
+            # they are actually dispatched. See `Packet.mandatory_tokens`: this
+            # is the floor that was REALLY paid, and it is the only one that
+            # cannot disagree with the packer.
+            mandatory_tokens_total += packet.mandatory_tokens
             if k > 1:
                 # n_candidates is deliberately not applied here: at the micro
                 # level the k replicas *are* the candidate set, and consensus is
@@ -1278,6 +1345,23 @@ def run_fragmented(
     # exactly like a below-floor row, and counted in the summary so the drop
     # cannot be silent.
     truthful_ceiling = packing_ceiling(packing_contract, plan, summaries)
+    # The floor that was actually PAID, from the packets as dispatched.
+    #
+    # `packing_floor` derives this, and on a level-by-level chain it under-
+    # reports: on 4 September `multi_hop_math_supply` at N=8 realised 4.10
+    # against a derived floor of 3.24, because the carries really dispatched
+    # were longer than the ones the derivation saw. The carry is MANDATORY --
+    # `build_packet` adds it to the floor rather than funding it from slack,
+    # because a packet that cannot state the value its task consumes is
+    # unanswerable and answerability outranks the budget. `build_packets` says
+    # so in as many words: "a chain whose carries exceed the target overshoots
+    # BY DESIGN, and that is a property of the cell, not a violation."
+    #
+    # It was a violation anyway, because the guard read the derived floor. With
+    # real models the summaries are longer than a mock's, so the overshoot grew
+    # past the tolerance and aborted a second five-hour tier.
+    realised_floor = mandatory_tokens_total / max(count_tokens(spec.text), 1)
+    row_forced_above = rho_target < realised_floor
     row_out_of_range = rho_target > truthful_ceiling
     if (not plan_refused and not row_out_of_range
             and rho_target >= truthful_floor and rho_target > 0):
@@ -1337,6 +1421,11 @@ def run_fragmented(
         # a measurement of rho needs the window, not just the target.
         "rho_ceiling": round(float(truthful_ceiling), 6),
         "rho_above_ceiling": row_out_of_range,
+        # The floor the packets actually paid, and whether the target was under
+        # it. A chain's mandatory carries can force this above the target, and
+        # then rho was never the independent variable for that cell.
+        "rho_floor_realised": round(float(realised_floor), 6),
+        "rho_forced_above_target": row_forced_above,
         "rho_target": rho_target,
         "rho_achieved": round(rho_achieved, 6),
         # The floor computed WITH the summaries. The optimistic floor -- taken
@@ -3770,6 +3859,8 @@ def summarize(
     n_below = sum(1 for r in excluded_rows if not _flag(r, "rho_reachable"))
     n_above = sum(1 for r in excluded_rows
                   if _flag(r, "rho_above_ceiling", default=False))
+    n_forced = sum(1 for r in excluded_rows
+                   if _flag(r, "rho_forced_above_target", default=False))
     n_refused = sum(1 for r in excluded_rows
                     if _flag(r, "plan_refused", default=False))
 
@@ -3778,6 +3869,7 @@ def summarize(
         "rows_excluded_by_reason": {
             "below_packing_floor": n_below,
             "above_packing_ceiling": n_above,
+            "forced_above_target_by_carry": n_forced,
             "plan_refused": n_refused,
             "note": (
                 "rows_excluded_below_floor is the TOTAL dropped, kept under its "

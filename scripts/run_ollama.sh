@@ -258,62 +258,74 @@ run_v0() {
   echo "  How much quality is lost to fragmentation and reassembly, and whether"
   echo "  any rho gets it under 5 %."
   echo ""
-  echo "  THE GRID MOVED, and the old one is why V0's published result was"
-  echo "  withdrawn. It swept rho 1.0-2.0 at N=2,4,8 against packing floors that"
-  echo "  run 1.43-1.68 at N=2, 1.85-2.36 at N=4 and 2.70-3.71 at N=8. Thirteen"
-  echo "  of ninety-six cells were reachable; the rho=1.00 and rho=1.25 rows had"
-  echo "  ZERO. Below the floor every packet collapses to its bare task, so the"
-  echo "  rho axis does not move and two rho labels produce byte-identical"
-  echo "  packets -- the 24.1 % -> 13.7 % curve was reading a variable that was"
-  echo "  not varying. publishable() now drops those rows, so the old grid would"
-  echo "  burn hours and emit almost nothing."
+  echo "  THREE SWEEPS, ONE PER N, and that is the result as much as the curve."
+  echo "  rho is not a free parameter: each N has a WINDOW, and the windows"
+  echo "  barely overlap."
   echo ""
-  echo "  WHY THE GRID IS UNEVEN ACROSS N, and why that is not a defect: the"
-  echo "  floor is roughly LINEAR IN N -- one contract header per packet -- so no"
-  echo "  single rho is both above the floor at N=8 and a low-context condition"
-  echo "  at N=2. The grid below is the union, chosen so every N keeps at least"
-  echo "  three reachable rho points and the three highest are reachable at ALL"
-  echo "  of them:"
+  echo "    N=2   usable 1.95 - 4.90    sweeping 2.0  2.7  3.4  4.1  4.8"
+  echo "    N=4   usable 2.95 - 6.95    sweeping 3.0  3.9  4.8  5.7  6.6"
+  echo "    N=8   usable 4.45 - 6.95    sweeping 4.5  5.0  5.5  6.0  6.5"
   echo ""
-  echo "    N=2  window [1.68, 4.90]   1.8  2.55  3.1  3.95  4.3  4.6  -- 6 points"
-  echo "    N=4  window [2.36, 8.52]        2.55  3.1  3.95  4.3  4.6  -- 5 points"
-  echo "    N=8  window [3.71, 15.63]                  3.95  4.3  4.6  -- 3 points"
+  echo "  The floor rises with N because every packet pays its own contract"
+  echo "  header. The ceiling rises too, but from a much lower base, because a"
+  echo "  packet cannot hold more than its natural context plus a FINITE"
+  echo "  expansion list. And on a CHAIN the mandatory carries force an overshoot"
+  echo "  in a band just above the floor, so the usable range starts higher"
+  echo "  still: multi_hop_math_supply at N=8 has a floor of 2.80 and cannot hold"
+  echo "  a target below 4.45 without drifting 20 %."
   echo ""
-  echo "  A WINDOW, not a floor. The first version of this grid topped out at"
-  echo "  5.5 and the N=2 ceiling is 4.90: the run died five hours in, at the"
-  echo "  fifth of six rho points, and took 143 measured cells with it. A packet"
-  echo "  cannot hold more than its mandatory blocks plus its natural context"
-  echo "  plus a FINITE expansion list, so above the ceiling the cell undershoots"
-  echo "  its own label exactly as it collapses below the floor. Every point"
-  echo "  above sits inside its window with 6 % to spare on both ends, which is"
-  echo "  wider than the 5 % drift tolerance, and a test asserts it."
+  echo "  A single grid across all three N is therefore impossible on this"
+  echo "  corpus. N=8 cannot start below 4.45 and N=2 cannot go above 4.90:"
+  echo "  the common window is 0.45 wide. Comparing N at fixed rho is honest"
+  echo "  only at 4.5 and 4.8, and nowhere else."
   echo ""
-  echo "  Read the rho curve WITHIN one N. Comparing N at fixed rho is only"
-  echo "  honest in the overlap -- 3.75 and above -- and the console prints [n=]"
-  echo "  beside each point so a curve resting on two cells cannot be mistaken"
-  echo "  for one resting on eight. At 2.5 and 3.0 the N=8 arm keeps only the"
-  echo "  prompts whose own floor is below the target, so those points rest on a"
-  echo "  DIFFERENT prompt subset and must not be joined to the others."
+  echo "  THAT THIS IS TRUE AT ALL IS THE FINDING. SPEC 11.5 asks for rho < 2.0."
+  echo "  The N=8 arm cannot be run below 4.45 on this corpus. The target is not"
+  echo "  merely unmet, it is unreachable, and no sweep can reach it."
   echo ""
-  echo "  THAT THE GRID HAS TO START AT 1.75 IS ITSELF THE RESULT. SPEC 11.5"
-  echo "  asks for rho < 2.0 and the floor at N=8 is 3.71 on this corpus: the"
-  echo "  target is unattainable, not merely unmet, and no sweep can reach it."
+  echo "  This grid is VERIFIED before a single token is dispatched. Three tiers"
+  echo "  died on 4 September -- below floor, above ceiling, and a chain drifting"
+  echo "  -- and I hand-patched the grid twice from a hypothesis and was wrong"
+  echo "  twice. scripts/check_grid.py packs every cell with worst-case summaries"
+  echo "  and reports the achieved rho in seconds. It runs first, below."
   echo "  Output: $out"
   mkdir -p "$out"
-  run_tier v0 "$out" \
-    python3 -m swarmbly_v0 run \
-    --backend openai --embedder api \
-    --rho 1.8,2.55,3.1,3.95,4.3,4.6 --n 2,4,8 --k 1 \
-    --candidates 2 --seed 0 \
-    --out "$out" || return 1
+
+  # The gate. Seconds against the hours each of the three failures cost.
+  local n rhos
+  for n in 2 4 8; do
+    case "$n" in
+      2) rhos="2.0,2.7,3.4,4.1,4.8" ;;
+      4) rhos="3.0,3.9,4.8,5.7,6.6" ;;
+      8) rhos="4.5,5.0,5.5,6.0,6.5" ;;
+    esac
+    python3 scripts/check_grid.py --rho "$rhos" --n "$n" --quiet \
+      || die "the v0 grid at N=$n would not measure its own labels. Nothing was
+  dispatched. Run scripts/check_grid.py --suggest --n $n for the rho values that
+  hold on this corpus."
+  done
+  echo "  grid verified: every cell packs within tolerance at every N"
+
+  for n in 2 4 8; do
+    case "$n" in
+      2) rhos="2.0,2.7,3.4,4.1,4.8" ;;
+      4) rhos="3.0,3.9,4.8,5.7,6.6" ;;
+      8) rhos="4.5,5.0,5.5,6.0,6.5" ;;
+    esac
+    bold "  -- N=$n, rho $rhos"
+    run_tier "v0-N$n" "$out/N$n" \
+      python3 -m swarmbly_v0 run \
+      --backend openai --embedder api \
+      --rho "$rhos" --n "$n" --k 1 \
+      --candidates 2 --seed 0 \
+      --out "$out/N$n" || return 1
+  done
   echo ""
-  bold "  Check FIRST, before reading any curve:"
-  echo "    rows_excluded_below_floor  -- expected non-zero and concentrated in"
-  echo "                                  the N=8 rows at 1.75-3.0. A count near"
-  echo "                                  the row total means the floors moved"
-  echo "                                  and this grid needs recomputing."
-  echo "    rho_fidelity               -- achieved against target, per cell."
-  echo "  -> $out/summary.json"
+  bold "  Read the rho curve WITHIN one N."
+  echo "  Comparing N at fixed rho is honest only at 4.5 and 4.8, where all three"
+  echo "  windows overlap. Anywhere else the arms are at different rho and the"
+  echo "  comparison is confounded -- which is what happened to tables-final."
+  echo "  -> $out/N2 $out/N4 $out/N8"
 }
 
 run_v3c_ff() {

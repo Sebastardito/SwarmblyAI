@@ -356,6 +356,11 @@ def build_packet(
         task_tokens=task_tokens,
         blocks_included=tuple(names),
         truncated=truncated,
+        # What this packet could not be talked out of carrying. Recorded here,
+        # where it is computed, so no caller has to re-derive it and get a
+        # different answer -- which is exactly how the floor and the packer
+        # disagreed twice.
+        mandatory_tokens=mandatory_tokens,
     )
 
 

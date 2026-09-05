@@ -161,6 +161,19 @@ class Packet:
     task_tokens: int
     blocks_included: tuple[str, ...] = ()
     truncated: bool = False
+    mandatory_tokens: int = 0
+    """Task block + contract header + mandatory carry: what could not be trimmed.
+
+    Recorded BY the packer rather than re-derived from the plan, and that is the
+    point. ``packing_floor`` derives the same quantity and has disagreed with
+    the packer twice: once when it summed task blocks and omitted the header,
+    and again on 4 September when a level-by-level chain realised 4.10 against a
+    derived floor of 3.24, because the carries actually dispatched were longer
+    than the ones the derivation saw.
+
+    The sum of this across a plan's packets is the floor that was REALLY paid,
+    and a target below it was never controllable -- so the drift invariant must
+    not read that overshoot as a defect."""
 
 
 @dataclass

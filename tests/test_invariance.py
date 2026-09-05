@@ -1421,52 +1421,101 @@ def _floors(corpus: Path | None, n_values: list[int]) -> dict[int, float]:
     return {n: lo for n, (lo, _) in _windows(corpus, n_values).items()}
 
 
-def test_every_N_in_the_v0_grid_keeps_at_least_three_reachable_rho_points() -> None:
-    """A curve needs points, and a point below the floor is not one.
+def _v0_grid_by_n() -> dict[int, list[float]]:
+    """The rho list `run_v0` sweeps at each N, read from its own case statement.
 
-    The floor is roughly linear in N -- one contract header per packet -- so no
-    single rho is both above the floor at N=8 and a low-context condition at
-    N=2. The grid is therefore uneven on purpose, and what has to hold is that
-    each N keeps enough points to be a curve rather than a dot.
+    v0 is three sweeps now, one per N, because a single grid across all three is
+    impossible on this corpus: N=8 cannot start below 4.45 and N=2 cannot go
+    above 4.90, so the common window is 0.45 wide.
     """
-    rhos, ns = _grid(_tier_body("v0"))
-    floors = _floors(None, ns)
-    for n_tasks in ns:
-        reachable = [r for r in rhos if r > floors[n_tasks]]
-        assert len(reachable) >= 3, (
-            f"N={n_tasks} has floor {floors[n_tasks]:.3f} and only "
-            f"{len(reachable)} of {len(rhos)} rho points above it "
-            f"({reachable}); a rho curve cannot be read from fewer than three")
+    import re as _re
+
+    body = _tier_body("v0")
+    grid: dict[int, list[float]] = {}
+    pattern = r'(\d+)\)\s+rhos="([\d.,]+)"'
+    for n_text, rhos in _re.findall(pattern, body):
+        grid[int(n_text)] = [float(v) for v in rhos.split(",")]
+    return grid
 
 
-def test_the_v0_grid_has_an_overlap_where_N_can_be_compared() -> None:
-    """Comparing N at fixed rho is only honest where every N is above its floor.
+def test_every_v0_cell_would_measure_its_own_label() -> None:
+    """The whole class, checked the way the runner checks it before dispatching.
 
-    Outside the overlap a cell keeps only the prompts whose own floor is below
-    the target, so the point rests on a different prompt subset -- which is the
-    quiet version of the same defect: the figure is not wrong, it is about
-    different prompts than the one beside it.
+    This replaces four tests that each encoded a PARTIAL theory of what makes a
+    rho unreachable -- a floor, then a ceiling, then a margin -- and each was
+    written after a tier died of the reason it did not know about. Three tiers,
+    three causes, and I hand-patched the grid twice from a hypothesis and was
+    wrong twice.
+
+    So this asserts the thing that actually matters, using the same predictor
+    the runner gates on: every cell packs within tolerance. It needs no theory
+    of why a cell might not.
     """
-    rhos, ns = _grid(_tier_body("v0"))
-    floors = _floors(None, ns)
-    overlap = [r for r in rhos if all(r > floors[n] for n in ns)]
-    assert len(overlap) >= 2, (
-        f"no rho in {rhos} clears every floor {floors}; N cannot be compared at "
-        f"fixed rho anywhere in this grid")
+    from swarmbly_v0.experiment import (RHO_TOLERANCE, load_prompts, predict_rho,
+                                        DEFAULT_PROMPTS_PATH, _answer_budget)
+    from swarmbly_v0.backends import MockBackend
+    from swarmbly_v0.planner import global_contract, plan as build_plan
+
+    grid = _v0_grid_by_n()
+    assert set(grid) == {2, 4, 8}, f"expected a rho list per N, got {sorted(grid)}"
+
+    backend = MockBackend()
+    specs = load_prompts(str(DEFAULT_PROMPTS_PATH))
+    offences: list[str] = []
+    for spec in specs:
+        contract = global_contract(spec.text, backend,
+                                   target_length_tokens=_answer_budget(spec, 420))
+        for n_tasks, rhos in grid.items():
+            plan = build_plan(spec.text, backend, n_tasks=n_tasks,
+                              contract=contract,
+                              answer_sheet=spec.has_ground_truth)
+            for rho in rhos:
+                achieved = predict_rho(spec, contract, plan, rho)
+                drift = abs(achieved - rho) / rho
+                if drift > RHO_TOLERANCE:
+                    offences.append(
+                        f"{spec.prompt_id} rho={rho} N={n_tasks}: predicted "
+                        f"{achieved:.3f} ({drift * 100:+.1f}%)")
+    assert not offences, (
+        "these cells would not measure their own label, and each one either "
+        "aborts the tier or -- worse -- stays inside tolerance and mislabels a "
+        "published cell:\n  " + "\n  ".join(offences[:10]))
+    assert sum(len(v) for v in grid.values()) >= 12, "too few cells to be a curve"
+
+
+def test_the_v0_windows_barely_overlap_and_the_runner_says_so() -> None:
+    """Comparing N at fixed rho is honest in a 0.45-wide band and nowhere else.
+
+    N=8 cannot be packed below 4.45 -- its floor is lower, but on a chain the
+    mandatory carries force an overshoot in the band just above it -- and N=2
+    cannot exceed 4.90. That is not a nuisance to route around, it is the
+    finding: the architecture cannot hold N and rho independent.
+
+    `tables-final` is what happens when this is not said. Its two arms ran at
+    3.38 and 3.51 under one label.
+    """
+    body = _tier_body("v0")
+    assert "4.5" in body and "4.8" in body, (
+        "the overlap points must actually be swept, or no cross-N comparison "
+        "is possible at all")
+    assert "honest only at 4.5 and 4.8" in body, (
+        "the runner must tell the operator where a cross-N comparison is valid; "
+        "tables-final compared two arms at different rho under one label")
 
 
 def test_the_spec_target_is_recorded_as_unattainable_and_not_merely_unmet() -> None:
-    """SPEC 11.5 asks for rho < 2.0. The floor at N=8 makes that impossible.
+    """SPEC 11.5 asks for rho < 2.0. The N=8 arm cannot be packed below 4.45.
 
     Worth a test rather than a note: an unmet target invites another sweep, and
-    an unattainable one is a claim to revise. Every sweep aimed below the floor
-    is a night spent measuring a configuration nobody chose, and three have been.
+    an unattainable one is a claim to revise. Four nights have now gone to
+    sweeps aimed at rho values that cannot be reached.
     """
-    _, ns = _grid(_tier_body("v0"))
-    floors = _floors(None, ns)
-    assert max(floors.values()) > 2.0, (
-        f"floors {floors} are all under 2.0, so SPEC 11.5's target is reachable "
-        f"after all and this test -- and the runner's claim -- must be removed")
+    grid = _v0_grid_by_n()
+    assert min(grid[8]) > 2.0, (
+        f"the N=8 sweep starts at {min(grid[8])}; if it can start below 2.0 "
+        f"then SPEC 11.5's target is reachable and both this test and the "
+        f"runner's claim must be removed")
+    assert "unreachable" in _tier_body("v0")
 
 
 @pytest.mark.parametrize("tier", ["v0", "v3c-gt", "v3c-ff", "tables-dev",
@@ -1810,44 +1859,6 @@ def test_the_smoke_tier_points_at_the_tiers_that_carry_a_verdict() -> None:
 # The grid was mine. I checked one bound and not the other, which is the same
 # mistake the floor exists to prevent, on the other side.
 # --------------------------------------------------------------------------- #
-
-
-def test_every_v0_rho_point_sits_inside_its_window_with_margin() -> None:
-    """Both bounds, with more headroom than the drift tolerance.
-
-    6 % on each end against a 5 % tolerance, because a point that merely clears
-    the ceiling still fails when the packer lands slightly under it -- which is
-    exactly how the tables corpus produced a systematic -3.4 % undershoot that
-    passed the fidelity check and left the declared cell mislabelled.
-    """
-    from swarmbly_v0.experiment import RHO_TOLERANCE
-
-    margin = 1.06
-    assert margin > 1 + RHO_TOLERANCE, (
-        f"the grid margin {margin} must exceed the drift tolerance "
-        f"{RHO_TOLERANCE}, or a point can clear the check and still drift out")
-
-    rhos, ns = _grid(_tier_body("v0"))
-    windows = _windows(None, ns)
-    for n_tasks in ns:
-        low, high = windows[n_tasks]
-        usable = [r for r in rhos if low * margin <= r <= high / margin]
-        assert len(usable) >= 3, (
-            f"N={n_tasks} has window [{low:.3f}, {high:.3f}] and only "
-            f"{len(usable)} of {len(rhos)} rho points inside it with margin "
-            f"({usable}); a rho curve cannot be read from fewer than three")
-    for rho in rhos:
-        for n_tasks in ns:
-            low, high = windows[n_tasks]
-            if rho > high:
-                assert rho > windows[min(ns)][1] or True
-    # No point may sit above the ceiling of the SMALLEST N it is swept at, which
-    # is the specific mistake: 5.5 was fine at N=8 and impossible at N=2.
-    worst_ceiling = min(high for _, high in windows.values())
-    assert max(rhos) <= worst_ceiling, (
-        f"the grid tops out at {max(rhos)} and the tightest ceiling across "
-        f"N={ns} is {worst_ceiling:.3f}. That cell cannot be packed, and before "
-        f"4 September it aborted the entire tier rather than being dropped.")
 
 
 def test_a_target_above_the_ceiling_is_dropped_and_not_raised() -> None:
