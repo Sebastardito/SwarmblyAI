@@ -242,6 +242,146 @@ is the confound the answer-key corpora exist to avoid and this one must not
 reintroduce."""
 
 
+# --------------------------------------------------------------------------- #
+# CORPUS v2 -- 36 sujetos nuevos, ningun termino compartido con v1.
+#
+# Existe porque el split final de v1 se usa por SEGUNDA vez en
+# `comp-final-once`, y el valor de un split final viene de evaluarse una sola
+# vez. Un tercer uso exige corpus nuevo, y esto es ese corpus.
+#
+# Se genera con la MISMA funcion `composition()`, los mismos tiers y el mismo
+# `digest()` que v1. Un segundo generador que construyera los prompts a su
+# manera haria que las dos mediciones no fueran comparables, y la diferencia se
+# atribuiria al corpus en vez de a la tuberia -- que es exactamente el error que
+# `enforce_term_once` viviendo en un solo lugar evita del otro lado.
+#
+# Lo unico que cambia es la lista de sujetos, la semilla y el prefijo del id.
+# --------------------------------------------------------------------------- #
+
+SEED_V2 = 20260905
+OUT_V2 = Path(__file__).resolve().parent.parent / "prompts" / "composition_v2.json"
+
+TOPICS_V2: list[tuple[str, str, list[str]]] = [
+    ("foundry_pour",
+     "Describe how a small foundry sequences pours when one furnace goes down for relining.",
+     ['pour window', 'ladle turn', 'mould yard', 'scrap mix']),
+    ("locks_traffic",
+     "Explain how a canal lock keeper orders traffic when one chamber is under repair.",
+     ['chamber cycle', 'queue mark', 'water level', 'passage fee']),
+    ("apiary_move",
+     "Explain how a beekeeper plans moving hives to a new forage site before a nectar flow.",
+     ['forage radius', 'hive weight', 'flight line', 'move night']),
+    ("saltworks_pans",
+     "Describe how a coastal saltworks decides which pans to harvest after unsettled weather.",
+     ['brine depth', 'rake pass', 'crust grade', 'pan order']),
+    ("kiln_firing",
+     "Explain how a pottery workshop schedules a shared kiln across several makers.",
+     ['firing slot', 'shelf plan', 'glaze batch', 'cool rate']),
+    ("fishmarket_grade",
+     "Describe how an early fish market grades and routes a landing before the floor opens.",
+     ['landing note', 'ice cover', 'size grade', 'buyer lot']),
+    ("observatory_night",
+     "Explain how a small observatory allocates a clear night between competing programmes.",
+     ['seeing grade', 'slew budget', 'filter set', 'target list']),
+    ("cobbler_repairs",
+     "Describe how a shoe repair shop orders a week of work when one machine is out.",
+     ['sole stock', 'last size', 'repair ticket', 'collection day']),
+    ("pumphouse_flood",
+     "Explain how a drainage pumphouse manages a rising level with one pump derated.",
+     ['sump level', 'run hours', 'outfall gate', 'duty pump']),
+    ("bindery_run",
+     "Describe how a bindery sequences jobs when a folding machine needs a long changeover.",
+     ['signature count', 'grain direction', 'case stock', 'trim margin']),
+    ("greenhouse_heat",
+     "Explain how a commercial greenhouse manages heating through an unusually cold week.",
+     ['vent stage', 'pipe temperature', 'screen position', 'crop stage']),
+    ("ropeworks_twist",
+     "Describe how a ropeworks plans a run when the laying floor is shortened by repairs.",
+     ['lay length', 'yarn count', 'twist rate', 'floor pass']),
+    ("ferrier_round",
+     "Explain how a farrier plans a round of yard visits after a lame horse is added.",
+     ['shoe stock', 'yard order', 'trim interval', 'forge time']),
+    ("chandlery_stock",
+     "Describe how a chandlery restocks before a regatta with limited storage.",
+     ['stock run', 'order lead', 'size range', 'counter space']),
+    ("weir_survey",
+     "Explain how a river trust plans a weir survey between two rainfall events.",
+     ['flow window', 'gauge board', 'access point', 'survey pair']),
+    ("tannery_soak",
+     "Describe how a tannery sequences batches when one soaking pit is out of service.",
+     ['soak time', 'pit rotation', 'hide grade', 'float ratio']),
+    ("cartography_field",
+     "Explain how a mapping team plans field checks after an aerial survey finds gaps.",
+     ['check point', 'route loop', 'daylight budget', 'gap list']),
+    ("icehouse_stock",
+     "Describe how an ice house manages stock across a warm spell with limited delivery slots.",
+     ['block count', 'melt rate', 'door cycle', 'delivery slot']),
+    ("mill_race",
+     "Explain how a working watermill manages grinding when the race silts up.",
+     ['head level', 'stone dress', 'grist order', 'clearing day']),
+    ("puppetry_tour",
+     "Describe how a touring puppet company plans a week of village halls with one van.",
+     ['get-in time', 'rig height', 'case load', 'hall list']),
+    ("seedbank_intake",
+     "Explain how a seed bank processes an intake of wild collections before winter.",
+     ['moisture level', 'accession number', 'viability test', 'store shelf']),
+    ("brickfield_dry",
+     "Describe how a brickfield manages green brick drying through a humid fortnight.",
+     ['hack row', 'drying rate', 'cover sheet', 'clay batch']),
+    ("stationhouse_relief",
+     "Explain how a remote station house arranges relief cover during a signalling upgrade.",
+     ['shift pattern', 'relief crew', 'possession window', 'token working']),
+    ("cider_press",
+     "Describe how a cider press schedules a run when fruit arrives faster than expected.",
+     ['press cycle', 'juice yield', 'vat space', 'fruit grade']),
+    ("herbarium_mount",
+     "Explain how a herbarium plans mounting and filing after a large donation.",
+     ['sheet stock', 'label set', 'filing order', 'mount queue']),
+    ("lifeboat_drill",
+     "Describe how a lifeboat station plans crew drills around tide and daylight.",
+     ['launch window', 'crew roster', 'slip condition', 'drill type']),
+    ("weaving_warp",
+     "Explain how a weaving shed plans a warp change with two looms out of action.",
+     ['warp length', 'reed count', 'beam stock', 'loom order']),
+    ("compost_site",
+     "Describe how a composting site manages windrows through a wet autumn.",
+     ['turn interval', 'moisture band', 'row spacing', 'screen date']),
+    ("bellfoundry_hang",
+     "Explain how a bell foundry plans a rehanging in a tower with restricted access.",
+     ['headstock fit', 'tower access', 'lift order', 'tuning check']),
+    ("cranefield_lift",
+     "Describe how a yard plans a heavy lift when the wind forecast is marginal.",
+     ['gust limit', 'lift plan', 'ground bearing', 'sling set']),
+    ("optician_lab",
+     "Explain how a small lens laboratory sequences work when the edger needs servicing.",
+     ['lens blank', 'edge job', 'frame trace', 'collection date']),
+    ("mushroom_house",
+     "Describe how a mushroom house manages flushes across rooms with one cooler failing.",
+     ['flush stage', 'room air', 'pick round', 'casing depth']),
+    ("clocktower_service",
+     "Explain how a clock tower service is planned around a public holiday.",
+     ['strike train', 'access ladder', 'regulation check', 'service day']),
+    ("saltmarsh_graze",
+     "Describe how a saltmarsh grazing plan is set around spring tides.",
+     ['stocking rate', 'tide table', 'fence line', 'graze block']),
+    ("bookbus_route",
+     "Explain how a mobile library sets a route when one village hall closes.",
+     ['stop time', 'shelf load', 'route leg', 'borrower count']),
+    ("charcoal_burn",
+     "Describe how a charcoal burner plans a kiln cycle across changeable weather.",
+     ['burn cycle', 'wood stack', 'vent control', 'cool period']),
+]
+
+
+CORPORA: dict[str, dict] = {
+    "v1": {"topics": TOPICS, "seed": SEED, "out": OUT, "prefix": "comp36"},
+    "v2": {"topics": TOPICS_V2, "seed": SEED_V2, "out": OUT_V2, "prefix": "c36v2"},
+}
+"""Los dos corpus, por nombre. v1 no se toca: su digest es e9e382b9... y hay un
+test que lo fija, porque un umbral congelado contra ese digest deja de aplicar
+si un solo caracter se mueve."""
+
+
 def composition(topic_id: str, instruction: str, terms: list[str],
                 tier: str, forbidden: str) -> dict:
     """One two-paragraph task with its constraint set, at one difficulty tier.
@@ -317,7 +457,7 @@ def _join(terms: list[str]) -> str:
     return ", ".join(terms)
 
 
-def build(seed: int = SEED) -> list[dict]:
+def build(seed: int = SEED, corpus: str = "v1") -> list[dict]:
     """The corpus, with tier and split assigned by position.
 
     No randomness is needed and none is used: the topics are written out in
@@ -331,11 +471,12 @@ def build(seed: int = SEED) -> list[dict]:
     two halves incomparable -- a way of breaking a split that leaves the digest
     intact and would not be visible in a diff.
     """
+    spec = CORPORA[corpus]
     prompts: list[dict] = []
-    for index, (topic_id, instruction, terms) in enumerate(TOPICS):
+    for index, (topic_id, instruction, terms) in enumerate(spec["topics"]):
         tier = TIER_ORDER[index % len(TIER_ORDER)]
         prompt = composition(
-            f"comp36_{topic_id}", instruction, terms, tier,
+            f"{spec['prefix']}_{topic_id}", instruction, terms, tier,
             HEDGES[index % len(HEDGES)])
         prompt["split"] = "dev" if (index // len(TIER_ORDER)) % 3 == 0 else "final"
         prompts.append(prompt)
@@ -357,16 +498,25 @@ def digest(prompts: list[dict]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default=str(OUT))
-    parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--corpus", choices=sorted(CORPORA), default="v1",
+                        help="v1 is the frozen 36-prompt corpus every published "
+                             "composition figure was measured on. v2 is the "
+                             "replacement, built because the v1 final split is "
+                             "used a second time by comp-final-once and a third "
+                             "use needs prompts nobody has seen.")
+    parser.add_argument("--out", default=None)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument(
         "--verify", action="store_true",
         help="Rebuild and compare against the digest already in --out. Exit 1 on "
              "a mismatch. Run this before quoting a result against this corpus.")
     args = parser.parse_args()
+    spec = CORPORA[args.corpus]
+    seed = args.seed if args.seed is not None else spec["seed"]
+    out = args.out if args.out is not None else str(spec["out"])
 
-    prompts = build(args.seed)
-    path = Path(args.out)
+    prompts = build(seed, args.corpus)
+    path = Path(out)
     current = digest(prompts)
 
     if args.verify:
@@ -403,7 +553,7 @@ def main() -> int:
         f"split, whatever the digest says.")
 
     payload = {
-        "_seed": args.seed,
+        "_seed": seed,
         "_frozen": {
             "sha256": current,
             "dev": sorted(p["id"] for p in dev),

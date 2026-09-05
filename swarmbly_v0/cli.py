@@ -63,6 +63,13 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--editor", action="store_true",
                      help="also run the post-processing editor arm, paired with each "
                           "unedited cell (adds one condition, not one flag)")
+    run.add_argument("--enforce-term-once", action="store_true",
+                     help="enforce term_once MECHANICALLY at assembly -- keep the "
+                          "first sentence carrying each once-term, drop the rest -- "
+                          "instead of asking the model for it. Changes the delivered "
+                          "answer for every cell, so it is a separate run and not a "
+                          "paired arm; comp-oracle measured it at 14/24 against the "
+                          "shipped pipeline's 6/24")
     run.add_argument("--backend", default="mock",
                      help="mock | openai (any OpenAI-compatible endpoint)")
     run.add_argument("--embedder", default="hash",
@@ -157,6 +164,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         ns=tuple(args.n),
         ks=tuple(args.k),
         editors=(False, True) if args.editor else (False,),
+        enforce_term_once=bool(getattr(args, "enforce_term_once", False)),
         carries=(False, True) if args.typed_carry else (False,),
         seed=args.seed,
         backend_name=args.backend,

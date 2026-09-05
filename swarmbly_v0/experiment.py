@@ -50,7 +50,8 @@ from .consensus import (
     segment_units,
 )
 from .composition_trace import build_trace, render_trace
-from .constraints import asserts_an_aggregate, check_numeric_fidelity, is_source_table_row
+from .constraints import (asserts_an_aggregate, check_numeric_fidelity,
+                          enforce_term_once, is_source_table_row)
 from .editor import EditorReport, edit_assembled
 from .stats import cluster_bootstrap
 from .grading import _optional_score, grade_units
@@ -308,6 +309,8 @@ CSV_COLUMNS: list[str] = [
     "output_tokens",
     "coherence_tax_booook",
     "coherence_tax_booook_full",
+    "term_once_enforced",
+    "term_once_sentences_removed",
     "seam_error_rate_delta",
     "coherence_tax_entity_grid",
     "quality_tax_judge",
@@ -474,6 +477,15 @@ class SweepConfig:
     untyped twin at the same prompt, N and k.
     """
     editors: tuple[bool, ...] = (False,)
+    enforce_term_once: bool = False
+    """Enforce `term_once` mechanically at assembly instead of asking for it.
+
+    A flag rather than an arm, deliberately. `editors` and `carries` are
+    tuples because both arms are meant to run PAIRED in one sweep against a
+    shared baseline. This is not: it changes the delivered answer for every
+    cell, and a sweep producing both would have two `fragmented` conditions
+    under one label -- the pooling defect this file has corrected four
+    times. To compare with and without, run two tiers."""
     """Whether the post-processing editor runs, swept as a condition of its own.
 
     A third arm rather than a flag, because the only interesting question about
@@ -1117,6 +1129,7 @@ def run_fragmented(
     contract: Contract | None = None,
     k: int = 1,
     use_editor: bool = False,
+    enforce_term_once_mechanically: bool = False,
     typed_carry: bool = False,
 ) -> dict[str, Any]:
     """One cell of the sweep: plan, pack at ``rho_target``, generate, assemble.
@@ -1386,6 +1399,31 @@ def run_fragmented(
     # edited answer measured with the unedited answer's numbers would be the
     # nicest-looking bug in the file.
     assembled_text = assembly.text
+
+    # `term_once` at the assembler, opt in.
+    #
+    # The oracle run of 5 September measured this: moving "exactly once" off the
+    # generation side and onto the assembler took it from 6/24 -- the shipped
+    # pipeline's score, and identical to a redundant oracle's -- to 14/24, ABOVE
+    # the monolithic arm's 13/24. It cost two `must_mention` and two
+    # `words_per_paragraph`, both from deleted sentences that carried something
+    # else.
+    #
+    # It is the same shape of constraint as `paragraph_count` and
+    # `words_per_paragraph`, which the assembler has always enforced this way: a
+    # property of the finished text, checkable by counting. Only history put it
+    # on the generation side.
+    #
+    # DEFAULT OFF, because it changes the delivered answer and every published
+    # composition figure was produced without it. It ships behind a flag, gets
+    # its own dev run and its own preregistered cell, and becomes the default
+    # only if that run says so. The exact function the oracle measured --
+    # `constraints.enforce_term_once` -- is the one called here, so the two
+    # cannot drift.
+    term_once_removed = None
+    if enforce_term_once_mechanically and spec.constraints:
+        assembled_text, term_once_removed = enforce_term_once(
+            assembled_text, spec.constraints)
     editor_report = None
     if use_editor and not spec.constraints:
         # The arm was requested and there is nothing mechanically checkable to
@@ -1410,6 +1448,12 @@ def run_fragmented(
     row = _base_row(spec, config, backend)
     row.update({
         "condition": "fragmented+editor" if use_editor else "fragmented",
+        # Blank, not 0, when the pass did not run: "ran and removed nothing" and
+        # "did not run" are different facts, and this file has corrected that
+        # confusion twice already.
+        "term_once_sentences_removed": ("" if term_once_removed is None
+                                        else term_once_removed),
+        "term_once_enforced": bool(enforce_term_once_mechanically),
         "typed_carry": bool(typed_carry),
         "n_tasks": len(plan.tasks),
         "n_levels": len(plan.topological_levels()),
@@ -1733,6 +1777,7 @@ def run_sweep(
                             contract=contracts[spec.prompt_id],
                             k=k,
                             use_editor=use_editor,
+                            enforce_term_once_mechanically=cfg.enforce_term_once,
                             typed_carry=carry,
                         )
                         rows.append(row)
@@ -1763,6 +1808,15 @@ def run_sweep(
         "accept_threshold": cfg.accept_threshold,
         "alphas_calibrated": False,
         "router_threshold": cfg.router_threshold,
+        # Which assembly pipeline produced this run.
+        #
+        # It travels in the metadata for the same reason corpus_frozen_sha256
+        # and code_sha256 do: a -final tier inherits a threshold from a -dev
+        # run, and a threshold fitted by a pipeline that enforced term_once
+        # mechanically does not apply to one that did not. Without this the two
+        # halves could be paired silently, and the pairing is the whole point of
+        # the split.
+        "enforce_term_once": bool(cfg.enforce_term_once),
         "tau_calibration": calibration.as_dict() if calibration else None,
         "harness_validation_only": getattr(engine, "name", "") == "mock",
         "transport": str(getattr(engine, "transport", "") or cfg.backend_name),

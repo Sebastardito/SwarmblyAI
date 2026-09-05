@@ -1579,10 +1579,21 @@ def test_both_final_tiers_check_the_code_that_fitted_their_threshold() -> None:
     runner = RUNNER.read_text()
     assert "def assert_same_code_as_dev" in runner or \
         "assert_same_code_as_dev()" in runner, "the gate does not exist"
-    for tier in ("run_tables_final", "run_comp_final"):
+    # Directly, or through the shared `read_dev_run` gate -- which itself must
+    # call it, checked below. The indirection arrived with `comp-final-once`,
+    # where a fifth thing had to be inherited (which assembly pipeline fitted
+    # the threshold) and duplicating four checks into a second tier would have
+    # been the way the two copies drift apart.
+    for tier in ("run_tables_final", "run_comp_final", "run_comp_final_once",
+                 "run_comp_final_v2"):
         body = _tier_body(tier[len("run_"):])
-        assert "assert_same_code_as_dev" in body, (
+        assert ("assert_same_code_as_dev" in body or "read_dev_run" in body), (
             f"{tier} does not compare its dev run's code fingerprint")
+    shared = runner[runner.index("read_dev_run() {"):]
+    shared = shared[:shared.index("\n}\n")]
+    assert "assert_same_code_as_dev" in shared, (
+        "every -final tier now inherits the fingerprint check through "
+        "read_dev_run; if that call goes, all of them lose it at once")
     # No escape hatch. Checked against the shapes an override actually takes --
     # an environment variable or a parsed flag -- rather than against the word
     # "--force", which appears in the gate's own comment explaining why there
@@ -1790,9 +1801,30 @@ def test_every_invocation_the_runner_prints_is_one_it_accepts() -> None:
     import re as _re
 
     script = RUNNER.read_text(encoding="utf-8")
-    known = {"smoke", "v0", "v3c", "v3c-gt", "v3c-ff", "v4",
-             "tables-dev", "tables-final", "comp-dev", "comp-final", "all"}
-    takes_a_directory = {"tables-final", "comp-final"}
+    # Both sets are DERIVED from the dispatch table, not written out here.
+    #
+    # They used to be hardcoded, and on 5 September four tiers were added and
+    # this test failed on all four -- correctly by its own rule, and for a
+    # reason that had nothing to do with what it exists to catch. A list a human
+    # must remember to update is the stale-instruction defect wearing a test's
+    # clothes: it fails when the script is right, which trains whoever hits it
+    # to edit the test rather than read it.
+    #
+    # A tier exists if the case statement dispatches it. A tier takes an
+    # argument if its dispatch forwards "$@". Both are facts about the script.
+    dispatch = script[script.index('case "$TIER" in'):]
+    dispatch = dispatch[:dispatch.index("\nesac")]
+    known = {name
+             for group in _re.findall(r"^\s{0,4}([a-z0-9|-]+)\)", dispatch, _re.M)
+             for name in group.split("|")}
+    takes_a_directory = {
+        name
+        for group in _re.findall(r"^\s{0,4}([a-z0-9|-]+)\)\s+run_\w+\s+\"\$@\"",
+                                 dispatch, _re.M)
+        for name in group.split("|")}
+    assert {"smoke", "v0", "comp-dev", "comp-final"} <= known, (
+        f"the dispatch table is not being read; found {sorted(known)}")
+    assert "comp-final" in takes_a_directory
 
     # Only lines the script PRINTS -- echo, bold, die, and the printed body of a
     # die. The dispatch table and the header comment are not instructions.
@@ -2075,6 +2107,7 @@ def test_the_runner_has_a_rehearsal_mode_and_it_stays_honest() -> None:
 
 @pytest.mark.parametrize("tier", ["smoke", "v0", "v3c", "v3c-gt", "v3c-ff",
                                   "tables-dev", "comp-dev", "comp-dev-k3",
+                                  "comp-dev-once", "comp-dev-v2",
                                   "comp-oracle"])
 def test_every_tier_rehearses_clean(tier: str) -> None:
     """Run the tier. End to end. Through the runner. Every one of them.

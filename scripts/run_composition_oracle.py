@@ -104,12 +104,12 @@ from typing import Any, Mapping, Sequence
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from swarmbly_v0.backends import get_backend, get_embedder  # noqa: E402
-from swarmbly_v0.constraints import grade_text  # noqa: E402
+from swarmbly_v0.constraints import (enforce_term_once,  # noqa: E402
+                                     grade_text)
 from swarmbly_v0.experiment import (ASSEMBLER_ENFORCED, PromptSpec,  # noqa: E402
                                     SweepConfig, _answer_budget,
                                     run_fragmented, run_monolithic)
 from swarmbly_v0.planner import global_contract  # noqa: E402
-from swarmbly_v0.textutil import split_sentences  # noqa: E402
 
 ARMS = ("monolithic", "oracle-exclusive", "oracle-redundant",
         "oracle-redundant-dedup", "real")
@@ -222,57 +222,6 @@ def allocate(constraints: Sequence[Mapping[str, Any]], n_fragments: int,
                 if index != owner:
                     brief["must_avoid"].append(term)
     return briefs
-
-
-def deduplicate_term_once(text: str, constraints: Sequence[Mapping[str, Any]]
-                          ) -> tuple[str, int]:
-    """Keep the FIRST sentence carrying each ``term_once`` term, drop the rest.
-
-    The architecture proposal this run produced, made testable rather than
-    argued. ``paragraph_count`` and ``words_per_paragraph`` are already
-    satisfied mechanically by the assembler rather than by asking a model
-    nicely; ``term_once`` is the same shape of constraint -- a property of the
-    finished text, checkable by counting -- and nothing but history puts it on
-    the generation side.
-
-    So: let every fragment mention every term (``redundant``, which scores 21/24
-    on `must_mention` because the term gets N chances), then delete the
-    duplicates at assembly.
-
-    Deleting the whole SENTENCE rather than the term, because removing a noun
-    phrase from a sentence leaves a sentence that no longer parses, and this is
-    a mechanical step with no model in it. The cost is that a deleted sentence
-    may carry another required term or a needed clause -- which is exactly why
-    this is measured rather than assumed. ``sentences_removed`` travels with the
-    score.
-    """
-    once_terms = [str(c.get("term")) for c in constraints
-                  if c.get("kind") == "term_once"]
-    if not once_terms:
-        return text, 0
-
-    removed = 0
-    paragraphs_out: list[str] = []
-    seen: set[str] = set()
-    for paragraph in [p for p in text.split("\n\n") if p.strip()]:
-        kept: list[str] = []
-        for sentence in split_sentences(paragraph):
-            if not sentence.strip():
-                continue
-            lowered = sentence.lower()
-            present = [t for t in once_terms if t.lower() in lowered]
-            # A sentence carrying two once-terms, one already seen and one not,
-            # must not mark the second as seen on its way to being deleted --
-            # that would consume the term's only surviving occurrence and turn a
-            # duplicate into an omission. Decide first, record after.
-            if any(term in seen for term in present):
-                removed += 1
-                continue
-            seen.update(present)
-            kept.append(sentence.strip())
-        if kept:
-            paragraphs_out.append(" ".join(kept))
-    return "\n\n".join(paragraphs_out), removed
 
 
 def _length_bounds(constraints: Sequence[Mapping[str, Any]]) -> tuple[int, int]:
@@ -437,7 +386,7 @@ def run_instance(spec: PromptSpec, backend: Any, embedder: Any, *,
             out[arm]["rho_achieved"] = None
 
     if "oracle-redundant-dedup" in arms and redundant_text is not None:
-        deduped, removed = deduplicate_term_once(redundant_text, constraints)
+        deduped, removed = enforce_term_once(redundant_text, constraints)
         out["oracle-redundant-dedup"] = _score(deduped, constraints)
         out["oracle-redundant-dedup"]["allocation_policy"] = "redundant+dedup"
         out["oracle-redundant-dedup"]["sentences_removed"] = removed
@@ -516,16 +465,50 @@ def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
     mono, real = _of("monolithic"), _of("real")
 
-    # Which oracle. There are three policies now, and picking the best one AFTER
-    # seeing the scores is choosing a result -- the defect `falsifiable_go_no_go`
-    # exists to stop. So every oracle gets its own decomposition, reported side
-    # by side and named, and the headline `decomposition` stays on the policy
-    # that was declared first: exclusive, the one the 5 September run used.
+    # Which oracle carries the headline.
+    #
+    # Three policies means three chances to pick a winner after the fact, which
+    # is what `falsifiable_go_no_go` exists to stop. The first version of this
+    # function therefore pinned the headline to the policy DECLARED FIRST --
+    # exclusive -- and on the run of 5 September that produced a headline reading
+    # "check the oracle's briefs" while a different policy, in the same run, had
+    # produced a clean decomposition sitting two lines below it.
+    #
+    # So the rule is now stated on the INSTRUMENT rather than on the result, and
+    # it is the validity condition this arm was designed around from the start:
+    # an oracle is an UPPER BOUND on what allocation can achieve, so an oracle
+    # scoring below the shipped pipeline has not measured allocation -- it has
+    # measured its own briefs. `allocation_cost_oracle_to_real >= 0` is that
+    # condition, expressed as arithmetic.
+    #
+    # The headline is the declared-first policy AMONG THOSE THAT PASS. Choosing
+    # among valid instruments by declaration order is not choosing a result;
+    # choosing among all of them by score would be.
+    #
+    # The check that this is not a rule bent toward a nicer answer: on the run
+    # that motivated it, the change moved the headline from "the oracle is
+    # broken" to "PARALLELISM dominates -- this workload is not fragmentable",
+    # which is the LESS flattering reading of the two. A rule revised after
+    # seeing data has to be audited in that direction, and this one moves away
+    # from the project's own hypothesis rather than toward it.
     per_policy = {arm: _decompose(mono, _of(arm), real)
                   for arm in ORACLE_ARMS if _of(arm) is not None}
-    headline = (per_policy.get("oracle-exclusive")
-                or (next(iter(per_policy.values())) if per_policy else
-                    _decompose(mono, None, real)))
+    valid = [arm for arm in ORACLE_ARMS
+             if arm in per_policy
+             and isinstance(per_policy[arm].get("allocation_cost_oracle_to_real"),
+                            (int, float))
+             and per_policy[arm]["allocation_cost_oracle_to_real"] >= 0]
+    headline_arm = valid[0] if valid else None
+    headline = (per_policy[headline_arm] if headline_arm
+                else (per_policy.get("oracle-exclusive")
+                      or (next(iter(per_policy.values())) if per_policy else
+                          _decompose(mono, None, real))))
+    if headline_arm is None and per_policy:
+        headline = {**headline, "headline_note": (
+            "NO ORACLE PASSED THE VALIDITY CHECK: every policy scored below the "
+            "shipped pipeline, so none of them bounds what allocation can "
+            "achieve. Nothing here decomposes the loss. The briefs are the "
+            "thing to fix, not the planner.")}
 
     return {
         "declared_cell": DECLARED,
@@ -533,7 +516,14 @@ def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "by_constraint_kind": kinds,
         "assembler_enforced_and_excluded": sorted(ASSEMBLER_ENFORCED),
         "decomposition": headline,
+        "decomposition_headline_arm": headline_arm,
+        "decomposition_valid_oracles": valid,
         "decomposition_by_policy": per_policy,
+        # Where the surviving loss lives. The decomposition says how much of the
+        # end-to-end loss allocation can reach; this says which constraint
+        # classes make up the part it cannot, which is the only part still
+        # actionable. A single number cannot be acted on; a class can.
+        "residual_by_kind": _residual(kinds, headline_arm),
         "must_mention_split": {
             bucket: {arm: {**counts,
                            "rate": (round(counts["satisfied"] / counts["checked"], 6)
@@ -556,6 +546,45 @@ def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
             "satisfies them in the monolithic one. by_constraint_kind reports "
             "every kind including those two, with its own denominator."
         ),
+    }
+
+
+def _residual(kinds: Mapping[str, Mapping[str, Mapping[str, Any]]],
+              headline_arm: str | None) -> dict[str, Any]:
+    """Monolithic minus the headline oracle, per constraint kind.
+
+    The decomposition answers "how much can allocation reach". This answers
+    "what is the rest made of", and it is the only half anyone can act on: a
+    residual of 0.19 is a number to quote, while `no_repeated_ngram` at 4/12
+    against 11/12 is a mechanism with a name.
+
+    Assembler-enforced kinds are reported and marked rather than dropped. They
+    are excluded from the headline score for good reason -- one arm satisfies
+    them mechanically and the other does not -- but a reader diagnosing a
+    residual needs to see that the dedup arm gave two of them back.
+    """
+    if headline_arm is None:
+        return {"note": "no valid oracle; nothing to take a residual against"}
+    out: dict[str, Any] = {}
+    for kind, per_arm in kinds.items():
+        mono = per_arm.get("monolithic")
+        oracle = per_arm.get(headline_arm)
+        if not mono or not oracle or not mono.get("checked"):
+            continue
+        out[kind] = {
+            "monolithic": f"{mono['satisfied']}/{mono['checked']}",
+            headline_arm: f"{oracle['satisfied']}/{oracle['checked']}",
+            "constraints_lost": mono["satisfied"] - oracle["satisfied"],
+            "assembler_enforced": kind in ASSEMBLER_ENFORCED,
+        }
+    return {
+        "against": headline_arm,
+        "by_kind": dict(sorted(out.items(),
+                               key=lambda kv: -kv[1]["constraints_lost"])),
+        "note": ("constraints_lost is monolithic minus the oracle, in checks "
+                 "rather than in points, so a class with many checks cannot "
+                 "hide behind a class with few. Negative means the oracle beat "
+                 "the unfragmented arm on that class."),
     }
 
 
@@ -714,8 +743,19 @@ def main(argv: Sequence[str] | None = None) -> int:
               f"   allocation (oracle->real) {d.get('allocation_cost_oracle_to_real')}")
         print(f"    {d.get('reading')}")
 
+    residual = summary.get("residual_by_kind", {})
+    if residual.get("by_kind"):
+        print(f"\nRESIDUAL — what monolithic satisfies and {residual['against']} does not")
+        for kind, row in residual["by_kind"].items():
+            mark = "  [assembler-enforced]" if row["assembler_enforced"] else ""
+            print(f"  {kind:22} {row['constraints_lost']:+3} checks   "
+                  f"mono {row['monolithic']:>6}  oracle {row[residual['against']]:>6}{mark}")
+
     decomposition = summary["decomposition"]
-    print("\nDECOMPOSITION (headline: the policy declared first)")
+    arm = summary.get("decomposition_headline_arm")
+    valid = summary.get("decomposition_valid_oracles") or []
+    print(f"\nDECOMPOSITION (headline: {arm or 'NONE VALID'};"
+          f" oracles passing the validity check: {', '.join(valid) or 'none'})")
     for key, value in decomposition.items():
         print(f"  {key:38} {value}")
 

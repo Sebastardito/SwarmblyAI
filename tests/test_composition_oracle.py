@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from swarmbly_v0.constraints import enforce_term_once
+
 _SPEC = importlib.util.spec_from_file_location(
     "run_composition_oracle",
     Path(__file__).resolve().parent.parent / "scripts" / "run_composition_oracle.py")
@@ -298,13 +300,18 @@ def test_the_two_policies_actually_differ():
 
 # --------------------------------------------------------------------------
 # The dedup, which is the proposal the trade produced
+#
+# It lives in `swarmbly_v0.constraints` rather than in this script, because the
+# shipped assembler now calls it behind a flag and the oracle arm measures it.
+# Two implementations of one behaviour would drift, and the drift would be
+# attributed to whichever arm noticed second.
 # --------------------------------------------------------------------------
 
 
 def test_dedup_keeps_the_first_sentence_carrying_a_term_and_drops_the_rest():
     text = ("The tide window closes at noon. Berths are reassigned.\n\n"
             "The tide window matters again here. Cargo waits.")
-    out, removed = oracle.deduplicate_term_once(text, HARBOUR)
+    out, removed = enforce_term_once(text, HARBOUR)
     assert removed == 1
     assert out.lower().count("tide window") == 1
     assert "Berths are reassigned." in out and "Cargo waits." in out
@@ -312,7 +319,7 @@ def test_dedup_keeps_the_first_sentence_carrying_a_term_and_drops_the_rest():
 
 def test_dedup_leaves_a_text_that_already_complies_untouched():
     text = "The tide window closes at noon.\n\nBerths are reassigned."
-    out, removed = oracle.deduplicate_term_once(text, HARBOUR)
+    out, removed = enforce_term_once(text, HARBOUR)
     assert removed == 0
     assert out == text
 
@@ -328,7 +335,7 @@ def test_dedup_does_not_consume_a_terms_only_occurrence():
     text = ("Alpha is introduced here.\n\n"
             "Alpha and beta appear together.\n\n"
             "Beta stands alone at the end.")
-    out, removed = oracle.deduplicate_term_once(text, constraints)
+    out, removed = enforce_term_once(text, constraints)
     assert removed == 1
     assert out.lower().count("alpha") == 1
     assert out.lower().count("beta") == 1, (
@@ -338,7 +345,7 @@ def test_dedup_does_not_consume_a_terms_only_occurrence():
 
 def test_dedup_is_a_no_op_when_the_prompt_has_no_term_once():
     text = "One sentence. Another sentence."
-    assert oracle.deduplicate_term_once(text, [
+    assert enforce_term_once(text, [
         {"id": "m", "kind": "must_mention", "term": "x"}]) == (text, 0)
 
 
@@ -359,23 +366,274 @@ def test_must_mention_is_split_by_whether_the_term_is_also_term_once():
     assert split["must_mention_also_term_once"]["satisfied"] == 0
 
 
-def test_the_headline_decomposition_is_the_policy_declared_first():
-    """Three oracles now. Picking the best one after seeing the scores is
-    choosing a result, which is what falsifiable_go_no_go exists to stop."""
+def test_the_headline_is_the_declared_first_oracle_THAT_PASSES_VALIDITY():
+    """Three oracles is three chances to pick a winner after the fact.
+
+    The first rule pinned the headline to the policy declared first, full stop.
+    On 5 September that produced a headline reading "check the oracle's briefs"
+    while a different policy, in the same run, had produced a clean
+    decomposition two lines below it.
+
+    So the rule is stated on the INSTRUMENT: an oracle is an upper bound on what
+    allocation can achieve, so one scoring below the shipped pipeline has not
+    measured allocation, it has measured its own briefs. Among the oracles that
+    ARE upper bounds, declaration order decides. Choosing among valid
+    instruments by declaration order is not choosing a result; choosing among
+    all of them by score would be.
+    """
     rows = [{"prompt_id": "p1", "split": "dev", "arms": {
         "monolithic": _fake(0.90), "real": _fake(0.60),
-        "oracle-exclusive": _fake(0.50), "oracle-redundant": _fake(0.88),
+        "oracle-exclusive": _fake(0.50),    # below real: not an upper bound
+        "oracle-redundant": _fake(0.88),    # valid
+        "oracle-redundant-dedup": _fake(0.75),  # valid, declared later
     }}]
     summary = oracle.summarise(rows)
-    assert set(summary["decomposition_by_policy"]) == {
-        "oracle-exclusive", "oracle-redundant"}
+    assert summary["decomposition_valid_oracles"] == [
+        "oracle-redundant", "oracle-redundant-dedup"]
+    assert summary["decomposition_headline_arm"] == "oracle-redundant", (
+        "among valid oracles, the one declared first")
     assert (summary["decomposition"]
-            == summary["decomposition_by_policy"]["oracle-exclusive"]), (
-        "the headline must stay on the declared policy even when another "
-        "policy scores better")
+            == summary["decomposition_by_policy"]["oracle-redundant"])
 
 
-def _fake(score: float) -> dict:
+def test_the_declared_first_oracle_still_wins_when_it_is_valid():
+    """The validity check must not become a way of preferring a better score."""
+    rows = [{"prompt_id": "p1", "split": "dev", "arms": {
+        "monolithic": _fake(0.90), "real": _fake(0.60),
+        "oracle-exclusive": _fake(0.70),        # valid, and WORSE than
+        "oracle-redundant": _fake(0.85),        # this one, which is also valid
+    }}]
+    summary = oracle.summarise(rows)
+    assert summary["decomposition_headline_arm"] == "oracle-exclusive"
+
+
+def test_when_no_oracle_is_an_upper_bound_the_summary_says_so():
+    rows = [{"prompt_id": "p1", "split": "dev", "arms": {
+        "monolithic": _fake(0.90), "real": _fake(0.60),
+        "oracle-exclusive": _fake(0.50), "oracle-redundant": _fake(0.55),
+    }}]
+    summary = oracle.summarise(rows)
+    assert summary["decomposition_headline_arm"] is None
+    assert summary["decomposition_valid_oracles"] == []
+    assert "NO ORACLE PASSED" in summary["decomposition"]["headline_note"]
+
+
+def test_the_residual_names_the_classes_the_oracle_could_not_reach():
+    """A residual of 0.19 is a number to quote. `no_repeated_ngram` at 4/12
+    against 11/12 is a mechanism with a name, and only one of those is
+    actionable."""
+    rows = [{"prompt_id": "p1", "split": "dev", "arms": {
+        "monolithic": _fake(0.90, by_kind={
+            "must_mention": {"satisfied": 3, "checked": 3},
+            "no_repeated_ngram": {"satisfied": 1, "checked": 1}}),
+        "real": _fake(0.60),
+        "oracle-redundant": _fake(0.85, by_kind={
+            "must_mention": {"satisfied": 2, "checked": 3},
+            "no_repeated_ngram": {"satisfied": 0, "checked": 1}}),
+    }}]
+    residual = oracle.summarise(rows)["residual_by_kind"]
+    assert residual["against"] == "oracle-redundant"
+    kinds = list(residual["by_kind"])
+    assert kinds[0] == "must_mention", "worst class first, in checks not points"
+    assert residual["by_kind"]["must_mention"]["constraints_lost"] == 1
+    assert residual["by_kind"]["no_repeated_ngram"]["constraints_lost"] == 1
+
+
+def test_the_residual_is_refused_when_no_oracle_is_valid():
+    rows = [{"prompt_id": "p1", "split": "dev", "arms": {
+        "monolithic": _fake(0.90), "real": _fake(0.60),
+        "oracle-exclusive": _fake(0.50)}}]
+    assert "by_kind" not in oracle.summarise(rows)["residual_by_kind"]
+
+
+def _fake(score: float, by_kind: dict | None = None) -> dict:
     return {"constraint_score": score, "constraint_score_comparable": score,
             "n_constraints": 8, "n_paragraphs": 2, "failed": [],
-            "by_kind": {}, "must_mention_split": {}}
+            "by_kind": by_kind or {}, "must_mention_split": {}}
+
+
+# --------------------------------------------------------------------------
+# term_once at the assembler: the shipped path, behind a flag
+# --------------------------------------------------------------------------
+
+
+def test_the_shipped_pipeline_can_enforce_term_once_and_records_that_it_did():
+    """Off by default, because every published composition figure was produced
+    without it and a default that changes the delivered answer would silently
+    reclassify the record."""
+    from swarmbly_v0.backends import get_backend, get_embedder
+    from swarmbly_v0.experiment import (PromptSpec, SweepConfig, run_fragmented,
+                                        global_contract)
+
+    spec = PromptSpec(prompt_id="t1", category="composition",
+                      expected_decomposable=True,
+                      text=("Describe a harbour.\n\nWrite exactly two paragraphs, "
+                            "each between 60 and 140 words."),
+                      constraints=HARBOUR, split="dev")
+    backend, embedder = get_backend("mock"), get_embedder("hash")
+    config = SweepConfig(rhos=(4.0,), ns=(2,), ks=(1,), n_candidates=1, seed=0)
+    contract = global_contract(spec.text, backend)
+
+    off = run_fragmented(spec, backend, embedder, config, rho_target=4.0,
+                         n_tasks=2, tau_sem=0.6, contract=contract)
+    on = run_fragmented(spec, backend, embedder, config, rho_target=4.0,
+                        n_tasks=2, tau_sem=0.6, contract=contract,
+                        enforce_term_once_mechanically=True)
+
+    assert off["term_once_enforced"] is False
+    assert on["term_once_enforced"] is True
+    assert off["term_once_sentences_removed"] == "", (
+        "blank, not 0: 'ran and removed nothing' and 'did not run' are "
+        "different facts, and this file has confused them twice")
+    assert isinstance(on["term_once_sentences_removed"], int)
+
+
+def test_the_oracle_and_the_assembler_call_the_same_function():
+    """Two implementations of one behaviour drift, and the drift is attributed
+    to whichever arm notices second. comp-oracle measured 14/24; the shipped
+    path must be measuring the same thing."""
+    import swarmbly_v0.experiment as experiment
+    from swarmbly_v0.constraints import enforce_term_once as canonical
+
+    assert experiment.enforce_term_once is canonical
+    source = (Path(__file__).resolve().parent.parent
+              / "scripts" / "run_composition_oracle.py").read_text(encoding="utf-8")
+    assert "from swarmbly_v0.constraints import" in source
+    assert "enforce_term_once" in source
+    assert "def enforce_term_once" not in source, (
+        "the script must import it, not own a second copy")
+
+
+# --------------------------------------------------------------------------
+# The fifth thing a -final tier inherits from its -dev run
+#
+# Threshold, corpus, split and code were already checked. The assembly PIPELINE
+# was not, and `--enforce-term-once` changes the delivered answer for every
+# cell -- so a threshold fitted by one pipeline could have been paired silently
+# with the other, and the pairing is the entire value of having a split.
+# --------------------------------------------------------------------------
+
+
+RUNNER = Path(__file__).resolve().parent.parent / "scripts" / "run_ollama.sh"
+
+
+def test_the_sweep_records_which_assembly_pipeline_produced_it():
+    from swarmbly_v0.backends import get_backend, get_embedder
+    from swarmbly_v0.experiment import SweepConfig, load_prompts, run_sweep
+
+    prompts = load_prompts("prompts/composition.json")[:1]
+    for flag in (False, True):
+        cfg = SweepConfig(rhos=(4.0,), ns=(3,), ks=(1,), n_candidates=1,
+                          seed=0, enforce_term_once=flag)
+        _, metadata = run_sweep(prompts, cfg, get_backend("mock"),
+                                get_embedder("hash"))
+        assert metadata["enforce_term_once"] is flag, (
+            "a -final tier reads this to refuse a dev run from the other "
+            "pipeline; if it is absent the check silently passes")
+
+
+def test_the_final_tiers_check_the_pipeline_matches_their_dev_run():
+    script = RUNNER.read_text(encoding="utf-8")
+    assert "read_dev_run" in script, "the shared gate must exist"
+    body = script[script.index("read_dev_run() {"):]
+    body = body[:body.index("\n}\n")]
+    assert "PIPELINE MISMATCH" in body
+    assert "enforce_term_once" in body
+    # Ausente no es falso. El campo llego el 5 de septiembre; una corrida
+    # anterior no dice nada sobre su tuberia en vez de decir que no, y leerla
+    # como "no" mandaria al operador a arreglar lo que no esta roto.
+    assert "'absent'" in body and 'dev_once" = "absent"' in body, (
+        "una corrida sin el campo debe refutarse por su propia razon, no "
+        "confundirse con un desajuste")
+
+    # And both callers must pass what they expect rather than defaulting.
+    for tier, expected in (("run_comp_final()", '"false"'),
+                           ("run_comp_final_once()", '"true"')):
+        start = script.index(tier)
+        chunk = script[start:start + 4000]
+        assert f'read_dev_run "$dev" {expected}' in chunk, (
+            f"{tier} must state the pipeline it expects; a default would let "
+            f"the two halves of the split be paired across pipelines")
+
+
+def test_comp_final_once_passes_the_flag_it_gates_on():
+    """A tier that checked for the flag and then did not pass it would refuse
+    the right dev runs and then measure the wrong pipeline."""
+    script = RUNNER.read_text(encoding="utf-8")
+    start = script.index("run_comp_final_once()")
+    body = script[start:script.index("\n}\n", start)]
+    assert "--enforce-term-once" in body
+    assert "--split final" in body
+    assert "comp-final-once" in body
+
+
+# --------------------------------------------------------------------------
+# Corpus v2: el reemplazo, porque el split final de v1 se usa dos veces
+# --------------------------------------------------------------------------
+
+
+def _generator():
+    import importlib.util
+    root = Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location(
+        "make_composition", root / "scripts" / "make_composition.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_v1_digest_is_unchanged_by_the_v2_work():
+    """El umbral de comp-final esta congelado contra e9e382b9... Un solo
+    caracter movido en v1 lo invalida, y anadir v2 al mismo generador es
+    exactamente el cambio que podria moverlo sin que nadie lo note."""
+    g = _generator()
+    assert g.digest(g.build(corpus="v1")).startswith("e9e382b92b1af6e3")
+
+
+def test_v2_shares_no_prompt_id_and_no_required_term_with_v1():
+    g = _generator()
+    v1, v2 = g.build(corpus="v1"), g.build(corpus="v2")
+    assert not ({p["id"] for p in v1} & {p["id"] for p in v2})
+
+    def terms(prompts):
+        return {c["term"] for p in prompts for c in p["constraints"]
+                if c["kind"] in ("must_mention", "term_once")}
+    shared = terms(v1) & terms(v2)
+    assert not shared, (
+        f"un termino compartido hace que las dos mediciones no sean "
+        f"independientes: {sorted(shared)}")
+
+
+def test_both_corpora_are_built_by_the_same_function():
+    """Un segundo generador que construyera los prompts a su manera haria que
+    las dos mediciones no fueran comparables, y la diferencia se atribuiria al
+    corpus en vez de a la tuberia."""
+    g = _generator()
+    v1, v2 = g.build(corpus="v1")[0], g.build(corpus="v2")[0]
+    assert [c["kind"] for c in v1["constraints"]] == [c["kind"] for c in v2["constraints"]]
+    assert v1["tier"] == v2["tier"]
+    # y el mismo texto de plantilla, salvo el sujeto y los terminos
+    for marker in ("Write exactly two paragraphs", "must appear exactly once",
+                   "Do not repeat any sentence"):
+        assert marker in v1["prompt"] and marker in v2["prompt"]
+
+
+def test_v2_splits_are_balanced_across_tiers():
+    g = _generator()
+    prompts = g.build(corpus="v2")
+    for split, expected in (("dev", 4), ("final", 8)):
+        counts = {t: sum(1 for p in prompts if p["split"] == split and p["tier"] == t)
+                  for t in g.TIER_ORDER}
+        assert set(counts.values()) == {expected}, (
+            f"un split cuyas mitades difieren en dificultad no es un split: {counts}")
+
+
+def test_the_v2_tiers_read_the_v2_corpus_and_nothing_else():
+    script = RUNNER.read_text(encoding="utf-8")
+    for tier in ("run_comp_dev_v2()", "run_comp_final_v2()"):
+        start = script.index(tier)
+        body = script[start:script.index("\n}\n", start)]
+        assert "composition_v2.json" in body
+        assert "prompts/composition.json" not in body, (
+            f"{tier} nombra el corpus v1; el digest coincidiria con el corpus "
+            f"equivocado y la compuerta pasaria por la razon opuesta")

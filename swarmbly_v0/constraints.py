@@ -64,6 +64,7 @@ __all__ = [
     "paragraphs_of",
     "check_constraint",
     "grade_text",
+    "enforce_term_once",
 ]
 
 CONSTRAINT_KINDS = (
@@ -416,3 +417,55 @@ def check_numeric_fidelity(text: str, allowed: Sequence[float]) -> bool | None:
         return None
     permitted = {round(float(v), 4) for v in allowed}
     return all(round(v, 4) in permitted for v in found)
+
+
+def enforce_term_once(text: str, constraints: Sequence[Mapping[str, Any]]
+                      ) -> tuple[str, int]:
+    """Keep the FIRST sentence carrying each ``term_once`` term, drop the rest.
+
+    The architecture proposal this run produced, made testable rather than
+    argued. ``paragraph_count`` and ``words_per_paragraph`` are already
+    satisfied mechanically by the assembler rather than by asking a model
+    nicely; ``term_once`` is the same shape of constraint -- a property of the
+    finished text, checkable by counting -- and nothing but history puts it on
+    the generation side.
+
+    So: let every fragment mention every term (``redundant``, which scores 21/24
+    on `must_mention` because the term gets N chances), then delete the
+    duplicates at assembly.
+
+    Deleting the whole SENTENCE rather than the term, because removing a noun
+    phrase from a sentence leaves a sentence that no longer parses, and this is
+    a mechanical step with no model in it. The cost is that a deleted sentence
+    may carry another required term or a needed clause -- which is exactly why
+    this is measured rather than assumed. ``sentences_removed`` travels with the
+    score.
+    """
+    once_terms = [str(c.get("term")) for c in constraints
+                  if c.get("kind") == "term_once"]
+    if not once_terms:
+        return text, 0
+
+    removed = 0
+    paragraphs_out: list[str] = []
+    seen: set[str] = set()
+    for paragraph in [p for p in text.split("\n\n") if p.strip()]:
+        kept: list[str] = []
+        for sentence in split_sentences(paragraph):
+            if not sentence.strip():
+                continue
+            lowered = sentence.lower()
+            present = [t for t in once_terms if t.lower() in lowered]
+            # A sentence carrying two once-terms, one already seen and one not,
+            # must not mark the second as seen on its way to being deleted --
+            # that would consume the term's only surviving occurrence and turn a
+            # duplicate into an omission. Decide first, record after.
+            if any(term in seen for term in present):
+                removed += 1
+                continue
+            seen.update(present)
+            kept.append(sentence.strip())
+        if kept:
+            paragraphs_out.append(" ".join(kept))
+    return "\n\n".join(paragraphs_out), removed
+

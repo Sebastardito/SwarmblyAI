@@ -1179,6 +1179,347 @@ run_comp_dev_k3() {
   echo "  -> $out/summary.json"
 }
 
+run_comp_dev_once() {
+  local out="$RESULTS_ROOT/comp-dev-once-$STAMP"
+  bold ""
+  bold "== comp-dev-once — term_once at the ASSEMBLER, not at the model =="
+  echo ""
+  echo "  A PREREGISTERED PREDICTION. See docs/PREREGISTRATION_term_once.md."
+  echo ""
+  echo "    Enforcing term_once mechanically at assembly moves the declared"
+  echo "    composition cell by AT LEAST 5 points against the k=1 dev run's"
+  echo "    +18.40 -- that is, to +13.40 or better."
+  echo ""
+  echo "  WHERE THE NUMBER COMES FROM. comp-oracle measured the mechanism"
+  echo "  directly, on this corpus, on this split:"
+  echo ""
+  echo "    term_once      shipped 6/24   redundant oracle 6/24   DEDUP 14/24"
+  echo "                   monolithic 13/24 -- the dedup arm BEAT it"
+  echo ""
+  echo "  It cost two must_mention and two words_per_paragraph, both from"
+  echo "  deleted sentences that carried something else. Eight constraints"
+  echo "  gained for four lost, and two of the four are assembler-enforced and"
+  echo "  excluded from the headline anyway."
+  echo ""
+  echo "  WHY IT SHOULD DO BETTER HERE THAN IN THE ORACLE. The oracle applied"
+  echo "  dedup to its own REDUNDANT text, which scored 17/24 on must_mention;"
+  echo "  the shipped pipeline scores 21/24 on the same bucket, because every"
+  echo "  fragment sees the whole prompt. Dedup does not touch must_mention"
+  echo "  except through deleted sentences, so applied to the shipped arm it"
+  echo "  should keep 21/24 AND gain the term_once. If it does not, the"
+  echo "  interaction is the finding."
+  echo ""
+  echo "  WHAT WOULD REFUTE IT: a mean_delta at or above +18.40, or a"
+  echo "  must_mention rate below the shipped pipeline's. Either says the"
+  echo "  deletions cost more on real fragments than on oracle ones."
+  echo ""
+  echo "  THIS IS NOT A PAIRED ARM. The flag changes the delivered answer for"
+  echo "  every cell, so a sweep producing both would have two 'fragmented'"
+  echo "  conditions under one label -- the pooling defect this project has"
+  echo "  corrected four times. Compare THIS RUN against a comp-dev run."
+  echo ""
+  echo "  Read: composition_criterion[composition@rho=4.0@N=3@k=1].mean_delta,"
+  echo "  then composition.by_condition.constraints_failed for term_once, then"
+  echo "  term_once_sentences_removed in results.csv -- if it is 0 everywhere"
+  echo "  the pass did not fire and the comparison is void."
+  echo "  Output: $out"
+  [ -f prompts/composition.json ] || python3 scripts/make_composition.py
+  python3 scripts/make_composition.py --verify \
+    || die "prompts/composition.json does not match what make_composition.py builds."
+  run_tier comp-dev-once "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split dev \
+    --rho 4.0 --n 3,8 --k 1 --enforce-term-once \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo "  -> $out/summary.json"
+}
+
+# --------------------------------------------------------------------------- #
+# What a -final tier inherits from its -dev run, and what has to match.
+#
+# Four things: the threshold, the corpus it was fitted on, the split it was
+# fitted on, and the code that fitted it. A fifth was added on 5 September --
+# WHICH ASSEMBLY PIPELINE -- because `--enforce-term-once` changes the delivered
+# answer for every cell, so a threshold fitted by a pipeline that enforces
+# term_once mechanically does not apply to one that asks the model for it.
+#
+# Without that check the two halves of the split could be paired silently, and
+# the pairing is the entire value of having a split.
+#
+# Sets DEV_TAU. Dies with the reason on any mismatch; there is no override, and
+# the remedy is always re-running dev.
+# --------------------------------------------------------------------------- #
+read_dev_run() {
+  local dev="$1" want_once="$2" corpus="$3"
+  [ -d "$dev" ] || die "'$dev' is not a directory. This tier takes the dev run's
+  directory, not a threshold and not a file."
+  [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist.
+  That run did not complete, or it is not a swarmbly results directory."
+
+  local dev_sha now_sha dev_split dev_once
+  DEV_TAU="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json'))['tau_sem'])")"
+  dev_sha="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_frozen_sha256',''))")"
+  dev_split="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_split',''))")"
+  # `absent` and not `false`. The field arrived on 5 September, and a run made
+  # before it exists says nothing about its pipeline rather than saying "no" --
+  # reporting a mismatch for a run that may well have matched would look like
+  # the operator's mistake and send them to fix the wrong thing.
+  dev_once="$(python3 -c "import json;print(str(json.load(open('$dev/run_metadata.json')).get('enforce_term_once', 'absent')).lower())")"
+  now_sha="$(python3 -c "import json;print(json.load(open('$corpus'))['_frozen']['sha256'])")"
+
+  [ "$dev_split" = "dev" ] || die "$dev ran on '$dev_split', not on the dev split.
+  A threshold fitted on the final half, or on the whole corpus, is fitted on the
+  data it is about to judge. That is the leakage the split exists to close."
+  [ -n "$dev_sha" ] || die "$dev has no corpus_frozen_sha256, so there is no way to
+  confirm its threshold was fitted on THIS corpus. Re-run the dev tier first."
+  if [ "$dev_sha" != "$now_sha" ]; then
+    die "the corpus changed since $dev ran.
+    dev:  $dev_sha
+    now:  $now_sha
+  tau_sem = $DEV_TAU was fitted on different prompts. Re-run the dev tier on
+  this corpus first."
+  fi
+  if [ "$dev_once" = "absent" ]; then
+    die "$dev no registra enforce_term_once en su metadata.
+
+  Ese campo se anadio el 5 de septiembre, asi que esta corrida es anterior y no
+  dice con que tuberia se ajusto su umbral. La compuerta no lo adivina: leerlo
+  como 'false' reportaria un desajuste que quiza no existe, y leerlo como lo que
+  a uno le convenga es el defecto que la compuerta existe para cerrar.
+
+  El remedio es el mismo que para cualquier desajuste aqui, y es volver a correr
+  dev. Si esa corrida ademas es anterior a un cambio de codigo -- lo sera, porque
+  el campo ES un cambio de codigo -- assert_same_code_as_dev tambien la habria
+  rechazado, y por la razon correcta.
+
+    bash scripts/run_ollama.sh comp-dev-once     # ~1 h"
+  fi
+  if [ "$dev_once" != "$want_once" ]; then
+    die "PIPELINE MISMATCH. $dev ran with enforce_term_once=$dev_once and this
+  tier runs with enforce_term_once=$want_once.
+
+  --enforce-term-once changes the delivered answer for EVERY cell: it deletes
+  every sentence after the first that carries a term_once term. A threshold
+  fitted by one pipeline does not apply to the other, and pairing them would
+  make the split measure two systems under one label.
+
+  Run the matching dev tier:
+    enforce_term_once=false -> bash scripts/run_ollama.sh comp-dev
+    enforce_term_once=true  -> bash scripts/run_ollama.sh comp-dev-once"
+  fi
+  assert_same_code_as_dev "$dev" "$DEV_TAU"
+}
+
+run_comp_dev_v2() {
+  local out="$RESULTS_ROOT/comp-dev-v2-$STAMP"
+  bold ""
+  bold "== comp-dev-v2 — corpus nuevo, para que el split final vuelva a valer una vez =="
+  echo ""
+  echo "  POR QUE EXISTE. El split final de v1 se usa por SEGUNDA vez en"
+  echo "  comp-final-once. Su valor viene de evaluarse UNA vez, asi que un tercer"
+  echo "  uso exige prompts que nadie haya visto. Estos son."
+  echo ""
+  echo "  36 sujetos nuevos, CERO terminos compartidos con v1, misma funcion"
+  echo "  composition(), mismos tiers, mismo digest(). Un segundo generador que"
+  echo "  construyera los prompts a su manera haria que las dos mediciones no"
+  echo "  fueran comparables y la diferencia se atribuiria al corpus."
+  echo ""
+  echo "  CORRE CON --enforce-term-once, y eso no compromete la validacion de los"
+  echo "  tiers. baseline_at_ceiling es una propiedad del brazo MONOLITICO, y el"
+  echo "  flag solo toca el fragmentado. Una sola corrida hace los dos trabajos:"
+  echo "  valida la dificultad y ajusta tau_sem para la tuberia que se va a"
+  echo "  juzgar en final."
+  echo ""
+  bold "  LA DECISION QUE SE TOMA AQUI, y en ningun otro lado despues:"
+  echo ""
+  echo "    baseline_at_ceiling de 12"
+  echo "      0-8   los tiers funcionan, la linea base tiene donde moverse -> seguir"
+  echo "      9-11  marginal; seguir y decirlo en el informe"
+  echo "      12    el corpus se saturo. PARAR. Reconstruir los tiers sale mas"
+  echo "            barato que un final que solo puede mostrar que fragmentar cuesta"
+  echo ""
+  echo "  En v1 dev este numero fue 3 de 12, que es sano. Si v2 sale muy distinto,"
+  echo "  los dos corpus no son comparables y hay que decirlo antes de usar v2"
+  echo "  para nada."
+  echo ""
+  echo "  NO IMPRIME VEREDICTO: 12 prompts contra un piso de 20, por diseno."
+  echo "  Output: $out"
+  [ -f prompts/composition_v2.json ] || python3 scripts/make_composition.py --corpus v2
+  python3 scripts/make_composition.py --corpus v2 --verify \
+    || die "prompts/composition_v2.json no coincide con lo que construye el generador."
+  run_tier comp-dev-v2 "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition_v2.json --split dev \
+    --rho 4.0 --n 3,8 --k 1 --enforce-term-once \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  El numero que decide:"
+  python3 -c "
+import json
+s=json.load(open('$out/summary.json'))
+c=s.get('composition_criterion',{}).get('composition@rho=4.0@N=3@k=1')
+if c:
+    print(f'    baseline_at_ceiling  {c.get(\"baseline_at_ceiling\")} de {c.get(\"n_observations\")}   (v1 dev fue 3 de 12)')
+    print(f'    mean_baseline        {c.get(\"mean_baseline\")}')
+    print(f'    mean_delta           {c.get(\"mean_delta\")}  (descriptivo, 12 clusters)')
+" 2>/dev/null || true
+  echo ""
+  echo "  Si el numero es sano, el final de v2 se corre asi -- y sera su PRIMER uso:"
+  echo "    bash scripts/run_ollama.sh comp-final-v2 $out"
+  echo "  -> $out/summary.json"
+}
+
+run_comp_final_v2() {
+  local out="$RESULTS_ROOT/comp-final-v2-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "nombra la corrida comp-dev-v2 de la que hereda el umbral:
+    bash scripts/run_ollama.sh comp-final-v2 results/comp-dev-v2-<stamp>"
+  case "$dev" in
+    -*) die "este tier toma el DIRECTORIO de la corrida dev:
+    bash scripts/run_ollama.sh comp-final-v2 results/comp-dev-v2-<stamp>
+
+  Corridas comp-dev-v2 recientes:
+$(ls -1dt "$RESULTS_ROOT"/comp-dev-v2-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (ninguna)')" ;;
+  esac
+  read_dev_run "$dev" "true" "prompts/composition_v2.json"
+  local tau="$DEV_TAU"
+
+  bold ""
+  bold "== comp-final-v2 — PRIMER uso de un split que nadie ha visto =="
+  echo ""
+  echo "  LA HIPOTESIS, identica a la de comp-final-once pero sobre prompts"
+  echo "  nuevos:"
+  echo ""
+  echo "    con term_once impuesto mecanicamente, la composicion a rho=4.0, N=3,"
+  echo "    k=1 cuesta menos de 5 PUNTOS contra su linea base monolitica, sobre"
+  echo "    la COTA SUPERIOR de un bootstrap agrupado por prompt, con N=8 como"
+  echo "    control que debe fallar."
+  echo ""
+  echo "  ESTE ES EL PRIMER USO DE ESTE SPLIT. Despues de esta corrida, cualquier"
+  echo "  otra hipotesis sobre composicion necesita un corpus v3."
+  echo ""
+  echo "  Y ES LA REPLICACION: si comp-final-once y este coinciden, el resultado"
+  echo "  no depende de los sujetos. Si difieren, el numero era del corpus."
+  echo "  Output: $out"
+  python3 scripts/make_composition.py --corpus v2 --verify \
+    || die "el corpus se movio desde dev; el umbral congelado ya no aplica."
+  run_tier comp-final-v2 "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition_v2.json --split final \
+    --rho 4.0 --n 3,8 --k 1 --tau "$tau" --enforce-term-once \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo "  -> $out/summary.json"
+}
+
+run_comp_final_once() {
+  local out="$RESULTS_ROOT/comp-final-once-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "name the comp-dev-once run this final run inherits from:
+    bash scripts/run_ollama.sh comp-final-once results/comp-dev-once-<stamp>
+
+  It must be a comp-dev-once run, not a comp-dev run: the threshold has to be
+  fitted by the SAME assembly pipeline that will produce the answers it judges."
+  case "$dev" in
+    -*) die "this tier takes the dev run's DIRECTORY:
+    bash scripts/run_ollama.sh comp-final-once results/comp-dev-once-<stamp>
+
+  Recent comp-dev-once runs on disk:
+$(ls -1dt "$RESULTS_ROOT"/comp-dev-once-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (none found)')" ;;
+  esac
+  read_dev_run "$dev" "true" "prompts/composition.json"
+  local tau="$DEV_TAU"
+
+  bold ""
+  bold "== comp-final-once — el segundo uso del split final, y dicho como tal =="
+  echo ""
+  echo "  LA HIPOTESIS, prerregistrada en docs/PREREGISTRATION_comp_final_once.md:"
+  echo ""
+  echo "    Con term_once impuesto mecanicamente en el ensamblador, la composicion"
+  echo "    a rho=4.0, N=3, k=1 cuesta menos de 5 PUNTOS de satisfaccion de"
+  echo "    restricciones contra su linea base monolitica -- juzgado sobre la COTA"
+  echo "    SUPERIOR de un bootstrap agrupado por prompt, con N=8 como control"
+  echo "    que debe fallar."
+  echo ""
+  echo "  ES UNA HIPOTESIS DISTINTA SOBRE UN SISTEMA DISTINTO. comp-final del 4 de"
+  echo "  septiembre juzgo la tuberia SIN esta imposicion y respondio NOT MET por"
+  echo "  23.51 puntos. Esa respuesta sigue en pie y no se revisa aqui."
+  echo ""
+  bold "  EL COSTO, dicho antes de la corrida:"
+  echo ""
+  echo "    ESTE ES EL SEGUNDO USO DEL SPLIT FINAL."
+  echo ""
+  echo "  El valor de un split final viene de evaluarse UNA vez. Usarlo dos veces"
+  echo "  lo debilita, aunque la hipotesis y el sistema sean distintos: cada uso"
+  echo "  da otra oportunidad de que un resultado favorable aparezca por azar."
+  echo "  Queda registrado en el documento y en este texto porque un costo que no"
+  echo "  se nombra antes se convierte en una nota al pie despues."
+  echo ""
+  echo "  UN TERCER USO EXIGE CORPUS NUEVO. El generador v2 existe para eso."
+  echo ""
+  echo "  QUE ESPERAR, dicho antes y no despues: en dev la estimacion puntual se"
+  echo "  movio de +18.40 a +8.61, pero la cota superior se quedo en +22.08. Un"
+  echo "  intercambio de +12/-2 en una clase no tiene por que bastar para bajar"
+  echo "  una cota superior por debajo de 5 puntos. NOT MET sigue siendo el"
+  echo "  resultado mas probable, y seguiria siendo el mejor numero que este"
+  echo "  proyecto ha producido."
+  echo ""
+  echo "  Leer, en este orden:"
+  echo "    composition_criterion[composition@rho=4.0@N=3@k=1]"
+  echo "      la cota superior de mean_ci95 contra 0.05, y n_prompts, que debe"
+  echo "      ser al menos 20 o no hay veredicto en absoluto."
+  echo "    la misma celda a N=8  -- el control, que DEBE fallar. Si tambien pasa,"
+  echo "      el instrumento no separa los brazos y ningun numero es evidencia."
+  echo "    term_once_sentences_removed en results.csv -- si es 0 en todas partes"
+  echo "      el paso no disparo y la comparacion es nula."
+  echo "  Output: $out"
+  python3 scripts/make_composition.py --verify \
+    || die "the corpus has moved since dev; the frozen threshold no longer applies."
+  run_tier comp-final-once "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition.json --split final \
+    --rho 4.0 --n 3,8 --k 1 --tau "$tau" --enforce-term-once \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 0 \
+    --out "$out" || return 1
+  echo ""
+  bold "  The declared test:"
+  python3 -c "
+import json, csv
+s=json.load(open('$out/summary.json'))
+cells=s.get('composition_criterion',{})
+for key,role in (('composition@rho=4.0@N=3@k=1','(UNDER TEST)'),
+                 ('composition@rho=4.0@N=8@k=1','(control, must fail)')):
+    c=cells.get(key)
+    if not c: print(f'    {key}: absent'); continue
+    print(f'    {key}')
+    print(f'      {role:<22} delta={c.get(\"mean_delta\")}  CI95={c.get(\"mean_ci95\")}  '
+          f'prompts={c.get(\"n_prompts\")}  ceiling={c.get(\"baseline_at_ceiling\")}'
+          f'  -> {c.get(\"passed\")}')
+rows=[r for r in csv.DictReader(open('$out/results.csv'))
+      if r.get('condition','').startswith('fragmented')]
+removed=[int(r['term_once_sentences_removed']) for r in rows
+         if str(r.get('term_once_sentences_removed','')).strip() not in ('','None')]
+print(f'    term_once_sentences_removed: total {sum(removed)} over {len(removed)} cells'
+      + ('   *** ZERO -- the pass did not fire, this comparison is void ***'
+         if sum(removed)==0 else ''))
+" 2>/dev/null || true
+  echo "  -> $out/summary.json"
+}
+
 run_comp_final() {
   local out="$RESULTS_ROOT/comp-final-$STAMP"
   local dev="${2:-}"
@@ -1206,25 +1547,8 @@ $(ls -1dt "$RESULTS_ROOT"/comp-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || 
   [ -f "$dev/run_metadata.json" ] || die "$dev/run_metadata.json does not exist.
   That run did not complete, or it is not a swarmbly results directory."
 
-  local tau dev_sha now_sha dev_split
-  tau="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json'))['tau_sem'])")"
-  dev_sha="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_frozen_sha256',''))")"
-  dev_split="$(python3 -c "import json;print(json.load(open('$dev/run_metadata.json')).get('corpus_split',''))")"
-  now_sha="$(python3 -c "import json;print(json.load(open('prompts/composition.json'))['_frozen']['sha256'])")"
-
-  [ "$dev_split" = "dev" ] || die "$dev ran on '$dev_split', not on the dev split.
-  A threshold fitted on the final half, or on the whole corpus, is fitted on the
-  data it is about to judge. That is the leakage the split exists to close."
-  [ -n "$dev_sha" ] || die "$dev has no corpus_frozen_sha256, so there is no way to
-  confirm its threshold was fitted on THIS corpus. Re-run comp-dev first."
-  if [ "$dev_sha" != "$now_sha" ]; then
-    die "the corpus changed since $dev ran.
-    dev:  $dev_sha
-    now:  $now_sha
-  tau_sem = $tau was fitted on different prompts. Re-run comp-dev on this
-  corpus first: bash scripts/run_ollama.sh comp-dev"
-  fi
-  assert_same_code_as_dev "$dev" "$tau"
+  read_dev_run "$dev" "false" "prompts/composition.json"
+  local tau="$DEV_TAU"
 
   bold ""
   bold "== comp-final — evaluated once, with nothing left to choose =="
@@ -1351,8 +1675,12 @@ case "$TIER" in
   tables-final) run_tables_final "$@" || true ;;
   comp-dev) run_comp_dev || true ;;
   comp-dev-k3) run_comp_dev_k3 || true ;;
+  comp-dev-once) run_comp_dev_once || true ;;
   comp-oracle) run_comp_oracle || true ;;
   comp-final) run_comp_final "$@" || true ;;
+  comp-final-once) run_comp_final_once "$@" || true ;;
+  comp-dev-v2) run_comp_dev_v2 || true ;;
+  comp-final-v2) run_comp_final_v2 "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
   # already recorded the failure
   # in TIERS_FAILED and stamped the directory; this only stops `set -e` killing
@@ -1360,7 +1688,8 @@ case "$TIER" in
   # overnight `all` finish its independent tiers. The exit status is restored at
   # the bottom.
   all) run_v0 || true; run_v3c || true ;;
-  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-oracle | comp-final | all" ;;
+  *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-dev-once | comp-dev-v2 | comp-oracle |
+           comp-final | comp-final-once | comp-final-v2 | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then
