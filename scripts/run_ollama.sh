@@ -1314,6 +1314,116 @@ read_dev_run() {
   assert_same_code_as_dev "$dev" "$DEV_TAU"
 }
 
+run_feas_dev() {
+  local out="$RESULTS_ROOT/feas-dev-$STAMP"
+  bold ""
+  bold "== feas-dev — la primera prueba en la que la arquitectura PUEDE ganar =="
+  echo ""
+  echo "  Prerregistrada en docs/PREREGISTRATION_feasibility.md, escrita antes"
+  echo "  del corpus y antes del runner."
+  echo ""
+  echo "  POR QUE EXISTE. El prompt mas grande de todo lo medido antes mide 375"
+  echo "  tokens y el modelo mas chico tiene una ventana de 8192. Ninguna tarea"
+  echo "  habia necesitado fragmentarse nunca: tres semanas midiendo cuanto"
+  echo "  cuesta partir algo que no hacia falta partir, y la unica respuesta"
+  echo "  posible a esa pregunta era 'cuesta'."
+  echo ""
+  echo "  Aqui hay un PRESUPUESTO POR NODO declarado, W = 2048 tokens, que todos"
+  echo "  los brazos respetan por igual. Por encima de W el brazo monolitico no"
+  echo "  puntua bajo: NO EXISTE. La pregunta pasa a ser si la respuesta existe."
+  echo ""
+  echo "  TRES BRAZOS, y el segundo es el que decide:"
+  echo ""
+  echo "    monolithic-capped   un nodo, presupuesto W. Infactible por encima."
+  echo "    naive-chunk         EL BASELINE OBVIO en su mejor version: trocear"
+  echo "                        respetando limites de fila, preguntar todo a"
+  echo "                        cada trozo, y combinar con una llamada mas."
+  echo "                        Sin router, planner, packer ni ensamblador."
+  echo "    swarmbly            el protocolo enviado."
+  echo ""
+  echo "  SI swarmbly ~= naive-chunk, EL HALLAZGO ES QUE EL VALOR ESTA EN"
+  echo "  TROCEAR y las cuatro piezas del protocolo no estan pagando su costo."
+  echo "  Ese resultado es tan publicable como el contrario y esta dicho ahora,"
+  echo "  antes de correr, para que no se pueda reescribir despues."
+  echo ""
+  echo "  DOS CLASES DE PREGUNTA, calificadas contra una clave calculada en la"
+  echo "  generacion -- sin juez y sin modelo en el veredicto:"
+  echo ""
+  echo "    local    el valor de una fila nombrada. UN TROZO LA CONTESTA."
+  echo "             Es el control: si naive-chunk falla aqui por debajo del"
+  echo "             80 %, el troceado esta roto y nada por debajo se lee."
+  echo "    global   un total, un maximo, un conteo bajo umbral. NINGUN TROZO"
+  echo "             LA CONTESTA SOLO. La hipotesis se juzga solo sobre estas."
+  echo ""
+  echo "  LAS CUATRO CONDICIONES DE INVALIDACION se evaluan EN CODIGO y se"
+  echo "  imprimen al final. Una condicion que hay que acordarse de comprobar"
+  echo "  es una que se comprueba cuando el resultado no gusta."
+  echo ""
+  echo "  El presupuesto se verifica MIDIENDO el contexto de cada paquete"
+  echo "  despachado, no confiando en que el packer respeto su objetivo. En el"
+  echo "  ensayo eso atrapo a swarmbly excediendo W en material de 900 filas:"
+  echo "  un paquete del protocolo lleva su cabecera de contrato y sus acarreos,"
+  echo "  asi que pesa mas que un trozo ingenuo. N sube hasta que el pico MEDIDO"
+  echo "  cabe, y n_attempts viaja con el resultado."
+  echo "  Output: $out"
+  [ -f prompts/longform.json ] || python3 scripts/make_longform.py
+  python3 scripts/make_longform.py --verify \
+    || die "prompts/longform.json no coincide con lo que construye el generador."
+  run_tier feas-dev "$out" \
+    python3 scripts/run_feasibility.py \
+    --backend openai --embedder api \
+    --prompts prompts/longform.json --split dev \
+    --budget 2048 --rho 2.0 \
+    --out "$out" || return 1
+  echo ""
+  echo "  Si ninguna condicion de invalidacion se cumplio, el final se corre asi"
+  echo "  -- y sera su PRIMER uso:"
+  echo "    bash scripts/run_ollama.sh feas-final $out"
+  echo "  -> $out/summary.json"
+}
+
+run_feas_final() {
+  local out="$RESULTS_ROOT/feas-final-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "nombra la corrida feas-dev de la que hereda:
+    bash scripts/run_ollama.sh feas-final results/feas-dev-<stamp>"
+  case "$dev" in
+    -*) die "este tier toma el DIRECTORIO de la corrida dev:
+    bash scripts/run_ollama.sh feas-final results/feas-dev-<stamp>
+
+  Corridas feas-dev recientes:
+$(ls -1dt "$RESULTS_ROOT"/feas-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (ninguna)')" ;;
+  esac
+  read_dev_run "$dev" "false" "prompts/longform.json"
+
+  bold ""
+  bold "== feas-final — PRIMER uso del split, y una hipotesis en dos mitades =="
+  echo ""
+  echo "    H-F (factibilidad): por encima del tamano declarado, swarmbly"
+  echo "        produce respuesta y monolithic-capped no."
+  echo "    H-U (utilidad): por encima del tamano declarado, la exactitud de"
+  echo "        swarmbly en preguntas GLOBALES no es inferior a la de"
+  echo "        naive-chunk, sobre la COTA INFERIOR de un bootstrap agrupado"
+  echo "        por documento, contra un margen de no inferioridad de -5 pp."
+  echo ""
+  echo "  LA COTA INFERIOR y no la superior: aqui la afirmacion es 'no es peor',"
+  echo "  asi que el lado conservador es el de abajo. Es la imagen espejo del"
+  echo "  criterio de composicion y se declara asi por la misma razon."
+  echo ""
+  echo "  H-F es aritmetica de empaquetado, no un resultado empirico. La que"
+  echo "  puede sorprender es H-U."
+  echo "  Output: $out"
+  python3 scripts/make_longform.py --verify \
+    || die "el corpus se movio desde dev; nada de lo fijado en dev aplica."
+  run_tier feas-final "$out" \
+    python3 scripts/run_feasibility.py \
+    --backend openai --embedder api \
+    --prompts prompts/longform.json --split final \
+    --budget 2048 --rho 2.0 \
+    --out "$out" || return 1
+  echo "  -> $out/summary.json"
+}
+
 run_comp_dev_v2() {
   local out="$RESULTS_ROOT/comp-dev-v2-$STAMP"
   bold ""
@@ -1681,6 +1791,8 @@ case "$TIER" in
   comp-final-once) run_comp_final_once "$@" || true ;;
   comp-dev-v2) run_comp_dev_v2 || true ;;
   comp-final-v2) run_comp_final_v2 "$@" || true ;;
+  feas-dev) run_feas_dev || true ;;
+  feas-final) run_feas_final "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
   # already recorded the failure
   # in TIERS_FAILED and stamped the directory; this only stops `set -e` killing
@@ -1689,7 +1801,8 @@ case "$TIER" in
   # the bottom.
   all) run_v0 || true; run_v3c || true ;;
   *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-dev-once | comp-dev-v2 | comp-oracle |
-           comp-final | comp-final-once | comp-final-v2 | all" ;;
+           comp-final | comp-final-once | comp-final-v2 |
+           feas-dev | feas-final | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then

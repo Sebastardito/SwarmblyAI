@@ -1,5 +1,12 @@
 # Prerregistración — `comp-final-once`
 
+> **CERRADA 5 septiembre 2026. NOT MET por 8.61 puntos** en la cota superior:
+> +7.64, IC [+1.42, +13.61], 24 clusters, control fallando. Ninguna de las
+> cuatro condiciones invalidantes se cumplió (56 oraciones eliminadas, control
+> falla, 24 prompts, cero filas excluidas). Contra el +22.40 del 4 de septiembre
+> sobre el MISMO split, son casi quince puntos recuperados. Ver
+> `docs/RESULTS_2026-09-05_final_dedup.md`.
+
 **Escrita el 5 de septiembre de 2026, después de `comp-dev-once` y ANTES de que
 `comp-final-once` corra.** Nada de lo que sigue puede cambiar una vez iniciada
 la corrida.

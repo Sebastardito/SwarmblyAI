@@ -2108,7 +2108,7 @@ def test_the_runner_has_a_rehearsal_mode_and_it_stays_honest() -> None:
 @pytest.mark.parametrize("tier", ["smoke", "v0", "v3c", "v3c-gt", "v3c-ff",
                                   "tables-dev", "comp-dev", "comp-dev-k3",
                                   "comp-dev-once", "comp-dev-v2",
-                                  "comp-oracle"])
+                                  "comp-oracle", "feas-dev"])
 def test_every_tier_rehearses_clean(tier: str) -> None:
     """Run the tier. End to end. Through the runner. Every one of them.
 
