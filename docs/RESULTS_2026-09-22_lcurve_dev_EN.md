@@ -149,3 +149,32 @@ the floor of 0.20 at the easiest point of the design?**
 
 What does **not** come next is `lcurve-final`. The split is still unused, and
 that is the one asset of this run worth keeping intact.
+
+## 7. A correction about this same page
+
+The first version of `--calibrate` read the family pool from the backend, which
+is empty outside a tier. It silently degraded to **one** family
+(`llama3.2:3b`, 0/12 on `global` and 2/8 on `local` over ten-row tables) and
+then printed a conclusion about *the whole pool*.
+
+That figure is real and it is bad, but it is **one** family out of five. The
+conclusion it printed was not supported by what it measured.
+
+It is the same defect this page describes in the control: a check that claims
+more than it measured. That it appeared twice in one day, the second time in
+the code written to catch the first, says something about how easily it slips
+in.
+
+Fixed in two places:
+
+- The probe derives the pool from `MODELS_DEFAULT` in `scripts/run_ollama.sh`,
+  where it lives, rather than copying it or accepting whatever it is handed.
+- With fewer than two families it **refuses** instead of concluding, and says
+  how to give it the pool.
+
+Two tests hold it: one that the derivation returns the five distinct families,
+one that with a single family the calibration returns a failure rather than a
+verdict.
+
+The calibration **has still not been run**. What is known today is that one
+family of five is at the floor.

@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,31 +31,66 @@ from swarmbly_v0.grading import extract_items  # noqa: E402
 CORPUS = Path(__file__).resolve().parent.parent / "prompts" / "lcurve.json"
 
 
+RUNNER = Path(__file__).resolve().parent / "run_ollama.sh"
+
+
+def family_pool() -> list[tuple[str, str]]:
+    """El pool de familias, del entorno o del runner, nunca inventado.
+
+    `SWARMBLY_REPLICA_MODELS` lo exporta `run_ollama.sh`, así que un tramo
+    siempre lo tiene. Esta sonda se corre a mano y no lo tiene, y la primera
+    versión resolvía eso degradando en silencio a una sola familia -- y luego
+    imprimía una conclusión sobre "el pool entero" con una familia medida.
+    Ése es el mismo defecto que esta sesión lleva corrigiendo en otros sitios:
+    una comprobación que afirma más de lo que midió.
+
+    Así que la lista se saca del runner, que es donde vive, en vez de copiarse
+    aquí donde se quedaría obsoleta.
+    """
+    raw = os.environ.get("SWARMBLY_REPLICA_MODELS", "").strip()
+    if not raw and RUNNER.exists():
+        for line in RUNNER.read_text(encoding="utf-8").splitlines():
+            if line.startswith("MODELS_DEFAULT="):
+                raw = line.split("=", 1)[1].strip().strip('"')
+                break
+    pairs: list[tuple[str, str]] = []
+    for entry in raw.split(","):
+        family, _, model = entry.strip().partition(":")
+        if family and model:
+            pairs.append((family, model))
+    return pairs
+
+
 def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
     """¿Alguna familia del pool despega del piso en el caso más fácil?
 
     El eje bajo prueba es L. Si el baseline no puede hacer la tarea en el punto
     más fácil del diseño, ningún contraste entre fragmentaciones es legible, y
-    eso no se arregla con más corridas. Esta es la comprobación que la
+    eso no se arregla con más corridas. Ésta es la comprobación que la
     prerregistración debió pedir ANTES de construir la rejilla: un diseño que
     varía X tiene que mostrar primero que el instrumento responde.
     """
-    from swarmbly_v0.backends import replica_backends  # noqa: E402
-
     docs = [p for p in prompts if p["n_rows"] == n_rows and p["split"] == "dev"]
-    base = get_backend(backend_name)
-    pool = getattr(base, "family_pool", None) or ()
-    replicas = replica_backends(base, max(1, len(pool))) or [base]
+    pool = family_pool()
+    if len(pool) < 2:
+        print("REHUSADA: se necesitan al menos dos familias para decir algo "
+              f"sobre el pool, y hay {len(pool)}.\n")
+        print("  export SWARMBLY_REPLICA_MODELS="
+              "\"llama:llama3.2:3b,qwen:qwen2.5:3b,...\"")
+        print("\n  o correr esta sonda con el entorno del runner ya puesto.")
+        return 1
 
     print(f"calibración: monolítico, S = {n_rows}, {len(docs)} documentos, "
-          f"{len(replicas)} familias\n")
-    print(f"{'familia':>22} {'global':>10} {'local':>10}")
-    floor_cleared = False
-    for replica in replicas:
-        name = getattr(replica, "model", None) or getattr(replica, "family", "?")
+          f"{len(pool)} familias\n")
+    print(f"{'familia':>24} {'global':>12} {'local':>12}")
+    cleared: list[str] = []
+    for family, model in pool:
+        os.environ["SWARMBLY_MODEL"] = model
+        replica = get_backend(backend_name)
         got = {"global": [0, 0], "local": [0, 0]}
         for doc in docs:
-            text = replica.generate(doc["prompt"], max_tokens=400, temperature=0.0)
+            text = replica.generate(doc["prompt"], max_tokens=400,
+                                    temperature=0.0)
             extracted = dict(extract_items(text))
             for qid, spec in doc["key"].items():
                 kind = spec["kind"]
@@ -63,20 +99,24 @@ def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
                         == spec["expected"].strip().lower()):
                     got[kind][0] += 1
         rate = got["global"][0] / max(1, got["global"][1])
-        floor_cleared = floor_cleared or rate >= 0.20
-        print(f"{str(name):>22} {got['global'][0]:>4}/{got['global'][1]:<5} "
-              f"{got['local'][0]:>4}/{got['local'][1]:<5}  "
-              f"{'' if rate < 0.20 else '<- despega del piso'}")
+        if rate >= 0.20:
+            cleared.append(model)
+        print(f"{model:>24} {got['global'][0]:>5}/{got['global'][1]:<6} "
+              f"{got['local'][0]:>5}/{got['local'][1]:<6} "
+              f"{'<- despega del piso' if rate >= 0.20 else ''}")
+
     print()
-    if floor_cleared:
-        print("Alguna familia despega. El piso NO es del pool entero: el corpus "
-              "sirve y el arreglo está en la selección de modelos.")
+    if cleared:
+        print(f"Despegan del piso: {', '.join(cleared)}.")
+        print("El piso NO es del pool entero. El corpus sirve y el arreglo "
+              "está en qué modelos se usan.")
     else:
-        print("NINGUNA familia despega del piso de 0.20 en el caso más fácil "
-              "del diseño. Este corpus no puede medir L con este pool: hay que "
-              "bajar la dificultad POR FILA -- que el generador ya trata como "
-              "un dial separado del tamaño -- y volver a calibrar antes de "
-              "construir otra rejilla.")
+        print(f"Ninguna de las {len(pool)} familias despega del piso de 0.20 "
+              "en el caso más fácil del diseño.")
+        print("Este corpus no puede medir L con este pool. Hay que bajar la "
+              "dificultad POR FILA -- que el generador ya trata como un dial "
+              "separado del tamaño -- y calibrar de nuevo ANTES de construir "
+              "otra rejilla.")
     return 0
 
 

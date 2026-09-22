@@ -151,3 +151,32 @@ familia despega del piso de 0.20 en el caso más fácil del diseño?**
 
 Lo que **no** sigue es `lcurve-final`. El split sigue sin usar, y ése es el
 único activo de esta corrida que conviene conservar intacto.
+
+## 7. Una corrección sobre esta misma página
+
+La primera versión de `--calibrate` leía el pool de familias del backend, que
+fuera de un tramo está vacío. Degradó en silencio a **una** familia
+(`llama3.2:3b`, 0/12 en `global` y 2/8 en `local` sobre tablas de diez filas) y
+a continuación imprimió una conclusión sobre *el pool entero*.
+
+Ese dato es real y es malo, pero es **una** familia de cinco. La conclusión que
+imprimió no estaba sostenida por lo que midió.
+
+Es el mismo defecto que esta página describe en el control: una comprobación
+que afirma más de lo que midió. Que apareciera dos veces en un día, y la
+segunda en el código escrito para cazar la primera, dice algo sobre con cuánta
+facilidad se cuela.
+
+Arreglado en dos sitios:
+
+- La sonda deriva el pool de `MODELS_DEFAULT` en `scripts/run_ollama.sh`, que
+  es donde vive, en vez de copiarlo o de aceptar lo que le den.
+- Con menos de dos familias **se rehúsa** en lugar de concluir, y dice cómo
+  darle el pool.
+
+Dos tests lo fijan: uno que la derivación devuelve las cinco familias
+distintas, otro que con una sola familia la calibración devuelve un fallo en
+vez de un veredicto.
+
+La calibración **sigue sin correrse**. Lo que se sabe hoy es que una familia de
+cinco está en el piso.

@@ -212,3 +212,47 @@ def test_a_baseline_with_room_to_move_does_not_invalidate() -> None:
     notes = _invalidations(rows, paired_contrast(rows, "local"), budget=2048)
     assert not any("PISO DEL BASELINE" in note for note in notes)
     assert BASELINE_FLOOR == pytest.approx(0.20)
+
+
+# --------------------------------------------------------------------------- #
+# La sonda de calibración
+
+def test_the_probe_derives_the_family_pool_from_the_runner() -> None:
+    """Cinco familias, y salen de donde viven.
+
+    La primera versión de la sonda leía `family_pool` del backend, que está
+    vacío fuera de un tramo, y degradaba en silencio a UNA familia -- y luego
+    imprimía una conclusión sobre "el pool entero". Una comprobación que
+    afirma más de lo que midió es peor que ninguna, porque se cree.
+    """
+    import os
+
+    from probe_lcurve import family_pool
+
+    previous = os.environ.pop("SWARMBLY_REPLICA_MODELS", None)
+    try:
+        pool = family_pool()
+    finally:
+        if previous is not None:
+            os.environ["SWARMBLY_REPLICA_MODELS"] = previous
+    assert len(pool) >= 5, pool
+    assert len({family for family, _ in pool}) == len(pool), (
+        "las familias tienen que ser distintas, o la diversidad es nominal")
+
+
+def test_the_probe_refuses_to_speak_about_a_pool_of_one() -> None:
+    import os
+
+    from probe_lcurve import calibrate
+
+    previous = os.environ.get("SWARMBLY_REPLICA_MODELS")
+    os.environ["SWARMBLY_REPLICA_MODELS"] = "llama:llama3.2:3b"
+    try:
+        assert calibrate([], "mock", 10) == 1, (
+            "con una sola familia la calibración tiene que rehusarse, no "
+            "concluir")
+    finally:
+        if previous is None:
+            os.environ.pop("SWARMBLY_REPLICA_MODELS", None)
+        else:
+            os.environ["SWARMBLY_REPLICA_MODELS"] = previous
