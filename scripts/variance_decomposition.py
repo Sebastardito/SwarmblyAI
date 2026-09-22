@@ -66,6 +66,21 @@ def decompose(a: dict[str, float], b: dict[str, float]) -> dict[str, float]:
     if len(shared) < 8:
         raise SystemExit(f"sólo {len(shared)} prompts en común; hacen falta 8+")
     pairs = [(a[k], b[k]) for k in shared]
+    if all(x == y for x, y in pairs):
+        raise SystemExit(
+            "REHUSADA: las dos corridas son idénticas en los "
+            f"{len(shared)} prompts.\n\n"
+            "  Cambiar la semilla no perturba la generación: a temperatura 0\n"
+            "  esta tubería es determinista, y la segunda corrida reprodujo la\n"
+            "  primera celda por celda. No hay dos medidas que descomponer.\n\n"
+            "  Eso NO invalida la pregunta, la responde: si repetir el mismo\n"
+            "  prompt da el mismo resultado, repetir no compra nada y la única\n"
+            "  vía es más prompts.\n\n"
+            "  Lo que sí queda sin estimar es sigma_entre, y NO se puede tomar\n"
+            "  de la mitad dev: dev tiene la mitad de prompts que final y su\n"
+            "  dispersión no es la misma. Usar --sigma-between con la cifra de\n"
+            "  la corrida final, y --observed para que el plan se contraste\n"
+            "  contra un error estándar realmente medido.")
     diff = [x - y for x, y in pairs]
     mean = [(x + y) / 2 for x, y in pairs]
     noise_var = statistics.pvariance(diff) / 2
@@ -102,13 +117,30 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run_a", type=Path)
     parser.add_argument("run_b", type=Path)
+    parser.add_argument("--sigma-between", type=float, default=None,
+                        help="Desviación entre prompts, en puntos, tomada de "
+                             "la corrida con MÁS clusters. Salta la "
+                             "descomposición.")
+    parser.add_argument("--observed", nargs=2, metavar=("N", "SE"), type=float,
+                        default=None,
+                        help="Un error estándar realmente medido y su n, para "
+                             "contrastar el plan. Si el plan no lo reproduce, "
+                             "el plan está mal y se rehúsa.")
     parser.add_argument("--effect", type=float, default=None,
                         help="Efecto verdadero supuesto, en puntos. Por "
                              "defecto la media observada de las dos corridas.")
     arguments = parser.parse_args(argv)
 
-    a, b = deltas(arguments.run_a), deltas(arguments.run_b)
-    result = decompose(a, b)
+    if arguments.sigma_between is not None:
+        result = {"n_prompts": 0, "sigma_noise": 0.0,
+                  "sigma_between": arguments.sigma_between,
+                  "total_sd_one_run": arguments.sigma_between,
+                  "mean_a": 0.0, "mean_b": 0.0}
+        print(f"sigma_entre dada: {arguments.sigma_between:.2f} puntos; "
+              "repetir no compra nada en una tubería determinista.")
+    else:
+        a, b = deltas(arguments.run_a), deltas(arguments.run_b)
+        result = decompose(a, b)
     effect = (arguments.effect if arguments.effect is not None
               else (result["mean_a"] + result["mean_b"]) / 2)
 
@@ -134,6 +166,21 @@ def main(argv: list[str] | None = None) -> int:
     else:
         print("  -> las dos vías compran algo; la tabla de abajo dice cuál "
               "cuesta menos.")
+
+    if arguments.observed:
+        n_obs, se_obs = arguments.observed
+        se_model = math.sqrt(result["sigma_between"] ** 2 / n_obs
+                             + result["sigma_noise"] ** 2 / n_obs)
+        ratio = se_model / max(1e-9, se_obs)
+        print(f"\ncontraste con un SE medido: n={n_obs:.0f} dio {se_obs:.2f}; "
+              f"el plan predice {se_model:.2f} (x{ratio:.2f})")
+        if not 0.8 <= ratio <= 1.25:
+            raise SystemExit(
+                "  REHUSADO: el plan no reproduce un error estándar que ya se "
+                "midió.\n  Una tabla de tamaños que se equivoca en el punto "
+                "donde hay dato\n  no se puede creer en los puntos donde no lo "
+                "hay. Corregir sigma_entre\n  antes de dimensionar nada.")
+        print("  el plan reproduce el dato medido; la tabla se puede leer")
 
     print(f"\nefecto supuesto {effect:+.2f} puntos, umbral {THRESHOLD_POINTS}")
     print(f"\n{'prompts':>8} {'repet':>6} {'corridas':>9} {'SE':>7} "

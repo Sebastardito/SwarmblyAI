@@ -329,3 +329,44 @@ def test_repeats_cannot_beat_prompts_when_there_is_no_noise() -> None:
     for prompts, errors in by_prompts.items():
         assert max(errors) - min(errors) < 1e-9, (
             f"con ruido cero, repetir cambió el SE en P={prompts}: {errors}")
+
+
+def test_two_identical_runs_are_refused_not_decomposed() -> None:
+    """Dos corridas idénticas no son dos medidas.
+
+    El retest del 22 de septiembre cambió la semilla y reprodujo la primera
+    corrida en 36 de 36 celdas: a temperatura 0 esta tubería es determinista.
+    La descomposición devolvía sigma_ruido = 0 y una tabla donde TODO cumplía
+    -- incluido n=24, que es el tamaño que ya había fallado.
+    """
+    from variance_decomposition import decompose
+
+    same = {f"p{i}": float(i) for i in range(12)}
+    with pytest.raises(SystemExit) as raised:
+        decompose(same, dict(same))
+    assert "idénticas" in str(raised.value)
+
+
+def test_a_plan_that_misses_a_measured_standard_error_is_refused() -> None:
+    """Una tabla que se equivoca donde hay dato no vale donde no lo hay.
+
+    sigma tomado de la mitad dev (11.46) predecía SE 2.34 con n=24. La corrida
+    final con n=24 midió 4.16. La tabla decía que 24 prompts bastaban.
+    """
+    import subprocess
+    import sys as _sys
+
+    def run(sigma: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [_sys.executable, "scripts/variance_decomposition.py", "x", "y",
+             "--sigma-between", sigma, "--observed", "24", "4.16",
+             "--effect", "-0.35"],
+            cwd=ROOT, capture_output=True, text=True)
+
+    bad = run("11.46")
+    assert bad.returncode != 0, bad.stdout
+    assert "REHUSADO" in bad.stdout + bad.stderr
+
+    good = run("20.36")
+    assert good.returncode == 0, good.stderr
+    assert "reproduce el dato medido" in good.stdout
