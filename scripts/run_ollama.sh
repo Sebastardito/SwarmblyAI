@@ -1813,6 +1813,51 @@ $(ls -1dt "$RESULTS_ROOT"/lcurve-dev-* 2>/dev/null | head -3 | sed 's/^/    /' |
   echo "  -> $out/summary.json"
 }
 
+run_comp_retest() {
+  local out="$RESULTS_ROOT/comp-dev-v2-retest-$STAMP"
+  bold ""
+  bold "== comp-dev-v2-retest -- cuanta de la varianza entre prompts es ruido =="
+  echo ""
+  echo "  El obstaculo para dar potencia al resultado de composicion no es el"
+  echo "  numero de prompts: es que la desviacion ENTRE prompts es de 20.36"
+  echo "  puntos contra un umbral de 5. Con esa dispersion hacen falta 60"
+  echo "  clusters para que la cota superior caiga bajo el umbral, y eso solo"
+  echo "  si el efecto verdadero se queda donde esta el estimador puntual."
+  echo ""
+  echo "  Pero 'varianza entre prompts' son DOS COSAS sumadas: que los prompts"
+  echo "  de verdad difieran, y que la medicion tenga ruido. Solo la primera"
+  echo "  se combate con mas prompts; la segunda se combate con mas repeticiones"
+  echo "  del mismo prompt. Construir un corpus de 72 sin saber cual domina es"
+  echo "  gastar computo a ciegas."
+  echo ""
+  echo "  Esto corre la MITAD DEV de v2 por segunda vez, con semilla 1 en vez"
+  echo "  de 0. Mismo corpus, mismo split, misma configuracion: lo unico que"
+  echo "  cambia es la semilla. La correlacion test-retest por prompt separa"
+  echo "  las dos varianzas."
+  echo ""
+  echo "  DEV Y NO FINAL, a proposito. La mitad dev existe para esto y se puede"
+  echo "  reusar; la final se gasta al mirarla y no se mira para estimar una"
+  echo "  varianza."
+  echo ""
+  [ -f prompts/composition_v2.json ] || python3 scripts/make_composition.py --corpus v2
+  python3 scripts/make_composition.py --corpus v2 --verify \
+    || die "prompts/composition_v2.json no coincide con el generador."
+  run_tier comp-dev-v2-retest "$out" \
+    python3 -m swarmbly_v0 run \
+    --backend openai --embedder api \
+    --prompts prompts/composition_v2.json --split dev \
+    --rho 4.0 --n 3,8 --k 1 --enforce-term-once \
+    --declare-composition 'composition@rho=4.0@N=3@k=1' \
+    --declare-composition 'composition@rho=4.0@N=8@k=1' \
+    --candidates 2 --seed 1 \
+    --out "$out" || return 1
+  echo ""
+  echo "  Ahora la descomposicion, contra la corrida dev de semilla 0:"
+  echo "    python3 scripts/variance_decomposition.py \\"
+  echo "      results/comp-dev-v2-<semilla0> $out"
+  echo "  -> $out/summary.json"
+}
+
 case "$TIER" in
   smoke)
     out="$RESULTS_ROOT/smoke-$STAMP"
@@ -1879,6 +1924,7 @@ case "$TIER" in
   comp-final-v2) run_comp_final_v2 "$@" || true ;;
   feas-dev) run_feas_dev || true ;;
   feas-final) run_feas_final "$@" || true ;;
+  comp-dev-v2-retest) run_comp_retest || true ;;
   lcurve-dev) run_lcurve_dev || true ;;
   lcurve-final) run_lcurve_final "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
@@ -1890,7 +1936,8 @@ case "$TIER" in
   all) run_v0 || true; run_v3c || true ;;
   *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-dev-once | comp-dev-v2 | comp-oracle |
            comp-final | comp-final-once | comp-final-v2 |
-           feas-dev | feas-final | lcurve-dev | lcurve-final | all" ;;
+           feas-dev | feas-final | comp-dev-v2-retest |
+           lcurve-dev | lcurve-final | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then

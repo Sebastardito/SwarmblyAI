@@ -282,3 +282,50 @@ def test_an_effect_every_family_shows_is_not_refused(capsys) -> None:
     printed = capsys.readouterr().out
     assert "REHUSADA" not in printed, printed
     assert "le cuesta al pool" in printed
+
+
+# --------------------------------------------------------------------------- #
+# La descomposición de varianza
+
+def test_noise_and_between_prompt_variance_are_recovered() -> None:
+    """Dos corridas sintéticas con varianzas conocidas se recuperan.
+
+    Sin esto, la descomposición es una fórmula que nadie comprobó, y de ella
+    sale el tamaño del corpus v3. Un corpus dimensionado por una fórmula sin
+    test es una noche de cómputo apostada a un álgebra.
+    """
+    import random
+
+    from variance_decomposition import decompose
+
+    rng = random.Random(0)
+    true = {f"p{i:03d}": rng.gauss(0, 12.0) for i in range(400)}
+    a = {k: v + rng.gauss(0, 6.0) for k, v in true.items()}
+    b = {k: v + rng.gauss(0, 6.0) for k, v in true.items()}
+    got = decompose(a, b)
+    assert 4.5 < got["sigma_noise"] < 7.5, got
+    assert 10.0 < got["sigma_between"] < 14.0, got
+
+
+def test_the_decomposition_refuses_too_few_prompts() -> None:
+    from variance_decomposition import decompose
+
+    with pytest.raises(SystemExit):
+        decompose({"a": 1.0, "b": 2.0}, {"a": 1.0, "b": 2.0})
+
+
+def test_repeats_cannot_beat_prompts_when_there_is_no_noise() -> None:
+    """Si el ruido es cero, repetir no mueve el error estándar.
+
+    Es la propiedad que decide entre las dos vías, así que se comprueba en vez
+    de confiarse a la lectura de la fórmula.
+    """
+    from variance_decomposition import plan
+
+    rows = plan(sigma_between=20.0, sigma_noise=0.0, effect=0.0)
+    by_prompts = {}
+    for prompts, repeats, _, se, _ in rows:
+        by_prompts.setdefault(prompts, []).append(se)
+    for prompts, errors in by_prompts.items():
+        assert max(errors) - min(errors) < 1e-9, (
+            f"con ruido cero, repetir cambió el SE en P={prompts}: {errors}")
