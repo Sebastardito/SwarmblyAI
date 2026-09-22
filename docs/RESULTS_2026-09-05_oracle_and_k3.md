@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # comp-oracle and comp-dev-k3 — 5 September 2026
 
 Two runs, both short, both testing something named before it started. One

@@ -136,8 +136,11 @@ def grade(text: str, key: Mapping[str, Mapping[str, str]]) -> dict[str, Any]:
     by_kind: dict[str, list[bool]] = defaultdict(list)
     detail: dict[str, Any] = {}
     for qid, spec in key.items():
-        # extract_items normaliza a dos digitos; las claves son Q1..Q5.
-        raw = given.get(qid) or given.get(qid.lstrip("Q").zfill(2)) or ""
+        # `extract_items` normaliza el id a dos digitos, y SOLO reconoce
+        # etiquetas numericas. El corpus las emite ya normalizadas para que el
+        # emparejamiento sea una igualdad y no una traduccion -- una traduccion
+        # es donde vivio tres horas el defecto de la primera version.
+        raw = given.get(qid.zfill(2), "")
         ok = grade_answer(raw, spec["expected"], spec.get("mode", "exact_norm"))
         ok = bool(ok)
         by_kind[spec["kind"]].append(ok)

@@ -1,3 +1,11 @@
+---
+status: partially_withdrawn
+stands: the accuracy, agreement and constraint figures
+reason: >
+  Every coherence tax and every monotone-in-N claim was produced by a metric
+  that was not arm-neutral and whose penalty grew with N by construction.
+lang: en
+---
 # V4 — the effective size of a semantic fragment
 
 > ## ⚠ The coherence-tax figures in this document are SUPERSEDED (27 August 2026)

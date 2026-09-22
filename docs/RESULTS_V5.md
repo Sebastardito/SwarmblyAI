@@ -1,3 +1,11 @@
+---
+status: partially_withdrawn
+stands: the accuracy, agreement and constraint figures
+reason: >
+  Every coherence tax and every monotone-in-N claim was produced by a metric
+  that was not arm-neutral and whose penalty grew with N by construction.
+lang: en
+---
 # V5 — power, the typed carry, and where the confidence map finally has a signal
 
 > ## ⚠ The coherence-tax figures in this document are SUPERSEDED (27 August 2026)

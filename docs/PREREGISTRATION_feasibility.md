@@ -1,4 +1,25 @@
+---
+status: current
+note: >
+  The preregistration stands. Its measurement does not exist yet: the
+  feas-dev and feas-final runs of 5 September were invalidated by the corpus
+  item ids, and the corrected corpus (digest 8f6c3565) has not been run.
+lang: es
+---
 # Prerregistración — la frontera de factibilidad
+
+> **CORRIDA 1 INVÁLIDA (5 sep, 23:47 y 23:52).** La condición 1 se cumplió en
+> las dos mitades: `naive-chunk` 0 % en `local`. El diagnóstico no fue el
+> troceado sino **el calificador**: el corpus salió con ids `[Q1]`..`[Q5]` y
+> `grading.extract_items` sólo reconoce etiquetas numéricas, así que devolvía
+> lista vacía y **toda** respuesta de **todo** brazo se calificó mal.
+> `monolithic-capped` sacó 0/2 en documentos de 24 filas que tenía enteros en un
+> solo nodo — imposible como fallo de capacidad.
+>
+> Corregido a ids numéricos; corpus regenerado (digest `8f6c3565…`, el anterior
+> nunca se usó válidamente). Nada de la hipótesis, del presupuesto ni de los
+> brazos cambia. **La condición de invalidación hizo su trabajo: tres horas
+> perdidas y cero números publicados.**
 
 **Escrita el 5 de septiembre de 2026, ANTES de construir el corpus y antes de
 correr nada.** Es la primera medición del proyecto que puede salir a favor de la
@@ -10,7 +31,7 @@ arquitectura, y por eso el diseño se fija primero.
 
 `REVISION_2026-09-05_que_hemos_medido.md` estableció el hecho que reencuadra
 todo lo anterior: **el prompt más grande del proyecto mide 375 tokens y el modelo
-más chico tiene una ventana de 8.192.** Ninguna tarea, en ningún corpus, ha
+más chico tiene una ventana de 8192.** Ninguna tarea, en ningún corpus, ha
 necesitado fragmentarse. Tres semanas midiendo cuánto cuesta partir algo que no
 hacía falta partir, y la única respuesta posible a esa pregunta era "cuesta".
 
@@ -90,7 +111,7 @@ troceado funciona.
 
 | # | condición | consecuencia |
 |---|---|---|
-| 1 | `naive-chunk` falla las `local` por debajo del 80 % | el troceado está roto; nada por debajo se puede leer |
+| 1 | `naive-chunk` falla las `local` por debajo del 80 % | el troceado está roto **o el calificador está ciego**; nada por debajo se puede leer. En la corrida 1 fue lo segundo. |
 | 2 | `monolithic-capped` resulta factible en todos los tamaños | `W` no está mordiendo; el diseño no probó nada |
 | 3 | Cualquier brazo excede `W` en algún nodo | el presupuesto no se está imponiendo, y la factibilidad medida es ficticia |
 | 4 | menos de 20 documentos con pregunta global | sin veredicto, como en toda medición declarada de este proyecto |
@@ -108,6 +129,20 @@ patrón que `packing_ceiling`: medir, no derivar.
 * **Nada sobre modelos grandes.** Sigue siendo 3B, y un modelo que siguiera
   instrucciones mejor movería las dos ramas a la vez.
 * **Nada sobre `W` distinto de 2048.** Un barrido de `W` sería otra prerregistración.
+
+## Lo que el ensayo no puede probar, y por eso hay un fixture
+
+El ensayo con backend mock demuestra que el tier **corre**: las funciones, las
+invocaciones, el wrapper, las post-condiciones. No puede demostrar que el
+calificador **lee**, porque un mock que no sabe contestar produce 0/5 tanto si
+el calificador funciona como si está ciego, y las dos cosas se ven idénticas.
+
+Ésa es la brecha que costó la corrida 1, y no estaba en la doctrina de ensayo.
+El remedio es un **fixture**: una respuesta correcta escrita a mano, calificada,
+que tiene que sacar 5/5 — y su imagen espejo, una respuesta absurda que tiene
+que sacar 0/5. Ningún backend puede dar esos dos tests.
+
+> **El ensayo valida la fontanería, no la semántica.**
 
 ## Los ejes que se registran sin declarar hipótesis
 

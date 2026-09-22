@@ -1,3 +1,12 @@
+---
+status: partially_withdrawn
+stands: Sections 5 and 6
+reason: >
+  Sections 1 to 4 and 7 rest on a coherence metric that was not arm-neutral:
+  one identical answer scores 0.9375 through one arm's convention and 0.5000
+  through the other.
+lang: en
+---
 # tables-dev — the hypothesis was refuted, and something else was found
 
 > ## ⚠ WITHDRAWN, 27 August 2026 — §1 to §4 and §7 do not stand

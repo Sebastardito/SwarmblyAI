@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # comp-oracle, five arms — 5 September 2026
 
 `results/comp-oracle-20260905-112603`, corpus digest `e9e382b9…`, twelve dev

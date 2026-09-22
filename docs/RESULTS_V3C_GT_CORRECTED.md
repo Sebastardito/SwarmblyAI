@@ -1,3 +1,11 @@
+---
+status: withdrawn
+reason: >
+  Every figure was produced under an arm asymmetry in the STIMULUS rather
+  than in the metric: one sequential cue in the shared instruction planned
+  all 15 prompts as four-deep chains.
+lang: en
+---
 # V3c against ground truth — the confidence map fails, and this run says why
 
 > # ⚠ WITHDRAWN — 4 September 2026

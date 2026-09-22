@@ -1,3 +1,10 @@
+---
+status: historical
+reason: >
+  A dated audit of 27 August. Its findings are left as written; the remedial
+  steps it prescribes were carried out and are not a live instruction.
+lang: en
+---
 # Versioning audit — 27 August 2026
 
 > ## Status update — the remedial steps have been carried out

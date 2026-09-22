@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # Swarmbly AI
 
 ### La barrera para servir inteligencia artificial deja de ser el capital y pasa a ser la participación
@@ -10,19 +14,19 @@ AGPL-3.0-or-later (software) · CC BY 4.0 (texto) · `github.com/Sebastardito/Sw
 
 ## La asimetría
 
-El conocimiento para construir inteligencia artificial es público. Los pesos de los modelos, las recetas de entrenamiento y los motores de inferencia se publican abiertamente y mejoran cada mes. **El capital para operarla no lo es.** Los centros de datos consumieron 415 TWh en 2024 —cerca del 1,5 % de la electricidad mundial— con proyecciones de 945 TWh para 2030, y esa curva de crecimiento pasa por la construcción, que solo está al alcance de quien puede financiarla.
+El conocimiento para construir inteligencia artificial es público. Los pesos de los modelos, las recetas de entrenamiento y los motores de inferencia se publican abiertamente y mejoran cada mes. **El capital para operarla no lo es.** Los centros de datos consumieron 415 TWh en 2024 —cerca del 1.5 % de la electricidad mundial— con proyecciones de 945 TWh para 2030, y esa curva de crecimiento pasa por la construcción, que solo está al alcance de quien puede financiarla.
 
 De modo que una tecnología cuyo conocimiento es de todos termina controlada por quien puede pagar los edificios. No por una patente. Por un contrato de energía.
 
-**Mientras tanto, el hardware ya existe, encendido y ocioso.** La plataforma insignia del cómputo voluntario agrega hoy alrededor de **700.000 dispositivos activos, 4 millones de núcleos de CPU, 560.000 GPU y 93 PetaFLOPS**, desde una comunidad que ha *encogido* un 80 % en dos décadas. Esa cifra es un suelo, tomado de un único nicho en declive, no una proyección. A nivel de una sola máquina, se reporta que una RTX 4090 ociosa sirve inferencia de modelos de lenguaje a **$0,111–0,149 por millón de tokens**, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del costo.
+**Mientras tanto, el hardware ya existe, encendido y ocioso.** La plataforma insignia del cómputo voluntario agrega hoy alrededor de **700000 dispositivos activos, 4 millones de núcleos de CPU, 560000 GPU y 93 PetaFLOPS**, desde una comunidad que ha *encogido* un 80 % en dos décadas. Esa cifra es un suelo, tomado de un único nicho en declive, no una proyección. A nivel de una sola máquina, se reporta que una RTX 4090 ociosa sirve inferencia de modelos de lenguaje a **$0.111–0.149 por millón de tokens**, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del costo.
 
 La capacidad de inferencia ociosa del mundo no es una hipótesis. Lo que faltaba era un protocolo bajo el cual pudiera usarse.
 
 ## Por qué nadie lo ha logrado todavía
 
-Todos los intentos serios hasta ahora han repartido el **modelo**: distribuyen capas del transformer entre máquinas, de modo que las activaciones intermedias cruzan la internet pública en cada token generado. Ese diseño choca de frente con un muro físico: la interconexión de un centro de datos mueve 900 GB/s; la subida doméstica mueve unos 60 Mbps. **Una razón de aproximadamente 120.000×**, y de cuatro a cinco órdenes de magnitud en latencia.
+Todos los intentos serios hasta ahora han repartido el **modelo**: distribuyen capas del transformer entre máquinas, de modo que las activaciones intermedias cruzan la internet pública en cada token generado. Ese diseño choca de frente con un muro físico: la interconexión de un centro de datos mueve 900 GB/s; la subida doméstica mueve unos 60 Mbps. **Una razón de aproximadamente 120000×**, y de cuatro a cinco órdenes de magnitud en latencia.
 
-Los resultados medidos coinciden con la predicción. Petals, la implementación de referencia de ese enfoque, pierde el 31 % de su rendimiento solo por la red al pasar de un enlace de laboratorio a uno realista; un enjambre geodistribuido real de catorce servidores alcanza 0,83 pasos por segundo.
+Los resultados medidos coinciden con la predicción. Petals, la implementación de referencia de ese enfoque, pierde el 31 % de su rendimiento solo por la red al pasar de un enlace de laboratorio a uno realista; un enjambre geodistribuido real de catorce servidores alcanza 0.83 pasos por segundo.
 
 Eso no es una mala implementación. Es la respuesta correcta a la pregunta equivocada.
 
@@ -32,7 +36,7 @@ Swarmbly hace otra pregunta: no *cómo ejecutar un modelo grande repartido entre
 
 Un orquestador pequeño, en el computador del propio usuario, descompone la petición en microtareas semánticas. Cada una se despacha **una sola vez**, de forma asíncrona, a un nodo voluntario que ejecuta un modelo pequeño completo. Los fragmentos devueltos —*contigs*, en el vocabulario del ensamblaje de genomas que el diseño toma prestado deliberadamente— se verifican, se seleccionan y se empalman localmente.
 
-**La red se cruza una vez por fragmento y por sesión, en lugar de una vez por capa y por token.** Ese único cambio mueve la arquitectura del lado del muro de 120.000× donde pierde, al lado donde el hardware doméstico puede siquiera participar. Repartir un modelo crea una cadena, donde cada máquina espera a la anterior. Repartir un problema crea un conjunto, donde todas trabajan a la vez. Ese contraste es arquitectónico: el rendimiento y la latencia de Swarmbly todavía no se han medido, y esta página no hace ninguna afirmación de velocidad en su nombre.
+**La red se cruza una vez por fragmento y por sesión, en lugar de una vez por capa y por token.** Ese único cambio mueve la arquitectura del lado del muro de 120000× donde pierde, al lado donde el hardware doméstico puede siquiera participar. Repartir un modelo crea una cadena, donde cada máquina espera a la anterior. Repartir un problema crea un conjunto, donde todas trabajan a la vez. Ese contraste es arquitectónico: el rendimiento y la latencia de Swarmbly todavía no se han medido, y esta página no hace ninguna afirmación de velocidad en su nombre.
 
 ## Lo que ya está medido
 
@@ -43,13 +47,13 @@ contra una celda nombrada antes de la ejecución. **El criterio no se alcanzó.*
 
 | | |
 |---|---|
-| Celda, nombrada de antemano | `table_summary`, ρ = 3,5, N = 2, k = 1 |
-| Calidad perdida por fragmentar | **+2,30 %** |
-| IC del 95 %, bootstrap agrupado por prompt | **[−2,05 %, +7,49 %]** |
+| Celda, nombrada de antemano | `table_summary`, ρ = 3.5, N = 2, k = 1 |
+| Calidad perdida por fragmentar | **+2.30 %** |
+| IC del 95 %, bootstrap agrupado por prompt | **[−2.05 %, +7.49 %]** |
 | Criterio | el *límite superior* debe quedar por debajo del 5 % |
-| Veredicto | **NO ALCANZADO**, le faltan 2,49 puntos |
+| Veredicto | **NO ALCANZADO**, le faltan 2.49 puntos |
 | Corpus | 16 prompts reservados |
-| Control (N = 8, k = 1, obligado a fallar) | +16,23 %, IC [+11,33 %, +20,28 %] — se comportó |
+| Control (N = 8, k = 1, obligado a fallar) | +16.23 %, IC [+11.33 %, +20.28 %] — se comportó |
 
 La estimación puntual queda cómodamente por debajo del 5 %. El intervalo no, y
 el criterio se escribió contra el intervalo justamente para que una estimación
@@ -57,22 +61,22 @@ puntual favorable no pudiera sostenerlo por sí sola. El criterio no se alcanzó
 no se va a reescribir.
 
 La distribución es el hallazgo más útil, y es nuevo. **El prompt mediano no
-pierde absolutamente nada —0,00 %— y 11 de 16 prompts quedan en cero o por
+pierde absolutamente nada —0.00 %— y 11 de 16 prompts quedan en cero o por
 debajo** (seis negativos, cinco exactamente cero). La media está *fabricada* por
-dos prompts: `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %) suman entre
+dos prompts: `tbl24_outturn` (+28.50 %) y `tbl24_bonded` (+23.08 %) suman entre
 los dos el 140 % de ella, y sin ellos la media de los catorce restantes es
-**−1,06 %**. Es decir: **en 11 de 16 prompts de resumen de tablas, partir el
+**−1.06 %**. Es decir: **en 11 de 16 prompts de resumen de tablas, partir el
 trabajo en dos salió gratis; en dos de ellos salió caro.** Esos dos son además
-los únicos prompts donde dos fragmentos cuestan *más* que ocho (+28,50 % frente a
-+13,57 %; +23,08 % frente a +14,00 %) — que más fragmentos ayuden no es lo que
+los únicos prompts donde dos fragmentos cuestan *más* que ocho (+28.50 % frente a
++13.57 %; +23.08 % frente a +14.00 %) — que más fragmentos ayuden no es lo que
 predice una historia de impuesto de coherencia, lo que apunta a un fallo de
 calidad de partición y no a un costo de fragmentar. Es una pista, no una
 afirmación puesta a prueba, y no alcanza el listón: un costo bimodal con una
 frontera identificable vale más para un enrutador que uno bajo y uniforme, pero
 el umbral que el propio proyecto se fijó no se ha cumplido.
 
-**Una versión anterior de esta página reportaba esa pérdida cayendo de 24,1 % a
-13,7 % a medida que subía el contexto compartido, y afirmaba que la predicción se
+**Una versión anterior de esta página reportaba esa pérdida cayendo de 24.1 % a
+13.7 % a medida que subía el contexto compartido, y afirmaba que la predicción se
 había cumplido. Esa tabla queda retirada.** Dos defectos, ambos en el
 instrumento de medición y no en la arquitectura. El primero: un presupuesto de
 contexto por debajo del *piso de empaquetado* del prompt —lo que cuestan las
@@ -81,8 +85,8 @@ paquete se reduzca a su tarea desnuda, de modo que dos etiquetas de presupuesto
 distintas producen paquetes idénticos. En ese corpus, 13 de 96 celdas quedaban
 por encima del piso, y las dos filas que sostenían el descenso no tenían
 ninguna. El segundo: la métrica de coherencia no era neutral respecto del brazo
-—el mismo texto puntuó 0,9375 sin fragmentar y 0,5000 con ocho fragmentos, una
-pérdida aparente del 46,7 % sobre un texto que nunca cambió. Ambos están
+—el mismo texto puntuó 0.9375 sin fragmentar y 0.5000 con ocho fragmentos, una
+pérdida aparente del 46.7 % sobre un texto que nunca cambió. Ambos están
 corregidos y cubiertos por pruebas de regresión; el banco de pruebas ahora se
 niega a publicar una celda por debajo del piso. La retractación se conserva
 completa en `docs/RESULTS_V0_V3C.md`.
@@ -92,7 +96,7 @@ un corpus reservado y con un control que se comportó, el costo de fragmentar es
 de unos pocos puntos porcentuales y su distribución es bimodal. El umbral que el
 propio proyecto se fijó dice que eso todavía no es suficiente, y esta página lo
 dice en lugar de mover el umbral. Con una varianza entre prompts de este tamaño,
-dieciséis prompts no pueden, por pura aritmética, meter un intervalo de 9,5
+dieciséis prompts no pueden, por pura aritmética, meter un intervalo de 9.5
 puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto verdadero:
 ampliar el corpus es un requisito previo para volver a poner a prueba el
 criterio, no una manera de obtener una respuesta mejor.
@@ -104,11 +108,11 @@ un *mapa de confianza*: como familias de modelo independientes responden la
 misma microtarea, su acuerdo puede puntuarse por unidad, y un proveedor
 centralizado único no tiene nada que alinear. El mecanismo funciona. La
 afirmación de que el acuerdo predice la calidad, no. La primera medición no
-encontró **relación alguna** (*r* = −0,030 sobre 597 unidades) contra un juez
+encontró **relación alguna** (*r* = −0.030 sobre 597 unidades) contra un juez
 débil que aceptaba el 93 % de todo, así que el veredicto honesto entonces era
 *sin sustento, no refutada*. Tres ejecuciones posteriores, calificadas contra una
-clave de respuestas, dieron en cambio razones de momios comunes de **3,47, luego
-0,26, luego 1,24**: por encima, por debajo y a caballo del 1 en la misma
+clave de respuestas, dieron en cambio razones de momios comunes de **3.47, luego
+0.26, luego 1.24**: por encima, por debajo y a caballo del 1 en la misma
 pregunta. Eso no es una señal débil; es ninguna señal, medida tres veces. El
 mapa de confianza queda **retirado**, no degradado, y sale del banco de pruebas
 V7.

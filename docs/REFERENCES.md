@@ -1,3 +1,7 @@
+---
+status: current
+lang: es+en
+---
 # Swarmbly AI — Bibliografía Anotada Maestra / Master Annotated Bibliography
 
 **Fecha de compilación / Compile date: 2026-08-12.**

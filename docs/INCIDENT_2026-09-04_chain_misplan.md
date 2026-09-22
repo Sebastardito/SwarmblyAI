@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Incident — every enumerated prompt was planned as a dependency chain
 
 **Found:** 4 September 2026, diagnosing why a single fragmented worker produced a

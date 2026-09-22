@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Semantic Fragmentation and Stochastic Assembly: A Protocol for Decentralized Language-Model Inference over Untrusted Volunteer Nodes
 
 **Sebastián A. Espinoza-Ulloa, Ph.D.**

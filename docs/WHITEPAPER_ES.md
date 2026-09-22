@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # Fragmentación semántica y ensamblaje estocástico: un protocolo de inferencia descentralizada de modelos de lenguaje sobre nodos voluntarios no confiables
 
 **Sebastián A. Espinoza-Ulloa, Ph.D.**
@@ -29,11 +33,11 @@ Segunda, descompongo el rendimiento del enjambre en **cobertura** (¿produce alg
 
 Tercera, especifico el protocolo de red, el algoritmo de ensamblaje, el esquema de verificación y las derivaciones de los parámetros con un detalle implementable.
 
-Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado, y el criterio no se alcanzó.** Sobre un instrumento corregido, contra una celda nombrada antes de la ejecución y con un control obligado a fallar, el impuesto con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de **+2,30 %, IC del 95 % [−2,05 %, +7,49 %]**: la estimación puntual queda por debajo del 5 % y el intervalo no, y el criterio se escribió contra el intervalo; le faltan 2,49 puntos en el límite superior. La distribución es el resultado más informativo: el **efecto mediano por prompt es exactamente 0,00 %** y **11 de 16 prompts quedan en cero o por debajo**, mientras que dos prompts —`tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %)— explican el 140 % de la media, y sin ellos los catorce restantes promedian **−1,06 %**. Es decir: en 11 de 16 prompts de resumen de tablas, partir el trabajo en dos salió gratis; en dos de ellos salió caro. Una versión anterior de este artículo reportaba el impuesto cayendo de 24,1 % a 13,7 % a lo largo de *S* y daba la predicción por confirmada; ese resultado queda **retirado**: el eje ρ no se había movido (13 de 96 celdas quedaban por encima de su piso de empaquetado) y la métrica de coherencia no era neutral respecto del brazo (+46,7 % de impuesto aparente sobre un texto que nunca cambió). La afirmación acompañante del mapa de confianza queda **retirada** también: el acuerdo entre réplicas independientes no mostró relación con la calidad juzgada (*r* = −0,030 sobre 597 unidades), y tres ejecuciones posteriores contra verdad de referencia situaron la razón de momios común en 3,47, 0,26 y 1,24 — ninguna señal, medida tres veces. La sección 11.3 reporta la retractación completa y la 11.3a la medición que la reemplaza.
+Cuarta, publico un banco de pruebas de referencia que mide el **impuesto de coherencia** —la calidad que se pierde por la fragmentación y el reensamblaje— en función de *S*, junto con un criterio explícito de continuidad o abandono bajo el cual la arquitectura debería descartarse. **Esa medición ya se ha realizado, y el criterio no se alcanzó.** Sobre un instrumento corregido, contra una celda nombrada antes de la ejecución y con un control obligado a fallar, el impuesto con ρ = 3.5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de **+2.30 %, IC del 95 % [−2.05 %, +7.49 %]**: la estimación puntual queda por debajo del 5 % y el intervalo no, y el criterio se escribió contra el intervalo; le faltan 2.49 puntos en el límite superior. La distribución es el resultado más informativo: el **efecto mediano por prompt es exactamente 0.00 %** y **11 de 16 prompts quedan en cero o por debajo**, mientras que dos prompts —`tbl24_outturn` (+28.50 %) y `tbl24_bonded` (+23.08 %)— explican el 140 % de la media, y sin ellos los catorce restantes promedian **−1.06 %**. Es decir: en 11 de 16 prompts de resumen de tablas, partir el trabajo en dos salió gratis; en dos de ellos salió caro. Una versión anterior de este artículo reportaba el impuesto cayendo de 24.1 % a 13.7 % a lo largo de *S* y daba la predicción por confirmada; ese resultado queda **retirado**: el eje ρ no se había movido (13 de 96 celdas quedaban por encima de su piso de empaquetado) y la métrica de coherencia no era neutral respecto del brazo (+46.7 % de impuesto aparente sobre un texto que nunca cambió). La afirmación acompañante del mapa de confianza queda **retirada** también: el acuerdo entre réplicas independientes no mostró relación con la calidad juzgada (*r* = −0.030 sobre 597 unidades), y tres ejecuciones posteriores contra verdad de referencia situaron la razón de momios común en 3.47, 0.26 y 1.24 — ninguna señal, medida tres veces. La sección 11.3 reporta la retractación completa y la 11.3a la medición que la reemplaza.
 
 Quinta, introduzco un segundo eje de enrutamiento, ortogonal a la sensibilidad del contenido: un clasificador de privacidad del lado del cliente asigna a cada petición un **nivel** —malla abierta de voluntarios, *enjambre de confianza* permisionado cuya pertenencia es una lista blanca criptográfica de claves públicas bajo TLS mutuo, o ejecución puramente local— y el mismo protocolo y el mismo cliente se ejecutan en los tres. Esto es lo que hace la arquitectura desplegable allí donde un voluntario anónimo no puede ser lícitamente un encargado del tratamiento, y separa dos papeles que el número de réplicas *k* venía desempeñando a la vez: la defensa frente a trabajadores deshonestos, que la lista blanca elimina, y las réplicas independientes que el mapa de confianza necesita, que no.
 
-El cómputo ya existe. Las plataformas de computación voluntaria agregan hoy del orden de 700.000 dispositivos activos, cuatro millones de núcleos de CPU y 560.000 GPU a un rendimiento medio de 93 PetaFLOPS, y lo hacen desde una base de participantes que lleva dos décadas *decreciendo*, lo que convierte esa cifra en un suelo y no en un techo. Lo que falta no es silicio. Es un protocolo bajo el cual ese silicio pueda servir inferencia de modelos de lenguaje sin que sus propietarios cedan el control y sin una interconexión de centro de datos.
+El cómputo ya existe. Las plataformas de computación voluntaria agregan hoy del orden de 700000 dispositivos activos, cuatro millones de núcleos de CPU y 560000 GPU a un rendimiento medio de 93 PetaFLOPS, y lo hacen desde una base de participantes que lleva dos décadas *decreciendo*, lo que convierte esa cifra en un suelo y no en un techo. Lo que falta no es silicio. Es un protocolo bajo el cual ese silicio pueda servir inferencia de modelos de lenguaje sin que sus propietarios cedan el control y sin una interconexión de centro de datos.
 
 Swarmbly es ese protocolo, y su consecuencia arquitectónica central es que **la barrera para servir IA deja de ser el capital y pasa a ser la participación**.
 
@@ -51,21 +55,21 @@ Enuncio con precisión lo que no afirmo —paridad de latencia, contexto ilimita
 
 La capacidad de construir modelos de lenguaje ya no es escasa. Los pesos de los modelos, las recetas de entrenamiento y los motores de inferencia se publican abiertamente y mejoran cada mes. Lo que sigue siendo escaso —y lo que concentra el poder— es el capital necesario para *operarlos* a escala: los aceleradores, los edificios, los contratos de energía y la interconexión.
 
-Esa concentración tiene una forma medible. Los centros de datos consumieron 415 TWh en 2024, en torno al 1,5 % de la electricidad mundial, con proyecciones de 945 TWh para 2030 [83]. Las instalaciones hiperescala de Estados Unidos se abastecen de redes eléctricas medidas en 545 gCO₂/kWh frente a una media nacional de 370 g [84]. Son las cifras de una industria cuya vía de crecimiento pasa por la construcción, y la construcción solo está al alcance de quien puede financiarla.
+Esa concentración tiene una forma medible. Los centros de datos consumieron 415 TWh en 2024, en torno al 1.5 % de la electricidad mundial, con proyecciones de 945 TWh para 2030 [83]. Las instalaciones hiperescala de Estados Unidos se abastecen de redes eléctricas medidas en 545 gCO₂/kWh frente a una media nacional de 370 g [84]. Son las cifras de una industria cuya vía de crecimiento pasa por la construcción, y la construcción solo está al alcance de quien puede financiarla.
 
 La consecuencia es estructural antes que conspirativa: una tecnología cuyo *conocimiento* es público se vuelve, en la práctica, controlable por quien pueda costear el *hardware*. La apertura de los pesos no democratiza una capacidad cuya operación cuesta cientos de millones de dólares.
 
-**Y sin embargo el hardware ya existe, distribuido y ocioso.** La plataforma insignia de computación voluntaria agrega aproximadamente 700.000 dispositivos activos, 4 millones de núcleos de CPU y 560.000 GPU a 93 PetaFLOPS de media [47], y lo hace desde una base de participantes que ha pasado de cerca de un millón a unos doscientos mil en dos décadas. Esa cifra es un *suelo*, extraído de un nicho en declive, y no una proyección de lo que podría movilizar un protocolo convincente. Medido a nivel del nodo individual, las GPU domésticas ociosas sirven inferencia de LLM a 0,111–0,149 $ por millón de tokens en una RTX 4090, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del coste [49].
+**Y sin embargo el hardware ya existe, distribuido y ocioso.** La plataforma insignia de computación voluntaria agrega aproximadamente 700000 dispositivos activos, 4 millones de núcleos de CPU y 560000 GPU a 93 PetaFLOPS de media [47], y lo hace desde una base de participantes que ha pasado de cerca de un millón a unos doscientos mil en dos décadas. Esa cifra es un *suelo*, extraído de un nicho en declive, y no una proyección de lo que podría movilizar un protocolo convincente. Medido a nivel del nodo individual, las GPU domésticas ociosas sirven inferencia de LLM a 0.111–0.149 $ por millón de tokens en una RTX 4090, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del coste [49].
 
 La capacidad de inferencia ociosa del mundo no es una hipótesis. La pieza que falta es un protocolo bajo el cual pueda usarse, y la razón de que aún no exista tal protocolo es una restricción física que la siguiente sección enuncia con exactitud.
 
 ### 1.2 La restricción física y el replanteamiento
 
-Cualquier arquitectura de inferencia distribuida de modelos de lenguaje sobre hardware doméstico queda decidida, antes de elegir algoritmo alguno, por una sola medición. Una NVIDIA H100 SXM mueve 900 GB/s por GPU sobre NVLink; Quantum-2 InfiniBand ofrece 400 Gb/s por puerto y 51,2 Tb/s agregados por conmutador. El ancho de banda de subida doméstico típico es del orden de 60 Mbps. La razón es de aproximadamente 120.000× frente a NVLink y 6.700× frente a InfiniBand. La latencia intranodo de NVLink es submicrosegundo y la de InfiniBand de microsegundos de un dígito, frente a 30–170 ms de tiempo de ida y vuelta de área amplia: **cuatro a cinco órdenes de magnitud** [22, 23, 24].
+Cualquier arquitectura de inferencia distribuida de modelos de lenguaje sobre hardware doméstico queda decidida, antes de elegir algoritmo alguno, por una sola medición. Una NVIDIA H100 SXM mueve 900 GB/s por GPU sobre NVLink; Quantum-2 InfiniBand ofrece 400 Gb/s por puerto y 51.2 Tb/s agregados por conmutador. El ancho de banda de subida doméstico típico es del orden de 60 Mbps. La razón es de aproximadamente 120000× frente a NVLink y 6700× frente a InfiniBand. La latencia intranodo de NVLink es submicrosegundo y la de InfiniBand de microsegundos de un dígito, frente a 30–170 ms de tiempo de ida y vuelta de área amplia: **cuatro a cinco órdenes de magnitud** [22, 23, 24].
 
 Este único hecho parte el espacio de diseño con nitidez. Las arquitecturas que requieren comunicación *por token* quedan empujadas contra la brecha en cada paso de la generación, mientras que las que la cruzan *una vez por unidad de trabajo* no lo están, y todo lo demás en este artículo se sigue de elegir la segunda clase.
 
-El comportamiento medido de la primera clase es coherente con la predicción. Petals —la implementación de referencia de la inferencia con paralelismo de tubería sobre internet— sirve Llama-2-70B en tres T4 a 2,29 pasos/s sobre un enlace de 1 Gbit/s con RTT inferior a 5 ms, y cae a 1,57 pasos/s a 100 Mbit/s y 100 ms: una pérdida del 31 % atribuible únicamente a la red. Un enjambre geodistribuido real de catorce servidores heterogéneos alcanza 0,83 pasos/s [1, 2]. Los análisis de esquemas de paralelismo de modelo a latencias de internet pública concluyen que el paralelismo de tubería es el *único* arreglo de paralelismo de modelo viable —es el que menos comunica— y que el microlotado asíncrono no ayuda, porque la decodificación está limitada por el movimiento de la caché KV y no por el cómputo [25].
+El comportamiento medido de la primera clase es coherente con la predicción. Petals —la implementación de referencia de la inferencia con paralelismo de tubería sobre internet— sirve Llama-2-70B en tres T4 a 2.29 pasos/s sobre un enlace de 1 Gbit/s con RTT inferior a 5 ms, y cae a 1.57 pasos/s a 100 Mbit/s y 100 ms: una pérdida del 31 % atribuible únicamente a la red. Un enjambre geodistribuido real de catorce servidores heterogéneos alcanza 0.83 pasos/s [1, 2]. Los análisis de esquemas de paralelismo de modelo a latencias de internet pública concluyen que el paralelismo de tubería es el *único* arreglo de paralelismo de modelo viable —es el que menos comunica— y que el microlotado asíncrono no ayuda, porque la decodificación está limitada por el movimiento de la caché KV y no por el cómputo [25].
 
 La conclusión que extraigo no es que el paralelismo de tubería estuviera mal implementado. Es que es la respuesta correcta a la pregunta equivocada.
 
@@ -77,11 +81,11 @@ El vocabulario de diseño se toma deliberadamente del ensamblaje shotgun de geno
 
 ### 1.3 Qué hace posible esto
 
-La primera medición ya está hecha, y **el criterio no se alcanzó**: con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados, el impuesto de coherencia es de +2,30 % con un IC del 95 % de [−2,05 %, +7,49 %], y el criterio está escrito contra el límite superior, al que le faltan 2,49 puntos (sección 11.3a). Una versión anterior de esta sección afirmaba que la predicción central se había cumplido y citaba un impuesto que decrecía de forma monótona con el presupuesto de contexto; esa afirmación queda retirada: el eje ρ no se había movido, porque solo 13 de 96 celdas quedaban por encima de su propio piso de empaquetado. Lo que sobrevive es más estrecho y está mejor fundado: el **prompt mediano no pierde absolutamente nada (0,00 %)**, **11 de 16 prompts quedan en cero o por debajo**, y el control con *N* = 8 falla como estaba obligado a fallar. La media está fabricada por dos prompts, `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %), que entre los dos son el 140 % de ella; sin ellos, los otros catorce promedian −1,06 %. Así que fragmentar salió gratis en once de dieciséis prompts y caro en dos, el núcleo falsable de la sección 4 ha producido por fin un negativo real, y las cuatro cosas que siguen están motivadas por un costo bimodal medido y no por una tendencia confirmada.
+La primera medición ya está hecha, y **el criterio no se alcanzó**: con ρ = 3.5, *N* = 2, *k* = 1 sobre 16 prompts reservados, el impuesto de coherencia es de +2.30 % con un IC del 95 % de [−2.05 %, +7.49 %], y el criterio está escrito contra el límite superior, al que le faltan 2.49 puntos (sección 11.3a). Una versión anterior de esta sección afirmaba que la predicción central se había cumplido y citaba un impuesto que decrecía de forma monótona con el presupuesto de contexto; esa afirmación queda retirada: el eje ρ no se había movido, porque solo 13 de 96 celdas quedaban por encima de su propio piso de empaquetado. Lo que sobrevive es más estrecho y está mejor fundado: el **prompt mediano no pierde absolutamente nada (0.00 %)**, **11 de 16 prompts quedan en cero o por debajo**, y el control con *N* = 8 falla como estaba obligado a fallar. La media está fabricada por dos prompts, `tbl24_outturn` (+28.50 %) y `tbl24_bonded` (+23.08 %), que entre los dos son el 140 % de ella; sin ellos, los otros catorce promedian −1.06 %. Así que fragmentar salió gratis en once de dieciséis prompts y caro en dos, el núcleo falsable de la sección 4 ha producido por fin un negativo real, y las cuatro cosas que siguen están motivadas por un costo bimodal medido y no por una tendencia confirmada.
 
 **1. Capacidad de servicio sin poseerla.** Un participante aporta una máquina que ya existe y que ya consume energía cuando está ociosa. El requisito de entrada es un modelo pequeño completo, no un fragmento de uno grande, lo que sitúa el conjunto de hardware alcanzable órdenes de magnitud por encima de lo que pueden alcanzar los esquemas de paralelismo de tubería. La capacidad escala entonces con la *participación* y no con el gasto de capital: una curva de crecimiento que ningún operador centralizado puede igualar, porque la suya está acotada por lo que puede construir y financiar.
 
-**2. Un mapa de confianza que la centralización no puede producir estructuralmente: un mecanismo cuyo beneficio declarado se ha medido y se ha retirado.** La sección 8.4b lo desarrolla. En un borrador anterior de este artículo se describía como la propiedad de cara al usuario más inmediatamente valiosa de la arquitectura; las mediciones no respaldan esa descripción y se ha retirado. Lo que queda es un mecanismo que informa de *dónde* divergieron réplicas independientes, sin relación establecida entre esa señal y la calidad. Como una microtarea la responden *k* nodos que ejecutan familias de modelo *distintas*, las respuestas pueden alinearse entre sí y el acuerdo puntuarse por unidad semántica. Las regiones donde modelos independientes convergen se reportan como tales; las regiones donde divergen se exponen como de baja confianza, exactamente igual que un ensamblador reporta la calidad por base en lugar de una secuencia uniformemente confiada. **Un proveedor que ejecuta un solo modelo no tiene nada que alinear.** La redundancia que la descentralización exige resulta producir una señal que la centralización no puede obtener a ningún precio. **Que esa señal contenga información sobre la corrección es una cuestión distinta, y ya está respondida: no.** El primer intento salió plano (*r* = −0,030 sobre 597 unidades) contra un juez demasiado saturado para discriminar; el experimento contra verdad de referencia que debía zanjarlo se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de 3,47, 0,26 y 1,24 — por encima, por debajo y a caballo del 1 en la misma pregunta. El mecanismo es real y el informe de divergencias es una capacidad real. La afirmación de fiabilidad queda **retirada** (secciones 8.4b, 11.3 y L13), no a la espera de más medición.
+**2. Un mapa de confianza que la centralización no puede producir estructuralmente: un mecanismo cuyo beneficio declarado se ha medido y se ha retirado.** La sección 8.4b lo desarrolla. En un borrador anterior de este artículo se describía como la propiedad de cara al usuario más inmediatamente valiosa de la arquitectura; las mediciones no respaldan esa descripción y se ha retirado. Lo que queda es un mecanismo que informa de *dónde* divergieron réplicas independientes, sin relación establecida entre esa señal y la calidad. Como una microtarea la responden *k* nodos que ejecutan familias de modelo *distintas*, las respuestas pueden alinearse entre sí y el acuerdo puntuarse por unidad semántica. Las regiones donde modelos independientes convergen se reportan como tales; las regiones donde divergen se exponen como de baja confianza, exactamente igual que un ensamblador reporta la calidad por base en lugar de una secuencia uniformemente confiada. **Un proveedor que ejecuta un solo modelo no tiene nada que alinear.** La redundancia que la descentralización exige resulta producir una señal que la centralización no puede obtener a ningún precio. **Que esa señal contenga información sobre la corrección es una cuestión distinta, y ya está respondida: no.** El primer intento salió plano (*r* = −0.030 sobre 597 unidades) contra un juez demasiado saturado para discriminar; el experimento contra verdad de referencia que debía zanjarlo se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de 3.47, 0.26 y 1.24 — por encima, por debajo y a caballo del 1 en la misma pregunta. El mecanismo es real y el informe de divergencias es una capacidad real. La afirmación de fiabilidad queda **retirada** (secciones 8.4b, 11.3 y L13), no a la espera de más medición.
 
 **3. Un contexto acotado por la máquina del usuario y no por la decisión de producto de un proveedor.** La fragmentación reubica el límite de contexto: pasa de una ventana fija fijada por un proveedor a una función del tiempo y de la memoria de ensamblaje del cliente. Con ensamblaje jerárquico, la memoria de trabajo requerida crece logarítmicamente con el volumen total, de modo que el techo práctico para una máquina personal moderna queda muy por encima de lo que agotaría un usuario individual y, a diferencia de la ventana de un proveedor, sube cuando el usuario mejora su equipo y no cuando cambia un plan de precios.
 
@@ -125,11 +129,11 @@ La lección que Swarmbly extrae es metodológica: el problema del ancho de banda
 
 ### 2.3 Paralelismo a nivel de tarea
 
-Skeleton-of-Thought (SoT) [12] es el precedente directo de la descomposición de un *prompt*: un prompt de esqueleto produce una lista de puntos, cada uno expandido de forma independiente y en paralelo. Reporta hasta 2,39× de aceleración y —esto importa más— reporta su propio daño: la calidad mejora en preguntas de conocimiento, genéricas, de sentido común, de juego de rol y contrafácticas, y se degrada en matemáticas, programación, redacción y estimación de Fermi; en la métrica de coherencia, SoT «no es peor que la generación normal alrededor del 60 % de las veces», lo que equivale a decir que *sí* es peor aproximadamente el 40 % de las veces. Los autores enuncian la causa estructural sin paliativos: «SoT actualmente ignora las dependencias entre puntos».
+Skeleton-of-Thought (SoT) [12] es el precedente directo de la descomposición de un *prompt*: un prompt de esqueleto produce una lista de puntos, cada uno expandido de forma independiente y en paralelo. Reporta hasta 2.39× de aceleración y —esto importa más— reporta su propio daño: la calidad mejora en preguntas de conocimiento, genéricas, de sentido común, de juego de rol y contrafácticas, y se degrada en matemáticas, programación, redacción y estimación de Fermi; en la métrica de coherencia, SoT «no es peor que la generación normal alrededor del 60 % de las veces», lo que equivale a decir que *sí* es peor aproximadamente el 40 % de las veces. Los autores enuncian la causa estructural sin paliativos: «SoT actualmente ignora las dependencias entre puntos».
 
 Su respuesta no fue defender el método, sino condicionarlo. SoT-R [12] añade un router que decide, pregunta a pregunta, si descomponer siquiera; basta un router RoBERTa de 120 M entrenado, y se entrena con una pérdida de Tversky precisamente para penalizar los falsos positivos, codificando la asimetría de que fragmentar indebidamente es peor que negarse indebidamente a hacerlo.
 
-Los descendientes refinan la idea. APAR [16] hace que el modelo planifique sus propias ramas paralelas. PASTA [17] aprende un lenguaje de anotación para tramos semánticamente independientes y reporta aceleraciones de media geométrica de 1,21–1,93× con un delta de tasa de victoria controlada por longitud de +2,2 % a −7,1 %, la curva velocidad/calidad más honesta publicada en esta familia. Plato/ASGD [18] sustituye la lista plana por un **grafo de dependencias** sobre los subproblemas y reporta una ganancia de rendimiento del 68 % con una tasa neta de victoria de calidad del 90 % frente a SoT. Hogwild! Inference [19] adopta la vía opuesta: trabajadores concurrentes que comparten una caché KV viva, y encuentra que los modelos de razonamiento actuales hacen esto sin ajuste fino.
+Los descendientes refinan la idea. APAR [16] hace que el modelo planifique sus propias ramas paralelas. PASTA [17] aprende un lenguaje de anotación para tramos semánticamente independientes y reporta aceleraciones de media geométrica de 1.21–1.93× con un delta de tasa de victoria controlada por longitud de +2.2 % a −7.1 %, la curva velocidad/calidad más honesta publicada en esta familia. Plato/ASGD [18] sustituye la lista plana por un **grafo de dependencias** sobre los subproblemas y reporta una ganancia de rendimiento del 68 % con una tasa neta de victoria de calidad del 90 % frente a SoT. Hogwild! Inference [19] adopta la vía opuesta: trabajadores concurrentes que comparten una caché KV viva, y encuentra que los modelos de razonamiento actuales hacen esto sin ajuste fino.
 
 ParallelBench [20] aporta la teoría: el supuesto de independencia condicional que subyace a la generación paralela «degrada inevitablemente la calidad de la generación cuando las dependencias son fuertes». Tran y Kiela [21] dan la versión teórico-informacional vía la desigualdad de procesamiento de datos, y encuentran que el agente único es el mejor o está estadísticamente empatado en todos los presupuestos de tokens de razonamiento por encima del más pequeño.
 
@@ -146,7 +150,7 @@ E[# islas aparentes]       = N·e^(−c·θ)
 E[# clones por isla]       = e^(c·θ)
 ```
 
-con la simplificación familiar θ→0 `E[contigs] = N·e^(−c)` de la que se sigue la regla de la «cobertura 8×»: `e^(−8) ≈ 0,034 %` de bases sin cubrir.
+con la simplificación familiar θ→0 `E[contigs] = N·e^(−c)` de la que se sigue la regla de la «cobertura 8×»: `e^(−8) ≈ 0.034 %` de bases sin cubrir.
 
 Este modelo sí se transfiere, pero solo tras una corrección que las versiones anteriores de este trabajo hacían mal.
 
@@ -233,7 +237,7 @@ También predice algo útil. Como *S* es compartido por las cuatro, **cualquier 
 
 ### 4.4 Por qué la formulación anterior era inadecuada
 
-Una versión anterior de este diseño especificaba un objetivo fijo de redundancia (`C_sem > 1,2`, «20 % de redundancia intencional») derivado por analogía de Lander–Waterman, y un umbral de costura fijo (`τ_sem = 0,85`) sobre la similitud coseno de embeddings.
+Una versión anterior de este diseño especificaba un objetivo fijo de redundancia (`C_sem > 1.2`, «20 % de redundancia intencional») derivado por analogía de Lander–Waterman, y un umbral de costura fijo (`τ_sem = 0.85`) sobre la similitud coseno de embeddings.
 
 Ambos se retiran. El primero se retira por las tres razones de la sección 2.4 y porque el paso de una razón a un porcentaje de redundancia solo se sostiene si todo el exceso de longitud es flanco, lo que deja de ser cierto en el momento en que se introduce un contrato global. El segundo se retira porque el espacio de embeddings contextuales es anisótropo —palabras elegidas al azar ya exhiben una similitud coseno media alta [34]—, porque la similitud coseno en modelos regularizados puede ser «arbitraria y por tanto carente de significado», determinada por el esquema de regularización y no por la semántica [35], porque ningún modelo de embeddings domina en todos los tipos de tarea [36], y porque la biblioteca de referencia para esta operación recomienda deliberadamente **ningún umbral en absoluto** y advierte de que la similitud es asimétrica [37].
 
@@ -267,9 +271,9 @@ El producto sobre *i* es el término incómodo —es la razón por la que *N* no
 
 **La cobertura escala con el enjambre. La conversión no.**
 
-La evidencia de la primera mitad es sólida. El muestreo repetido eleva la cobertura de forma log-lineal a lo largo de cuatro órdenes de magnitud del número de muestras: en SWE-bench Lite con DeepSeek-Coder-V2-Instruct, el 15,9 % con una muestra sube al 56 % con 250 muestras, superando un estado del arte del 43 % con muestra única [38]. Más nodos significa genuinamente que existen más fragmentos correctos en algún lugar del enjambre.
+La evidencia de la primera mitad es sólida. El muestreo repetido eleva la cobertura de forma log-lineal a lo largo de cuatro órdenes de magnitud del número de muestras: en SWE-bench Lite con DeepSeek-Coder-V2-Instruct, el 15.9 % con una muestra sube al 56 % con 250 muestras, superando un estado del arte del 43 % con muestra única [38]. Más nodos significa genuinamente que existen más fragmentos correctos en algún lugar del enjambre.
 
-La evidencia de la segunda mitad es igual de sólida y suele pasarse por alto. El mismo trabajo afirma que «el voto mayoritario y los modelos de recompensa se estancan más allá de varios centenares de muestras»: la cobertura sigue subiendo y la *capacidad de convertirla en valor* se satura [38]. La selección basada en juez sobre equipos diversos alcanza una tasa de victoria del 81 % frente a una línea base de modelo único, mientras que los equipos homogéneos alcanzan el 51,2 % —el azar— y producen el 100 % de empates en 756 veredictos bajo juicio desacoplado [39]. Y en el estudio más próximo a la arquitectura propia de Swarmbly, un sistema multiagente de 8 B empata con un agente único de 32 B con herramientas en GAIA (23,0 frente a 23,0) y lo supera en AIME (55,0 frente a 45,0), ejecutándose 4,2× más rápido; pero el rendimiento está «impulsado principalmente por la capacidad del orquestador y no por la de los subagentes», y escalar los subagentes rinde retornos «inconsistentes e ineficientes» [40].
+La evidencia de la segunda mitad es igual de sólida y suele pasarse por alto. El mismo trabajo afirma que «el voto mayoritario y los modelos de recompensa se estancan más allá de varios centenares de muestras»: la cobertura sigue subiendo y la *capacidad de convertirla en valor* se satura [38]. La selección basada en juez sobre equipos diversos alcanza una tasa de victoria del 81 % frente a una línea base de modelo único, mientras que los equipos homogéneos alcanzan el 51.2 % —el azar— y producen el 100 % de empates en 756 veredictos bajo juicio desacoplado [39]. Y en el estudio más próximo a la arquitectura propia de Swarmbly, un sistema multiagente de 8 B empata con un agente único de 32 B con herramientas en GAIA (23.0 frente a 23.0) y lo supera en AIME (55.0 frente a 45.0), ejecutándose 4.2× más rápido; pero el rendimiento está «impulsado principalmente por la capacidad del orquestador y no por la de los subagentes», y escalar los subagentes rinde retornos «inconsistentes e ineficientes» [40].
 
 ### 5.3 Tres consecuencias
 
@@ -277,7 +281,7 @@ De esa asimetría se siguen tres cosas, y todas apuntan en dirección contraria 
 
 **(a) El cliente es el techo, no la red.** El valor marginal del nodo *(N+1)*-ésimo está acotado superiormente por la capacidad del orquestador para seleccionar entre lo que ya llega. Un presupuesto de ingeniería que compra nodos antes que un mejor selector del lado del cliente está gastando en el orden equivocado. Esto invierte la intuición que el marco del enjambre invita a tener y es, a mi juicio, la conclusión más accionable de este artículo.
 
-**(b) Seleccionar; no sintetizar.** La selección basada en juez supera a la agregación por síntesis en 63,1 puntos porcentuales, y la síntesis al estilo Mixture-of-Agents pierde frente a la línea base simple de modelo único en 42 de 42 tareas [39]. Nótese que esto está en tensión directa con los resultados que la propia MoA reporta —65,1 % en AlpacaEval 2.0 frente al 57,5 % de GPT-4 Omni usando solo modelos abiertos [41]—, y señalo el desacuerdo en vez de escoger el lado conveniente. El diseño lo resuelve de forma conservadora: la selección es la vía por defecto, la síntesis es la excepción invocada solo ante una costura fallida, y el protocolo registra qué vía tomó cada costura para que la cuestión pueda zanjarse con datos propios.
+**(b) Seleccionar; no sintetizar.** La selección basada en juez supera a la agregación por síntesis en 63.1 puntos porcentuales, y la síntesis al estilo Mixture-of-Agents pierde frente a la línea base simple de modelo único en 42 de 42 tareas [39]. Nótese que esto está en tensión directa con los resultados que la propia MoA reporta —65.1 % en AlpacaEval 2.0 frente al 57.5 % de GPT-4 Omni usando solo modelos abiertos [41]—, y señalo el desacuerdo en vez de escoger el lado conveniente. El diseño lo resuelve de forma conservadora: la selección es la vía por defecto, la síntesis es la excepción invocada solo ante una costura fallida, y el protocolo registra qué vía tomó cada costura para que la cuestión pueda zanjarse con datos propios.
 
 **(c) La heterogeneidad es un activo, no un defecto.** Una versión anterior de este diseño trataba la diversidad de hardware y modelos voluntarios como un problema que había que homogeneizar. La evidencia apunta en sentido contrario: los equipos diversos alcanzan tasas de victoria del 81 % donde los homogéneos alcanzan el azar, y las salidas homogéneas empatan el 100 % de las veces: un selector al que se le dan candidatos idénticos no tiene nada que seleccionar [39]. Se ha reportado que los pares de modelos de familias distintas eliminan más del 30 % de los errores [42].
 
@@ -295,7 +299,7 @@ Por eso lo enuncio como hipótesis con un protocolo de medición, y no como afir
 
 > **H2 (Sustitución de capacidad).** Para microtareas atómicas, bien especificadas y verificables, existe un presupuesto de contexto *S* al que la calidad del fragmento de un trabajador de 3–8 B es estadísticamente indistinguible de la de un modelo de frontera en la misma microtarea; y el *S* requerido decrece a medida que aumenta la capacidad del trabajador.
 >
-> *Protocolo.* Fijar un conjunto de microtareas que abarque las categorías de la sección 11.1. Para cada uno de {3 B, 8 B, frontera}, barrer *S* y puntuar los fragmentos con juicio ciego por pares. Reportar el *S* al que el intervalo de confianza sobre la tasa de victoria cruza 0,5, por categoría. Reportar las categorías en las que no existe tal *S* en el rango barrido: esas son las categorías que Swarmbly debe rechazar.
+> *Protocolo.* Fijar un conjunto de microtareas que abarque las categorías de la sección 11.1. Para cada uno de {3 B, 8 B, frontera}, barrer *S* y puntuar los fragmentos con juicio ciego por pares. Reportar el *S* al que el intervalo de confianza sobre la tasa de victoria cruza 0.5, por categoría. Reportar las categorías en las que no existe tal *S* en el rango barrido: esas son las categorías que Swarmbly debe rechazar.
 
 La hipótesis complementaria gobierna al cliente:
 
@@ -345,11 +349,11 @@ c  ≥  ln(1/ε) / (1 − p)
 
 para una fracción objetivo ε de unidades sin cubrir. Esto sustituye el umbral arbitrario de las versiones anteriores por una tabla:
 
-| Tasa de pérdida *p* | ε = 5 % | ε = 1 % | ε = 0,1 % |
+| Tasa de pérdida *p* | ε = 5 % | ε = 1 % | ε = 0.1 % |
 |---|---|---|---|
-| 0,05 | c ≥ 3,2 | c ≥ 4,8 | c ≥ 7,3 |
-| 0,10 | c ≥ 3,3 | c ≥ 5,1 | c ≥ 7,7 |
-| 0,20 | c ≥ 3,7 | c ≥ 5,8 | c ≥ 8,6 |
+| 0.05 | c ≥ 3.2 | c ≥ 4.8 | c ≥ 7.3 |
+| 0.10 | c ≥ 3.3 | c ≥ 5.1 | c ≥ 7.7 |
+| 0.20 | c ≥ 3.7 | c ≥ 5.8 | c ≥ 8.6 |
 
 Como la replicación es el contribuyente dominante a *c*, el rango operativo práctico es de **k = 3–5 réplicas por unidad crítica**, con el despacho especulativo (sección 7.6) actuando como mecanismo adaptativo que eleva `c_eff` bajo demanda en vez de pagar el *c* del peor caso en cada petición. Esto unifica dos mecanismos que las versiones anteriores trataban como no relacionados.
 
@@ -421,7 +425,7 @@ con cuatro términos que la versión ingenua omite.
 
 Dos de esos términos son locales y, por tanto, previsibles. La planificación escala con `|P|` y se ejecuta en el modelo pequeño del cliente, y el ensamblaje escala con `Σ|Rᵢ|` y no con la longitud de la respuesta, lo que lo convierte en un coste que crece con el material devuelto en vez de en una constante. Los otros dos los fija el enjambre, y son donde el modelo se aparta con más nitidez de `max ≪ Σ`.
 
-El primero de ellos es la cola de rezagados. `E[max]` sobre *W* extracciones concurrentes crece con *W*, y las colas de los voluntarios son pesadas: el ciclo de servicio efectivo medido en BOINC es de ≈0,61 (0,81 conectado × 0,84 activo × 0,899 de eficiencia de CPU) y la vida mediana de un anfitrión es de 91 días [47, 48]. Los reintentos lo agravan. Con probabilidad de fallo por nodo *p*, `P(al menos un fallo) = 1 − (1−p)^W`; con *p* = 0,10 y *W* = 20 eso es el 88 %, de modo que casi toda petición reintenta al menos una vez y un tiempo de espera fijo de 10 segundos añadiría por tanto ≥10 s a la ruta crítica de forma rutinaria. El protocolo exige en su lugar **peticiones especulativas** al p95 de la distribución de latencia observada por clase (sección 7.6).
+El primero de ellos es la cola de rezagados. `E[max]` sobre *W* extracciones concurrentes crece con *W*, y las colas de los voluntarios son pesadas: el ciclo de servicio efectivo medido en BOINC es de ≈0.61 (0.81 conectado × 0.84 activo × 0.899 de eficiencia de CPU) y la vida mediana de un anfitrión es de 91 días [47, 48]. Los reintentos lo agravan. Con probabilidad de fallo por nodo *p*, `P(al menos un fallo) = 1 − (1−p)^W`; con *p* = 0.10 y *W* = 20 eso es el 88 %, de modo que casi toda petición reintenta al menos una vez y un tiempo de espera fijo de 10 segundos añadiría por tanto ≥10 s a la ruta crítica de forma rutinaria. El protocolo exige en su lugar **peticiones especulativas** al p95 de la distribución de latencia observada por clase (sección 7.6).
 
 ### 6.4 Perfiles de trabajador y determinismo
 
@@ -433,7 +437,7 @@ profile = (model_family, model_version, quantization, prompt_template_id, sampli
 
 El orquestador agrupa cada nivel del DAG en **clases de capacidad homogéneas** para controlar el desajuste de registro, preservando a la vez deliberadamente la **diversidad de familias entre las réplicas redundantes** de una misma tarea (sección 5.3(c)). Ambos objetivos están en tensión y el protocolo hace explícita la disyuntiva: homogeneidad *dentro* del papel de un fragmento, diversidad *entre* los candidatos a ese mismo fragmento.
 
-Sobre la economía del trabajador, las GPU domésticas ociosas empleadas para inferencia de LLM se han medido en 0,111–0,149 $ por millón de tokens en una RTX 4090, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del coste [49]. Esta es la cifra sobre la que descansa el argumento de la participación.
+Sobre la economía del trabajador, las GPU domésticas ociosas empleadas para inferencia de LLM se han medido en 0.111–0.149 $ por millón de tokens en una RTX 4090, al 62–78 % del rendimiento de una H100 por aproximadamente la mitad del coste [49]. Esta es la cifra sobre la que descansa el argumento de la participación.
 
 ---
 
@@ -544,7 +548,7 @@ Los paquetes del carril `SENSITIVE` nunca se emiten hacia nodos abiertos; se eje
 | Umbral del router | τ_route | calibrado, asimétrico | β<1 en F_β, según el fundamento de Tversky de SoT-R [12] |
 | Réplicas por criticidad | *k* | 1 (3 para las críticas) | Guiado por coste; la mayoría de *k* sigue la práctica de BOINC [47] |
 | Disparo de especulación | — | p95 por clase | Sección 6.3 |
-| Tasa de muestreo de auditoría | λ | 0,01–0,05 | Sección 9.3; ajustada contra el calendario de penalizaciones [50] |
+| Tasa de muestreo de auditoría | λ | 0.01–0.05 | Sección 9.3; ajustada contra el calendario de penalizaciones [50] |
 | Anchura máxima del plan | — | 8 | La cola de rezagados crece con la anchura (sección 6.3) |
 | Profundidad máxima del plan | — | 4 | Más allá de esto, la densidad de dependencias aconseja no fragmentar |
 
@@ -669,7 +673,7 @@ Para un usuario, esta es la diferencia entre una respuesta y una respuesta que l
 **Tres salvedades honestas.**
 
 1. **El acuerdo no es verdad.** Los modelos entrenados sobre corpus solapados comparten errores. La convergencia sobre una falsedad común es un fallo correlacionado que el alineamiento no puede ver. Precisamente por eso la sección 7.6 exige **diversidad entre familias** entre las réplicas: la señal solo es tan fuerte como la independencia de las muestras.
-2. **Había que validarlo, no suponerlo: se validó cuatro veces, y ahora queda retirado.** La correlación entre la puntuación de acuerdo y la corrección factual es una magnitud empírica. Medida contra un juez de clase par sobre 597 unidades semánticas, salió en *r* = −0,030 con tramos planos y no monótonos (sección 11.3). Esa medición era débil en sus propios términos —el juez aceptó el 93,3 % de las unidades, dejando casi ninguna varianza contra la que pudiera aparecer una correlación—, de modo que entonces dejaba el mecanismo *sin sustento y no refutado*, y la sección 11.4 especificaba el experimento contra verdad de referencia que zanjaría la cuestión. **Ese experimento se ha ejecutado ya tres veces, y la zanjó en negativo.** Calificada contra una clave de respuestas, la razón de momios común de Mantel-Haenszel salió en **3,47, luego 0,26, luego 1,24**: por encima del 1, por debajo del 1 y a caballo del 1 en la misma pregunta. Tres estimaciones mutuamente contradictorias no son una señal débil; son ninguna señal, medida tres veces. La afirmación de que el acuerdo predice la calidad queda por tanto **retirada, no degradada**, y sale del banco de pruebas V7. El mecanismo sigue especificado y sigue informando de *dónde* divergieron las réplicas independientes; lo que no puede hacer es presentar eso como evidencia de corrección. Las etiquetas de confianza se reportan como *acuerdo*, nunca como *exactitud*, y el mapa no se ofrece como garantía de fiabilidad.
+2. **Había que validarlo, no suponerlo: se validó cuatro veces, y ahora queda retirado.** La correlación entre la puntuación de acuerdo y la corrección factual es una magnitud empírica. Medida contra un juez de clase par sobre 597 unidades semánticas, salió en *r* = −0.030 con tramos planos y no monótonos (sección 11.3). Esa medición era débil en sus propios términos —el juez aceptó el 93.3 % de las unidades, dejando casi ninguna varianza contra la que pudiera aparecer una correlación—, de modo que entonces dejaba el mecanismo *sin sustento y no refutado*, y la sección 11.4 especificaba el experimento contra verdad de referencia que zanjaría la cuestión. **Ese experimento se ha ejecutado ya tres veces, y la zanjó en negativo.** Calificada contra una clave de respuestas, la razón de momios común de Mantel-Haenszel salió en **3.47, luego 0.26, luego 1.24**: por encima del 1, por debajo del 1 y a caballo del 1 en la misma pregunta. Tres estimaciones mutuamente contradictorias no son una señal débil; son ninguna señal, medida tres veces. La afirmación de que el acuerdo predice la calidad queda por tanto **retirada, no degradada**, y sale del banco de pruebas V7. El mecanismo sigue especificado y sigue informando de *dónde* divergieron las réplicas independientes; lo que no puede hacer es presentar eso como evidencia de corrección. Las etiquetas de confianza se reportan como *acuerdo*, nunca como *exactitud*, y el mapa no se ofrece como garantía de fiabilidad.
 3. **Cuesta *k*×.** El consenso se aplica por criticidad, no universalmente.
 
 ### 8.5 Calibración de umbrales
@@ -706,7 +710,7 @@ Cuatro hallazgos de esa literatura inciden en el razonamiento, y todos apuntan e
 
 El segundo es que el estilo es en sí mismo un identificador. La atribución de autoría opera a escala de internet [58], sobrevive al acortamiento y al desplazamiento de dominio entre plataformas [59], y funciona por debajo de los 280 caracteres [60]. Un fragmento «sin contexto» sigue portando, por tanto, la firma estilística de quien lo solicita y, aunque en el caso de Swarmbly el fragmento lo genera un *trabajador*, el microprompt derivado del texto del usuario no. El tercero es que las representaciones intermedias se invierten: los embeddings de texto revelan casi tanto como el propio texto [61] y los prompts pueden recuperarse solo a partir de las salidas del modelo [62].
 
-El cuarto es decisivo, porque no procede por analogía sino que ataca esta misma arquitectura. En la inferencia partida —un cliente que computa parte de una red y un servidor el resto—, el ataque ActInv alcanza precisión y exhaustividad por encima del 98 % en casi todos los casos evaluados, con ROUGE-L consistentemente por encima de 0,96. Cortar tras dos bloques de cliente de Qwen3-0.6B produce un 99,76 % de precisión, e incluso con siete bloques retiene el 77,74 %. Las defensas rinden por debajo de lo esperado: con un 70 % de esparcimiento de activaciones la precisión decrece «solo modestamente», y hace falta ruido gaussiano con varianza 10⁻¹ antes de que la recuperación se degrade sustancialmente [63].
+El cuarto es decisivo, porque no procede por analogía sino que ataca esta misma arquitectura. En la inferencia partida —un cliente que computa parte de una red y un servidor el resto—, el ataque ActInv alcanza precisión y exhaustividad por encima del 98 % en casi todos los casos evaluados, con ROUGE-L consistentemente por encima de 0.96. Cortar tras dos bloques de cliente de Qwen3-0.6B produce un 99.76 % de precisión, e incluso con siete bloques retiene el 77.74 %. Las defensas rinden por debajo de lo esperado: con un 70 % de esparcimiento de activaciones la precisión decrece «solo modestamente», y hace falta ruido gaussiano con varianza 10⁻¹ antes de que la recuperación se degrade sustancialmente [63].
 
 Swarmbly no transmite activaciones, lo que lo sitúa en mejor posición que la inferencia partida. Pero la dirección de la evidencia es inequívoca, y hay un argumento adicional interno a este mismo diseño: **la sección 4.2 establece que la coherencia exige enviar el contrato global Γ a cada trabajador.** Un nodo que posee Γ posee el objetivo, la audiencia, el formato y las restricciones de la sesión. Descontextualización y coherencia son antagonistas por construcción, y ninguna cantidad de ingeniería disuelve eso.
 
@@ -720,7 +724,7 @@ Dos canales residuales merecen nombrarse porque son fáciles de pasar por alto: 
 
 ### 9.3 Verificación
 
-La confidencialidad criptográfica fuerte es inasequible aquí, y vale la pena enunciar las cifras para que la conclusión no se confunda con derrotismo. La computación multiparte de propósito general sobre un transformer se ejecuta con una ralentización del orden de 10⁴–10⁶×, con 280,99 GB de comunicación para una sola inferencia de BERT-Base [64, 65]; los mejores sistemas de dos partes reportan aproximadamente 8 minutos por token para LLaMA-7B [66]. Las pruebas de conocimiento cero sobre inferencia necesitan menos de 15 minutos para demostrar un paso hacia adelante de un modelo de 13 B [67]. Nada de esto cabe en una economía de voluntarios.
+La confidencialidad criptográfica fuerte es inasequible aquí, y vale la pena enunciar las cifras para que la conclusión no se confunda con derrotismo. La computación multiparte de propósito general sobre un transformer se ejecuta con una ralentización del orden de 10⁴–10⁶×, con 280.99 GB de comunicación para una sola inferencia de BERT-Base [64, 65]; los mejores sistemas de dos partes reportan aproximadamente 8 minutos por token para LLaMA-7B [66]. Las pruebas de conocimiento cero sobre inferencia necesitan menos de 15 minutos para demostrar un paso hacia adelante de un modelo de 13 B [67]. Nada de esto cabe en una economía de voluntarios.
 
 Lo que sí cabe es un esquema de dos capas:
 
@@ -738,7 +742,7 @@ Lo que ninguna de estas capas hace es verificar la *fidelidad semántica*. La ca
 |---|---|---|---|
 | **PUBLIC** | Sin PII, sin secreto comercial | Nodos voluntarios abiertos | Ninguno |
 | **SANITISABLE** | PII detectable y seudonimizable | Nodos abiertos; rehidratado localmente | Riesgo residual real (abajo) |
-| **SENSITIVE** | Salud, jurídico, financiero, identificable | Ejecución local, o TEE atestiguado | **<7 % de sobrecoste medio** en computación confidencial sobre H100, por debajo del 5 % para consultas típicas y tendiendo a cero a medida que crece el tamaño del modelo [72]; mediciones independientes bajo Intel TDX reportan 8,9–21,8 % según el régimen [73] |
+| **SENSITIVE** | Salud, jurídico, financiero, identificable | Ejecución local, o TEE atestiguado | **<7 % de sobrecoste medio** en computación confidencial sobre H100, por debajo del 5 % para consultas típicas y tendiendo a cero a medida que crece el tamaño del modelo [72]; mediciones independientes bajo Intel TDX reportan 8.9–21.8 % según el régimen [73] |
 
 El carril TEE es lo que hace el protocolo adoptable por una organización, y es asequible: un sobrecoste porcentual de un solo dígito es la única primitiva de confidencialidad en este espacio con esa propiedad.
 
@@ -771,7 +775,7 @@ El protocolo permite, por tanto, la reducción, pero no permite que sea silencio
 
 Sin una autoridad de identidad confiable, un único adversario puede presentar arbitrariamente muchas identidades distintas, derrotando **cualquier** esquema basado en redundancia o voto mayoritario [76]. Los sistemas de reputación no escapan a esto: el algoritmo P2P canónico requiere un conjunto de pares *previamente confiables* para ser resistente a Sybil, lo que reintroduce el anclaje que pretendía eliminar [77].
 
-Que esto no sea meramente teórico se ve en el despliegue insignia de la computación voluntaria, donde el 41,4 % de los anfitriones pertenecía a usuarios de un solo anfitrión, el 44,2 % a usuarios con 2–10 anfitriones, y el mayor usuario individual operaba 2.987 anfitriones [47]: concentración extrema, por parte de un participante benigno y sin incentivo alguno para ocultarlo.
+Que esto no sea meramente teórico se ve en el despliegue insignia de la computación voluntaria, donde el 41.4 % de los anfitriones pertenecía a usuarios de un solo anfitrión, el 44.2 % a usuarios con 2–10 anfitriones, y el mayor usuario individual operaba 2987 anfitriones [47]: concentración extrema, por parte de un participante benigno y sin incentivo alguno para ocultarlo.
 
 **Swarmbly no es, por tanto, resistente a Sybil en sentido fuerte, y el protocolo lo dice.** Adopta una confianza por capas: reputación acumulada, un coste de entrada al registro, auditoría muestreada con penalización económica y un conjunto de nodos ancla operados por la fundación para el arranque en frío. Sistemas comparables toman la misma medicina bajo otros nombres [6].
 
@@ -781,7 +785,7 @@ Que esto no sea meramente teórico se ve en el despliegue insignia de la computa
 
 ### 10.1 Créditos, no tokens
 
-El desarrollo previo proponía un preminado del 15 % para los fundadores y una comisión de protocolo del 0,5 % sobre cada micropago. Ambos se retiran por motivos regulatorios y narrativos. El marco suizo clasifica los tokens como de pago, de utilidad o de activo, con una prueba de dos condiciones para escapar de la clasificación como valor [78]; un instrumento preminado y transferible con expectativa de revalorización es el arquetipo que la activa. Las exenciones europeas son estrechas: 1.000.000 € en doce meses, o 150 personas por Estado miembro, con las normas para proveedores de servicios en vigor desde el 30 de diciembre de 2024 [79].
+El desarrollo previo proponía un preminado del 15 % para los fundadores y una comisión de protocolo del 0.5 % sobre cada micropago. Ambos se retiran por motivos regulatorios y narrativos. El marco suizo clasifica los tokens como de pago, de utilidad o de activo, con una prueba de dos condiciones para escapar de la clasificación como valor [78]; un instrumento preminado y transferible con expectativa de revalorización es el arquetipo que la activa. Las exenciones europeas son estrechas: 1.000.000 € en doce meses, o 150 personas por Estado miembro, con las normas para proveedores de servicios en vigor desde el 30 de diciembre de 2024 [79].
 
 El diseño que queda fuera de ambos regímenes es deliberadamente poco emocionante: créditos no transferibles entre cuentas, ganados por procesar y gastados por solicitar; sin preventa y sin preminado; utilidad inmediata desde el primer día en vez de una promesa; saldos que expiran para desincentivar el acaparamiento; y conversión a moneda fiduciaria en una sola dirección: las empresas compran capacidad a través del brazo comercial, los voluntarios no venden créditos. Esto es menos emocionante que un token y es lo que permite lanzar sin asesoría en materia de valores en tres jurisdicciones.
 
@@ -797,9 +801,9 @@ Sobre la estructura: una *Verein* suiza puede constituirse con rapidez y sin cap
 
 ### 10.3 Sostenibilidad, no reivindicada
 
-Los centros de datos consumieron 415 TWh en 2024, alrededor del 1,5 % de la electricidad mundial, con proyecciones de 945 TWh para 2030 [83]. Las instalaciones hiperescala estadounidenses se abastecen de redes medidas en 545 gCO₂/kWh frente a una media nacional de 370 g: un 48 % más sucias [84]. Esas cifras respaldan la *motivación*.
+Los centros de datos consumieron 415 TWh en 2024, alrededor del 1.5 % de la electricidad mundial, con proyecciones de 945 TWh para 2030 [83]. Las instalaciones hiperescala estadounidenses se abastecen de redes medidas en 545 gCO₂/kWh frente a una media nacional de 370 g: un 48 % más sucias [84]. Esas cifras respaldan la *motivación*.
 
-No respaldan una afirmación de beneficio neto, y no la hago. La energía por token varía en casi tres órdenes de magnitud entre configuraciones, y los aceleradores de centro de datos logran la menor energía por token en la gran mayoría de escenarios; el consumo en reposo de 12–90 W lo paga íntegro un nodo que está disponible pero sin uso [85]. El PUE global es de 1,54, pero los hiperescalares operan a 1,09–1,15 frente a un ~1,0 efectivo en un hogar: un margen del 9–15 %, no un orden de magnitud [86]. La redundancia añadida a eso es sobrecoste puro, y el calor residual se recupera en los centros de datos y esencialmente nunca en los hogares.
+No respaldan una afirmación de beneficio neto, y no la hago. La energía por token varía en casi tres órdenes de magnitud entre configuraciones, y los aceleradores de centro de datos logran la menor energía por token en la gran mayoría de escenarios; el consumo en reposo de 12–90 W lo paga íntegro un nodo que está disponible pero sin uso [85]. El PUE global es de 1.54, pero los hiperescalares operan a 1.09–1.15 frente a un ~1.0 efectivo en un hogar: un margen del 9–15 %, no un orden de magnitud [86]. La redundancia añadida a eso es sobrecoste puro, y el calor residual se recupera en los centros de datos y esencialmente nunca en los hogares.
 
 El compromiso que sí adquiero es procedimental: adoptar el estándar de Intensidad de Carbono del Software —`SCI = ((E × I) + M) / R`, ISO/IEC 21031:2024, que excluye explícitamente las compensaciones [87]—, instrumentar los nodos y el cliente, y **publicar el resultado sea cual sea**. El argumento motivador defendible es el del carbono incorporado: prolongar la vida útil de hardware que ya existe evita nueva fabricación, y la fabricación es la mayor parte de la huella de un gran operador, y creciente. Ese argumento merece medición, no aserción.
 
@@ -867,11 +871,11 @@ La intención de enunciar una regla de parada antes de recoger datos es hacer qu
 > microtareas y sus cabeceras de contrato antes de añadir contexto alguno. Por
 > debajo, `build_packet` cae a `budget = max(mandatory_tokens, …)`, todo paquete
 > se reduce a su tarea desnuda, y dos etiquetas ρ distintas producen paquetes
-> idénticos byte a byte. En este corpus los pisos son 1,42–1,68 con N = 2,
-> 1,85–2,35 con N = 4 y 2,70–3,71 con N = 8, contra un barrido de
-> ρ ∈ {1,00, 1,25, 1,50, 2,00}: **13 de 96 celdas quedaban por encima del piso, y
-> las filas ρ = 1,00 y ρ = 1,25 no contenían ninguna.** El sobrepaso era visible
-> en la propia tabla publicada —ρ alcanzada 1,17 contra un objetivo de 1,00— y se
+> idénticos byte a byte. En este corpus los pisos son 1.42–1.68 con N = 2,
+> 1.85–2.35 con N = 4 y 2.70–3.71 con N = 8, contra un barrido de
+> ρ ∈ {1.00, 1.25, 1.50, 2.00}: **13 de 96 celdas quedaban por encima del piso, y
+> las filas ρ = 1.00 y ρ = 1.25 no contenían ninguna.** El sobrepaso era visible
+> en la propia tabla publicada —ρ alcanzada 1.17 contra un objetivo de 1.00— y se
 > leyó como tolerancia en lugar de como un paquete que no cabía en su
 > presupuesto. «El impuesto decrece de forma monótona con ρ» reformula por tanto
 > otra cosa: que los paquetes que no llevan nada puntúan peor que los que llevan
@@ -881,7 +885,7 @@ La intención de enunciar una regla de parada antes de recoger datos es hacer qu
 > entidades esperadas crecía con N, las omisiones se atribuían por turnos entre
 > las cabezas de fragmento, y las clases de error locales a la costura solo
 > podían dispararse allí donde había costuras. El mismo texto de dieciséis
-> oraciones puntuó **0,9375 como monolítico y 0,5000 con N = 8: +46,7 % de
+> oraciones puntuó **0.9375 como monolítico y 0.5000 con N = 8: +46.7 % de
 > impuesto aparente sobre un texto que nunca cambió.**
 >
 > Ambos defectos están corregidos y cubiertos por pruebas de regresión, y
@@ -898,18 +902,18 @@ no la oración —el análisis anterior trataba las oraciones como independiente
 dentro de un prompt, lo que subestima todos los intervalos— y los intervalos son
 percentiles bootstrap agrupados por prompt.
 
-**Resultado.** `table_summary`, ρ = 3,5, N = 2, k = 1, sobre los 16 prompts
+**Resultado.** `table_summary`, ρ = 3.5, N = 2, k = 1, sobre los 16 prompts
 reservados:
 
 | | |
 |---|---|
-| Impuesto de coherencia | **+2,30 %** |
-| IC del 95 % (agrupado por prompt) | **[−2,05 %, +7,49 %]** |
+| Impuesto de coherencia | **+2.30 %** |
+| IC del 95 % (agrupado por prompt) | **[−2.05 %, +7.49 %]** |
 | Criterio | límite superior por debajo del 5 % |
-| Veredicto | **NO ALCANZADO** — le faltan 2,49 puntos en el límite superior |
-| Efecto mediano por prompt | **exactamente 0,00 %** |
+| Veredicto | **NO ALCANZADO** — le faltan 2.49 puntos en el límite superior |
+| Efecto mediano por prompt | **exactamente 0.00 %** |
 | Prompts en cero o por debajo | **11 de 16** (6 negativos, 5 exactamente cero) |
-| Control, N = 8, k = 1 (obligado a fallar) | +16,23 %, IC [+11,33 %, +20,28 %], mediana +18,59 %, 15 de 16 prompts peores que la línea base — se comportó |
+| Control, N = 8, k = 1 (obligado a fallar) | +16.23 %, IC [+11.33 %, +20.28 %], mediana +18.59 %, 15 de 16 prompts peores que la línea base — se comportó |
 | Filas excluidas por debajo del piso de empaquetado | 0 |
 
 La estimación puntual queda por debajo del umbral y el intervalo no. El criterio
@@ -920,15 +924,15 @@ reescribir ahora que el caso se ha presentado.
 equivocado para describirlo.** El prompt mediano no pierde absolutamente nada,
 once de dieciséis prompts quedan en cero o por debajo, y la media no está
 simplemente arrastrada por los prompts positivos: está *fabricada* por dos de
-ellos. `tbl24_outturn` (+28,50 %) y `tbl24_bonded` (+23,08 %) suman +0,516 frente
-a un total de +0,368, el **140 % de la media**; si se quitan, la media de los
-catorce prompts restantes es **−1,06 %**, es decir, fragmentar en dos resulta
+ellos. `tbl24_outturn` (+28.50 %) y `tbl24_bonded` (+23.08 %) suman +0.516 frente
+a un total de +0.368, el **140 % de la media**; si se quitan, la media de los
+catorce prompts restantes es **−1.06 %**, es decir, fragmentar en dos resulta
 ligeramente *mejor* que no fragmentar. La descripción honesta no es «fragmentar
-cuesta 2,3 %», sino: **en 11 de 16 prompts de resumen de tablas, partir el
+cuesta 2.3 %», sino: **en 11 de 16 prompts de resumen de tablas, partir el
 trabajo en dos salió gratis, y en dos de ellos salió caro.**
 
 Esos mismos dos prompts son los **únicos dos donde N = 2 es peor que N = 8**
-(outturn, +28,50 % frente a +13,57 %; bonded, +23,08 % frente a +14,00 %). Que
+(outturn, +28.50 % frente a +13.57 %; bonded, +23.08 % frente a +14.00 %). Que
 más fragmentos *ayuden* no es lo que predice una historia de impuesto de
 coherencia, así que esto parece un fallo de **calidad de partición** —una
 división en dos que deja una costura en un sitio caro, y que cortar en ocho
@@ -946,7 +950,7 @@ a sí mismo no se ha superado.
 el extremo bajo del rango de capacidad al que apunta el protocolo, lo que acota
 la arquitectura ahí y no la zanja a 8 B. Con una varianza entre prompts de este
 tamaño, dieciséis prompts no pueden, por pura aritmética, meter un intervalo de
-9,5 puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto
+9.5 puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto
 verdadero: ampliar el corpus es un requisito previo para volver a poner a prueba
 el criterio, no una manera de obtener una respuesta mejor.
 
@@ -954,44 +958,44 @@ el criterio, no una manera de obtener una respuesta mejor.
 
 **Lo que sigue es la sección 11.3 retirada, sin alterar.** V0 y la calibración del acuerdo ya se han ejecutado contra modelos reales. Lo que sigue es el resultado completo, incluida la parte que no respalda una afirmación hecha antes en este mismo artículo.
 
-**Montaje.** Tres familias de modelos servidas por un Ollama local —`llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`— con `nomic-embed-text` para los embeddings. Ocho prompts en ocho categorías, una semilla, temperatura 0. τ_sem se calibró sobre **72 pares etiquetados** (F₀·₅ = 0,988, precisión 1,00, exhaustividad 0,944) y quedó en **0,51**. Los metadatos de la ejecución registran que no se usó el backend simulado y que la ruta de embeddings no degradó; sin ambas cosas los números de abajo son nulos, y por eso el banco de pruebas los reporta.
+**Montaje.** Tres familias de modelos servidas por un Ollama local —`llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`— con `nomic-embed-text` para los embeddings. Ocho prompts en ocho categorías, una semilla, temperatura 0. τ_sem se calibró sobre **72 pares etiquetados** (F₀·₅ = 0.988, precisión 1.00, exhaustividad 0.944) y quedó en **0.51**. Los metadatos de la ejecución registran que no se usó el backend simulado y que la ruta de embeddings no degradó; sin ambas cosas los números de abajo son nulos, y por eso el banco de pruebas los reporta.
 
 **El impuesto de coherencia baja de forma monótona con ρ.** Impuesto tipo BooookScore contra la línea base monolítica, con *k* = 1 y 21 celdas válidas por ρ:
 
 | ρ (objetivo) | ρ (alcanzada) | Impuesto de coherencia | Diferencia absoluta |
 |---|---|---|---|
-| 1,00 | 1,17 | +24,1 % | +0,124 |
-| 1,25 | 1,27 | +20,4 % | +0,076 |
-| 1,50 | 1,53 | +16,1 % | +0,068 |
-| 2,00 | 2,08 | +13,7 % | +0,052 |
+| 1.00 | 1.17 | +24.1 % | +0.124 |
+| 1.25 | 1.27 | +20.4 % | +0.076 |
+| 1.50 | 1.53 | +16.1 % | +0.068 |
+| 2.00 | 2.08 | +13.7 % | +0.052 |
 
 Tanto la razón como la diferencia absoluta —que no depende del denominador— decrecen con ρ. Es el comportamiento que predice la hipótesis H1 y la primera evidencia de que el presupuesto de contexto de la sección 4 es la variable que el diseño dice que es.
 
-**El criterio de continuar o abandonar de la sección 11.2 se cumple.** Seis de 28 celdas categoría × ρ quedan por debajo del umbral del 5 % fijado antes de que existiera dato alguno. `synthetic_data` lo cumple en todas las ρ probadas (+1,3 %, −5,1 %, −6,2 %, −0,3 %); `creative_writing` lo cumple con ρ = 2,0 y **−9,0 %**, y `code_shared_state` con ρ = 1,5 y +3,2 %. Un impuesto negativo significa que fragmentar *mejoró* la respuesta en ese instrumento. El criterio se redactó como «al menos una categoría de tarea» precisamente porque nadie esperaba que pasaran todas, y no pasan.
+**El criterio de continuar o abandonar de la sección 11.2 se cumple.** Seis de 28 celdas categoría × ρ quedan por debajo del umbral del 5 % fijado antes de que existiera dato alguno. `synthetic_data` lo cumple en todas las ρ probadas (+1.3 %, −5.1 %, −6.2 %, −0.3 %); `creative_writing` lo cumple con ρ = 2.0 y **−9.0 %**, y `code_shared_state` con ρ = 1.5 y +3.2 %. Un impuesto negativo significa que fragmentar *mejoró* la respuesta en ese instrumento. El criterio se redactó como «al menos una categoría de tarea» precisamente porque nadie esperaba que pasaran todas, y no pasan.
 
-**Dos fallos de medición, reportados porque acotan lo que la tabla anterior puede significar.** El primero: la rejilla de entidades es inservible en este corpus. La línea base monolítica de ese instrumento va de 0,000 a 0,114 en los ocho prompts, con mediana 0,024. Las 96 celdas dividen, por tanto, por un denominador casi nulo, y las 96 quedan excluidas. El impuesto de coherencia por rejilla de entidades **no está medido aquí**, y una versión temprana de esta ejecución llegó a reportar cifras de hasta −180 % antes de que se revisara el denominador. El segundo: un prompt produjo una línea base monolítica de una sola frase y seis tokens —un fallo de generación, no un resultado de coherencia— y sus 12 celdas quedan excluidas de la tabla anterior.
+**Dos fallos de medición, reportados porque acotan lo que la tabla anterior puede significar.** El primero: la rejilla de entidades es inservible en este corpus. La línea base monolítica de ese instrumento va de 0.000 a 0.114 en los ocho prompts, con mediana 0.024. Las 96 celdas dividen, por tanto, por un denominador casi nulo, y las 96 quedan excluidas. El impuesto de coherencia por rejilla de entidades **no está medido aquí**, y una versión temprana de esta ejecución llegó a reportar cifras de hasta −180 % antes de que se revisara el denominador. El segundo: un prompt produjo una línea base monolítica de una sola frase y seis tokens —un fallo de generación, no un resultado de coherencia— y sus 12 celdas quedan excluidas de la tabla anterior.
 
-**La calibración del acuerdo no respalda el mapa de confianza.** Barriendo *k* ∈ {1, 3, 5} con ρ = 1,5 y una réplica por familia:
+**La calibración del acuerdo no respalda el mapa de confianza.** Barriendo *k* ∈ {1, 3, 5} con ρ = 1.5 y una réplica por familia:
 
 | *k* | Impuesto de coherencia | Acuerdo medio | ALTA | BAJA |
 |---|---|---|---|---|
-| 1 | +13,2 % | — | — | — |
-| 3 | +30,8 % | 0,577 | 29,1 % | 42,3 % |
-| 5 | +33,3 % | 0,728 | 58,3 % | 28,7 % |
+| 1 | +13.2 % | — | — | — |
+| 3 | +30.8 % | 0.577 | 29.1 % | 42.3 % |
+| 5 | +33.3 % | 0.728 | 58.3 % | 28.7 % |
 
-El consenso por alineamiento múltiple cuesta entre 17 y 20 puntos de calidad respecto de *k* = 1, y la puntuación de acuerdo por unidad no predice la aceptabilidad juzgada: **r de Pearson = −0,030 sobre 597 unidades semánticas.** Los tramos de acuerdo son planos y no monótonos, y el acuerdo no los ordena: el tramo que más puntúa es el de 0,6–0,8, el de *menor* acuerdo queda segundo, y el tramo donde los modelos más coincidieron puntúa por debajo de ambos:
+El consenso por alineamiento múltiple cuesta entre 17 y 20 puntos de calidad respecto de *k* = 1, y la puntuación de acuerdo por unidad no predice la aceptabilidad juzgada: **r de Pearson = −0.030 sobre 597 unidades semánticas.** Los tramos de acuerdo son planos y no monótonos, y el acuerdo no los ordena: el tramo que más puntúa es el de 0.6–0.8, el de *menor* acuerdo queda segundo, y el tramo donde los modelos más coincidieron puntúa por debajo de ambos:
 
 | Acuerdo | Unidades | Juzgadas aceptables |
 |---|---|---|
-| 0,0 – 0,2 | 40 | 97,5 % |
-| 0,2 – 0,4 | 91 | 91,2 % |
-| 0,4 – 0,6 | 80 | 91,3 % |
-| 0,6 – 0,8 | 122 | 99,2 % |
-| 0,8 – 1,0 | 264 | 91,3 % |
+| 0.0 – 0.2 | 40 | 97.5 % |
+| 0.2 – 0.4 | 91 | 91.2 % |
+| 0.4 – 0.6 | 80 | 91.3 % |
+| 0.6 – 0.8 | 122 | 99.2 % |
+| 0.8 – 1.0 | 264 | 91.3 % |
 
 La sección 11.4 enuncia que una correlación plana o negativa invalidaría el mapa de confianza como señal de fiabilidad y que tal resultado debe ser publicable. Queda publicado aquí.
 
-**Pero esta ejecución no es el experimento que especifica la sección 11.4, y la diferencia importa.** El juez aceptó el **93,3 %** de las unidades. Con tan poca varianza en la variable dependiente, una correlación no puede aparecer aunque la señal subyacente exista, de modo que esta medición no distingue entre dos conclusiones muy distintas: que el acuerdo entre familias de modelos independientes no predice la corrección, o que un juez de clase par no discrimina la calidad con finura suficiente para detectarlo. V3c, tal como está especificado, pide conjuntos de datos con verdad de referencia; esta ejecución usó el juez. **La afirmación honesta es que el mapa de confianza está sin sustento, no refutado.**
+**Pero esta ejecución no es el experimento que especifica la sección 11.4, y la diferencia importa.** El juez aceptó el **93.3 %** de las unidades. Con tan poca varianza en la variable dependiente, una correlación no puede aparecer aunque la señal subyacente exista, de modo que esta medición no distingue entre dos conclusiones muy distintas: que el acuerdo entre familias de modelos independientes no predice la corrección, o que un juez de clase par no discrimina la calidad con finura suficiente para detectarlo. V3c, tal como está especificado, pide conjuntos de datos con verdad de referencia; esta ejecución usó el juez. **La afirmación honesta es que el mapa de confianza está sin sustento, no refutado.**
 
 Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede anunciarse como la más valiosa de la arquitectura, y la sección 1.3 se ha reescrito en consecuencia. Sí significa que el mecanismo no está muerto todavía, y que el experimento que zanjaría la cuestión pasa a ser el punto de mayor prioridad de la sección 11.4.
 
@@ -1001,11 +1005,11 @@ Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede a
 
 **V1 — router.** Entrenar el clasificador de descomponibilidad con pérdida asimétrica; exigir la recuperación de ≥80 % de la ganancia disponible con una tasa de falsos positivos inferior al 5 %.
 
-**V2 — enjambre simulado.** Inyectar rotación con parámetros medidos de voluntarios: ciclo de servicio 0,61, vida mediana del anfitrión 91 días [47, 48], distribuciones de latencia de área amplia [24], tasas de fallo del 5/10/20 %. Exigir una latencia p95 dentro de 2× del caso sin fallos con *p* = 0,10, *N* = 8, usando peticiones especulativas.
+**V2 — enjambre simulado.** Inyectar rotación con parámetros medidos de voluntarios: ciclo de servicio 0.61, vida mediana del anfitrión 91 días [47, 48], distribuciones de latencia de área amplia [24], tasas de fallo del 5/10/20 %. Exigir una latencia p95 dentro de 2× del caso sin fallos con *p* = 0.10, *N* = 8, usando peticiones especulativas.
 
 **V3 — red real, 20–50 nodos.** Integrar el esquema de compromiso [68] y la auditoría muestreada [69]. Inyectar deliberadamente nodos deshonestos: modelos infradimensionados, fabricaciones plausibles, inyección de prompts. Exigir >95 % de detección con menos del 5 % de sobrecoste de verificación.
 
-**V3c — calibración del acuerdo. Ejecutada, y cerrada en negativo.** La especificación era: medir la correlación entre la puntuación de acuerdo por unidad de la sección 8.4b y la corrección factual, contra conjuntos de datos con verdad de referencia, con réplicas tomadas de familias de modelo deliberadamente distintas, y tratar una correlación plana o negativa como invalidante del mapa de confianza como señal de fiabilidad — con ese resultado obligado a ser publicable. Se ha ejecutado ya tres veces contra una clave de respuestas, devolviendo razones de momios comunes de **3,47, 0,26 y 1,24**. Tres estimaciones mutuamente contradictorias sobre una misma pregunta invalidan la señal exactamente como decía el preregistro, de modo que el mapa de confianza queda **retirado** (secciones 8.4b, 11.3 y L13) y sale del banco de pruebas V7. Las etiquetas de confianza siguen reportándose como *acuerdo* y nunca como *exactitud*. Esta fase está cerrada; reabrirla exigiría un instrumento nuevo, no repetir este.
+**V3c — calibración del acuerdo. Ejecutada, y cerrada en negativo.** La especificación era: medir la correlación entre la puntuación de acuerdo por unidad de la sección 8.4b y la corrección factual, contra conjuntos de datos con verdad de referencia, con réplicas tomadas de familias de modelo deliberadamente distintas, y tratar una correlación plana o negativa como invalidante del mapa de confianza como señal de fiabilidad — con ese resultado obligado a ser publicable. Se ha ejecutado ya tres veces contra una clave de respuestas, devolviendo razones de momios comunes de **3.47, 0.26 y 1.24**. Tres estimaciones mutuamente contradictorias sobre una misma pregunta invalidan la señal exactamente como decía el preregistro, de modo que el mapa de confianza queda **retirado** (secciones 8.4b, 11.3 y L13) y sale del banco de pruebas V7. Las etiquetas de confianza siguen reportándose como *acuerdo* y nunca como *exactitud*. Esta fase está cerrada; reabrirla exigiría un instrumento nuevo, no repetir este.
 
 **V4 — medición ambiental.** Instrumentar y publicar el SCI frente a una línea base centralizada.
 
@@ -1013,11 +1017,11 @@ Esa distinción no rescata la afirmación. Una propiedad sin sustento no puede a
 
 | Métrica | Definición | Objetivo v1.0 | Medido (sección 11.3) |
 |---|---|---|---|
-| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | límite superior del IC del 95 % por debajo del 5 % | **NO ALCANZADO** (sección 11.3a): +2,30 %, IC [−2,05 %, +7,49 %], 16 prompts reservados con ρ = 3,5, N = 2, k = 1; efecto mediano por prompt exactamente 0,00 %, 11 de 16 en cero o por debajo |
-| ρ operativa | Tokens de entrada por token de prompt | <2,0 | **no alcanzable en este corpus.** El piso de empaquetado con N = 2 es de 1,20 en `tables24` y de 1,42–1,68 en el corpus V0, así que un objetivo de 2,0 deja casi nada de contexto por encima de la tarea obligatoria y su cabecera. Un objetivo de <2,0 no es un objetivo que el diseño pueda cumplir con ningún N útil; la cifra hay que rederivarla a partir del piso en vez de afirmarla. |
-| Aceleración efectiva | Frente a monolítico, mismo modelo | >1,5× | sin medir todavía |
+| Impuesto de coherencia | Δ de la fracción de oraciones sin costura frente a monolítico | límite superior del IC del 95 % por debajo del 5 % | **NO ALCANZADO** (sección 11.3a): +2.30 %, IC [−2.05 %, +7.49 %], 16 prompts reservados con ρ = 3.5, N = 2, k = 1; efecto mediano por prompt exactamente 0.00 %, 11 de 16 en cero o por debajo |
+| ρ operativa | Tokens de entrada por token de prompt | <2.0 | **no alcanzable en este corpus.** El piso de empaquetado con N = 2 es de 1.20 en `tables24` y de 1.42–1.68 en el corpus V0, así que un objetivo de 2.0 deja casi nada de contexto por encima de la tarea obligatoria y su cabecera. Un objetivo de <2.0 no es un objetivo que el diseño pueda cumplir con ningún N útil; la cifra hay que rederivarla a partir del piso en vez de afirmarla. |
+| Aceleración efectiva | Frente a monolítico, mismo modelo | >1.5× | sin medir todavía |
 | Aceleración frente a la línea base honesta | Frente a decodificación especulativa | Reportada incluso cuando es <1 | sin medir todavía |
-| Latencia p95 bajo rotación | *p*=0,10, *N*=8 | <2× la del caso sin fallos | sin medir todavía |
+| Latencia p95 bajo rotación | *p*=0.10, *N*=8 | <2× la del caso sin fallos | sin medir todavía |
 | Detección de nodos deshonestos | Adversarios inyectados capturados | >95 % | sin medir todavía |
 | Sobrecoste de verificación | Coste extra por fragmento | <5 % | sin medir todavía |
 | SCI | gCO₂e por unidad funcional | Publicado y comparado | sin medir todavía |
@@ -1048,13 +1052,13 @@ Enunciados sin rodeos y con extensión. Una especificación cuyos modos de fallo
 
 **L10 — El riesgo dominante no es técnico.** La computación voluntaria lleva dos décadas en declive: los primeros proyectos atrajeron del orden de un millón de voluntarios, y la base de usuarios se ha reducido desde entonces a unos doscientos mil [47]. Swarmbly debe explicar qué hace distinto a su bucle de incentivos, y «créditos de red» no es por sí solo una respuesta. Esto es, según mi valoración, más probable que acabe con el proyecto que cualquier limitación algorítmica.
 
-**L11 — Los sistemas multiagente fallan de formas caracterizadas.** Una taxonomía construida a partir de 150 trazas anotadas por expertos (κ = 0,88) y más de 1.600 trazas en siete marcos atribuye el 47,9 % de los fallos al diseño del sistema, el 32,2 % al desalineamiento entre agentes y el 20,0 % a la verificación de tareas, con la repetición de pasos (15,7 %) y la desobediencia de la especificación (11,8 %) como los modos individuales más comunes [90]. Swarmbly es un sistema multiagente y debería esperar esta distribución.
+**L11 — Los sistemas multiagente fallan de formas caracterizadas.** Una taxonomía construida a partir de 150 trazas anotadas por expertos (κ = 0.88) y más de 1.600 trazas en siete marcos atribuye el 47.9 % de los fallos al diseño del sistema, el 32.2 % al desalineamiento entre agentes y el 20.0 % a la verificación de tareas, con la repetición de pasos (15.7 %) y la desobediencia de la especificación (11.8 %) como los modos individuales más comunes [90]. Swarmbly es un sistema multiagente y debería esperar esta distribución.
 
 **L12 — Un enjambre de confianza reubica la confianza; no la elimina.** Véase la sección 9.5. Quien controla la lista blanca de pertenencia controla el enjambre, de modo que la gobernanza del registro pasa a ser una función crítica de seguridad; el TLS mutuo autentica una identidad, no el modelo que hay detrás; y un enjambre que baja *k* a 1 renuncia al mapa de confianza de la sección 8.4b junto con la redundancia adversarial que ya no necesita. El nivel es un cambio de modelo de amenaza, y la especificación exige que se declare en lugar de darse por supuesto.
 
-**L13 — El mapa de confianza queda retirado.** Véase la sección 11.3. Medido contra un juez de clase par, el acuerdo por unidad no predijo la aceptabilidad juzgada (*r* = −0,030 sobre 597 unidades), y *k* > 1 costó entre 17 y 20 puntos de coherencia en la misma ejecución. Eso lo dejaba sin sustento y no refutado, contra un juez demasiado saturado para discriminar. El experimento contra verdad de referencia se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de **3,47, 0,26 y 1,24**: por encima, por debajo y a caballo del 1 en la misma pregunta. Esto ya no es una hipótesis sin validar a la espera de su medición; es una afirmación que se ha medido y no ha sobrevivido, así que queda **retirada** en vez de degradada, y sale del banco de pruebas V7. El mecanismo sigue divulgado y especificado, e informar de *dónde* divergieron las réplicas sigue siendo una capacidad real; afirmar que la convergencia indica corrección no lo es. Quien construya sobre E16 debería construir sobre el informe de divergencias, no sobre la afirmación de fiabilidad.
+**L13 — El mapa de confianza queda retirado.** Véase la sección 11.3. Medido contra un juez de clase par, el acuerdo por unidad no predijo la aceptabilidad juzgada (*r* = −0.030 sobre 597 unidades), y *k* > 1 costó entre 17 y 20 puntos de coherencia en la misma ejecución. Eso lo dejaba sin sustento y no refutado, contra un juez demasiado saturado para discriminar. El experimento contra verdad de referencia se ha ejecutado desde entonces tres veces y devolvió razones de momios comunes de **3.47, 0.26 y 1.24**: por encima, por debajo y a caballo del 1 en la misma pregunta. Esto ya no es una hipótesis sin validar a la espera de su medición; es una afirmación que se ha medido y no ha sobrevivido, así que queda **retirada** en vez de degradada, y sale del banco de pruebas V7. El mecanismo sigue divulgado y especificado, e informar de *dónde* divergieron las réplicas sigue siendo una capacidad real; afirmar que la convergencia indica corrección no lo es. Quien construya sobre E16 debería construir sobre el informe de divergencias, no sobre la afirmación de fiabilidad.
 
-**L14 — El segundo instrumento de coherencia no funciona con respuestas cortas.** Véase la sección 11.3. La rejilla de entidades devolvió líneas base monolíticas entre 0,000 y 0,114 en todo el corpus, lo que convierte cualquier comparación relativa construida sobre ella en una razón con denominador casi nulo. O el corpus de evaluación pasa a salidas más largas o se sustituye el instrumento; hasta entonces este artículo tiene un instrumento de coherencia en funcionamiento, no dos, y un único proxy mecánico es evidencia más delgada de lo que el diseño merece.
+**L14 — El segundo instrumento de coherencia no funciona con respuestas cortas.** Véase la sección 11.3. La rejilla de entidades devolvió líneas base monolíticas entre 0.000 y 0.114 en todo el corpus, lo que convierte cualquier comparación relativa construida sobre ella en una razón con denominador casi nulo. O el corpus de evaluación pasa a salidas más largas o se sustituye el instrumento; hasta entonces este artículo tiene un instrumento de coherencia en funcionamiento, no dos, y un único proxy mecánico es evidencia más delgada de lo que el diseño merece.
 
 ---
 
@@ -1110,7 +1114,7 @@ Se siguen tres consecuencias que no anticipaba cuando comenzó este trabajo y qu
 
 El argumento en contra es igual de específico y se enuncia extensamente en la sección 12. La generación independiente pierde calidad por razones teóricas y no incidentales. El modelo del lado del cliente del que depende el diseño se sitúa en el extremo débil de la capacidad de planificación medida. La computación voluntaria lleva veinte años contrayéndose, y ningún diseño de incentivos de este artículo es todavía una respuesta demostrada a por qué eso habría de revertirse.
 
-Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. Las mediciones ya están, y las dos fueron contra el artículo. El impuesto de coherencia con ρ = 3,5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de +2,30 % con un IC del 95 % de [−2,05 %, +7,49 %], y el umbral de abandono fijado de antemano está escrito contra ese límite superior: **no se alcanza**, y le faltan 2,49 puntos (sección 11.3a). Una versión anterior de esta conclusión afirmaba un impuesto que decrecía de forma monótona con el presupuesto de contexto y un umbral superado en tres categorías de tarea; esa afirmación queda retirada, porque el eje ρ no se había movido y la métrica de coherencia no era neutral respecto del brazo. El mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— queda retirado del todo. Lo que sobrevive es un costo medido y bimodal —el prompt mediano no pierde absolutamente nada, 11 de 16 prompts quedan en cero o por debajo, y dos prompts cargan el 140 % de la media— y un control que falló como estaba obligado a fallar. Lo que queda por zanjar es qué separa a los once prompts que se fragmentan gratis de los dos que no, y si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
+Ambos argumentos son reales, y ninguno se zanja discutiendo. Lo que lo zanja es una medición. Las mediciones ya están, y las dos fueron contra el artículo. El impuesto de coherencia con ρ = 3.5, *N* = 2, *k* = 1 sobre 16 prompts reservados es de +2.30 % con un IC del 95 % de [−2.05 %, +7.49 %], y el umbral de abandono fijado de antemano está escrito contra ese límite superior: **no se alcanza**, y le faltan 2.49 puntos (sección 11.3a). Una versión anterior de esta conclusión afirmaba un impuesto que decrecía de forma monótona con el presupuesto de contexto y un umbral superado en tres categorías de tarea; esa afirmación queda retirada, porque el eje ρ no se había movido y la métrica de coherencia no era neutral respecto del brazo. El mapa de confianza —la propiedad de la que este artículo estaba más orgulloso— queda retirado del todo. Lo que sobrevive es un costo medido y bimodal —el prompt mediano no pierde absolutamente nada, 11 de 16 prompts quedan en cero o por debajo, y dos prompts cargan el 140 % de la media— y un control que falló como estaba obligado a fallar. Lo que queda por zanjar es qué separa a los once prompts que se fragmentan gratis de los dos que no, y si existe un presupuesto de contexto que satisfaga coherencia, privacidad, verificabilidad y capacidad del trabajador simultáneamente, a un coste inferior al valor de la capacidad agregada. He especificado el protocolo con detalle suficiente para implementarlo, enunciado las hipótesis que lo falsarían, publicado el banco de pruebas que mide la primera de ellas y comprometido de antemano el umbral a partir del cual concluiría que el diseño no funciona.
 
 Si funciona, el resultado no es una forma más barata de comprar lo que ya se vende. Es capacidad de inferencia que crece con el número de personas que participan y no con la cantidad de capital disponible para construir, sostenida bajo una licencia y una estructura de gobernanza diseñadas para que ninguna parte pueda cercarla. Eso merece intentarse incluso con una probabilidad sustancial de fracaso, y merece intentarse en abierto, donde pueda comprobarse.
 
@@ -1174,7 +1178,7 @@ Si funciona, el resultado no es una forma más barata de comprar lo que ya se ve
 
 [22] NVIDIA. (s. f.). *Documentación de producto de la NVIDIA H100* (NVLink 900 GB/s SXM; PCIe Gen5 128 GB/s). NVIDIA Corporation.
 
-[23] NVIDIA. (s. f.). *Documentación de NVIDIA Quantum-2 InfiniBand* (400 Gb/s por puerto; 51,2 Tb/s agregados). NVIDIA Corporation.
+[23] NVIDIA. (s. f.). *Documentación de NVIDIA Quantum-2 InfiniBand* (400 Gb/s por puerto; 51.2 Tb/s agregados). NVIDIA Corporation.
 
 [24] Sevilla, J. (2025). *How far can decentralized training over the internet scale?* Epoch AI. [Léase junto con las estadísticas de latencia entre regiones de Microsoft Azure.]
 

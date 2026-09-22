@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Preregistration — `term_once` at the assembler
 
 > **CERRADA 5 septiembre 2026.** Endpoint primario CUMPLIDO con el doble del

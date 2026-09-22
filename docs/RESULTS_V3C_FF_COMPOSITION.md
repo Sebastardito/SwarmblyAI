@@ -1,3 +1,12 @@
+---
+status: partially_withdrawn
+stands: Sections 1 to 4
+reason: >
+  Section 5 is withdrawn. Its repeated_sentences_cross_task = 0 was true of
+  that corpus, not of prose composition: on the composition corpus it reads
+  12 at N=3 and 50 at N=8.
+lang: en
+---
 # The first composition measurement — and the coherence tax cannot see it
 
 > # ⚠ PARTIALLY WITHDRAWN — 4 September 2026

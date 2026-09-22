@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Swarmbly AI
 
 ### The barrier to serving artificial intelligence stops being capital and becomes participation

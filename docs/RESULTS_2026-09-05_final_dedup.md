@@ -1,3 +1,10 @@
+---
+status: current
+note: >
+  The current composition verdict. comp-final-v2 reads -0.35 on a corpus
+  nobody had seen.
+lang: es
+---
 # Los dos veredictos finales — 5 de septiembre de 2026
 
 Cuatro corridas: `comp-dev-once` (re-corrida), `comp-final-once`, `comp-dev-v2`,
@@ -142,6 +149,6 @@ se genera antes de mirar nada.
 
 Sigue sin probarse el caso para el que existe la arquitectura: **una tarea que no
 quepa en un nodo**. El prompt más grande del proyecto mide 375 tokens contra una
-ventana de 8.192. Todo lo anterior mide cuánto cuesta partir algo que no hacía
+ventana de 8192. Todo lo anterior mide cuánto cuesta partir algo que no hacía
 falta partir — y ese costo ahora es aproximadamente cero, lo cual es una noticia
 buena y sigue sin ser la pregunta.

@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Pre-registration — the cost of fragmentation on prose composition
 
 **Written:** 4 September 2026, **before** the corpus was run against any real

@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # tables-dev, second run — the cost hypothesis is alive, the successor is dead
 
 **Run:** `results/tables-dev-20260827-095758`. The dev half of

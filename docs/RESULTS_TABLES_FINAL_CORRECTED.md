@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # tables-final on a corrected instrument — the criterion is NOT MET, and the mean is the wrong statistic
 
 **Run:** `results/tables-final-20260903-153237`. The final half of

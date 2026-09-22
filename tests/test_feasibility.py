@@ -86,9 +86,9 @@ def test_the_answer_key_is_computed_from_the_rows():
     rng = random.Random(0)
     rows = gen._rows(40, rng)
     questions = gen._questions(rows, rng)
-    total = next(q for q in questions if q["id"] == "Q3")
+    total = next(q for q in questions if q["id"] == "03")
     assert int(total["expected"]) == sum(r["on_hand"] for r in rows)
-    largest = next(q for q in questions if q["id"] == "Q4")
+    largest = next(q for q in questions if q["id"] == "04")
     assert largest["expected"] == max(rows, key=lambda r: (r["on_hand"], r["id"]))["id"]
 
 
@@ -106,7 +106,7 @@ def test_the_digest_covers_the_answer_key():
     resultado sin mover un solo prompt."""
     prompts = gen.build()
     before = gen.digest(prompts)
-    prompts[0]["key"]["Q3"]["expected"] = "999999"
+    prompts[0]["key"]["03"]["expected"] = "999999"
     assert gen.digest(prompts) != before
 
 
@@ -250,3 +250,75 @@ def test_the_tier_says_out_loud_what_a_null_result_would_mean():
     body = body[:body.index("\n}\n")]
     assert "naive-chunk" in body
     assert "EL VALOR ESTA EN" in body or "valor esta en trocear" in body
+
+
+# --------------------------------------------------------------------------
+# El test que faltaba, y que costó tres horas de computo
+#
+# El corpus salió con ids `[Q1]`..`[Q5]`. `grading.extract_items` -- el unico
+# lector de respuestas del proyecto -- reconoce `\d{1,3}` y NO reconoce letras,
+# asi que devolvia lista vacia y CADA respuesta de CADA brazo se califico mal.
+# monolithic-capped saco 0/2 en preguntas locales sobre documentos de 24 filas
+# que tenia enteros en un solo nodo, que es un resultado imposible como fallo de
+# capacidad.
+#
+# La condicion de invalidacion 1 lo atrapo y nada se publico. El ENSAYO no pudo:
+# un mock que no sabe contestar produce 0/5 tanto si el calificador funciona
+# como si esta ciego, y las dos cosas se ven identicas.
+#
+# La leccion que no estaba en la doctrina: EL ENSAYO VALIDA LA FONTANERIA, NO LA
+# SEMANTICA. Para lo segundo hace falta una respuesta correcta escrita a mano,
+# que es lo que sigue.
+# --------------------------------------------------------------------------
+
+
+def _perfect_answer(doc: dict) -> str:
+    return "\n".join(f"[{qid}] {spec['expected']}"
+                     for qid, spec in doc["key"].items())
+
+
+def test_a_perfect_answer_scores_five_of_five():
+    """Ningun mock puede dar este test: hay que escribir la respuesta correcta.
+
+    Si esto falla, el calificador esta ciego y TODA cifra de este tier es cero
+    por construccion, sin importar lo que hagan los modelos.
+    """
+    for doc in gen.build()[:3]:
+        result = feas.grade(_perfect_answer(doc), doc["key"])
+        total = sum(c["correct"] for c in result["by_kind"].values())
+        asked = sum(c["asked"] for c in result["by_kind"].values())
+        assert asked == 5, f"{doc['id']}: se esperaban 5 preguntas, hay {asked}"
+        assert total == 5, (
+            f"{doc['id']}: una respuesta PERFECTA saco {total}/5. El "
+            f"calificador no esta leyendo las respuestas: "
+            f"{result['detail']}")
+
+
+def test_a_wrong_answer_scores_zero():
+    """La imagen espejo: un calificador que aceptara cualquier cosa daria 5/5 a
+    una respuesta perfecta igual que uno que funciona."""
+    doc = gen.build()[0]
+    wrong = "\n".join(f"[{qid}] ZZZ-nonsense" for qid in doc["key"])
+    result = feas.grade(wrong, doc["key"])
+    assert sum(c["correct"] for c in result["by_kind"].values()) == 0
+
+
+def test_every_question_id_is_one_extract_items_can_read():
+    """El corpus y el calificador tienen que hablar el mismo idioma, y el
+    calificador es el que no se puede cambiar."""
+    from swarmbly_v0.grading import extract_items
+    for doc in gen.build()[:5]:
+        line = " ".join(f"[{qid}] 1" for qid in doc["key"])
+        read = {item_id for item_id, _ in extract_items(line)}
+        assert read == set(doc["key"]), (
+            f"{doc['id']}: extract_items leyo {sorted(read)} de "
+            f"{sorted(doc['key'])}. Las que faltan se califican mal siempre.")
+
+
+def test_the_prompt_shows_the_same_ids_the_key_uses():
+    """Pedirle al modelo `[Q1]` y calificar contra `01` es el mismo defecto con
+    un paso mas."""
+    for doc in gen.build()[:5]:
+        for qid in doc["key"]:
+            assert f"[{qid}]" in doc["prompt"], (
+                f"{doc['id']}: la clave usa {qid!r} y el prompt no lo pide")

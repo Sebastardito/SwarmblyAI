@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # The segmenter splits a question away from the data that answers it
 
 **Found:** 4 September 2026, on the first instance the V7 oracle arm was pointed

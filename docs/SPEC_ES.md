@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # Especificación del protocolo Swarmbly
 
 **Versión 0.2 — 13 de agosto de 2026**
@@ -312,7 +316,7 @@ El trabajador MUST reportar el perfil que realmente usó. El compromiso liga el 
 
 1. **Filtrar** candidatos primero por `tier` —un paquete con `tier` igual a `TRUSTED` sólo se ofrece a nodos cuyo `node_id` figure en la lista blanca del enjambre nombrado por `swarm_id`, sobre un canal mutuamente autenticado— y después por soporte declarado de `kind`, clase de capacidad y RTT observado.
 2. **Seleccionar** `k` nodos para una tarea de criticidad `k`, **maximizando la diversidad de familias de modelos** dentro de la clase de capacidad. La diversidad de candidatos es lo que hace efectiva la selección; las implementaciones MUST NOT concentrar las réplicas en una única familia de modelos cuando haya alternativas disponibles.
-3. **Especular.** Arrancar un temporizador en el **p95** observado de la distribución de latencia *para ese tipo de tarea y ese presupuesto de tokens*. Al vencer, despachar una réplica adicional. Aceptar el primer resultado que verifique. Un tiempo de espera fijo es no conformante: con una probabilidad de fallo por nodo *p* y una anchura *W*, `P(≥1 fallo) = 1 − (1−p)^W`, que con *p*=0,10 y *W*=20 es el 88 %, de modo que un tiempo de espera fijo cae de forma rutinaria en la ruta crítica.
+3. **Especular.** Arrancar un temporizador en el **p95** observado de la distribución de latencia *para ese tipo de tarea y ese presupuesto de tokens*. Al vencer, despachar una réplica adicional. Aceptar el primer resultado que verifique. Un tiempo de espera fijo es no conformante: con una probabilidad de fallo por nodo *p* y una anchura *W*, `P(≥1 fallo) = 1 − (1−p)^W`, que con *p*=0.10 y *W*=20 es el 88 %, de modo que un tiempo de espera fijo cae de forma rutinaria en la ruta crítica.
 4. **Cancelar** las réplicas pendientes al aceptar, y registrar la cancelación como *lentitud*, no como *deshonestidad*. La reputación MUST distinguir ambas.
 5. **Reintentar** ante un fallo de verificación, excluyendo al nodo que falló, y reportar el evento al muestreador de auditoría.
 
@@ -345,7 +349,7 @@ La reputación es orientativa y la calculan el orquestador y el registro de form
 
 **Capa 1 — compromiso (REQUIRED cuando se solicite).** El trabajador computa un compromiso sensible a la localidad sobre las activaciones y devuelve un resumen ligado al perfil declarado. El orquestador lo valida antes de que el resultado pueda entrar en el ensamblaje. Coste objetivo: ~258 bytes por cada 32 tokens, con una validación más rápida que la generación original.
 
-**Capa 2 — auditoría muestreada (REQUIRED de la red).** Una fracción λ de las tareas es reejecutada por un auditor. Las tareas de auditoría MUST ser **indistinguibles** de las tareas reales desde la perspectiva del trabajador: mismo formato, mismos identificadores, misma envolvente de latencia. Por defecto λ ∈ [0,01; 0,05]. La probabilidad de fallo bajo una tasa de corrupción ρ_c y un comité de tamaño *k* es aproximadamente `ρ_c^k`.
+**Capa 2 — auditoría muestreada (REQUIRED de la red).** Una fracción λ de las tareas es reejecutada por un auditor. Las tareas de auditoría MUST ser **indistinguibles** de las tareas reales desde la perspectiva del trabajador: mismo formato, mismos identificadores, misma envolvente de latencia. Por defecto λ ∈ [0.01; 0.05]. La probabilidad de fallo bajo una tasa de corrupción ρ_c y un comité de tamaño *k* es aproximadamente `ρ_c^k`.
 
 **Capa 3 — selección (implícita).** Con `k > 1`, la selección basada en juez de la sección 14 descarta los candidatos anómalos como efecto colateral.
 
@@ -531,7 +535,7 @@ Omitir `rho_floor` o `rho_reachable` es no conformante. Sin ellos, quien consuma
 4. La compresión del contrato es el problema abierto de mayor apalancamiento: como Γ es simultáneamente el mecanismo de coherencia, la exposición de privacidad y el término de coste dominante, cualquier reducción de `|Γ|` a igual efecto mejora tres propiedades a la vez.
 5. Que el orquestador pueda ser un modelo de clase 8 B con calidad aceptable está sin resolver y es objeto de la hipótesis H3 del whitepaper.
 6. La granularidad de una unidad semántica —oración frente a cláusula— está sin resolver, y afecta materialmente tanto a la calidad del alineamiento de la sección 14b como a los parámetros del modelo de cobertura.
-7. La correlación entre la puntuación de acuerdo de la sección 14b y la exactitud factual ya se ha medido, y **no se encontró relación alguna.** Contra un juez de clase par salió en *r* = −0,030 sobre 597 unidades semánticas; tres ejecuciones posteriores calificadas contra una clave de respuestas situaron la razón de momios común de Mantel-Haenszel en 3,47, luego 0,26, luego 1,24: por encima, por debajo y a caballo del 1 en la misma pregunta, que es ninguna señal medida tres veces. El mapa de confianza queda por tanto **retirado** como afirmación de fiabilidad, y sale del banco de pruebas V7. El mecanismo de la sección 14b sigue especificado y MAY reportarse, pero una implementación MUST reportar su salida como *acuerdo* y MUST NOT presentarla como exactitud, confianza ni garantía de fiabilidad. Lo que queda abierto no es si la correlación está ahí, sino si es posible recuperar en absoluto alguna señal por unidad de este tipo; un instrumento nuevo, y no repetir este, es la condición previa para reabrirlo.
+7. La correlación entre la puntuación de acuerdo de la sección 14b y la exactitud factual ya se ha medido, y **no se encontró relación alguna.** Contra un juez de clase par salió en *r* = −0.030 sobre 597 unidades semánticas; tres ejecuciones posteriores calificadas contra una clave de respuestas situaron la razón de momios común de Mantel-Haenszel en 3.47, luego 0.26, luego 1.24: por encima, por debajo y a caballo del 1 en la misma pregunta, que es ninguna señal medida tres veces. El mapa de confianza queda por tanto **retirado** como afirmación de fiabilidad, y sale del banco de pruebas V7. El mecanismo de la sección 14b sigue especificado y MAY reportarse, pero una implementación MUST reportar su salida como *acuerdo* y MUST NOT presentarla como exactitud, confianza ni garantía de fiabilidad. Lo que queda abierto no es si la correlación está ahí, sino si es posible recuperar en absoluto alguna señal por unidad de este tipo; un instrumento nuevo, y no repetir este, es la condición previa para reabrirlo.
 8. La federación de registros de enjambres de confianza, la rotación de claves y la latencia de revocación están sin especificar. Mientras lo estén, el modo de fallo de la regla 1 de la sección 15c es una lista blanca desactualizada, no una sin autenticar.
 9. Si un modelo de triaje de entidades nombradas lo bastante pequeño para ejecutarse en el dispositivo solicitante alcanza una exhaustividad aceptable sobre clases de entidades reguladas está sin medir, y la bandera manual existe precisamente porque está sin medir.
 

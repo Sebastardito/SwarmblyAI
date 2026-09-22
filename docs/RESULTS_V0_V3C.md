@@ -1,3 +1,13 @@
+---
+status: partially_withdrawn
+stands: >
+  whatever does not rest on the rho axis or on the coherence tax
+reason: >
+  Section 1 is not a measurement of rho -- every cell sat below its own
+  packing floor, so two rho labels produced byte-identical packets -- and
+  the coherence tax came from an instrument that was not arm-neutral.
+lang: en
+---
 # First measurements against real models — V0 and V3c
 
 > # ⚠ SUPERSEDED — 12 August 2026

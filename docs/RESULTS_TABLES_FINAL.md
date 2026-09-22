@@ -1,3 +1,12 @@
+---
+status: superseded
+superseded_by: RESULTS_TABLES_FINAL_CORRECTED.md
+reason: >
+  Run on a defective instrument. The verdict is unchanged -- NOT MET -- but
+  every figure moved, and the distribution behind the figure moved a great
+  deal more.
+lang: en
+---
 # tables-final — the pre-registered criterion is NOT MET
 
 > **The run below (27 August) was made with a DEFECTIVE instrument and is kept

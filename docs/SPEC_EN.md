@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Swarmbly Protocol Specification
 
 **Version 0.2 — 13 August 2026**

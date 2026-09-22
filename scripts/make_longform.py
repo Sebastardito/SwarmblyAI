@@ -121,20 +121,33 @@ def _questions(rows: list[dict], rng: random.Random) -> list[dict]:
     threshold = 500
     below = sum(1 for r in rows if r["on_hand"] < r["reorder_at"])
 
+    # Ids NUMERICOS, y no `Q1`..`Q5`.
+    #
+    # `grading.extract_items` -- el unico lector de respuestas del proyecto --
+    # reconoce etiquetas de la forma `[01]`, `1.` o `(1)`, con `\d{1,3}`. No
+    # reconoce letras. La primera version de este corpus uso `[Q1]`, asi que
+    # `extract_items` devolvia una lista vacia y CADA respuesta de CADA brazo se
+    # califico mal: monolithic-capped saco 0/2 en preguntas locales sobre
+    # documentos de 24 filas que tenia enteros en un solo nodo.
+    #
+    # Tres horas de computo. La condicion de invalidacion 1 lo atrapo y nada se
+    # publico, pero el ensayo no pudo: un mock que no sabe contestar no
+    # distingue "el calificador funciona" de "el calificador esta ciego". Ver
+    # `test_a_perfect_answer_scores_five_of_five`, que es el test que faltaba.
     return [
-        {"id": "Q1", "kind": "local",
+        {"id": "01", "kind": "local",
          "text": f"What is on_hand for {picked[0]['id']}?",
          "expected": str(picked[0]["on_hand"]), "mode": "numeric"},
-        {"id": "Q2", "kind": "local",
+        {"id": "02", "kind": "local",
          "text": f"Which warehouse holds {picked[1]['id']}?",
          "expected": picked[1]["warehouse"], "mode": "exact_norm"},
-        {"id": "Q3", "kind": "global",
+        {"id": "03", "kind": "global",
          "text": "What is the total on_hand across every row?",
          "expected": str(total), "mode": "numeric"},
-        {"id": "Q4", "kind": "global",
+        {"id": "04", "kind": "global",
          "text": "Which row id has the largest on_hand?",
          "expected": largest["id"], "mode": "exact_norm"},
-        {"id": "Q5", "kind": "global",
+        {"id": "05", "kind": "global",
          "text": ("How many rows have on_hand strictly below their own "
                   "reorder_at?"),
          "expected": str(below), "mode": "numeric"},

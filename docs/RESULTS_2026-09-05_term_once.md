@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # comp-dev-once — la predicción se cumplió, y con el doble del margen
 
 `results/comp-dev-once-20260905-120541`. Digest del corpus `e9e382b9…`,

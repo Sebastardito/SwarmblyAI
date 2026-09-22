@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # v0, v3c-ff, v3c-gt — 4–5 September 2026
 
 Three tiers, roughly eleven hours, all completed. Provenance is clean on all

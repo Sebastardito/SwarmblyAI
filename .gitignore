@@ -223,12 +223,21 @@ docs/AUDIT_V0.md
 # Listed explicitly rather than by a wildcard so that adding a new private
 # document is a deliberate act, and so that this list can be read as an
 # inventory of what must never travel.
+# These files now LIVE in the sibling vault (../Swarmbly-Private/), not here.
+# They are listed anyway so that a copy landing back in this tree -- by an
+# extraction, a restore, or a hand that meant well -- is refused by git rather
+# than caught by a reader. The rule that put them there is in the vault's
+# README: a document is public if some public artifact points at it. Nothing
+# public points at any of these.
 docs/AUDIT_V0.md
 docs/DISCUSION_PUNTOS.*
 docs/NAMING.*
 docs/RESOLUCIONES.*
 docs/Swarmbly_AI_Documento_Maestro_ES.*
 docs/Swarmbly_AI_Master_Document_EN.*
+docs/PLAN_V7.*
+docs/RUNBOOK_2026-09-04.*
+docs/FUNDAMENTOS_*
 publication/
 _interno/
 _to_delete/

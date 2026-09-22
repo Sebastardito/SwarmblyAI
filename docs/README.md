@@ -1,3 +1,7 @@
+---
+status: current
+lang: es+en
+---
 # Swarmbly AI — Documentation Index · Índice de documentación
 
 One page, everything that exists, what each thing is for, and in which order
@@ -6,15 +10,26 @@ to read it.
 Una sola página: todo lo que existe, para qué sirve cada cosa y en qué orden
 leerlo.
 
-> **Not everything listed here is necessarily present yet.** Several of these
-> documents are produced separately from this scaffolding and land in the
-> repository on their own schedule. A missing file is expected, not an error.
-> If a link below does not resolve, that document has not been added yet.
+> ## ¿Se puede citar? · May I quote it?
 >
-> **No todo lo que aparece aquí está necesariamente presente todavía.** Varios
-> de estos documentos se elaboran por separado y llegan al repositorio a su
-> propio ritmo. Que falte un archivo es lo esperable, no un fallo. Si un enlace
-> no resuelve, ese documento aún no se ha añadido.
+> **Antes de citar cualquier cifra, mirá [`STATUS.md`](STATUS.md).** Varios
+> documentos de este repositorio fueron retirados o superados por una medición
+> posterior, y siguen aquí a propósito: borrarlos dejaría el registro más
+> limpio y menos honesto. `STATUS.md` dice, sin abrir nada, cuál de dos cifras
+> es la que se sostiene. Se genera desde los documentos, así que no puede
+> desfasarse de ellos.
+>
+> **Before quoting any figure, see [`STATUS.md`](STATUS.md).** Several
+> documents here were withdrawn or superseded by a later measurement, and they
+> stay on purpose: deleting them would leave a tidier record and a less honest
+> one. `STATUS.md` says, without opening anything, which of two figures stands.
+> It is generated from the documents, so it cannot drift from them.
+>
+> Un enlace roto en este índice ya no es normal: `tests/test_docs_boundary.py`
+> falla si un archivo rastreado cita un documento que no está en el árbol.
+> *A broken link in this index is no longer normal:
+> `tests/test_docs_boundary.py` fails when a tracked file cites a document that
+> is not in the tree.*
 
 **Versions covered / Versiones cubiertas:** whitepaper **v1.4** · protocol
 specification **v0.2 revision 2** · reference implementation **V0**.

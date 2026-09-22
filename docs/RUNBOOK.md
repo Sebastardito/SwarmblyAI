@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Runbook
 
 The commands, in order, and the check that has to pass before each one. Written

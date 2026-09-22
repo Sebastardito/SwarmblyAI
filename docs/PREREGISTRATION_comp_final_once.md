@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # Prerregistración — `comp-final-once`
 
 > **CERRADA 5 septiembre 2026. NOT MET por 8.61 puntos** en la cota superior:

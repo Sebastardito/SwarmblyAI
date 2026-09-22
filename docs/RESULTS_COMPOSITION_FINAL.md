@@ -1,3 +1,12 @@
+---
+status: superseded
+superseded_by: RESULTS_2026-09-05_final_dedup.md
+reason: >
+  Its +22.40 was measured before term_once was enforced at the assembler. On
+  the same split with enforcement the figure is +7.64, and on a corpus
+  nobody had seen it is -0.35.
+lang: en
+---
 # The composition criterion: NOT MET by 23.5 points, and the tax could not see it
 
 **Run:** `results/comp-final-20260904-123403`. `prompts/composition.json`, split

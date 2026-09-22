@@ -1,3 +1,7 @@
+---
+status: current
+lang: es
+---
 # ¿Vamos en círculos? — revisión del planteamiento
 
 **5 de septiembre de 2026.** Escrito porque Seb preguntó dos cosas que había que
@@ -23,7 +27,7 @@ El prompt más grande de **todo** el proyecto mide **375 tokens**.
 | `prompts.json` | 8 | 145 | 160 |
 | `composition.json` | 36 | 106 | 119 |
 
-El modelo más pequeño del pool (`gemma2:2b`) tiene una ventana de **8.192
+El modelo más pequeño del pool (`gemma2:2b`) tiene una ventana de **8192
 tokens**. El prompt más grande usa el **4.6 %** de la memoria del nodo más chico.
 
 **Ninguna tarea, en ningún corpus, en ninguna corrida, ha necesitado

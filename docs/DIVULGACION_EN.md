@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Swarmbly AI
 
 ## An artificial intelligence built by everyone

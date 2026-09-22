@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # ADR-001: The instrument must not import the thing it measures
 
 **Status:** Accepted

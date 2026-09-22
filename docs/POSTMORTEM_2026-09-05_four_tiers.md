@@ -1,3 +1,7 @@
+---
+status: current
+lang: en
+---
 # Post-mortem — four tiers failed in a row, and the pattern is mine
 
 **Written:** 5 September 2026, after Seb asked the right question: *what
