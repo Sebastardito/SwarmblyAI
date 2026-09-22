@@ -27,7 +27,7 @@ learn whether you may quote it**.
 
 ---
 
-## Vigente · Current — 25
+## Vigente · Current — 26
 
 Se puede citar. Es lo que el proyecto sostiene hoy.
 
@@ -54,6 +54,7 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 | [`RESULTS_2026-09-05_oracle_v2.md`](RESULTS_2026-09-05_oracle_v2.md) | [`RESULTS_2026-09-05_oracle_v2_ES.md`](RESULTS_2026-09-05_oracle_v2_ES.md) | — |
 | [`RESULTS_2026-09-05_term_once.md`](RESULTS_2026-09-05_term_once.md) | [`RESULTS_2026-09-05_term_once_EN.md`](RESULTS_2026-09-05_term_once_EN.md) | — |
 | [`RESULTS_2026-09-05_three_tiers.md`](RESULTS_2026-09-05_three_tiers.md) | [`RESULTS_2026-09-05_three_tiers_ES.md`](RESULTS_2026-09-05_three_tiers_ES.md) | — |
+| [`RESULTS_2026-09-22_lcurve_dev.md`](RESULTS_2026-09-22_lcurve_dev.md) | [`RESULTS_2026-09-22_lcurve_dev_EN.md`](RESULTS_2026-09-22_lcurve_dev_EN.md) | La corrida no habla sobre L. Se publica porque el defecto que encontró es de método y no de resultado. |
 | [`RESULTS_TABLES_DEV2.md`](RESULTS_TABLES_DEV2.md) | [`RESULTS_TABLES_DEV2_ES.md`](RESULTS_TABLES_DEV2_ES.md) | — |
 | [`RESULTS_TABLES_FINAL_CORRECTED.md`](RESULTS_TABLES_FINAL_CORRECTED.md) | [`RESULTS_TABLES_FINAL_CORRECTED_ES.md`](RESULTS_TABLES_FINAL_CORRECTED_ES.md) | — |
 | [`REVISION_2026-08-12.md`](REVISION_2026-08-12.md) | [`REVISION_2026-08-12_EN.md`](REVISION_2026-08-12_EN.md) | — |

@@ -51,6 +51,26 @@ umbral nuevo elegido para este experimento sería un grado de libertad más, y e
 CONTROL_TOLERANCE = 0.05
 """Cuánto puede moverse la exactitud `local` con L antes de invalidar la corrida."""
 
+BASELINE_FLOOR = 0.20
+"""Exactitud mínima del brazo monolítico en `global` para que la corrida hable.
+
+AÑADIDA DESPUÉS DE LA PRIMERA CORRIDA, y eso se dice aquí y no se esconde.
+
+`lcurve-dev` del 22 de septiembre salió sin disparar ninguna condición de
+invalidación y con el control marcando +0.000, que se lee como "nada se rompió".
+No era eso. El brazo monolítico sacó 1 de 72 en preguntas globales -- incluso
+con S = 10, una tabla de diez filas que cabe entera en cualquier ventana. Con
+los dos extremos en el piso, la diferencia pareada entre dos fragmentaciones es
+ruido alrededor de cero, y el control marca +0.000 PRECISAMENTE porque no hay
+nada que mover.
+
+Un control que pasa en el piso no es un control. Ése fue el defecto de la
+prerregistración: cuatro condiciones de refutación y ninguna que preguntara si
+el instrumento tiene rango dinámico.
+
+Esta condición no rescata aquella corrida ni cambia ningún veredicto -- no hubo
+ninguno, la celda se rehusó por clusters. Rige desde la siguiente."""
+
 
 # --------------------------------------------------------------------------- #
 # Una celda
@@ -101,6 +121,7 @@ def run_document(doc: Mapping[str, Any], backend: Any, embedder: Any, *,
                  "arm": "monolithic", "n_tasks": 1, "L": doc["n_rows"],
                  "peak_node_context": recorder.peak_context,
                  "over_budget": recorder.peak_context > budget,
+                 "text": str(base.get("_text", ""))[:2000],
                  **grade(str(base.get("_text", "")), doc["key"])})
     for n_tasks, rows_per_fragment in doc["cells"]:
         cell = run_cell(doc, backend, embedder, n_tasks=n_tasks, rho=rho,
@@ -111,6 +132,7 @@ def run_document(doc: Mapping[str, Any], backend: Any, embedder: Any, *,
                      "peak_node_context": cell["peak_node_context"],
                      "over_budget": cell["peak_node_context"] > budget,
                      "rho_achieved": cell["rho_achieved"],
+                     "text": cell["text"][:2000],
                      **grade(cell["text"], doc["key"])})
     return rows
 
@@ -223,6 +245,20 @@ def _invalidations(rows: Sequence[Mapping[str, Any]],
             f"TODO POR ENCIMA DE W: los {len(sizes)} tamaños exceden el "
             "presupuesto monolítico, así que no hay un extremo barato con el "
             "que contrastar.")
+
+    baseline = [r for r in rows if r["arm"] == "monolithic"]
+    correct = sum((r.get("by_kind", {}).get("global") or {}).get("correct", 0)
+                  for r in baseline)
+    asked = sum((r.get("by_kind", {}).get("global") or {}).get("asked", 0)
+                for r in baseline)
+    if asked and correct / asked < BASELINE_FLOOR:
+        found.append(
+            f"PISO DEL BASELINE: el brazo monolítico acierta {correct}/{asked} "
+            f"= {correct / asked:.3f} en preguntas globales, por debajo de "
+            f"{BASELINE_FLOOR}. Con el baseline en el piso, la diferencia entre "
+            "dos fragmentaciones del mismo documento es ruido alrededor de cero "
+            "y el control `local` marca +0.000 porque no hay nada que mover. "
+            "NINGUNA cifra de esta corrida habla sobre L.")
 
     refused = [r for r in rows if r.get("plan_refused")]
     if refused:

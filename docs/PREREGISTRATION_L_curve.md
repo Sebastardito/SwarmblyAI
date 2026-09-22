@@ -134,6 +134,28 @@ Evaluadas en código por `_invalidations()`, no en prosa después del hecho.
    brazo monolítico nunca falla y la comparación es de coste, no de
    factibilidad. Se registra junto al resultado, porque cambia cómo se lee.
 
+5. **Piso del baseline.** `BASELINE_FLOOR = 0.20`. Si el brazo monolítico
+   acierta menos de eso en preguntas `global`, ninguna cifra de la corrida
+   habla sobre L: con los dos extremos en el piso, la diferencia pareada entre
+   dos fragmentaciones es ruido alrededor de cero.
+
+   > **Añadida el 22 de septiembre, DESPUÉS de la primera corrida.** Se dice
+   > aquí porque añadir una condición de refutación después de ver datos es
+   > exactamente la libertad que una prerregistración existe para quitar.
+   >
+   > `lcurve-dev` terminó sin disparar ninguna de las cuatro condiciones
+   > anteriores y con el control marcando +0.000, que se lee como "nada se
+   > rompió". El brazo monolítico había sacado **1 de 72** en preguntas
+   > globales, incluso con S = 10 -- una tabla de diez filas que cabe entera en
+   > cualquier ventana. El control marcaba cero porque los dos extremos estaban
+   > en el piso. **Un control que pasa en el piso no es un control**, y ése fue
+   > el defecto: cuatro condiciones y ninguna que preguntara si el instrumento
+   > tiene rango dinámico.
+   >
+   > Esta condición no rescata aquella corrida ni cambia ningún veredicto -- no
+   > hubo ninguno, la celda se rehusó por número de clusters. Rige desde la
+   > siguiente.
+
 ## 7. Lo que se congela antes de correr
 
 - El corpus y su digest SHA-256, con la clave dentro del digest.

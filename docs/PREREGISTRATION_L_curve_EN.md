@@ -134,6 +134,27 @@ Evaluated in code by `_invalidations()`, not in prose after the fact.
    monolithic arm never fails and the comparison is about cost, not
    feasibility. Recorded beside the result, because it changes how it reads.
 
+5. **Baseline at the floor.** `BASELINE_FLOOR = 0.20`. If the monolithic arm
+   scores below that on `global` questions, no figure in the run speaks about
+   L: with both ends at the floor, the paired difference between two
+   fragmentations is noise around zero.
+
+   > **Added on 22 September, AFTER the first run.** Said here because adding
+   > a refutation condition after seeing data is exactly the freedom a
+   > pre-registration exists to remove.
+   >
+   > `lcurve-dev` finished without firing any of the four earlier conditions
+   > and with the control reading +0.000, which reads as "nothing broke". The
+   > monolithic arm had scored **1 of 72** on global questions, even at S = 10
+   > -- a ten-row table that fits whole in any window. The control read zero
+   > because both ends were at the floor. **A control that passes at the floor
+   > is not a control**, and that was the defect: four conditions and none
+   > asking whether the instrument has any dynamic range.
+   >
+   > This condition does not rescue that run and changes no verdict -- there
+   > was none, the cell was refused on cluster count. It governs from the next
+   > one.
+
 ## 7. What is frozen before running
 
 - The corpus and its SHA-256 digest, with the key inside the digest.

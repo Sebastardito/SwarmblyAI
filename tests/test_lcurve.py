@@ -23,8 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from make_lcurve import L_VALUES, N_VALUES, SIZES, build, cells, digest  # noqa: E402
-from run_lcurve import (CONTROL_TOLERANCE, L_CURVE_THRESHOLD_POINTS,  # noqa: E402
-                        _invalidations, paired_contrast, verdict)
+from run_lcurve import (BASELINE_FLOOR, CONTROL_TOLERANCE,  # noqa: E402
+                        L_CURVE_THRESHOLD_POINTS, _invalidations,
+                        paired_contrast, verdict)
 from swarmbly_v0.experiment import MIN_CLUSTERS_FOR_A_VERDICT  # noqa: E402
 
 
@@ -182,3 +183,32 @@ def test_a_run_where_nothing_exceeds_the_budget_says_so() -> None:
                  "n_tasks": 1, "L": 80, "over_budget": False, "by_kind": {}})
     notes = _invalidations(rows, paired_contrast(rows, "local"), budget=2048)
     assert any("SIN FRONTERA" in note for note in notes)
+
+
+def test_a_baseline_at_the_floor_invalidates_the_run() -> None:
+    """La condición que faltaba, y que la primera corrida necesitaba.
+
+    `lcurve-dev` del 22 de septiembre terminó sin disparar ninguna condición y
+    con el control marcando +0.000, que se lee como "nada se rompió". El brazo
+    monolítico había sacado 1 de 72 en preguntas globales. El control marcaba
+    cero porque los dos extremos estaban en el piso, no porque la tubería
+    estuviera sana: un control que pasa en el piso no es un control.
+    """
+    rows = _rows(24, high=0.9, low=0.5)
+    for index in range(24):
+        rows.append({"prompt_id": f"doc_{index:02d}", "arm": "monolithic",
+                     "n_rows": 80, "n_tasks": 1, "L": 80, "over_budget": True,
+                     "by_kind": {"global": {"correct": 0, "asked": 6}}})
+    notes = _invalidations(rows, paired_contrast(rows, "local"), budget=2048)
+    assert any("PISO DEL BASELINE" in note for note in notes), notes
+
+
+def test_a_baseline_with_room_to_move_does_not_invalidate() -> None:
+    rows = _rows(24, high=0.9, low=0.5)
+    for index in range(24):
+        rows.append({"prompt_id": f"doc_{index:02d}", "arm": "monolithic",
+                     "n_rows": 80, "n_tasks": 1, "L": 80, "over_budget": True,
+                     "by_kind": {"global": {"correct": 4, "asked": 6}}})
+    notes = _invalidations(rows, paired_contrast(rows, "local"), budget=2048)
+    assert not any("PISO DEL BASELINE" in note for note in notes)
+    assert BASELINE_FLOOR == pytest.approx(0.20)
