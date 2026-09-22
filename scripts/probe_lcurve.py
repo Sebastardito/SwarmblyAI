@@ -61,6 +61,35 @@ def family_pool() -> list[tuple[str, str]]:
     return pairs
 
 
+def wrapped(doc: dict) -> str:
+    """El prompt tal como el harness lo despacha, con su contrato global."""
+    from swarmbly_v0.experiment import PromptSpec, _answer_budget  # noqa: E402
+    from swarmbly_v0.packing import build_monolithic_prompt  # noqa: E402
+    from swarmbly_v0.planner import global_contract  # noqa: E402
+
+    spec = PromptSpec(prompt_id=doc["id"], category="lcurve",
+                      expected_decomposable=True, text=doc["prompt"],
+                      constraints=None, split=doc.get("split"))
+    contract = global_contract(spec.text, get_backend("mock"),
+                               target_length_tokens=_answer_budget(spec, 384))
+    return build_monolithic_prompt(contract, doc["prompt"])
+
+
+def _score(replica, docs: list[dict], use_contract: bool) -> dict[str, list[int]]:
+    got = {"global": [0, 0], "local": [0, 0]}
+    for doc in docs:
+        text = replica.generate(wrapped(doc) if use_contract else doc["prompt"],
+                                max_tokens=400, temperature=0.0)
+        extracted = dict(extract_items(text))
+        for qid, spec in doc["key"].items():
+            kind = spec["kind"]
+            got[kind][1] += 1
+            if (extracted.get(qid.zfill(2), "").strip().lower()
+                    == spec["expected"].strip().lower()):
+                got[kind][0] += 1
+    return got
+
+
 def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
     """¿Alguna familia del pool despega del piso en el caso más fácil?
 
@@ -82,29 +111,38 @@ def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
 
     print(f"calibración: monolítico, S = {n_rows}, {len(docs)} documentos, "
           f"{len(pool)} familias\n")
-    print(f"{'familia':>24} {'global':>12} {'local':>12}")
+    print("Dos envíos por familia: el prompt CRUDO, y el mismo prompt envuelto")
+    print("en el contrato global que el harness antepone. Mismos documentos,")
+    print("mismos modelos, misma clave: lo único que cambia es el envoltorio.\n")
+    header = (f"{'familia':>24} {'global crudo':>13} {'global contrato':>16}"
+              f" {'local crudo':>12} {'local contrato':>15}")
+    print(header)
+    print("-" * len(header))
     cleared: list[str] = []
+    totals = {"raw": [0, 0], "contract": [0, 0]}
     for family, model in pool:
         os.environ["SWARMBLY_MODEL"] = model
         replica = get_backend(backend_name)
-        got = {"global": [0, 0], "local": [0, 0]}
-        for doc in docs:
-            text = replica.generate(doc["prompt"], max_tokens=400,
-                                    temperature=0.0)
-            extracted = dict(extract_items(text))
-            for qid, spec in doc["key"].items():
-                kind = spec["kind"]
-                got[kind][1] += 1
-                if (extracted.get(qid.zfill(2), "").strip().lower()
-                        == spec["expected"].strip().lower()):
-                    got[kind][0] += 1
-        rate = got["global"][0] / max(1, got["global"][1])
-        if rate >= 0.20:
+        raw, con = _score(replica, docs, False), _score(replica, docs, True)
+        if raw["global"][0] / max(1, raw["global"][1]) >= 0.20:
             cleared.append(model)
-        print(f"{model:>24} {got['global'][0]:>5}/{got['global'][1]:<6} "
-              f"{got['local'][0]:>5}/{got['local'][1]:<6} "
-              f"{'<- despega del piso' if rate >= 0.20 else ''}")
+        totals["raw"][0] += raw["local"][0]; totals["raw"][1] += raw["local"][1]
+        totals["contract"][0] += con["local"][0]
+        totals["contract"][1] += con["local"][1]
+        cell = lambda d, k: f"{d[k][0]}/{d[k][1]}"
+        print(f"{model:>24} {cell(raw,'global'):>13} {cell(con,'global'):>16}"
+              f" {cell(raw,'local'):>12} {cell(con,'local'):>15}")
 
+    print()
+    a = totals["raw"][0] / max(1, totals["raw"][1])
+    b = totals["contract"][0] / max(1, totals["contract"][1])
+    print(f"LOOKUP (`local`), pool entero:  crudo {a:.3f}   contrato {b:.3f}"
+          f"   diferencia {b - a:+.3f}")
+    if a - b >= 0.15:
+        print("\nEl contrato global le está costando al baseline en una tarea")
+        print("que sabe hacer. El contrato pide `output_format: report` y 384")
+        print("tokens; el corpus pide una línea por pregunta con el valor solo.")
+        print("Se contradicen, y el contrato va primero.")
     print()
     if cleared:
         print(f"Despegan del piso: {', '.join(cleared)}.")
@@ -125,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-rows", type=int, default=10)
     parser.add_argument("--backend", default="openai")
     parser.add_argument("--index", type=int, default=0)
+    parser.add_argument("--contract", action="store_true",
+                        help="Enviar el prompt envuelto en el contrato global, "
+                             "como lo hace el harness, en vez del prompt crudo. "
+                             "Con --calibrate mide las dos y las compara.")
     parser.add_argument("--calibrate", action="store_true",
                         help="Monolítico en TODAS las familias del pool, sobre "
                              "el tamaño más fácil. Decide si el piso es del "

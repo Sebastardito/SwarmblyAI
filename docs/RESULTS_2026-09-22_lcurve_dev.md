@@ -180,3 +180,77 @@ vez de un veredicto.
 
 La calibración **sigue sin correrse**. Lo que se sabe hoy es que una familia de
 cinco está en el piso.
+
+## 8. La calibración con las cinco familias, y lo que destapó
+
+| familia | `global` | `local` |
+|---|---|---|
+| `llama3.2:3b` | 0/12 | 2/8 |
+| `qwen2.5:3b` | 0/12 | **7/8** |
+| `gemma2:2b` | 2/12 | **7/8** |
+| `phi3.5:3.8b` | 1/12 | **7/8** |
+| `granite3.1-dense:2b` | 1/12 | **6/8** |
+
+**Corrijo lo que escribí en la sección 4.** Dije que el modelo "no está
+localizando el campo que se le nombra" y que eso apuntaba a la dificultad por
+fila. Eso salió de `llama3.2:3b`, que resultó ser la peor de las cinco y la
+única que la sonda rota había medido. Cuatro de cinco familias hacen el lookup
+a **0.84**. El formato del material no es hostil: se lee bien.
+
+Lo que sí está en el piso es `global`: **4 de 60** en el pool entero. Sumar
+diez números, encontrar un máximo, contar bajo un umbral.
+
+### El dato que no cuadra
+
+Mismo tamaño, mismos documentos, mismos modelos, y dos cifras distintas para
+`local`:
+
+| medición | `local` en S = 10 |
+|---|---|
+| calibración, prompt crudo | 29/40 = **0.725** |
+| corrida dev, a través del harness | 3/8 = **0.375** |
+
+La diferencia no son los modelos ni el corpus. Es que el harness **no envía el
+prompt**: lo envuelve. Reconstruido para `lc_010_00`, el envoltorio añade 596
+caracteres antes del texto:
+
+```
+[GLOBAL CONTRACT]
+objective: Answer the questions from the inventory below.
+register: formal
+output_format: report
+target_length_tokens: 384
+glossary:
+- R: canonical name; use this exact surface form.
+- What: canonical name; use this exact surface form.
+- Which: canonical name; use this exact surface form.
+```
+
+**El contrato pide un informe formal de 384 tokens. El corpus pide una línea
+por pregunta con el valor solo, sin comentario.** Se contradicen, y el contrato
+va primero. El glosario, además, extrajo `What`, `Which` y `How` como "nombres
+canónicos" y le ordenó al modelo conservar esa forma exacta — la heurística de
+contrato disparando sobre un prompt con forma de pregunta.
+
+Afecta a los dos brazos por igual, así que no es una asimetría entre brazos. Es
+un depresor uniforme que pone al baseline en el piso y deja ilegible cualquier
+contraste por encima.
+
+Todos los corpus anteriores de este proyecto eran composición de prosa, donde
+`output_format: report` es exactamente lo que se quiere. Éste es el primero de
+respuesta corta, y es el primero donde el contrato estorba.
+
+### Lo que falta para afirmarlo
+
+La comparación de arriba tiene la forma correcta —misma celda, mismos
+modelos— pero distinto n, y no fue pareada. El test decisivo es una A/B con
+todo lo demás fijo, y ahora es un comando:
+
+```bash
+python3 scripts/probe_lcurve.py --calibrate
+```
+
+Envía cada documento **dos veces** por familia, crudo y envuelto, e imprime las
+dos columnas lado a lado. Si la diferencia en `local` supera 0.15, lo dice.
+
+Hasta que eso corra, esto es una hipótesis bien sostenida, no un hallazgo.

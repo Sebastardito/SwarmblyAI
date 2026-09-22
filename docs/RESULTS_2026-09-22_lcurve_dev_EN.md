@@ -178,3 +178,76 @@ verdict.
 
 The calibration **has still not been run**. What is known today is that one
 family of five is at the floor.
+
+## 8. The calibration across five families, and what it uncovered
+
+| family | `global` | `local` |
+|---|---|---|
+| `llama3.2:3b` | 0/12 | 2/8 |
+| `qwen2.5:3b` | 0/12 | **7/8** |
+| `gemma2:2b` | 2/12 | **7/8** |
+| `phi3.5:3.8b` | 1/12 | **7/8** |
+| `granite3.1-dense:2b` | 1/12 | **6/8** |
+
+**This corrects what I wrote in section 4.** I said the model was "not locating
+the field it is being named" and that this pointed at difficulty per row. That
+came from `llama3.2:3b`, which turned out to be the worst of the five and the
+only one the broken probe had measured. Four of five families do the lookup at
+**0.84**. The material format is not hostile: it reads fine.
+
+What is at the floor is `global`: **4 of 60** across the whole pool. Summing ten
+numbers, finding a maximum, counting under a threshold.
+
+### The figure that does not line up
+
+Same size, same documents, same models, and two different numbers for `local`:
+
+| measurement | `local` at S = 10 |
+|---|---|
+| calibration, raw prompt | 29/40 = **0.725** |
+| dev run, through the harness | 3/8 = **0.375** |
+
+The difference is not the models and not the corpus. It is that the harness
+does **not send the prompt**: it wraps it. Rebuilt for `lc_010_00`, the wrapper
+adds 596 characters ahead of the text:
+
+```
+[GLOBAL CONTRACT]
+objective: Answer the questions from the inventory below.
+register: formal
+output_format: report
+target_length_tokens: 384
+glossary:
+- R: canonical name; use this exact surface form.
+- What: canonical name; use this exact surface form.
+- Which: canonical name; use this exact surface form.
+```
+
+**The contract asks for a formal 384-token report. The corpus asks for one line
+per question with the value alone, no commentary.** They contradict each other,
+and the contract comes first. The glossary, besides, extracted `What`, `Which`
+and `How` as "canonical names" and ordered the model to keep that exact surface
+form — the contract heuristic firing on a question-shaped prompt.
+
+It hits both arms equally, so it is not an arm asymmetry. It is a uniform
+depressant that puts the baseline on the floor and leaves any contrast above it
+unreadable.
+
+Every earlier corpus in this project was prose composition, where
+`output_format: report` is exactly what you want. This is the first
+short-answer one, and the first where the contract gets in the way.
+
+### What is missing before claiming it
+
+The comparison above has the right shape — same cell, same models — but a
+different n, and it was not paired. The decisive test is an A/B with everything
+else held fixed, and it is now one command:
+
+```bash
+python3 scripts/probe_lcurve.py --calibrate
+```
+
+It sends each document **twice** per family, raw and wrapped, and prints the
+two columns side by side. If the difference on `local` exceeds 0.15, it says so.
+
+Until that runs, this is a well-supported hypothesis, not a finding.
