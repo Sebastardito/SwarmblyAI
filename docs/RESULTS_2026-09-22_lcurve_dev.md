@@ -63,23 +63,54 @@ condiciones de refutación escritas antes de mirar datos, y ninguna que
 preguntara si el instrumento tiene rango dinámico. La corrida hizo exactamente
 lo que se le pidió y lo informó exactamente como se le pidió.
 
-## 4. Qué se descartó, y con qué
+## 4. No es el formato, y no es el corpus
+
+El sondeo sobre `lc_010_00` —diez filas, la tarea más fácil del diseño— cierra
+las dos hipótesis alternativas de una sola vez.
+
+**El modelo obedece la instrucción de formato al pie de la letra:**
+
+```
+[01] seals
+[02] Eastdock
+[03] 3053
+[04] 3
+[05] 4
+```
+
+**`extract_items` saca los cinco ids con sus cinco valores, sin perder ninguno.**
+No hay desalineación de etiquetas. La forma `dado='[03] 215'` que vi en los
+artefactos era un artefacto de truncado a 80 caracteres, no un defecto de
+parsing — y decirlo así corrige lo que escribí antes de mirar.
+
+**La clave es correcta.** Verificada a mano contra el material: `R-002` tiene
+`on_hand=570`; la suma de las diez filas es 5889; el mayor `on_hand` es 979 en
+`R-007`; ninguna fila tiene `on_hand` por debajo de su `reorder_at`, y por eso
+la cuenta es 0. Los cinco valores de la clave son los correctos.
 
 **La calificación está sana.** Una respuesta perfecta construida desde la clave
-de cada documento saca **100 % en los 72 documentos** del corpus. No es una
-opinión: es un test, y queda en la suite. El defecto que mató dos corridas de
-feasibility —el corpus escribiendo `[Q1]` donde el calificador esperaba `01`—
-no está aquí.
+saca 100 % en los 72 documentos. Es un test, no una opinión, y queda en la
+suite.
 
-**Queda abierto** si los modelos producen valores correctos en un formato que
-el extractor rechaza. Entre las respuestas incorrectas aparecen formas como
-`dado='[03] 215'` para una pregunta que no era la 03, que huele a desalineación
-de etiquetas. No se puede decidir desde los artefactos de esta corrida **porque
-no guardó el texto del modelo**, y ése es un segundo defecto: una corrida que no
-se puede depurar desde su propia salida obliga a repetirla para mirarla.
+Así que es capacidad. Pero la forma del fallo importa más que la etiqueta:
 
-Ambas cosas están arregladas: el runner ya persiste el texto, y
-`scripts/probe_lcurve.py` mira un documento con una sola llamada.
+| pregunta | pide | contestó |
+|---|---|---|
+| `[01]` local | `on_hand` de `R-002` → 570 | `seals` |
+| `[03]` global | la suma de diez números → 5889 | 3053 |
+| `[04]` global | el id de fila con mayor `on_hand` → `R-007` | `3` |
+| `[05]` global | cuántas filas cumplen un umbral → 0 | 4 |
+
+`[01]` y `[04]` no son errores de aritmética. En `[01]` el modelo devolvió la
+**categoría** en vez del `on_hand`; en `[04]` devolvió un número desnudo donde
+se pedía un id de fila. Sobre una fila como
+`R-002 | Northgate | seals | on_hand=570 | reorder_at=175`, el modelo no está
+localizando el campo que se le nombra.
+
+Eso apunta a la **dificultad por fila**, no a la dificultad de la pregunta. El
+generador ya trata las dos como diales separados —ésa era la intención
+declarada: *más filas es más material sin cambiar la dificultad por fila*— pero
+nadie calibró el segundo antes de construir la rejilla sobre el primero.
 
 ## 5. La condición que faltaba
 
@@ -97,18 +128,26 @@ ningún veredicto —no hubo ninguno— y rige desde la siguiente.
 
 ## 6. Lo que sigue
 
-En orden, y el primero es barato:
+**La comprobación que la prerregistración debió pedir antes de construir la
+rejilla:** un diseño que varía X tiene que mostrar primero que el instrumento
+responde. No estaba, y es la lección de método de esta corrida.
 
-1. `python3 scripts/probe_lcurve.py` con el pool real. Una llamada. Decide si
-   el piso es de capacidad o de formato, que son dos arreglos distintos.
-2. Si es de formato: arreglarlo en el corpus o en el extractor, y volver a
-   correr dev. No cambiar de modelos por un defecto de parsing.
-3. Si es de capacidad: las preguntas `global` de este corpus —sumas y conteos
-   sobre decenas de filas— están fuera del alcance de un pool de 2–3.8 B. La
-   pregunta tiene que cambiar, no el protocolo: un máximo, un conteo bajo
-   umbral, una fila que domina. El eje bajo prueba sigue siendo L; lo que se
-   ajusta es la dificultad por fila, que el generador ya trata como un dial
-   separado del tamaño.
+```bash
+python3 scripts/probe_lcurve.py --calibrate
+```
+
+Monolítico, S = 10, las cinco familias del pool, sobre los cuatro documentos
+dev de ese tamaño. Veinte llamadas. Responde una sola pregunta: **¿alguna
+familia despega del piso de 0.20 en el caso más fácil del diseño?**
+
+- **Si alguna despega:** el piso no es del pool entero y el corpus sirve. El
+  arreglo está en qué modelos se usan, y la rejilla se puede volver a correr
+  tal cual.
+- **Si ninguna despega:** este corpus no puede medir L con este pool, y no se
+  arregla con más corridas. Hay que bajar la dificultad **por fila** —un
+  formato de material que no exija localizar un campo entre cinco— y
+  **calibrar de nuevo antes** de construir otra rejilla. El eje bajo prueba
+  sigue siendo L; lo que se ajusta es lo que rodea a L.
 
 Lo que **no** sigue es `lcurve-final`. El split sigue sin usar, y ése es el
 único activo de esta corrida que conviene conservar intacto.

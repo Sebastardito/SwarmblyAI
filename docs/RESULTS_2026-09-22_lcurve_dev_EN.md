@@ -62,22 +62,54 @@ four refutation conditions written before looking at data, and none that asked
 whether the instrument has any dynamic range. The run did exactly what it was
 asked and reported it exactly as it was asked to.
 
-## 4. What was ruled out, and with what
+## 4. It is not the format, and it is not the corpus
 
-**The grading is sound.** A perfect answer built from each document's own key
-scores **100 % on all 72 documents** in the corpus. That is not an opinion: it
-is a test, and it stays in the suite. The defect that killed two feasibility
-runs — the corpus writing `[Q1]` where the grader expected `01` — is not here.
+The probe on `lc_010_00` — ten rows, the easiest task in the design — closes
+both alternative hypotheses at once.
 
-**Still open** is whether the models produce correct values in a format the
-extractor rejects. Among the wrong answers are shapes like `given='[03] 215'`
-for a question that was not 03, which smells of label misalignment. It cannot
-be decided from this run's artefacts **because it did not keep the model text**,
-and that is a second defect: a run that cannot be debugged from its own output
-forces a repeat in order to look at it.
+**The model follows the format instruction to the letter:**
 
-Both are fixed: the runner now persists the text, and
-`scripts/probe_lcurve.py` looks at one document in a single call.
+```
+[01] seals
+[02] Eastdock
+[03] 3053
+[04] 3
+[05] 4
+```
+
+**`extract_items` pulls all five ids with their five values, losing none.**
+There is no label misalignment. The shape `given='[03] 215'` I saw in the
+artefacts was an artefact of truncation to 80 characters, not a parsing defect
+— and saying so corrects what I wrote before looking.
+
+**The key is correct.** Checked by hand against the material: `R-002` has
+`on_hand=570`; the sum of the ten rows is 5889; the largest `on_hand` is 979 at
+`R-007`; no row has `on_hand` below its own `reorder_at`, which is why the
+count is 0. All five key values are the right ones.
+
+**The grading is sound.** A perfect answer built from the key scores 100 % on
+all 72 documents. That is a test, not an opinion, and it stays in the suite.
+
+So it is capability. But the shape of the failure matters more than the label:
+
+| question | asks for | answered |
+|---|---|---|
+| `[01]` local | `on_hand` of `R-002` → 570 | `seals` |
+| `[03]` global | the sum of ten numbers → 5889 | 3053 |
+| `[04]` global | the row id with the largest `on_hand` → `R-007` | `3` |
+| `[05]` global | how many rows meet a threshold → 0 | 4 |
+
+`[01]` and `[04]` are not arithmetic errors. In `[01]` the model returned the
+**category** instead of the `on_hand`; in `[04]` it returned a bare number where
+a row id was asked for. On a row like
+`R-002 | Northgate | seals | on_hand=570 | reorder_at=175`, the model is not
+locating the field it is being named.
+
+That points at the **difficulty per row**, not at the difficulty of the
+question. The generator already treats the two as separate dials — that was the
+declared intent: *more rows is more material without changing the difficulty
+per row* — but nobody calibrated the second before building the grid on the
+first.
 
 ## 5. The condition that was missing
 
@@ -95,19 +127,25 @@ changes no verdict — there was none — and it governs from the next one.
 
 ## 6. What comes next
 
-In order, and the first is cheap:
+**The check the pre-registration should have demanded before the grid was
+built:** a design that varies X has to show first that the instrument responds.
+It was not there, and that is this run's methodological lesson.
 
-1. `python3 scripts/probe_lcurve.py` against the real pool. One call. It
-   decides whether the floor is one of capability or of format, which are two
-   different repairs.
-2. If it is format: fix it in the corpus or in the extractor and re-run dev. Do
-   not change models over a parsing defect.
-3. If it is capability: the `global` questions of this corpus — sums and counts
-   over dozens of rows — are out of reach for a pool of 2–3.8 B. The question
-   has to change, not the protocol: a maximum, a count under a threshold, a row
-   that dominates. The axis under test is still L; what is adjusted is the
-   difficulty per row, which the generator already treats as a dial separate
-   from size.
+```bash
+python3 scripts/probe_lcurve.py --calibrate
+```
+
+Monolithic, S = 10, the five families of the pool, over the four dev documents
+of that size. Twenty calls. It answers one question: **does any family clear
+the floor of 0.20 at the easiest point of the design?**
+
+- **If one clears it:** the floor is not the whole pool and the corpus is fine.
+  The repair is in which models are used, and the grid can be re-run as it is.
+- **If none clears it:** this corpus cannot measure L with this pool, and more
+  runs will not fix it. The difficulty **per row** has to come down — a
+  material format that does not require locating one field among five — and it
+  has to be **calibrated again before** another grid is built. The axis under
+  test is still L; what is adjusted is what surrounds L.
 
 What does **not** come next is `lcurve-final`. The split is still unused, and
 that is the one asset of this run worth keeping intact.
