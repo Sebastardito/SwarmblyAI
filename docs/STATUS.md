@@ -27,7 +27,7 @@ learn whether you may quote it**.
 
 ---
 
-## Vigente · Current — 24
+## Vigente · Current — 25
 
 Se puede citar. Es lo que el proyecto sostiene hoy.
 
@@ -42,6 +42,7 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 | [`INCIDENT_2026-09-04_chain_misplan.md`](INCIDENT_2026-09-04_chain_misplan.md) | [`INCIDENT_2026-09-04_chain_misplan_ES.md`](INCIDENT_2026-09-04_chain_misplan_ES.md) | — |
 | [`ONEPAGER_EN.md`](ONEPAGER_EN.md) | [`ONEPAGER_ES.md`](ONEPAGER_ES.md) | — |
 | [`POSTMORTEM_2026-09-05_four_tiers.md`](POSTMORTEM_2026-09-05_four_tiers.md) | [`POSTMORTEM_2026-09-05_four_tiers_ES.md`](POSTMORTEM_2026-09-05_four_tiers_ES.md) | — |
+| [`PREREGISTRATION_L_curve.md`](PREREGISTRATION_L_curve.md) | [`PREREGISTRATION_L_curve_EN.md`](PREREGISTRATION_L_curve_EN.md) | Escrita antes de generar el corpus y antes de escribir el runner. La medición todavía no existe. |
 | [`PREREGISTRATION_comp_final_once.md`](PREREGISTRATION_comp_final_once.md) | [`PREREGISTRATION_comp_final_once_EN.md`](PREREGISTRATION_comp_final_once_EN.md) | — |
 | [`PREREGISTRATION_composition.md`](PREREGISTRATION_composition.md) | [`PREREGISTRATION_composition_ES.md`](PREREGISTRATION_composition_ES.md) | — |
 | [`PREREGISTRATION_feasibility.md`](PREREGISTRATION_feasibility.md) | [`PREREGISTRATION_feasibility_EN.md`](PREREGISTRATION_feasibility_EN.md) | The preregistration stands. Its measurement does not exist yet: the feas-dev and feas-final runs of 5 September were invalidated by the corpus item ids, and the corrected corpus (digest 8f6c3565) has not been run. |

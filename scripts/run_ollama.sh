@@ -1727,6 +1727,92 @@ print(f'    rho within tolerance: {rf.get(\"within_tolerance\")}'
   echo "  -> $out/summary.json"
 }
 
+run_lcurve_dev() {
+  local out="$RESULTS_ROOT/lcurve-dev-$STAMP"
+  bold ""
+  bold "== lcurve-dev — el tamano de fragmento como variable independiente =="
+  echo ""
+  echo "  Prerregistrada en docs/PREREGISTRATION_L_curve.md, escrita antes del"
+  echo "  corpus y antes del runner."
+  echo ""
+  echo "  POR QUE EXISTE. El harness no tiene perilla de tamano de fragmento:"
+  echo "  tiene n_tasks. Con el material fijo, L y N son la MISMA variable"
+  echo "  escrita al reves -- L = S / N. Toda conclusion sobre N en el registro"
+  echo "  de este proyecto es tambien una conclusion sobre L, y ninguna de las"
+  echo "  dos es identificable por separado."
+  echo ""
+  echo "  COMO SE SEPARAN. El corpus elige S = L * N, asi que cada L aparece en"
+  echo "  varios N y cada N en varios L. Y sobre todo: EL MISMO DOCUMENTO se"
+  echo "  fragmenta a dos o tres valores de L. Mismo texto, mismas preguntas,"
+  echo "  misma clave calculada, mismo baseline. Solo cambia el tamano del"
+  echo "  trozo. Esa es la comparacion pareada que decide."
+  echo ""
+  echo "  LO QUE ESTA MEDICION NO PUEDE VER, dicho antes de correr: una fila de"
+  echo "  inventario YA ES la unidad atomica, asi que agrupar 5 o 40 filas"
+  echo "  cambia cuanto pesa un fragmento, no lo que significa. Esto mide el"
+  echo "  componente MECANICO de L. Es una cota inferior del efecto total."
+  echo ""
+  echo "  Y POR ESO ES LA PRUEBA BARATA QUE PUEDE MATAR LA PREMISA: si ni"
+  echo "  siquiera el coste mecanico de trocear fino se distingue de cero, la"
+  echo "  idea del tamano minimo de unidad semantica se queda sin su apoyo mas"
+  echo "  barato, y el corpus semantico -- caro de construir y de calificar --"
+  echo "  es lo unico que le queda. Eso se sabe esta noche y no en un mes."
+  echo ""
+  echo "  EL CONTROL QUE TIENE QUE FALLAR: las preguntas 'local'. Una fila"
+  echo "  nombrada la contesta el fragmento que la contiene, sea de 5 filas o"
+  echo "  de 40. Si L mueve la exactitud local, lo roto esta en la tuberia y"
+  echo "  NINGUNA cifra de la corrida se puede leer."
+  echo ""
+  [ -f prompts/lcurve.json ] || python3 scripts/make_lcurve.py
+  python3 scripts/make_lcurve.py --check \
+    || die "prompts/lcurve.json no coincide con lo que construye el generador."
+  run_tier lcurve-dev "$out" \
+    python3 scripts/run_lcurve.py \
+    --backend openai --embedder api \
+    --prompts prompts/lcurve.json --split dev \
+    --budget 2048 --rho 4.0 \
+    --out "$out" || return 1
+  echo ""
+  echo "  Si ninguna condicion de invalidacion se cumplio, el final se corre asi"
+  echo "  -- y sera su PRIMER uso:"
+  echo "    bash scripts/run_ollama.sh lcurve-final $out"
+  echo "  -> $out/summary.json"
+}
+
+run_lcurve_final() {
+  local out="$RESULTS_ROOT/lcurve-final-$STAMP"
+  local dev="${2:-}"
+  [ -n "$dev" ] || die "nombra la corrida lcurve-dev de la que hereda:
+    bash scripts/run_ollama.sh lcurve-final results/lcurve-dev-<stamp>"
+  case "$dev" in
+    -*) die "este tier toma el DIRECTORIO de la corrida dev:
+    bash scripts/run_ollama.sh lcurve-final results/lcurve-dev-<stamp>
+
+  Corridas lcurve-dev recientes:
+$(ls -1dt "$RESULTS_ROOT"/lcurve-dev-* 2>/dev/null | head -3 | sed 's/^/    /' || echo '    (ninguna)')" ;;
+  esac
+  read_dev_run "$dev" "false" "prompts/lcurve.json"
+
+  bold ""
+  bold "== lcurve-final — PRIMER uso del split =="
+  echo ""
+  echo "  CELDA DECLARADA: el contraste de L dentro del mismo documento,"
+  echo "  agrupado sobre los cuatro tamanos que admiten mas de un L, sobre"
+  echo "  preguntas GLOBALES. 32 clusters."
+  echo ""
+  echo "  LA COTA INFERIOR y no la superior: aqui la afirmacion es 'existe un"
+  echo "  efecto', asi que el lado conservador es el de abajo. Umbral 0.05,"
+  echo "  el mismo del criterio de composicion, reutilizado a proposito."
+  echo ""
+  run_tier lcurve-final "$out" \
+    python3 scripts/run_lcurve.py \
+    --backend openai --embedder api \
+    --prompts prompts/lcurve.json --split final \
+    --budget 2048 --rho 4.0 \
+    --out "$out" || return 1
+  echo "  -> $out/summary.json"
+}
+
 case "$TIER" in
   smoke)
     out="$RESULTS_ROOT/smoke-$STAMP"
@@ -1793,6 +1879,8 @@ case "$TIER" in
   comp-final-v2) run_comp_final_v2 "$@" || true ;;
   feas-dev) run_feas_dev || true ;;
   feas-final) run_feas_final "$@" || true ;;
+  lcurve-dev) run_lcurve_dev || true ;;
+  lcurve-final) run_lcurve_final "$@" || true ;;
   # `|| true` on a tier dispatch, and on no run line anywhere. `run_tier` has
   # already recorded the failure
   # in TIERS_FAILED and stamped the directory; this only stops `set -e` killing
@@ -1802,7 +1890,7 @@ case "$TIER" in
   all) run_v0 || true; run_v3c || true ;;
   *)   die "unknown tier '$TIER'. Use: smoke | v0 | v3c | v3c-gt | v3c-ff | v4 | tables-dev | tables-final | comp-dev | comp-dev-k3 | comp-dev-once | comp-dev-v2 | comp-oracle |
            comp-final | comp-final-once | comp-final-v2 |
-           feas-dev | feas-final | all" ;;
+           feas-dev | feas-final | lcurve-dev | lcurve-final | all" ;;
 esac
 
 if [ -n "$TIERS_FAILED" ]; then

@@ -2105,10 +2105,44 @@ def test_the_runner_has_a_rehearsal_mode_and_it_stays_honest() -> None:
         "a rehearsal must be stamped so it cannot be mistaken for evidence")
 
 
-@pytest.mark.parametrize("tier", ["smoke", "v0", "v3c", "v3c-gt", "v3c-ff",
-                                  "tables-dev", "comp-dev", "comp-dev-k3",
-                                  "comp-dev-once", "comp-dev-v2",
-                                  "comp-oracle", "feas-dev"])
+def _rehearsable_tiers() -> list[str]:
+    """Los tramos que el runner despacha, leídos de su tabla de despacho.
+
+    Estaban escritos a mano aquí. Añadir un tramo al runner y olvidar esta
+    lista dejaba al tramo nuevo sin ensayo, en silencio y sin que nada fallara
+    -- que es exactamente el defecto de instrucción obsoleta disfrazado de
+    test, el mismo que este archivo corrigió en
+    `test_every_invocation_the_runner_prints_is_one_it_accepts` y que aquí
+    seguía vivo. Lo encontró un tramo nuevo: `lcurve-dev` se despachaba
+    correctamente y no se ensayaba.
+
+    Se excluye todo tramo con `-final` en el nombre, que toma una corrida dev
+    como argumento -- el camino compartido queda cubierto ensayando su mitad
+    dev -- y `all`, que es un alias de varios. La comprobación es sobre el
+    nombre completo y no sobre su final, porque `comp-final-once` y
+    `comp-final-v2` son finales y no terminan en `-final`.
+
+    La lista escrita a mano omitía además `v4`, que existe en el runner desde
+    hace semanas. Nadie lo notó, que es el argumento entero contra las listas
+    escritas a mano.
+    """
+    script = RUNNER.read_text(encoding="utf-8")
+    block = script[script.index('case "$TIER" in'):]
+    block = block[:block.index("\nesac")]
+    tiers: list[str] = []
+    for line in block.splitlines():
+        line = line.strip()
+        if not line.startswith(("#", "case")) and ")" in line:
+            name = line.split(")", 1)[0].strip()
+            if (name and name not in ("*", "all", "-*")
+                    and "-final" not in name
+                    and all(c.isalnum() or c in "-_" for c in name)):
+                tiers.append(name)
+    assert len(tiers) >= 10, f"la tabla de despacho dio {tiers}"
+    return tiers
+
+
+@pytest.mark.parametrize("tier", _rehearsable_tiers())
 def test_every_tier_rehearses_clean(tier: str) -> None:
     """Run the tier. End to end. Through the runner. Every one of them.
 
