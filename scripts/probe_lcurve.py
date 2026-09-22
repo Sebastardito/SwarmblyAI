@@ -90,6 +90,52 @@ def _score(replica, docs: list[dict], use_contract: bool) -> dict[str, list[int]
     return got
 
 
+def report_contract(per_family: list[tuple[str, int, int, int]]) -> None:
+    """El efecto del contrato, y de quién viene.
+
+    La primera versión imprimía sólo la diferencia agrupada y concluía cuando
+    superaba 0.15. Sobre estos datos eso disparó con -0.150 -- y cuatro sextos
+    de esa diferencia venían de UNA familia. Las otras cuatro se movían un
+    acierto sobre ocho, que es ruido, y una mejoraba.
+
+    Una diferencia agrupada que una sola celda puede producir no es un efecto
+    del pool. Así que aquí se imprime por familia, y la conclusión se retira
+    si quitar al mayor contribuyente la deshace.
+    """
+    total_raw = sum(r for _, r, _, _ in per_family)
+    total_con = sum(c for _, _, c, _ in per_family)
+    asked = sum(n for _, _, _, n in per_family)
+    if not asked:
+        return
+    delta = (total_con - total_raw) / asked
+    print(f"LOOKUP (`local`) por familia, contrato menos crudo, sobre "
+          f"{asked // len(per_family)} preguntas cada una:")
+    for model, r, c, _ in sorted(per_family, key=lambda row: row[2] - row[1]):
+        print(f"    {model:>24} {c - r:+d}")
+    print(f"\n  agrupado: {total_raw}/{asked} -> {total_con}/{asked} "
+          f"({delta:+.3f})")
+
+    worst = min(per_family, key=lambda row: row[2] - row[1])
+    rest_raw = total_raw - worst[1]
+    rest_con = total_con - worst[2]
+    rest_asked = asked - worst[3]
+    rest_delta = (rest_con - rest_raw) / max(1, rest_asked)
+    print(f"  sin {worst[0]}: {rest_raw}/{rest_asked} -> {rest_con}/"
+          f"{rest_asked} ({rest_delta:+.3f})")
+
+    if delta > -0.15:
+        print("\n  El contrato no mueve el lookup de forma apreciable.")
+    elif rest_delta > -0.15:
+        print(f"\n  REHUSADA la conclusión agrupada: la diferencia la carga "
+              f"{worst[0]}. Sin esa familia el efecto cae a {rest_delta:+.3f}. "
+              "Lo que se sostiene es que el contrato le cuesta a ESA familia, "
+              "no al pool.")
+    else:
+        print("\n  El contrato le cuesta al pool en una tarea que sabe hacer. "
+              "Pide `output_format: report` y 384 tokens; el corpus pide una "
+              "línea por pregunta. Se contradicen, y el contrato va primero.")
+
+
 def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
     """¿Alguna familia del pool despega del piso en el caso más fácil?
 
@@ -119,30 +165,22 @@ def calibrate(prompts: list[dict], backend_name: str, n_rows: int) -> int:
     print(header)
     print("-" * len(header))
     cleared: list[str] = []
-    totals = {"raw": [0, 0], "contract": [0, 0]}
+    per_family: list[tuple[str, int, int, int]] = []
     for family, model in pool:
         os.environ["SWARMBLY_MODEL"] = model
         replica = get_backend(backend_name)
         raw, con = _score(replica, docs, False), _score(replica, docs, True)
         if raw["global"][0] / max(1, raw["global"][1]) >= 0.20:
             cleared.append(model)
-        totals["raw"][0] += raw["local"][0]; totals["raw"][1] += raw["local"][1]
-        totals["contract"][0] += con["local"][0]
-        totals["contract"][1] += con["local"][1]
+        per_family.append((model, raw["local"][0], con["local"][0],
+                           raw["local"][1]))
         cell = lambda d, k: f"{d[k][0]}/{d[k][1]}"
         print(f"{model:>24} {cell(raw,'global'):>13} {cell(con,'global'):>16}"
               f" {cell(raw,'local'):>12} {cell(con,'local'):>15}")
 
     print()
-    a = totals["raw"][0] / max(1, totals["raw"][1])
-    b = totals["contract"][0] / max(1, totals["contract"][1])
-    print(f"LOOKUP (`local`), pool entero:  crudo {a:.3f}   contrato {b:.3f}"
-          f"   diferencia {b - a:+.3f}")
-    if a - b >= 0.15:
-        print("\nEl contrato global le está costando al baseline en una tarea")
-        print("que sabe hacer. El contrato pide `output_format: report` y 384")
-        print("tokens; el corpus pide una línea por pregunta con el valor solo.")
-        print("Se contradicen, y el contrato va primero.")
+    report_contract(per_family)
+
     print()
     if cleared:
         print(f"Despegan del piso: {', '.join(cleared)}.")

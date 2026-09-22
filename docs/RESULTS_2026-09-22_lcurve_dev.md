@@ -254,3 +254,52 @@ Envía cada documento **dos veces** por familia, crudo y envuelto, e imprime las
 dos columnas lado a lado. Si la diferencia en `local` supera 0.15, lo dice.
 
 Hasta que eso corra, esto es una hipótesis bien sostenida, no un hallazgo.
+
+## 9. La A/B corrió, y refuta mi propia hipótesis
+
+| familia | `global` crudo | `global` contrato | `local` crudo | `local` contrato | Δ local |
+|---|---|---|---|---|---|
+| `llama3.2:3b` | 0/12 | 0/12 | 2/8 | 1/8 | −1 |
+| `qwen2.5:3b` | 0/12 | 1/12 | 7/8 | 6/8 | −1 |
+| `gemma2:2b` | 2/12 | 2/12 | 7/8 | 8/8 | **+1** |
+| `phi3.5:3.8b` | 1/12 | 1/12 | 7/8 | 6/8 | −1 |
+| `granite3.1-dense:2b` | 1/12 | 0/12 | 6/8 | 2/8 | **−4** |
+
+**`global`: 4/60 crudo, 4/60 contrato. Diferencia exactamente 0.000.**
+
+El contrato **no explica** el piso global. La hipótesis de la sección 8 queda
+refutada justo donde importaba.
+
+**`local`: −0.150 agrupado — y cuatro sextos de esa diferencia los pone
+`granite3.1-dense:2b` solo.** Sin esa familia el efecto cae a **−0.062**, y los
+otros cuatro movimientos son de un acierto sobre ocho, que es ruido. Una
+familia mejora.
+
+Lo que se sostiene: **el contrato le cuesta a granite**, mucho. Al pool, no.
+
+### El mismo defecto, tercera vez en un día
+
+Mi umbral —0.15 sobre la media agrupada— disparó sobre una diferencia que una
+sola celda podía producir. Es la misma forma que el control que pasaba en el
+piso y que la sonda que concluía sobre cinco familias habiendo medido una: **una
+comprobación que afirma más de lo que midió.**
+
+Que aparezca tres veces en un día, cada vez en el código escrito para cazar la
+anterior, deja de ser un descuido y pasa a ser un patrón con nombre. El patrón
+es: *un agregado se reporta sin preguntar de dónde viene.*
+
+`report_contract` ahora imprime la diferencia por familia, quita al mayor
+contribuyente, y **retira la conclusión agrupada si al quitarlo se deshace**.
+Dos tests lo fijan.
+
+### Dónde queda la pregunta de L
+
+Donde estaba, pero por la razón correcta. **`global` está en el piso y no es
+culpa del contrato**: 4/60 con envoltorio y sin él. Sumar diez números,
+encontrar un máximo y contar bajo umbral están fuera del alcance de este pool,
+y el lookup —que sí saben hacer, a 0.84— no es una pregunta que la
+fragmentación pueda ayudar a responder.
+
+Para medir L hace falta una pregunta **global** que el pool pueda contestar
+cuando el material es chico. Ése es el siguiente diseño, y la calibración —que
+ahora existe como comando— tiene que pasar **antes** de construir otra rejilla.

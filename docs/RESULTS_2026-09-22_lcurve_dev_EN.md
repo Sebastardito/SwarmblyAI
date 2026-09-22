@@ -251,3 +251,52 @@ It sends each document **twice** per family, raw and wrapped, and prints the
 two columns side by side. If the difference on `local` exceeds 0.15, it says so.
 
 Until that runs, this is a well-supported hypothesis, not a finding.
+
+## 9. The A/B ran, and refutes my own hypothesis
+
+| family | `global` raw | `global` contract | `local` raw | `local` contract | Δ local |
+|---|---|---|---|---|---|
+| `llama3.2:3b` | 0/12 | 0/12 | 2/8 | 1/8 | −1 |
+| `qwen2.5:3b` | 0/12 | 1/12 | 7/8 | 6/8 | −1 |
+| `gemma2:2b` | 2/12 | 2/12 | 7/8 | 8/8 | **+1** |
+| `phi3.5:3.8b` | 1/12 | 1/12 | 7/8 | 6/8 | −1 |
+| `granite3.1-dense:2b` | 1/12 | 0/12 | 6/8 | 2/8 | **−4** |
+
+**`global`: 4/60 raw, 4/60 contract. Difference exactly 0.000.**
+
+The contract does **not** explain the global floor. The hypothesis in section 8
+is refuted exactly where it mattered.
+
+**`local`: −0.150 pooled — and four sixths of that difference is put there by
+`granite3.1-dense:2b` alone.** Without that family the effect falls to
+**−0.062**, and the other four moves are one item out of eight, which is noise.
+One family improves.
+
+What stands: **the contract costs granite**, a lot. Not the pool.
+
+### The same defect, third time in a day
+
+My threshold — 0.15 on the pooled mean — fired on a difference a single cell
+could produce. It is the same shape as the control that passed at the floor and
+the probe that concluded about five families having measured one: **a check that
+claims more than it measured.**
+
+Appearing three times in a day, each time in the code written to catch the last
+one, stops being an oversight and becomes a pattern worth naming. The pattern
+is: *an aggregate is reported without asking where it comes from.*
+
+`report_contract` now prints the difference per family, removes the largest
+contributor, and **withdraws the pooled conclusion if removing it undoes the
+effect**. Two tests hold it.
+
+### Where the L question stands
+
+Where it was, but for the right reason. **`global` is at the floor and the
+contract is not to blame**: 4/60 wrapped and unwrapped. Summing ten numbers,
+finding a maximum and counting under a threshold are out of reach for this
+pool, and the lookup — which they can do, at 0.84 — is not a question
+fragmentation could help answer.
+
+Measuring L needs a **global** question this pool can answer when the material
+is small. That is the next design, and the calibration — which now exists as a
+command — has to pass **before** another grid is built.

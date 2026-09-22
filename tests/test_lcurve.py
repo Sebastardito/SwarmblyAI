@@ -256,3 +256,29 @@ def test_the_probe_refuses_to_speak_about_a_pool_of_one() -> None:
             os.environ.pop("SWARMBLY_REPLICA_MODELS", None)
         else:
             os.environ["SWARMBLY_REPLICA_MODELS"] = previous
+
+
+def test_a_pooled_effect_one_family_carries_is_refused(capsys) -> None:
+    """La conclusión agrupada se retira si una sola celda la produce.
+
+    Los datos del 22 de septiembre: -0.150 agrupado, y cuatro sextos de esa
+    diferencia venían de una familia. Las otras cuatro se movían un acierto
+    sobre ocho -- ruido -- y una mejoraba. Un umbral sobre la media agrupada
+    dispara ahí y no debería.
+    """
+    from probe_lcurve import report_contract
+
+    report_contract([("llama", 2, 1, 8), ("qwen", 7, 6, 8), ("gemma", 7, 8, 8),
+                     ("phi", 7, 6, 8), ("granite", 6, 2, 8)])
+    printed = capsys.readouterr().out
+    assert "REHUSADA" in printed, printed
+    assert "granite" in printed
+
+
+def test_an_effect_every_family_shows_is_not_refused(capsys) -> None:
+    from probe_lcurve import report_contract
+
+    report_contract([(f"m{i}", 8, 4, 8) for i in range(5)])
+    printed = capsys.readouterr().out
+    assert "REHUSADA" not in printed, printed
+    assert "le cuesta al pool" in printed
