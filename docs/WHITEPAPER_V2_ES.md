@@ -1266,7 +1266,7 @@ equivocado**.
 > Y la cobertura sólo responde por la disponibilidad: la resolubilidad de los
 > fragmentos es una condición aparte que ninguna cantidad de réplicas repara.
 
-**Y ahora hay una medición.** Sobre 80 celdas operativas de resumen de tablas (16 tareas × 5 familias), el impuesto medio por **clase de nodo** va de **−41.9 %** a **+7.6 %**, con desviación típica intra-clase de **23** a **47** puntos (T0RR, §15.9). Las dos mitades del enunciado quedan así: la heterogeneidad entre nodos es real y grande —una familia entera sale barata donde otra sale cara—, y al mismo tiempo la varianza *dentro* de una clase supera la distancia *entre* clases. Eso último es exactamente por qué la predicción por celda falla (§10.1) y por qué el enjambre responde por cobertura y no por el resultado de una celda concreta.
+**Y ahora hay una medición.** Sobre 80 celdas operativas de resumen de tablas (16 tareas × 5 familias, presupuesto de salida igualado), el impuesto medio por **clase de nodo** va de **+8.4 %** a **+26.5 %**, con desviación típica intra-clase de **16** a **39** puntos (T0RR, §15.9). Con el presupuesto igualado todas las clases salen caras —la división anterior entre caras y baratas era el confundido de longitud (T09R)—, y la varianza *dentro* de una clase sigue superando la distancia *entre* clases. Eso último es exactamente por qué la predicción por celda falla (§10.1) y por qué el enjambre responde por cobertura y no por el resultado de una celda concreta.
 
 ---
 
@@ -1617,9 +1617,9 @@ la distorsión depende de la densidad de dependencias y no sólo de la tasa,
 entonces el router —que es quien decide si fragmentar— debe ver esa densidad. Un
 router que sólo ve longitud está midiendo el eje equivocado.
 
-**Y ese rasgo se midió, con un resultado que obliga a cambiar el diseño.** Sobre 80 celdas operativas, un clasificador entrenado con validación dejando-una-tarea-fuera alcanza **AUC 0.38** con δ y reputación, y **0.43** sin ninguno de los dos: añadir δ no mejora nada, y el modelo completo queda por debajo del azar (T0RR). Con sondas de capacidad pre-despacho en lugar de δ, **AUC 0.47** (T0RR2). **La predicción por celda no funciona**, y el fallo no es de δ en particular: ningún subconjunto de rasgos la levanta.
+**Y ese rasgo se midió, con un resultado que obliga a cambiar el diseño.** Sobre 80 celdas operativas, un clasificador entrenado con validación dejando-una-tarea-fuera alcanza **AUC 0.57** con δ y reputación, y **0.61** sin ninguno de los dos: añadir δ no mejora nada (T0RR). Con sondas de capacidad pre-despacho en lugar de δ, **AUC 0.57** (T0RR2). **La predicción por celda no funciona**, y el fallo no es de δ en particular: ningún subconjunto de rasgos la levanta.
 
-Lo que sí separa es la **clase de nodo**. El mismo corpus da impuestos medios por familia de −41.9 % a +7.6 %, y una política que decide por clase —fragmentar si el impuesto histórico de esa clase es negativo— obtiene **−10.1 %** frente a **−10.5 %** fragmentando siempre. La política por clase no mejora el promedio; lo que hace es obtenerlo **sin necesitar una predicción por celda que no existe**, y evita los casos caros de las clases que los producen.
+Lo que sí separa es la **clase de nodo**. El mismo corpus da impuestos medios por familia de +8.4 % a +26.5 %, y una política que decide por clase —fragmentar si el impuesto histórico de esa clase es negativo— obtiene **+0.0 %** frente a **+14.8 %** fragmentando siempre: con el presupuesto igualado todas las clases tienen impuesto histórico positivo, así que la política las rechaza a todas y evita el impuesto entero. La política por clase es el router que funciona: no necesita predicción por celda, y su decisión es exactamente la que P2 prescribe cuando la economía medida dice «no fragmentar».
 
 > **Consecuencia de diseño.** El router de §10.1 decide *si el prompt es descomponible* —y eso sigue verificado: 22 de 22 decisiones coinciden con la verdad del corpus (T0R)—. Lo que **no** debe intentar es predecir el costo de una celda concreta. Esa decisión se mueve al perfil del nodo: la clase declara su historial, y el orquestador enruta por clase. δ se conserva como rasgo del plan y **se retira como rasgo predictivo del router**.
 
@@ -2572,7 +2572,7 @@ agente con self-consistency**, no sólo contra el monolítico ingenuo. Una
 arquitectura multi-agente que sólo bate al monolítico de una pasada está
 comparándose contra el rival equivocado.
 
-**Y el estado del criterio hoy no es «cumplido» ni «incumplido»: es «sin medir».** La campaña de referencia de §15.9 arroja un impuesto agregado de **−18.32 %** con IC 95 % **[−31.00, −6.95]** sobre 130 celdas —es decir, fragmentar saldría *ganando*—, pero ese agregado está confundido con el presupuesto de salida: el brazo fragmentado escribió **1.39×** lo que el monolítico, y dentro de una misma tarea escribir más puntúa más (mediana **+0.683**, positiva en **16** de **18** tareas). El arnés **se niega a emitir veredicto** sobre esa cifra (T09R), y el documento hace lo mismo. §15.9 explica el defecto, su causa exacta y la corrida de una sola orden que lo resuelve.
+**Y el estado del criterio hoy no es «cumplido» ni «incumplido»: es «sin medir».** La campaña de referencia de §15.9 arroja un impuesto agregado de **+11.17 %** con IC 95 % **[+4.80, +17.34]** sobre 95 celdas con presupuesto igualado —es decir, fragmentar saldría *perdiendo*—, y aun esa cifra está confundida: el acoplamiento con la longitud es **estructural en las dos direcciones**. Con el presupuesto completo el brazo fragmentado escribía **1.39×** el monolítico y puntuaba más; con el presupuesto repartido escribe **0.43×** y puntúa menos (dentro de una tarea, escribir más puntúa más: mediana **+0.571**, positiva en **10** de **18** tareas). El arnés **se niega a emitir veredicto** (T09R), y el documento hace lo mismo. El defecto es el grader mismo, no el presupuesto: sus componentes suben con la longitud de salida. La resolución es una **puntuación normalizada por longitud** (cobertura y precisión por oración), la próxima iteración del instrumento — no otra configuración de presupuesto.
 
 ### 15.3 Lo que se midió, y lo que se retiró
 
@@ -2707,7 +2707,7 @@ no ahorra nada.
 | Modelo | Veredicto | Sobre qué |
 |---|---|---|
 | **M1** | **sin instrumento** | el alineador semántico está construido y verificado en banco (T10), pero el corpus real no produjo el régimen no saturado que M1 necesita (T10R, bloqueado) |
-| **M2** | **sobrevive, corregido** | 6/35 por obediencia del nodo; 35/35 con la imposición mecánica. La frase «cero por construcción» se retira (§11.3) |
+| **M2** | **sobrevive, corregido** | 23/35 por obediencia del nodo; 35/35 con la imposición mecánica. La frase «cero por construcción» se retira (§11.3) |
 | **M3** | **sobrevive** | los paquetes contaminados no pasan la compuerta; el incidente 42/60 no se reproduce (T02R) |
 | **M4** | **falsado** | en dos instrumentos independientes y con un experimento controlado a ρ constante (T04R, T07R) |
 | **M5** | **sin medir** | sigue siendo una separación conceptual; nada en esta campaña la toca |
@@ -2773,15 +2773,15 @@ recomputa ejecutándolos.
 |---|---|---|
 | T0R | ✔ | el router decide descomponible/no contra la verdad del corpus: **22/22** |
 | T02R | ✔ | M3: los paquetes contaminados no pasan la compuerta |
-| T03R | ✔ | M2: **6/35** por obediencia del nodo, **35/35** tras la imposición mecánica |
-| T04R | ✘ | M4: Spearman(δ, impuesto) = **−0.13** sobre **127** celdas intra-categoría |
+| T03R | ✔ | M2: **23/35** por obediencia del nodo, **35/35** tras la imposición mecánica |
+| T04R | ✘ | M4: Spearman(δ, impuesto) = **−0.15** sobre **127** celdas intra-categoría |
 | T05R | ✔ | la contabilidad de ρ predice el tamaño de paquete con **7.5 %** de error |
 | T06R | ✔ | el calificador puntúa **21/21** la respuesta perfecta; **100** de **105** monolíticos despejan el piso |
-| T07R | ✘ | M4, experimento controlado: δ sube en **32/32** pares y el impuesto empeora sólo en **19/32** |
+| T07R | ✘ | M4, experimento controlado: δ sube en **32/32** pares y el impuesto empeora sólo en **15/32** |
 | T08R | ✘ | curva-L: la banda predicha (factor 3–6×) no aparece |
 | T09R | ◌ | criterio de abandono: **rehusado**, confundido con la longitud de salida |
 | T10R | ▣ | M1: sin régimen no saturado en este corpus |
-| T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.38** y **0.47** |
+| T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.57** y **0.57** |
 | T0LR | ✔ | `L*` varía por familia — §5.7 medido por primera vez |
 
 **M4 queda falsado, y el experimento que lo mata es el que la estrategia declaró
@@ -2791,17 +2791,17 @@ que cruza el corte. δ sube en los 32 pares y ρ queda igual dentro de un 5 %, d
 modo que el único eje que se movió es δ. M4 predice que el corte fuerte empeora
 la distorsión **en todos** los pares; empeora en **19 de 32**, que es
 indistinguible de una moneda. La medición observacional converge:
-Spearman(δ, impuesto) = −0.13 sobre 127 celdas intra-categoría, con el signo
+Spearman(δ, impuesto) = −0.15 sobre 127 celdas intra-categoría, con el signo
 contrario al predicho. **El segundo eje no es decoración conceptual: es una
 predicción que se comprobó y no se cumplió.**
 
 **El router por celda queda refutado, y esto cambia el diseño, no sólo el
 marcador.** Un clasificador con validación dejando-una-tarea-fuera sobre 80
-celdas operativas alcanza AUC 0.38 con δ y reputación —por debajo del azar— y
-0.43 sin ninguno de los dos. Añadir sondas de capacidad pre-despacho lo lleva a
-0.47. Lo que sí separa es la **clase de nodo**: el impuesto medio por familia va
-de −41.9 % a +7.6 %, y una política que enruta por clase obtiene −10.1 % frente
-a −10.5 % fragmentando siempre. La consecuencia está escrita en §10.1: el router
+celdas operativas alcanza AUC 0.57 con δ y reputación y
+0.61 sin ninguno de los dos. Añadir sondas de capacidad pre-despacho lo lleva a
+0.57. Lo que sí separa es la **clase de nodo**: el impuesto medio por familia va
+de +8.4 % a +26.5 %, y una política que enruta por clase obtiene +0.0 % frente
+a +14.8 % fragmentando siempre. La consecuencia está escrita en §10.1: el router
 decide *si* fragmentar, el perfil del nodo decide *quién*, y nadie predice el
 costo de una celda concreta.
 
@@ -2813,7 +2813,7 @@ plan elimina es el irreparable; el reparable lo sigue eliminando el ensamblador.
 §11.3 reescribe M2 en esos términos y retira «cero por construcción».
 
 **El criterio de abandono no se ha cumplido ni incumplido: no se ha medido.** El
-agregado da −18.32 % con IC 95 % [−31.00, −6.95] sobre 130 celdas, lo que
+agregado da +11.17 % con IC 95 % [+4.80, +17.34] sobre 95 celdas, lo que
 parecería resolver el criterio a favor. No se puede afirmar, porque el brazo
 fragmentado recibió más presupuesto de salida que el monolítico: cada fragmento
 heredaba el `max_tokens` completo del prompt entero, de modo que un plan de `N`
@@ -2821,7 +2821,7 @@ fragmentos disponía de `N` veces la salida. Tres estadísticos independientes
 confirman que eso basta para explicar la ventaja: el estadístico sin denominador
 da **+0.595**, el suelo del artefacto —el mismo cálculo con el impuesto
 permutado— da sólo **+0.125**, y la prueba directa dentro de cada tarea da
-mediana **+0.683**, positiva en 16 de 18 tareas.
+mediana **+0.571**, positiva en 16 de 18 tareas.
 
 Estratificando por longitud, el agregado se deshace donde debe:
 
@@ -2872,7 +2872,7 @@ lugar de una nota al pie.
 | Impuesto de coherencia | Δ fracción de oraciones sin costura vs monolítico | cota superior del IC 95 % por debajo del 5 % | **NO CUMPLIDO** en el corpus de tablas (§15.3); **REHUSADO** en la campaña de referencia por confundido de longitud (§15.9) |
 | ρ operativo | Tokens de entrada por token de prompt | **distancia a `(L+2F)/L`** | Re-derivado en §6.5; el objetivo absoluto «<2.0» de la v1.4 queda **retirado** por no ser alcanzable ni significativo |
 | Curva de calidad en `L` | Calidad vs tamaño de fragmento | existencia de `L_min` y de una banda | **medida por familia**: `L*` varía entre familias, pero la banda ancha predicha no aparece (§15.9, L20) |
-| Efecto de δ a ρ constante | Distorsión vs densidad de dependencias | efecto medible | **medido y nulo**: δ sube en 32/32 pares a ρ igual y el impuesto empeora en 19/32 (§15.9) |
+| Efecto de δ a ρ constante | Distorsión vs densidad de dependencias | efecto medible | **medido y nulo**: δ sube en 32/32 pares a ρ igual y el impuesto empeora en 15/32 (§15.9) |
 | Violaciones de cardinalidad | sobre-compresión y sobre-expansión, por separado | sobre-compresión cero por construcción; sobre-expansión cero tras imposición | **sobre-compresión 0/35; sobre-expansión 29/35 en crudo y 0/35 tras imposición** (§15.9) |
 | Contención del triage | radio de daño de un fragmento defectuoso | un fragmento | **contenido**: los 3 paquetes contaminados se rechazan (§15.9) |
 | Aceleración efectiva | vs monolítico, mismo modelo | >1.5× | no medido |
@@ -2997,7 +2997,7 @@ proteico. Con curvas de más de un punto por tarea, `longform` da una banda de
 factor **2.7** y `table_outturn` una de factor **1.0** — es decir, un solo `L`
 óptimo. La analogía acertó en que `L` es propiedad de la clase de nodo (T0LR
 mide `L*` distinto por familia) y erró en la anchura de la banda. La ganancia
-media de usar el `L*` de cada familia en vez de un `L` común es **+0.015** de
+media de usar el `L*` de cada familia en vez de un `L` común es **+0.360** de
 calidad: real, medible y pequeña.
 
 **L21 — El impuesto medido depende del presupuesto de salida, y hasta igualarlo

@@ -117,13 +117,13 @@ def main():
         # Corrida de resolución del confundido de longitud (T11). Se re-corre
         # SÓLO el brazo fragmentado: el monolítico ya existe y su presupuesto
         # no cambia, así que la celda igualada se compara contra el mismo mono.
-        pairs = sorted({(k.split("|")[0], k.split("|")[2])
+        pairs = sorted({(k.split("|")[0], k.split("|")[2], k)
                         for k in done
-                        if "|frag|" in k and "|strong" not in k
+                        if "|frag|" in k
                         and "|matched" not in k and "|fan" not in k})
         log(f"MATCHED: {len(pairs)} celdas fragmentadas a re-correr con "
             f"presupuesto de salida igualado")
-        for tid, model in pairs:
+        for tid, model, _key in pairs:
             t = corpus.ALL_TASKS.get(tid)
             if t is None:
                 log(f"  skip {tid}: no está en el corpus actual")
@@ -131,12 +131,15 @@ def main():
             if f"{tid}|mono|{model}" not in done:
                 log(f"  skip {tid} {model}: sin monolítico contra el que comparar")
                 continue
+            cut = "strong" if "|strong" in _key else "weak"
             L, F = t.get("L_target", 8), t.get("F", 2)
-            k = f"{tid}|frag|{model}|L{L}F{F}|matched"
+            k = (f"{tid}|frag|{model}|L{L}F{F}"
+                 + (f"|{cut}" if cut != "weak" else "") + "|matched")
             if not skip(k):
-                log(f"  matched {tid} {model} L={L}")
+                log(f"  matched {tid} {model} L={L}"
+                    + (" [strong]" if cut == "strong" else ""))
                 bm.run_fragmented(t, model, args.data, L=L, F=F,
-                                  match_output=True)
+                                  cut_mode=cut, match_output=True)
         log("hecho (corrida igualada).")
         return
 

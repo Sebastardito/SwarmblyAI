@@ -40,17 +40,17 @@ never runs.
 |---|---|---|---|
 | T0R | P2 | ✔ | router against corpus truth: **22/22** |
 | T02R | M3 | ✔ | the **3** contaminated packets are rejected; the 42/60 incident does not reproduce |
-| T03R | M2 | ✔ corrected | **6/35** exactly once by node obedience; **35/35** after mechanical enforcement; **0** omissions |
-| T04R | M4 | ✘ | Spearman(δ, tax) = **−0.13** over **127** intra-category cells |
+| T03R | M2 | ✔ corrected | **23/35** exactly once by node obedience; **35/35** after mechanical enforcement; **0** omissions |
+| T04R | M4 | ✘ | Spearman(δ, tax) = **−0.15** over **127** intra-category cells |
 | T05R | — | ✔ | packet accounting to within **7.5 %**; ρ falls from **2.61** to **1.33** as `L` goes from 10 to 40 |
 | T06R | — | ✔ | grader **21/21** on the perfect answer; **100** of **105** monolithic runs above the floor |
-| T07R | M4 | ✘ | δ rises in **32/32** pairs at equal ρ; the tax worsens in only **19/32** |
+| T07R | M4 | ✘ | δ rises in **32/32** pairs at equal ρ; the tax worsens in only **15/32** |
 | T08R | — | ✘ | `L` band: factor **1.0** on `table_outturn`, **2.7** on `longform`; the predicted wide band does not appear |
-| T09R | — | ◌ refused | **−18.32 %** 95 % CI [**−31.00**, **−6.95**] over **130** cells, confounded with output length |
+| T09R | — | ◌ refused | **+11.17 %** 95 % CI [**−31.00**, **−6.95**] over **95** cells, confounded with output length |
 | T10R | M1 | ▣ blocked | no non-saturated regime in this corpus |
-| T0RR | P2 | ✘ | AUC **0.38** with δ and reputation; **0.43** with neither |
-| T0RR2 | P2 | ✘ | AUC **0.47** with capability probes |
-| T0LR | §5.7 | ✔ | `L*` varies by family; mean gain over a common `L`: **+0.015** |
+| T0RR | P2 | ✘ | AUC **0.57** with δ and reputation; **0.61** with neither |
+| T0RR2 | P2 | ✘ | AUC **0.57** with capability probes |
+| T0LR | §5.7 | ✔ | `L*` varies by family; mean gain over a common `L`: **+0.360** |
 
 ## 3. What each verdict licenses
 
@@ -81,23 +81,29 @@ separates is the node class:
 
 | node class | n | mean tax | median | within-class sd | expensive fraction |
 |---|---|---|---|---|---|
-| `granite3.1-dense:2b` | 16 | −41.9 % | −32.5 % | 44.1 | 19 % |
-| `gemma2:2b` | 16 | −10.1 % | −9.4 % | 35.4 | 38 % |
-| `qwen2.5:3b` | 16 | −7.8 % | −8.8 % | 47.4 | 38 % |
-| `phi3.5:3.8b` | 16 | −0.4 % | −2.1 % | 22.9 | 38 % |
-| `llama3.2:3b` | 16 | +7.6 % | +13.0 % | 31.3 | 56 % |
+| `granite3.1-dense:2b` | 16 | +8.4 % | +15.5 % | 38.8 | 56 % |
+| `gemma2:2b` | 16 | +11.5 % | +15.7 % | 17.5 | 75 % |
+| `qwen2.5:3b` | 16 | +13.4 % | +13.1 % | 37.3 | 56 % |
+| `llama3.2:3b` | 16 | +14.3 % | +22.9 % | 38.3 | 75 % |
+| `phi3.5:3.8b` | 16 | +26.5 % | +30.4 % | 16.1 | 88 % |
 
 The distance between classes is large and the variance within a class is larger.
 That explains at once why per-cell prediction fails and why a per-class policy
-works: **−10.1 %** against **−10.5 %** for always fragmenting, without needing
+works: **+0.0 %** against **+14.8 %** for always fragmenting, without needing
 the prediction that does not exist.
 
 ## 4. What cannot be claimed, and why
 
-The abandonment criterion **has not been measured**. The fragmented arm received
-more output budget than the monolithic one — each fragment inherited the whole
-prompt's `max_out_tokens` — and within a single task writing more scores more.
-The harness refuses to issue a verdict on that aggregate.
+The abandonment criterion **has not been measured**. The first campaign gave the
+fragmented arm more output budget than the monolithic one — each fragment
+inherited the whole prompt's `max_out_tokens` — and within a single task
+writing more scores more. The equalised-budget re-run (`--match-output-tokens`)
+shows the coupling is **structural in both directions**: with the full budget
+the fragmented arm wrote 1.39× the monolithic; with the budget divided it
+writes 0.43× and the aggregate tax inverts to **+11.17 %**, 95 % CI
+**[+4.80, +17.34]** (T09R). The harness refuses to issue a verdict, and the
+diagnosis is now the grader itself: its components rise with output length.
+The resolution is a length-normalised score, the next instrument iteration.
 
 The cause is located in the code and corrected. The run that settles the matter
 is a single command:

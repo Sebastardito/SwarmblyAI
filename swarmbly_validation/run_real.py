@@ -375,9 +375,14 @@ def t08_real(recs):
     details, table_rows = [], []
     all_factors = []
     for tid, (rows, ls, qs, qmax, floor, band, factor) in analyses.items():
-        details.append(
-            f"{tid}: L_min≈{floor}, banda {band} "
-            f"(factor {factor:.2f})" if floor else f"{tid}: sin piso detectable")
+        if factor is not None:
+            details.append(
+                f"{tid}: L_min≈{floor}, banda {band} "
+                f"(factor {factor:.2f})")
+        else:
+            details.append(
+                f"{tid}: L_min≈{floor}, sin banda discernible "
+                f"(puntos: {[(l, round(q, 2)) for l, q in rows]})")
         if factor:
             all_factors.append(factor)
         table_rows.extend([[tid, str(l), f"{q:.3f}"] for l, q in rows])
@@ -386,8 +391,10 @@ def t08_real(recs):
     return Result(id="T08R", name="Curva-L (datos reales)", model="—",
                   verdict=verdict,
                   summary="; ".join(
-                      f"{tid}: banda {a[5]} (factor {a[6]:.2f})" if a[5] else
-                      f"{tid}: sin banda" for tid, a in analyses.items()),
+                      f"{tid}: banda {a[5]} (factor {a[6]:.2f})"
+                      if a[5] and a[6] is not None else
+                      f"{tid}: sin banda discernible"
+                      for tid, a in analyses.items()),
                   killed_if="no aparece piso ni banda discernibles",
                   refusal="sin puntos suficientes",
                   details=details,
@@ -471,6 +478,9 @@ def t09_real(recs):
     for r in recs:
         if r.get("arm") != "frag" or "|strong" in r.get("key", ""):
             continue   # el criterio se mide sobre el corte operativo (P9)
+        task = ref_corpus.ALL_TASKS.get(r.get("task"))
+        if task is not None and r.get("L") != task.get("L_target", 10):
+            continue   # sólo la celda operativa, no el barrido de L
         if matched_any and not r.get("match_output"):
             continue   # con presupuesto igualado disponible, medir sobre él
         m = mono(recs, r["task"], r["model"])
@@ -687,8 +697,10 @@ def t07_real(recs):
     for r in recs:
         if r.get("arm") != "frag" or "|strong" not in r.get("key", ""):
             continue
-        base_key = r["key"].replace("|strong", "")
-        weak = next((x for x in recs if x.get("key") == base_key), None)
+        base_key = r["key"].replace("|strong", "").replace("|matched", "")
+        weak = next((x for x in recs
+                     if x.get("key") == base_key + "|matched"
+                     or x.get("key") == base_key), None)
         m = mono(recs, r["task"], r["model"])
         if weak is None or m is None:
             continue
@@ -1321,6 +1333,26 @@ def tL_real(recs):
                          "subóptimo y el perfil del nodo debe declarar su L."])
 
 
+def prefer_matched(recs):
+    """Si una celda fragmentada tiene versión |matched, ésta la reemplaza.
+
+    Tras la campaña de presupuesto igualado, TODA la batería empírica se mide
+    sobre las celdas limpias: el impuesto con presupuesto desigual queda como
+    registro histórico, no como insumo de veredictos (su agregado estaba
+    confundido con la longitud — T11)."""
+    best = {}
+    for r in recs:
+        if r.get("arm") != "frag":
+            continue
+        base = r.get("key", "").replace("|matched", "")
+        cur = best.get(base)
+        if cur is None or r.get("key", "").endswith("|matched"):
+            best[base] = r.get("key")
+    keep = set(best.values())
+    keep |= {r.get("key") for r in recs if r.get("arm") != "frag"}
+    return [r for r in recs if r.get("key") in keep]
+
+
 def run_suite(data=None, embed=False, quiet=False):
     """Ejecuta la batería empírica y devuelve (resultados, ruta_de_datos).
 
@@ -1329,9 +1361,10 @@ def run_suite(data=None, embed=False, quiet=False):
     desincroniza sin avisar.
     """
     data = data or ap_default_data()
-    recs = load(data)
+    recs = prefer_matched(load(data))
     if not quiet:
-        print(f"registros cargados: {len(recs)} desde {data}")
+        print(f"registros cargados: {len(recs)} desde {data} "
+              f"(celdas |matched preferidas cuando existen)")
     results = [router_check(), t02_real(recs), t03_real(recs), t04_real(recs),
                t05_real(recs), t06_real(recs), t07_real(recs), t08_real(recs),
                t09_real(recs), t10_real(recs, embed=embed),

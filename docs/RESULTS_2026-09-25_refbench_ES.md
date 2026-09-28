@@ -40,17 +40,17 @@ falla y el resto no llega a correr.
 |---|---|---|---|
 | T0R | P2 | ✔ | router contra la verdad del corpus: **22/22** |
 | T02R | M3 | ✔ | los **3** paquetes contaminados se rechazan; el incidente 42/60 no se reproduce |
-| T03R | M2 | ✔ corregido | **6/35** exactamente una vez por obediencia del nodo; **35/35** tras imposición mecánica; **0** omisiones |
-| T04R | M4 | ✘ | Spearman(δ, impuesto) = **−0.13** sobre **127** celdas intra-categoría |
+| T03R | M2 | ✔ corregido | **23/35** exactamente una vez por obediencia del nodo; **35/35** tras imposición mecánica; **0** omisiones |
+| T04R | M4 | ✘ | Spearman(δ, impuesto) = **−0.15** sobre **127** celdas intra-categoría |
 | T05R | — | ✔ | contabilidad de paquete con **7.5 %** de error; ρ cae de **2.61** a **1.33** al pasar `L` de 10 a 40 |
 | T06R | — | ✔ | calificador **21/21** sobre la respuesta perfecta; **100** de **105** monolíticos sobre el piso |
-| T07R | M4 | ✘ | δ sube en **32/32** pares a ρ igual; el impuesto empeora sólo en **19/32** |
+| T07R | M4 | ✘ | δ sube en **32/32** pares a ρ igual; el impuesto empeora sólo en **15/32** |
 | T08R | — | ✘ | banda de `L`: factor **1.0** en `table_outturn`, **2.7** en `longform`; la banda ancha predicha no aparece |
-| T09R | — | ◌ rehusado | **−18.32 %** IC 95 % [**−31.00**, **−6.95**] sobre **130** celdas, confundido con la longitud de salida |
+| T09R | — | ◌ rehusado | **+11.17 %** IC 95 % [**−31.00**, **−6.95**] sobre **130** celdas, confundido con la longitud de salida |
 | T10R | M1 | ▣ bloqueado | sin régimen no saturado en este corpus |
-| T0RR | P2 | ✘ | AUC **0.38** con δ y reputación; **0.43** sin ninguno de los dos |
-| T0RR2 | P2 | ✘ | AUC **0.47** con sondas de capacidad |
-| T0LR | §5.7 | ✔ | `L*` varía por familia; ganancia media sobre `L` común: **+0.015** |
+| T0RR | P2 | ✘ | AUC **0.57** con δ y reputación; **0.61** sin ninguno de los dos |
+| T0RR2 | P2 | ✘ | AUC **0.57** con sondas de capacidad |
+| T0LR | §5.7 | ✔ | `L*` varía por familia; ganancia media sobre `L` común: **+0.360** |
 
 ## 3. Lo que cada veredicto permite afirmar
 
@@ -81,23 +81,30 @@ Lo que separa es la clase de nodo:
 
 | clase de nodo | n | impuesto medio | mediana | sd intra-clase | fracción cara |
 |---|---|---|---|---|---|
-| `granite3.1-dense:2b` | 16 | −41.9 % | −32.5 % | 44.1 | 19 % |
-| `gemma2:2b` | 16 | −10.1 % | −9.4 % | 35.4 | 38 % |
-| `qwen2.5:3b` | 16 | −7.8 % | −8.8 % | 47.4 | 38 % |
-| `phi3.5:3.8b` | 16 | −0.4 % | −2.1 % | 22.9 | 38 % |
-| `llama3.2:3b` | 16 | +7.6 % | +13.0 % | 31.3 | 56 % |
+| `granite3.1-dense:2b` | 16 | +8.4 % | +15.5 % | 38.8 | 56 % |
+| `gemma2:2b` | 16 | +11.5 % | +15.7 % | 17.5 | 75 % |
+| `qwen2.5:3b` | 16 | +13.4 % | +13.1 % | 37.3 | 56 % |
+| `llama3.2:3b` | 16 | +14.3 % | +22.9 % | 38.3 | 75 % |
+| `phi3.5:3.8b` | 16 | +26.5 % | +30.4 % | 16.1 | 88 % |
 
 La distancia entre clases es grande y la varianza dentro de una clase es mayor.
 Eso explica a la vez por qué la predicción por celda falla y por qué una
-política por clase funciona: **−10.1 %** frente a **−10.5 %** fragmentando
+política por clase funciona: **+0.0 %** frente a **+14.8 %** fragmentando
 siempre, sin necesitar la predicción que no existe.
 
 ## 4. Lo que no se puede afirmar, y por qué
 
-El criterio de abandono **no se ha medido**. El brazo fragmentado recibió más
-presupuesto de salida que el monolítico —cada fragmento heredaba el
-`max_out_tokens` del prompt entero— y dentro de una misma tarea escribir más
-puntúa más. El arnés rehúsa emitir veredicto sobre ese agregado.
+El criterio de abandono **no se ha medido**. La primera campaña dio al brazo
+fragmentado más presupuesto de salida que al monolítico —cada fragmento
+heredaba el `max_out_tokens` del prompt entero— y dentro de una misma tarea
+escribir más puntúa más. La re-corrida con presupuesto igualado
+(`--match-output-tokens`) muestra que el acoplamiento es **estructural en las
+dos direcciones**: con el presupuesto completo el brazo fragmentado escribía
+1.39× el monolítico; con el presupuesto repartido escribe 0.43× y el impuesto
+agregado se invierte a **+11.17 %**, IC 95 % **[+4.80, +17.34]** (T09R). El
+arnés rehúsa emitir veredicto, y el diagnóstico ahora es el grader mismo: sus
+componentes suben con la longitud de salida. La resolución es una puntuación
+normalizada por longitud, la próxima iteración del instrumento.
 
 La causa está localizada en el código y corregida. La corrida que resuelve el
 asunto es una sola orden:

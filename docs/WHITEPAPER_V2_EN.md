@@ -1235,7 +1235,7 @@ wrong assembly**.
 > availability: the solvability of the fragments is a separate condition that no
 > number of replicas repairs.
 
-**And now there is a measurement.** Over 80 operational table-summary cells (16 tasks × 5 families), the mean tax per **node class** ranges from **−41.9 %** to **+7.6 %**, with within-class standard deviations of **23** to **47** points (T0RR, §15.9). Both halves of the statement come out as written: heterogeneity between nodes is real and large — a whole family comes out cheap where another comes out expensive — and at the same time the variance *within* a class exceeds the distance *between* classes. That last part is exactly why per-cell prediction fails (§10.1) and why the swarm answers for coverage rather than for the outcome of any particular cell.
+**And now there is a measurement.** Over 80 operational table-summary cells (16 tasks × 5 families, equalised output budget), the mean tax per **node class** ranges from **+8.4 %** to **+26.5 %**, with within-class standard deviations of **16** to **39** points (T0RR, §15.9). Under the equalised budget every class comes out expensive — the earlier cheap/expensive split was the output-length confound (T09R) — and the variance *within* a class still exceeds the distance *between* classes. That last part is exactly why per-cell prediction fails (§10.1) and why the swarm answers for coverage rather than for the outcome of any particular cell.
 
 ---
 
@@ -1576,9 +1576,9 @@ depends on dependency density and not only on rate, then the router — which is
 what decides whether to fragment — must see that density. A router that sees only
 length is measuring the wrong axis.
 
-**And that feature was measured, with a result that forces a design change.** Over 80 operational cells, a classifier trained with leave-one-task-out validation reaches **AUC 0.38** with δ and reputation, and **0.43** with neither: adding δ improves nothing, and the full model lands below chance (T0RR). With pre-dispatch capability probes in place of δ, **AUC 0.47** (T0RR2). **Per-cell prediction does not work**, and the failure is not δ's in particular: no subset of features rescues it.
+**And that feature was measured, with a result that forces a design change.** Over 80 operational cells, a classifier trained with leave-one-task-out validation reaches **AUC 0.57** with δ and reputation, and **0.61** with neither: adding δ improves nothing (T0RR). With pre-dispatch capability probes in place of δ, **AUC 0.57** (T0RR2). **Per-cell prediction does not work**, and the failure is not δ's in particular: no subset of features rescues it.
 
-What does separate is the **node class**. The same corpus gives mean taxes per family from −41.9 % to +7.6 %, and a policy that decides by class — fragment if that class's historical tax is negative — obtains **−10.1 %** against **−10.5 %** for always fragmenting. The per-class policy does not improve the average; what it does is obtain it **without needing a per-cell prediction that does not exist**, and it avoids the expensive cases in the classes that produce them.
+What does separate is the **node class**. The same corpus gives mean taxes per family from +8.4 % to +26.5 %, and a policy that decides by class — fragment if that class's historical tax is negative — obtains **+0.0 %** against **+14.8 %** for always fragmenting: under the equalised budget every class has a positive historical tax, so the class policy refuses them all and avoids the whole tax. The per-class policy is the router that works: it needs no per-cell prediction, and its decision is exactly the one P2 prescribes when the measured economics say "do not fragment".
 
 > **Design consequence.** The router of §10.1 decides *whether the prompt is decomposable* — and that remains verified: 22 of 22 decisions agree with the corpus truth (T0R). What it must **not** attempt is to predict the cost of a particular cell. That decision moves to the node profile: the class declares its history, and the orchestrator routes by class. δ is kept as a feature of the plan and **withdrawn as a predictive feature of the router**.
 
@@ -2487,7 +2487,7 @@ self-consistency**, not only against the naive monolithic baseline. A multi-agen
 architecture that only beats single-pass monolithic generation is comparing itself
 against the wrong rival.
 
-**And the status of the criterion today is neither "met" nor "not met": it is "unmeasured".** The reference campaign of §15.9 yields an aggregate tax of **−18.32 %** with a 95 % CI of **[−31.00, −6.95]** over 130 cells — that is, fragmenting would come out *ahead* — but that aggregate is confounded with the output budget: the fragmented arm wrote **1.39×** what the monolithic one wrote, and within a single task writing more scores more (median **+0.683**, positive in **16** of **18** tasks). The harness **refuses to issue a verdict** on that figure (T09R), and this document does the same. §15.9 explains the defect, its exact cause, and the single-command run that resolves it.
+**And the status of the criterion today is neither "met" nor "not met": it is "unmeasured".** The reference campaign of §15.9 yields an aggregate tax of **+11.17 %** with a 95 % CI of **[+4.80, +17.34]** over 95 cells under the equalised budget — that is, fragmenting would come out *behind* — and even that figure is confounded: the length coupling is **structural in both directions**. With the full budget the fragmented arm wrote **1.39×** the monolithic and scored more; with the budget divided it writes **0.43×** and scores less (within one task, writing more scores more: median **+0.571**, positive in **10** of **18** tasks). The harness **refuses to issue a verdict** (T09R), and this document does the same. The defect is the grader itself, not the budget: its components rise with output length. The resolution is a **length-normalised score** (per-sentence coverage and precision), the next instrument iteration — not another budget setting.
 
 ### 15.3 What was measured, and what was withdrawn
 
@@ -2619,7 +2619,7 @@ saves nothing.
 | Model | Verdict | On what |
 |---|---|---|
 | **M1** | **no instrument** | the semantic aligner is built and verified on the bench (T10), but the real corpus did not produce the non-saturated regime M1 needs (T10R, blocked) |
-| **M2** | **survives, corrected** | 6/35 by node obedience; 35/35 with mechanical enforcement. The phrase "zero by construction" is withdrawn (§11.3) |
+| **M2** | **survives, corrected** | 23/35 by node obedience; 35/35 with mechanical enforcement. The phrase "zero by construction" is withdrawn (§11.3) |
 | **M3** | **survives** | contaminated packets do not pass the gate; the 42/60 incident does not reproduce (T02R) |
 | **M4** | **falsified** | in two independent instruments and with a controlled experiment at constant ρ (T04R, T07R) |
 | **M5** | **unmeasured** | it remains a conceptual separation; nothing in this campaign touches it |
@@ -2685,15 +2685,15 @@ recomputed by running them.
 |---|---|---|
 | T0R | ✔ | the router decides decomposable/not against corpus truth: **22/22** |
 | T02R | ✔ | M3: contaminated packets do not pass the gate |
-| T03R | ✔ | M2: **6/35** by node obedience, **35/35** after mechanical enforcement |
-| T04R | ✘ | M4: Spearman(δ, tax) = **−0.13** over **127** intra-category cells |
+| T03R | ✔ | M2: **23/35** by node obedience, **35/35** after mechanical enforcement |
+| T04R | ✘ | M4: Spearman(δ, tax) = **−0.15** over **127** intra-category cells |
 | T05R | ✔ | the ρ accounting predicts packet size to within **7.5 %** |
 | T06R | ✔ | the grader scores the perfect answer **21/21**; **100** of **105** monolithic runs clear the floor |
-| T07R | ✘ | M4, controlled experiment: δ rises in **32/32** pairs and the tax worsens in only **19/32** |
+| T07R | ✘ | M4, controlled experiment: δ rises in **32/32** pairs and the tax worsens in only **15/32** |
 | T08R | ✘ | L curve: the predicted band (factor 3–6×) does not appear |
 | T09R | ◌ | abandonment criterion: **refused**, confounded with output length |
 | T10R | ▣ | M1: no non-saturated regime in this corpus |
-| T0RR / T0RR2 | ✘ | per-cell routability: **AUC 0.38** and **0.47** |
+| T0RR / T0RR2 | ✘ | per-cell routability: **AUC 0.57** and **0.57** |
 | T0LR | ✔ | `L*` varies by family — §5.7 measured for the first time |
 
 **M4 is falsified, and the experiment that kills it is the one the strategy
@@ -2702,17 +2702,17 @@ once at weak-coupling interfaces (P9) and once maximising the coupling that
 crosses the cut. δ rises in all 32 pairs and ρ stays equal to within 5 %, so the
 only axis that moved is δ. M4 predicts that the strong cut worsens distortion in
 **every** pair; it worsens in **19 of 32**, which is indistinguishable from a
-coin. The observational measurement converges: Spearman(δ, tax) = −0.13 over 127
+coin. The observational measurement converges: Spearman(δ, tax) = −0.15 over 127
 intra-category cells, with the sign opposite to the prediction. **The second
 axis is not conceptual decoration: it is a prediction that was checked and did
 not hold.**
 
 **The per-cell router is refuted, and this changes the design, not only the
 scoreboard.** A classifier with leave-one-task-out validation over 80
-operational cells reaches AUC 0.38 with δ and reputation — below chance — and
-0.43 with neither. Adding pre-dispatch capability probes brings it to 0.47. What
-does separate is the **node class**: mean tax per family ranges from −41.9 % to
-+7.6 %, and a policy that routes by class obtains −10.1 % against −10.5 % for
+operational cells reaches AUC 0.57 with δ and reputation and
+0.61 with neither. Adding pre-dispatch capability probes brings it to 0.57. What
+does separate is the **node class**: mean tax per family ranges from +8.4 % to
++26.5 %, and a policy that routes by class obtains +0.0 % against +14.8 % for
 always fragmenting. The consequence is written into §10.1: the router decides
 *whether* to fragment, the node profile decides *who*, and nobody predicts the
 cost of a particular cell.
@@ -2725,7 +2725,7 @@ is the irreparable one; the reparable one is still removed by the assembler.
 §11.3 rewrites M2 in those terms and withdraws "zero by construction".
 
 **The abandonment criterion has neither been met nor failed: it has not been
-measured.** The aggregate gives −18.32 % with a 95 % CI of [−31.00, −6.95] over
+measured.** The aggregate gives +11.17 % with a 95 % CI of [+4.80, +17.34] over
 130 cells, which would appear to settle the criterion in favour. It cannot be
 claimed, because the fragmented arm received more output budget than the
 monolithic one: each fragment inherited the full `max_tokens` of the whole
@@ -2784,7 +2784,7 @@ reproducible rather than a footnote.
 | Coherence tax | Δ seam-free sentence fraction vs monolithic | upper bound of the 95% CI below 5% | **NOT MET** on the table corpus (§15.3); **REFUSED** in the reference campaign owing to the length confound (§15.9) |
 | Operating ρ | Input tokens per prompt token | **distance to `(L+2F)/L`** | Re-derived in §6.5; v1.4's absolute "<2.0" target is **withdrawn** as neither attainable nor meaningful |
 | Quality curve in `L` | Quality vs fragment size | existence of `L_min` and of a band | **measured per family**: `L*` varies across families, but the predicted wide band does not appear (§15.9, L20) |
-| Effect of δ at constant ρ | Distortion vs dependency density | measurable effect | **measured and null**: δ rises in 32/32 pairs at equal ρ and the tax worsens in 19/32 (§15.9) |
+| Effect of δ at constant ρ | Distortion vs dependency density | measurable effect | **measured and null**: δ rises in 32/32 pairs at equal ρ and the tax worsens in 15/32 (§15.9) |
 | Cardinality violations | over-compression and over-expansion, separately | over-compression zero by construction; over-expansion zero after enforcement | **over-compression 0/35; over-expansion 29/35 raw and 0/35 after enforcement** (§15.9) |
 | Triage containment | blast radius of a defective fragment | one fragment | **contained**: all 3 contaminated packets are rejected (§15.9) |
 | Effective speedup | vs monolithic, same model | >1.5× | not measured |
@@ -2904,7 +2904,7 @@ With curves of more than one point per task, `longform` gives a band of factor
 **2.7** and `table_outturn` one of factor **1.0** — that is, a single optimal
 `L`. The analogy was right that `L` is a property of the node class (T0LR
 measures a different `L*` per family) and wrong about the width of the band. The
-mean gain from using each family's `L*` instead of a common `L` is **+0.015** of
+mean gain from using each family's `L*` instead of a common `L` is **+0.360** of
 quality: real, measurable and small.
 
 **L21 — The measured tax depends on the output budget, and until it is matched

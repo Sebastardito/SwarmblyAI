@@ -38,6 +38,19 @@ def load_cells(path, exclude_strong=True):
     se mide sobre el corte operativo, no sobre uno diseñado para ser malo.
     """
     recs = [json.loads(line) for line in open(path, encoding="utf-8")]
+    # preferencia por celdas |matched: cuando existen, el confundido y la
+    # interacción se miden sobre el presupuesto igualado (T11 resuelto)
+    best = {}
+    for r in recs:
+        if r.get("arm") != "frag":
+            continue
+        base = r.get("key", "").replace("|matched", "")
+        cur = best.get(base)
+        if cur is None or r.get("key", "").endswith("|matched"):
+            best[base] = r
+    keep_ids = {id(r) for r in best.values()}
+    keep_ids |= {id(r) for r in recs if r.get("arm") != "frag"}
+    recs = [r for r in recs if id(r) in keep_ids]
     mono = {(r["task"], r["model"]): r for r in recs if r.get("arm") == "mono"}
     cells = []
     for r in recs:

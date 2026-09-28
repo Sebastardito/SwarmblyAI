@@ -38,8 +38,8 @@ from swarmblyval.stats import (attainable_min_p, bimodality_summary,
 #: Digest del corpus de referencia con el que se escribieron los documentos.
 #: Anclarlo convierte «los números cambiaron» en un fallo visible en vez de una
 #: discrepancia que alguien nota meses después.
-BENCH_SHA256 = "d94bb9cc7694d0f77e28d7e456e9f116d7796d79d0b891a87b6a180b1c6a5b25"
-BENCH_RECORDS = 341
+BENCH_SHA256 = "dcd1931d98f7f0ec4d6c6dbf5d4ce6251680cc1bc133841a395be279e02c6285"
+BENCH_RECORDS = 473
 
 
 def _reconcile_bench(path):
