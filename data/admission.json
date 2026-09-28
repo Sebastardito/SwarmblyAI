@@ -1,0 +1,1069 @@
+{
+  "corpus": "prompts/lcurve_v2.json",
+  "dev": [
+    "lc_010_00",
+    "lc_010_01",
+    "lc_010_02",
+    "lc_010_03",
+    "lc_020_00",
+    "lc_020_01",
+    "lc_020_02",
+    "lc_020_03",
+    "lc_040_00",
+    "lc_040_01",
+    "lc_040_02",
+    "lc_040_03",
+    "lc_080_00",
+    "lc_080_01",
+    "lc_080_02",
+    "lc_080_03",
+    "lc_160_00",
+    "lc_160_01",
+    "lc_160_02",
+    "lc_160_03",
+    "lc_320_00",
+    "lc_320_01",
+    "lc_320_02",
+    "lc_320_03"
+  ],
+  "families": {
+    "llama3.2:3b": {
+      "global_rate": 0.6111,
+      "global": [
+        44,
+        72
+      ],
+      "local_rate": 0.8542,
+      "local": [
+        41,
+        48
+      ],
+      "per_doc": [
+        {
+          "id": "lc_010_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-001 | Harbour\n\n02: R-009 | Eastdock\n\n03: 241\n\n04: 1166\n\n05: R-006"
+        },
+        {
+          "id": "lc_010_01",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Fell End\n\n02: 14\n\n03: 740 + 377 + 848 = 1965\n\n04: 191 + 890 + 377 = 1458\n\n05: 740 + 377 + 848 = 1965"
+        },
+        {
+          "id": "lc_010_02",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 641\n\n02: 135\n\n03: 961 - 279 = 682\n\n04: 588 - 276 = 312\n\n05: Eastdock"
+        },
+        {
+          "id": "lc_010_03",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 24\n\n02: 465\n\n03: 798 + 275 = 1073\n\n04: 844 + 247 + 190 = 1281\n\n05: R-010"
+        },
+        {
+          "id": "lc_020_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-005 | Riverside\n\n02: 153\n\n03: 851 + 418 + 200 = 1469\n\n04: R-014\n\n05: R-011"
+        },
+        {
+          "id": "lc_020_01",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-012 | Fell End\n\n02: 665\n\n03: 922 + 346 + 102 = 1370\n\n04: 346 + 102 + 98 = 546\n\n05: R-006 | Midvale"
+        },
+        {
+          "id": "lc_020_02",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 718\n\n02: 484\n\n03: 726 - 162 = 564\n\n04: R-011\n\n05: 459 + 162 + 411 = 1032"
+        },
+        {
+          "id": "lc_020_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Westhill\n\n02: Southfield\n\n03: 913 + 472 = 1385\n\n04: 120 + 702 + 592 = 1414\n\n05: 913 + 171 = 1084"
+        },
+        {
+          "id": "lc_040_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 196\n02: 789\n03: 881 + 613 + 414 = 2008\n04: R-034 has a larger on_hand (492) than R-010 (159)\n05: R-029 has the largest on_hand (791)"
+        },
+        {
+          "id": "lc_040_01",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Southfield\n02: Eastdock\n03: 562 + 717 + 326 = 1605\n04: R-018 has a larger on_hand\n05: R-033 has the largest on_hand"
+        },
+        {
+          "id": "lc_040_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 811\n\n02: Northgate\n\n03: 353 + 160 + 503 = 1016\n\n04: R-013 has a larger on_hand (917)\n\n05: R-019 has a larger on_hand (382)"
+        },
+        {
+          "id": "lc_040_03",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 171\n\n02: R-017 | Northgate | gaskets | on_hand=964 | reorder_at=46\n\n03: 689 + 435 = 1124\n\n04: R-010\n\n05: 520 + 584 + 287 = 1391"
+        },
+        {
+          "id": "lc_080_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-070\n02: 233\n03: 224 + 500 = 724\n04: 507 - 256 = 251\n05: R-063"
+        },
+        {
+          "id": "lc_080_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 904\n\n02: 598\n\n03: 433 + 140 = 573\n\n04: 651 - 308 = 343\n\n05: 851 + 298 = 1149"
+        },
+        {
+          "id": "lc_080_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Eastdock\n02: Midvale\n03: 207 + 465 + 164 = 836\n04: 160 - 152 = 8\n05: R-006 (938)"
+        },
+        {
+          "id": "lc_080_03",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 277\n\n02: Southfield\n\n03: 152 + 38 + 322 = 512\n\n04: R-072 has the largest on_hand\n\n05: R-046 has the larger on_hand"
+        },
+        {
+          "id": "lc_160_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-063 | Eastdock\n02: 255\n03: 584 + 584 + 597 = 1665\n04: R-061 has 917, R-086 has 360\n05: 519 + 292 = 811"
+        },
+        {
+          "id": "lc_160_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Eastdock\n02: 127\n03: 124 + 0 + 188 = 412\n04: R-106\n05: 769 + 216 + 588 = 1573"
+        },
+        {
+          "id": "lc_160_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Southfield\n02: Fell End\n03: 360 + 674 + 378 = 1412\n04: Eastdock\n05: Northgate"
+        },
+        {
+          "id": "lc_160_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: Eastdock\n02: Harbour\n03: 343 + 548 = 891\n04: R-031\n05: R-027"
+        },
+        {
+          "id": "lc_320_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 192\n02: 395\n03: 657 - 832 = 125\n04: R-055 has the larger on_hand\n05: 526 + 522 + 865 = 1913"
+        },
+        {
+          "id": "lc_320_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-282 | Harbour\n02: R-035 | Midvale\n03: 823 + 736 = 1559\n04: R-180 has a larger on_hand\n05: R-160 has the largest on_hand"
+        },
+        {
+          "id": "lc_320_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 942\n02: 822\n03: 196 + 684 + 28 = 908\n04: R-195 has a larger on_hand\n05: Northgate holds R-149 with a larger on_hand"
+        },
+        {
+          "id": "lc_320_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Eastdock\n02: 382\n03: 939 + 186 = 1125\n04: 870 + 124 = 994\n05: Eastdock"
+        }
+      ]
+    },
+    "qwen2.5:3b": {
+      "global_rate": 0.1944,
+      "global": [
+        14,
+        72
+      ],
+      "local_rate": 0.5417,
+      "local": [
+        26,
+        48
+      ],
+      "per_doc": [
+        {
+          "id": "lc_010_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Harbour\n02: Eastdock\n03: 241\n04: 1756\n05: R-002"
+        },
+        {
+          "id": "lc_010_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Fell End\n02: 14\n03: 629\n04: 1160\n05: 1118"
+        },
+        {
+          "id": "lc_010_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 641\n02: 135\n03: 583\n04: 241\n05: Eastdock"
+        },
+        {
+          "id": "lc_010_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 24\n02: 465\n03: 673\n04: 1043\n05: R-001"
+        },
+        {
+          "id": "lc_020_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Riverside\n02: 153\n03: 1799\n04: R-014\n05: R-014"
+        },
+        {
+          "id": "lc_020_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Fell End\n02: 665\n03: 872\n04: 577\n05: R-010"
+        },
+        {
+          "id": "lc_020_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 718\n02: 484\n03: 375\n04: R-011\n05: 1342"
+        },
+        {
+          "id": "lc_020_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Westhill\n02: Southfield\n03: 1365\n04: 1439\n05: 558"
+        },
+        {
+          "id": "lc_040_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 196\n02: 789\n03: 1699\n04: R-034\n05: R-037"
+        },
+        {
+          "id": "lc_040_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Southfield\n02: Eastdock\n03: 1363\n04: R-018\n05: R-033"
+        },
+        {
+          "id": "lc_040_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 811\n02: Westhill\n03: 1982\n04: R-002\n05: R-019"
+        },
+        {
+          "id": "lc_040_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 171\n02: Westhill\n03: 655\n04: R-017\n05: 1365"
+        },
+        {
+          "id": "lc_080_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: Riverside\n02: 128\n03: 442\n04: 281\n05: R-006"
+        },
+        {
+          "id": "lc_080_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 904\n02: 598\n03: 1403\n04: 263\n05: 1333"
+        },
+        {
+          "id": "lc_080_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Riverside\n02: Midvale\n03: 1056\n04: 100\n05: R-006"
+        },
+        {
+          "id": "lc_080_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 277\n02: Riverside\n03: 1871\n04: R-035\n05: Riverside"
+        },
+        {
+          "id": "lc_160_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: Which warehouse holds R-063?\n- R-063 is not listed in the provided data. Therefore, we cannot determine which warehouse holds R-063 based on the given information.\n\n02: What is on_hand for R-024?\n- R-024 is not listed in the provided data. Therefore, we cannot determine the on_hand quantity for R-024 based on the given information.\n\n03: What is the combined on_hand of R-159, R-025 and R-128?\n- R-159: on_hand = 315\n- R-025: not listed\n- R-128: on_hand = 540\n\nSince R-025 is not listed, we cannot include it in our calculation. The combined on_hand for R-159 and R-128 is:\n315 + 540 ="
+        },
+        {
+          "id": "lc_160_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: Which warehouse holds R-142?\n- Looking at the list, R-142 is associated with the warehouse \"Southfield\".\n- Therefore, the warehouse that holds R-142 is Southfield.\n\n02: What is on_hand for R-022?\n- R-022 is not listed in the provided data.\n- Therefore, there is no on_hand value for R-022.\n\n03: What is the combined on_hand of R-124, R-060 and R-115?\n- R-124: on_hand=789, reorder_at=166\n- R-060 is not listed.\n- R-115: on_hand=144, reorder_at=48\n- Combining these values: 789 + 0 + 144 = 933\n- Therefore, the combined on_hand of R-12"
+        },
+        {
+          "id": "lc_160_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: Which warehouse holds R-021?\n- R-021 is not listed in the provided data. Therefore, we cannot determine which warehouse holds R-021 based on the given information.\n\n02: Which warehouse holds R-108?\n- R-108 is held by the warehouse in Fell End.\n\n03: What is the combined on_hand of R-100, R-047 and R-081?\n- R-100 is held by Southfield with 667 on_hand.\n- R-047 is not listed.\n- R-081 is not listed.\n- Since R-047 and R-081 are not listed, we cannot calculate the combined on_hand for R-100, R-047, and R-081.\n\n04: Which warehouse holds whichever of R-119 and R-070 has the larger on_hand"
+        },
+        {
+          "id": "lc_160_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question based on the provided data:\n\n01: Which warehouse holds R-068?\n- R-068 is not listed in the provided data. Therefore, we cannot determine which warehouse holds R-068.\n\n02: Which warehouse holds R-099?\n- R-099 is held by Eastdock.\n\n03: What is the combined on_hand of R-028 and R-049?\n- R-028 is not listed, so we only consider R-049.\n- R-049: on_hand=486\n- Combined on_hand: 486\n\n04: Among R-066, R-031 and R-096, which row id has the largest on_hand?\n- R-066: on_hand=64\n- R-031: not listed\n- R-096: on_hand=654\n\nR-096 has the largest on_hand of"
+        },
+        {
+          "id": "lc_320_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: What is on_hand for R-110?\n- R-110 is not listed in the provided data. Therefore, there is no on_hand value for R-110.\n\n02: What is on_hand for R-113?\n- R-113 is not listed in the provided data. Therefore, there is no on_hand value for R-113.\n\n03: How much larger is the on_hand of R-249 than that of R-036?\n- R-249: on_hand = 366\n- R-036 is not listed in the provided data. Since R-036 is not available, we can consider its on_hand as 0 for comparison purposes.\n- The difference: 366 - 0 = 366\n- R-249's on_hand is 366 larger than R-036's on_hand.\n\n04"
+        },
+        {
+          "id": "lc_320_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: Which warehouse holds R-282?\n- Looking at the row for R-282: \n  - Warehouse: Harbour\n  - Item: filters\n  - On-hand: 534\n  - Reorder at: 134\n- Therefore, R-282 is held by the Harbour warehouse.\n\n02: Which warehouse holds R-035?\n- There is no row with row id 035 in the provided data.\n- Therefore, there is no warehouse that holds R-035.\n\n03: What is the combined on_hand of R-316 and R-222?\n- For R-316:\n  - Warehouse: Eastdock\n  - Item: fasteners\n  - On-hand: 849\n- For R-222:\n  - Warehouse: Riverside\n  - Item: fasteners\n  - On-hand: 519\n- Combined on-hand for"
+        },
+        {
+          "id": "lc_320_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: What is on_hand for R-296?\n- From the data, R-296 is located at Riverside and the on_hand value is 942.\n\n02: What is on_hand for R-050?\n- There is no row with R-050 in the provided data. Therefore, there is no on_hand value for R-050.\n\n03: What is the combined on_hand of R-249, R-319 and R-152?\n- R-249: on_hand = 435\n- R-319: on_hand = 684\n- R-152: There is no row for R-152 in the provided data.\n\nSince R-152 is not present, we can only sum the values of R-249 and R-319:\n435 + 684 = 1119"
+        },
+        {
+          "id": "lc_320_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's address each question step by step using the provided data:\n\n01: Which warehouse holds R-253?\n- R-253 is associated with Eastdock warehouse.\n\n02: What is on_hand for R-068?\n- R-068 is not listed in the provided data, so there is no on_hand value for it.\n\n03: What is the combined on_hand of R-302 and R-156?\n- R-302 is associated with Southfield, with an on_hand value of 125.\n- R-156 is not listed, so we cannot include it in the calculation.\n- Therefore, the combined on_hand for R-302 is 125.\n\n04: What is the combined on_hand of R-154 and R-022?\n- R-154 is associated with Eastdock, with an on_hand value of 972.\n- R-022 is not listed, so we cannot include it in"
+        }
+      ]
+    },
+    "gemma2:2b": {
+      "global_rate": 0.3056,
+      "global": [
+        22,
+        72
+      ],
+      "local_rate": 0.6875,
+      "local": [
+        33,
+        48
+      ],
+      "per_doc": [
+        {
+          "id": "lc_010_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Harbour\n02: Eastdock\n03: 401\n04: 146 + 653 + 878 = 1677\n05: R-002 \n"
+        },
+        {
+          "id": "lc_010_01",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "NN: 01: Fell End\nNN: 02: 14\nNN: 03: 377+740+848=1965\nNN: 04: 191+890+377=1458\nNN: 05: 740+377+848=1965 \n"
+        },
+        {
+          "id": "lc_010_02",
+          "global_ok": 3,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "NN: 01: 641\nNN: 02: 135\nNN: 03: 961 - 279 = 682\nNN: 04: 588 - 276 = 312\nNN: 05: Eastdock \n"
+        },
+        {
+          "id": "lc_010_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "NN: 01: 24\nNN: 02: 465\nNN: 03: 275\nNN: 04: 844\nNN: 05: 10 \n"
+        },
+        {
+          "id": "lc_020_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Riverside\n02: 153\n03: 193\n04: R-014\n05: R-016 \n"
+        },
+        {
+          "id": "lc_020_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-012\n02: 665\n03: 922\n04: 922\n05: R-010 \n"
+        },
+        {
+          "id": "lc_020_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "NN: 01: 484\nNN: 02: 484\nNN: 03: 805-162=643\nNN: 04: R-011\nNN: 05: 459+162+411=1032 \n"
+        },
+        {
+          "id": "lc_020_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Westhill\n02: Southfield\n03: 935\n04: 1450\n05: 1000 \n"
+        },
+        {
+          "id": "lc_040_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "NN: 01: 196\nNN: 02: 789\nNN: 320 + 613 + 286 = 1229\nNN: 034 and 010\nNN: 029 \n"
+        },
+        {
+          "id": "lc_040_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Southfield\n02: Harbour\n03: 1400\n04: R-022\n05: R-033 \n"
+        },
+        {
+          "id": "lc_040_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 811\n02: Northgate\n03: 100\n04: R-013\n05: R-019 \n"
+        },
+        {
+          "id": "lc_040_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 171\n02: Northgate\n03: 100\n04: R-010\n05: 1000 \n"
+        },
+        {
+          "id": "lc_080_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-070\n02: 233\n03: 224\n04: 507\n05: R-063 \n"
+        },
+        {
+          "id": "lc_080_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 904\n02: 598\n03: 1450\n04: 109\n05: 749 \n"
+        },
+        {
+          "id": "lc_080_02",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Eastdock\n02: Westhill\n03: 164\n04: R-011 has a on_hand of 160, R-074 has a on_hand of 152, 160 - 152 = 8\n05: R-006 \n"
+        },
+        {
+          "id": "lc_080_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 277\n02: Southfield\n03: 1095\n04: R-035\n05: R-046 \n"
+        },
+        {
+          "id": "lc_160_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's break down the answers to your questions based on the provided data:\n\n**01: Which warehouse holds R-063?**\n\nYou'll need to provide the data for R-063 to answer this. The provided data is a list of items and their inventory levels. \n\n**02: What is on_hand for R-024?**\n\nYou'll need to provide the data for R-024 to answer this. \n\n**03: What is the combined on_hand of R-159, R-025 and R-128?**\n\nYou'll need to provide the data for R-159, R-025, and R-128 to answer this. \n\n**04: Of R-086 and R-061, which row id has the larger on_hand?**\n\nYou'll need to provide the data for R-086 and R-061 to answer this"
+        },
+        {
+          "id": "lc_160_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "Here are the answers to your questions based on the provided data:\n\n**01: Which warehouse holds R-142?**\n\nR-142 is held at **Fell End**.\n\n**02: What is on_hand for R-022?**\n\nThe on_hand value for R-022 is not provided in the data. \n\n**03: What is the combined on_hand of R-124, R-060 and R-115?**\n\nThe combined on_hand of R-124, R-060, and R-115 is **2,277**. \n\n**04: Among R-091, R-128 and R-106, which row id has the largest on_hand?**\n\nR-128 has the largest on_hand (**871**).\n\n**05: What is the combined on_hand of R-059, R-"
+        },
+        {
+          "id": "lc_160_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "Let's break down the answers to your questions based on the provided data:\n\n**01: Which warehouse holds R-021?**\n\nYou'll need to provide the data for R-021 to answer this. The provided data only lists R-numbers and their on-hand quantities. \n\n**02: Which warehouse holds R-108?**\n\nR-108 is held at **Fell End**. \n\n**03: What is the combined on_hand of R-100, R-047 and R-081?**\n\nTo calculate the combined on-hand, you need to add the on-hand quantities for each item:\n\n* R-100: 667\n* R-047:  (You need to provide the on-hand quantity for R-047)\n* R-081:  (You need to provide the on-hand quantity for R-081)\n\n**04: Which warehouse"
+        },
+        {
+          "id": "lc_160_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's break down the answers to your questions based on the provided data:\n\n**01: Which warehouse holds R-068?**\n\nYou'll need to provide the data for R-068 to answer this. The provided data is a list of items and their on-hand quantities. \n\n**02: Which warehouse holds R-099?**\n\nR-099 is held at **R-099** warehouse. \n\n**03: What is the combined on_hand of R-028 and R-049?**\n\nTo find the combined on-hand, you need to add the on-hand quantities of R-028 and R-049. \n\n**04: Among R-066, R-031 and R-096, which row id has the largest on_hand?**\n\nTo determine which row id has the largest on-hand, you need to compare the on-hand quantities of R-06"
+        },
+        {
+          "id": "lc_320_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "Let's break down the answers to your questions based on the provided data:\n\n**01: What is on_hand for R-110?**\n\nTo find the on_hand for R-110, you'll need to look at the entire dataset.  You'll find the on_hand value for R-110 in the dataset. \n\n\n**02: What is on_hand for R-113?**\n\nTo find the on_hand for R-113, you'll need to look at the entire dataset.  You'll find the on_hand value for R-113 in the dataset. \n\n\n**03: How much larger is the on_hand of R-249 than that of R-036?**\n\nTo find the difference in on_hand, you'll need to look at the dataset.  You'll find the on_hand values for R-249 and R-036.  Then, subtract"
+        },
+        {
+          "id": "lc_320_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "Here are the answers to your questions based on the provided data:\n\n**01: Which warehouse holds R-282?**\n\nR-282 is held at **Harbour**.\n\n**02: Which warehouse holds R-035?**\n\nR-035 is held at **Midvale**.\n\n**03: What is the combined on_hand of R-316 and R-222?**\n\nThe combined on_hand of R-316 and R-222 is 1667. \n\n**04: Of R-227 and R-180, which row id has the larger on_hand?**\n\nR-227 has a larger on_hand (793) than R-180 (650).\n\n**05: Among R-310, R-037 and R-160, which row id has the largest on_hand?**\n\nR-310 has"
+        },
+        {
+          "id": "lc_320_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "Here are the answers to your questions based on the provided data:\n\n**01: What is on_hand for R-296?**\n\nR-296 has an on_hand quantity of **942**.\n\n**02: What is on_hand for R-050?**\n\nThe data doesn't contain information about R-050. \n\n**03: What is the combined on_hand of R-249, R-319 and R-152?**\n\nTo calculate the combined on_hand, you need to add the on_hand values for each item: \n* R-249: 435\n* R-319: 684\n* R-152:  (Data not provided)\n\n**04: Of R-096 and R-195, which row id has the larger on_hand?**\n\nTo determine which row has the larger on_hand, you need to"
+        },
+        {
+          "id": "lc_320_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "Let's break down the answers based on the provided data:\n\n**01: Which warehouse holds R-253?**\n\n* R-253 is held at **Eastdock**. \n\n**02: What is on_hand for R-068?**\n\n* R-068 has an on_hand of **68**. \n\n**03: What is the combined on_hand of R-302 and R-156?**\n\n*  R-302 (Southfield) and R-156 (Northgate) are not listed together in the provided data. \n\n**04: What is the combined on_hand of R-154 and R-022?**\n\n* R-154 (Midvale) and R-022 (Westhill) are not listed together in the provided data. \n\n**05: Which warehouse holds whichever of R-078 and R-235 has the larger on"
+        }
+      ]
+    },
+    "phi3.5:3.8b": {
+      "global_rate": 0.2778,
+      "global": [
+        20,
+        72
+      ],
+      "local_rate": 0.5208,
+      "local": [
+        25,
+        48
+      ],
+      "per_doc": [
+        {
+          "id": "lc_010_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Harbour\n02: Eastdock\n03: 361\n04: 1722\n05: R-006"
+        },
+        {
+          "id": "lc_010_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Fell End\n02: 14\n03: 1829\n04: 2074\n05: 2099"
+        },
+        {
+          "id": "lc_010_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 641\n02: 135\n03: 982\n04: 224\n05: R-009"
+        },
+        {
+          "id": "lc_010_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 24\n02: 465\n03: 988\n04: 1159\n05: R-010"
+        },
+        {
+          "id": "lc_020_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Riverside\n02: 153\n03: 1542\n04: R-014\n05: R-011"
+        },
+        {
+          "id": "lc_020_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Fell End\n02: 356\n03: 1324\n04: 1325\n05: R-010"
+        },
+        {
+          "id": "lc_020_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 718\n02: 484\n03: 615\n04: R-011\n05: 1637\n\n"
+        },
+        {
+          "id": "lc_020_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Harbour\n02: Southfield\n03: 1243\n04: 1557\n05: 1015"
+        },
+        {
+          "id": "lc_040_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 196\n02: 417\n03: 2038\n04: R-034\n05: R-003"
+        },
+        {
+          "id": "lc_040_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Southfield\n02: Eastdock\n03: 2179 (678+717+326)\n04: R-018 with 494 on_hand\n05: R-031 with 193 on_hand"
+        },
+        {
+          "id": "lc_040_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 811\n02: Northgate\n03: 2365 (853+771+503)\n04: R-013 (965)\n05: R-023 (81)"
+        },
+        {
+          "id": "lc_040_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 287\n02: Northgate\n03: 7570\n04: R-010\n05: 1705"
+        },
+        {
+          "id": "lc_080_00",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: R-070 is held at Eastdock.\n02: The on_hand for R-033 is 447.\n03: The combined on_hand of R-054 and R-004 is 1171.\n04: The on_hand of R-052 is 802, and that of R-014 is 256, so R-052 has 546 units larger.\n05: Among R-006, R-058 and R-063, R-058 has the largest on_hand with 794 units."
+        },
+        {
+          "id": "lc_080_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: 87\n02: 828\n03: 1385 (R-067 on_hand=824 + R-039 on_hand=584)\n04: 271 (R-034 on_hand=101 - R-079 on_hand=308)\n05: 1108 (R-070 on_hand=520 + R-036 on_hand=67)"
+        },
+        {
+          "id": "lc_080_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: Midvale\n02: Harbour\n03: 79 + 465 + 442 = 1216\n04: 160 - 92 = 68\n05: R-006 (938 on_hand) has a larger on_hand than R-074 (176 on_hand)"
+        },
+        {
+          "id": "lc_080_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 827\n02: Southfield\n03: 2018\n04: R-072\n05: R-046"
+        },
+        {
+          "id": "lc_160_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "\n01: The warehouse that holds R-063 is Eastdock.\n\n02: The on_hand for R-024 is not available in the provided data.\n\n03: The combined on_hand of R-159 (Eastdock), R-025 (not available in the provided data), and R-128 (Southfield) cannot be calculated due to missing data for R-025.\n\n04: Between R-086 (Midvale) with on_hand 703 and R-061 (Southfield) with on_hand 729, R-061 has the larger on_hand.\n\n05: The combined on_hand of R-017 (Southfield) with on_hand 333 and R-078 (not available in the provided data) cannot be calculated due to missing data for R-078.\n\n\n"
+        },
+        {
+          "id": "lc_160_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "\n01: The warehouse that holds R-142 is Eastdock.\n\n02: The question seems to have a mistake as R-022 is not present in the provided data.\n\n03: The combined on_hand for R-124 (Midvale, bearings, on_hand=789), R-060 (not present in the data), and R-115 (Riverside, gaskets, on_hand=433) cannot be calculated due to the absence of R-060 in the data.\n\n04: Among R-091 (Riverside, filters, on_hand=912), R-128 (Harbour, couplings, on_hand=238), and R-106 (Northgate, couplings, on_hand=588), the largest on_hand is R-091 with 912 items.\n"
+        },
+        {
+          "id": "lc_160_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "\n01: R-021 is not listed in the provided data, so it's not possible to determine which warehouse holds it.\n\n02: R-108 is held at Eastdock with 169 on_hand.\n\n03: R-100 has 667 on_hand, R-047 has 378 on_hand, and R-081 has 56 on_hand. The combined on_hand is 667 + 378 + 56 = 1101.\n\n04: R-119 (Southfield) has 453 on_hand and R-070 (not listed) has no on_hand data available. Without the on_hand data for R-070, it's impossible to determine which warehouse has the larger on_hand.\n\n05: R-150 (Southfield) has 82"
+        },
+        {
+          "id": "lc_160_03",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "\n01: The warehouse that holds R-068 is not listed in the provided data.\n\n02: R-099 is located in Eastdock and has 710 on_hand.\n\n03: R-028 has 503 on_hand and R-049 has 407 on_hand. The combined on_hand is 910.\n\n04: Among R-066, R-031, and R-096, R-096 has the largest on_hand with 654.\n\n05: Among R-096, R-050, and R-027, R-096 has the largest on_hand with 654.\n\n\nEXPLANATION:\n\n01: The provided data does not include R-068, so we cannot determine which warehouse holds it.\n\n02: R-"
+        },
+        {
+          "id": "lc_320_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: The on_hand for R-110 is not provided in the given data.\n02: The on_hand for R-113 is not provided in the given data.\n03: The on_hand for R-249 is 567, and for R-036, it is not provided in the given data. Therefore, we cannot determine how much larger the on_hand of R-249 is compared to that of R-036.\n04: The data does not include R-055, so we cannot compare the on_hand of R-210 with R-055.\n05: R-217 and R-104 are not provided in the given data, and R-260 is also not provided. Therefore, we cannot determine the combined on_hand of R-260, R-104, and R-217.\n\nSince the required information for some of the questions"
+        },
+        {
+          "id": "lc_320_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: The warehouse that holds R-282 is Harbour.\n02: The warehouse that holds R-035 does not appear in the provided list, as the IDs seem to start from R-281 instead of R-035.\n03: The combined on_hand of R-316 (Harbour) and R-222 (Harbour) is 961 + 961 = 1922.\n04: Between R-227 (Harbour with 341 on_hand) and R-180 (Harbour with 643 on_hand), Harbour has the larger on_hand.\n05: Among R-310 (Harbour with 82 on_hand), R-037, and R-160, R-160 has the largest on_hand with 138.\n\nHere's the breakdown for clarity:\n"
+        },
+        {
+          "id": "lc_320_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: The on_hand for R-296 (Fell End - seals) is 942.\n\n02: There seems to be a mistake in the request as R-050 does not exist in the provided list. The closest options are R-051 and R-052, but their on_hand values are not provided.\n\n03: The combined on_hand for R-249 (Harbour - bushings), R-319 (Northgate - spacers), and R-152 is not available because R-152 does not exist in the provided list.\n\n04: The on_hand for R-096 (Fell End - spacers) is 706, and for R-195 (Riverside - couplings) is 422. Therefore, R-096 has the larger on_hand.\n\n05: Rows R-149 and R-"
+        },
+        {
+          "id": "lc_320_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-253 is held at the Eastdock warehouse.\n02: The on_hand for R-068 cannot be determined from the provided information as R-068 is not listed in the given data.\n03: The combined on_hand of R-302 (Southfield) and R-156 cannot be determined from the provided information as R-156 is not listed in the given data.\n04: Similarly, the combined on_hand of R-154 and R-022 cannot be determined as R-022 is not listed in the given data.\n05: Between R-078 and R-235, R-235 has a larger on_hand with 656 units. R-078 is not listed in the given data, so we cannot compare it.\n\nTo answer questions 03 and 04, we would need the missing data for R-068"
+        }
+      ]
+    },
+    "granite3.1-dense:2b": {
+      "global_rate": 0.2222,
+      "global": [
+        16,
+        72
+      ],
+      "local_rate": 0.5833,
+      "local": [
+        28,
+        48
+      ],
+      "per_doc": [
+        {
+          "id": "lc_010_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Northgate\n02: Eastdock\n03: 625\n04: 1163\n05: R-006"
+        },
+        {
+          "id": "lc_010_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: Fell End\n02: 14\n03: 1217\n04: 1265\n05: 724"
+        },
+        {
+          "id": "lc_010_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 641\n02: 135\n03: 505\n04: 112\n05: Eastdock"
+        },
+        {
+          "id": "lc_010_03",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 24\n02: 465\n03: 663\n04: 1053\n05: R-010"
+        },
+        {
+          "id": "lc_020_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-005\n02: 153\n03: 1102\n04: R-020\n05: R-016"
+        },
+        {
+          "id": "lc_020_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-012 is held by Fell End.\n02: On_hand for R-020 is 665.\n03: Combined on_hand for R-008, R-007, and R-019 is 346 + 472 + 98 = 916.\n04: Combined on_hand for R-007, R-019, and R-013 is 472 + 670 + 98 = 1240.\n05: Among R-010, R-019, and R-006, R-010 has the largest on_hand (676)."
+        },
+        {
+          "id": "lc_020_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 718\n02: 120\n03: 12\n04: R-011\n05: 1057"
+        },
+        {
+          "id": "lc_020_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: Harbour\n02: Southfield\n03: 1199\n04: 173\n05: 993"
+        },
+        {
+          "id": "lc_040_00",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 196\n02: 953\n03: 1360\n04: R-032\n05: R-003"
+        },
+        {
+          "id": "lc_040_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-021 is held by Southfield.\n02: R-019 is held by Eastdock.\n03: The combined on_hand of R-016, R-004, and R-025 is 1497.\n04: R-022 has a larger on_hand than R-018, which is 692.\n05: Among R-031, R-009, and R-033, R-033 has the largest on_hand, which is 990."
+        },
+        {
+          "id": "lc_040_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 811\n02: Northgate\n03: 1121\n04: R-027\n05: R-023"
+        },
+        {
+          "id": "lc_040_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 171\n02: Northgate\n03: 1051\n04: R-015\n05: 1061"
+        },
+        {
+          "id": "lc_080_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: R-070\n02: 13\n03: 1051\n04: 551\n05: R-058"
+        },
+        {
+          "id": "lc_080_01",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: 904\n02: 598\n03: 1062\n04: 1062 - 241 = 821\n05: 1174"
+        },
+        {
+          "id": "lc_080_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 2,
+          "local_n": 2,
+          "response": "01: R-012 is held by Eastdock.\n02: R-069 is held by Midvale.\n03: The combined on_hand of R-007, R-077, and R-013 is 1022.\n04: The on_hand of R-011 is 160, and that of R-074 is 976. Therefore, R-011's on_hand is 716 less than R-074's.\n05: R-051 has a larger on_hand (153) than R-006 (938)."
+        },
+        {
+          "id": "lc_080_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: 277\n02: Harbour\n03: 1022\n04: R-066\n05: Harbour"
+        },
+        {
+          "id": "lc_160_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: R-063 is not listed in the provided data.\n\n02: On_hand for R-024 is 158.\n\n03: The combined on_hand for R-159, R-025, and R-128 is:\n159 (on_hand for R-159) + 125 (on_hand for R-025) + 415 (on_hand for R-128) = 699.\n\n04: Comparing R-086 and R-061, R-086 has a larger on_hand:\n- R-086: on_hand = 473\n- R-061: on_hand = 559\n\n05: The combined on_hand for R-017 and R-078 is:\n125 (on_hand for R-01"
+        },
+        {
+          "id": "lc_160_01",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-142 is held by Eastdock.\n02: The on_hand for R-022 is 130.\n03: The combined on_hand for R-124, R-060, and R-115 is 108 + 128 + 304 = 540.\n04: Among R-091, R-128, and R-106, R-128 has the largest on_hand with 798.\n05: The combined on_hand for R-059, R-034, and R-066 is 18 + 130 + 108 = 256."
+        },
+        {
+          "id": "lc_160_02",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: R-021 is not listed in the provided data, so I cannot determine which warehouse holds it.\n\n02: R-108 is held by the Harbour warehouse.\n\n03: To find the combined on_hand of R-100, R-047, and R-081, add their on_hand quantities: 822 (R-108) + 480 (R-100) + 974 (R-081) = 2276.\n\n04: R-119 has a larger on_hand quantity (666) than R-070 (24), so the Harbour warehouse holds R-119.\n\n05: R-150 has a larger on_hand quantity (429) than R-011 (378), so the Fell End warehouse holds R-150.\n\nFinal"
+        },
+        {
+          "id": "lc_160_03",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-068 is not listed in the provided data.\n\n02: R-099 is held by Eastdock.\n\n03: The combined on_hand for R-028 and R-049 is 117 + 923 = 1040.\n\n04: Among R-066, R-031, and R-096, R-096 has the largest on_hand (654).\n\n05: Among R-096, R-050, and R-027, R-096 has the largest on_hand (654)."
+        },
+        {
+          "id": "lc_320_00",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: R-110 does not exist in the provided data, so there is no on_hand value for R-110.\n\n02: R-249 has on_hand = 861, and R-036 has on_hand = 50. The difference is 861 - 50 = 811.\n\n03: The on_hand for R-249 is 861, and for R-036 is 50. The difference is 861 - 50 = 811.\n\n04: Comparing R-210 and R-055, R-210 has on_hand = 722, and R-055 has on_hand = 52. The on_hand for R-210 is larger.\n\n05: The combined on_hand for R-260, R-104, and R"
+        },
+        {
+          "id": "lc_320_01",
+          "global_ok": 2,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-282 is held by Harbour.\n02: R-035 is not listed in the provided data.\n03: The combined on_hand of R-316 and R-222 is 1311 (454 + 857).\n04: R-227 has a larger on_hand (454) compared to R-180 (405).\n05: Among R-310, R-037, and R-160, R-310 has the largest on_hand (548)."
+        },
+        {
+          "id": "lc_320_02",
+          "global_ok": 1,
+          "global_n": 3,
+          "local_ok": 0,
+          "local_n": 2,
+          "response": "01: On_hand for R-296 is 752.\n02: R-050 is not listed in the provided data.\n03: The combined on_hand for R-249, R-319, and R-152 is 1241 (249 + 319 + 682).\n04: R-195 has a larger on_hand (923) compared to R-096 (109).\n05: The warehouse holding R-149 (Eastdock) has a larger on_hand (993) compared to the warehouse holding R-078 (Fell End) with an on_hand of 811."
+        },
+        {
+          "id": "lc_320_03",
+          "global_ok": 0,
+          "global_n": 3,
+          "local_ok": 1,
+          "local_n": 2,
+          "response": "01: R-253 is held by Eastdock.\n02: On_hand for R-068 is 0.\n03: The combined on_hand of R-302 and R-156 is 1072 (835 + 237).\n04: The combined on_hand of R-154 and R-022 is 1272 (102 + 1250).\n05: Eastdock holds whichever of R-078 and R-235 has the larger on_hand, which is R-235 with 758 on_hand."
+        }
+      ]
+    }
+  },
+  "pool_global_rate_min": 0.1944,
+  "pool_global_rate_max": 0.6111,
+  "admission": {
+    "admitted": true,
+    "report": "  PASS  global questions straddle every declared cell: all verified\n  PASS  arity <= 3 and operands <= 3: within ceiling\n  PASS  every key computable and non-empty: all present\n  PASS  local control questions present: present in every document\n  PASS  chance baseline below 0.20: guessing scores 0.182 across 72 global questions\n  PASS  every document has an arithmetic global question: present\n  PASS  local controls do not leak rows used by global questions: disjoint\n  PASS  monolithic arm clears the floor: 0.611 vs floor 0.50",
+    "floor": 0.5,
+    "rate_used": 0.6111
+  }
+}
