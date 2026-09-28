@@ -411,10 +411,17 @@ def _length_confound(recs, negligible=0.20):
     monos = {(r["task"], r["model"]): r for r in recs if r.get("arm") == "mono"}
     def _w(r):
         return len(str(r.get("assembled_text") or r.get("text") or "").split())
+    # si existen celdas con presupuesto igualado (|matched), son ellas las que
+    # deciden: la pregunta del confundido es si IGUALADO el presupuesto el
+    # agregado sigue confundido, no si el presupuesto desigual lo estaba
+    matched = [r for r in recs if r.get("arm") == "frag"
+               and r.get("match_output")]
     ratio, diff = [], []
     for r in recs:
         if r.get("arm") != "frag" or "|strong" in r.get("key", ""):
             continue
+        if matched and not r.get("match_output"):
+            continue   # presupuesto igualado disponible: medir sobre él
         m = monos.get((r["task"], r["model"]))
         if m is None:
             continue
@@ -458,10 +465,14 @@ def _spearman_simple(xs, ys):
 
 def t09_real(recs):
     """Re-prueba del criterio: distribución del tax sobre las celdas reales."""
+    matched_any = any(r.get("arm") == "frag" and r.get("match_output")
+                      for r in recs)
     cells = []
     for r in recs:
         if r.get("arm") != "frag" or "|strong" in r.get("key", ""):
             continue   # el criterio se mide sobre el corte operativo (P9)
+        if matched_any and not r.get("match_output"):
+            continue   # con presupuesto igualado disponible, medir sobre él
         m = mono(recs, r["task"], r["model"])
         t = tax_of(m, r)
         if t is None:

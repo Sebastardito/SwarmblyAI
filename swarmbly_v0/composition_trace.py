@@ -33,7 +33,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
-from .constraints import CompositionReport, grade_text, paragraphs_of
+from .constraints import CompositionReport, grade_text
 from .grading import normalise_text
 from .textutil import count_tokens, split_sentences
 

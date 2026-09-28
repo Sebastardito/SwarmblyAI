@@ -58,7 +58,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Iterable, Mapping
 
 __all__ = [
     "ITEM_LABEL_RE",

@@ -69,7 +69,7 @@ than editing, and the result is contaminated rather than good.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
 from .constraints import (

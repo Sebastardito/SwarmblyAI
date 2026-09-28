@@ -38,7 +38,7 @@ from typing import Any, Iterable, Mapping, Sequence
 import numpy as np
 
 from .assembler import boundary_windows, select_then_splice
-from .backends import Backend, Embedder, HashEmbedder, get_backend, get_embedder, replica_backends
+from .backends import Backend, Embedder, get_backend, get_embedder, replica_backends
 from .consensus import (
     ConsensusResult,
     DEFAULT_ACCEPT,
@@ -71,7 +71,7 @@ from .packing import (
                       build_monolithic_prompt, build_packets, packing_floor,
                       task_budget_floors as _task_budget_floors,
                       task_budget_weights as _task_budget_weights)
-from .planner import (BASELINE_FORMAT_DIRECTIVE, carry_values, requested_paragraphs,
+from .planner import (BASELINE_FORMAT_DIRECTIVE, requested_paragraphs,
                       global_contract, plan as build_plan, split_enumerated,
                       summarize_fragment)
 from .router import DEFAULT_THRESHOLD, evaluate_router, is_decomposable

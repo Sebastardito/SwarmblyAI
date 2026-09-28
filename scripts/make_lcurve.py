@@ -37,7 +37,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from make_longform import NODE_BUDGET_TOKENS, document  # noqa: E402
-from swarmbly_v0.textutil import count_tokens  # noqa: E402
 
 SEED = 20260922
 OUT = Path(__file__).resolve().parent.parent / "prompts" / "lcurve.json"
