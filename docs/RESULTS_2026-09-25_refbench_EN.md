@@ -52,7 +52,7 @@ never runs.
 | T0RR2 | P2 | ✘ | AUC **0.57** with capability probes |
 | T0LR | §5.7 | ✔ | `L*` varies by family; mean gain over a common `L`: **+0.360** |
 | T13 | — | ◌ refused | truncated tax flips sign with the reading budget T (**−15.66 %** at T=40, **+7.69 %** at T=120): the length coupling is structural |
-| T13b | SWIP-0001 | ✔ | position tax: keys surface **−0.279** of the arm's own length earlier, 95 % CI **[−0.361, −0.178]**, confound ρ = **+0.075** — criterion restated and **met** |
+| T13b | SWIP-0001 | ◌ refused | position tax corrected for omissions: displacement **+0.0036**, 95 % CI **[−0.0948, +0.0994]**, corpus halves disagree in sign — criterion remains **unmeasured** |
 
 ## 3. What each verdict licenses
 
@@ -96,19 +96,20 @@ the prediction that does not exist.
 
 ## 4. What cannot be claimed, and why
 
-The abandonment criterion **was unmeasured, and is now judgeable** — via a
-new instrument, not a new budget setting. The aggregate tax is confounded with
-output length in **both directions** (full budget: the fragmented arm writes
-1.39× the monolithic and scores more; divided budget: 0.43× and scores less;
-aggregate **+11.17 %**, 95 % CI **[+4.80, +17.34]**, T09R — refused and not
-cited as the criterion). Truncating both arms to a fixed reading budget **T**
-fails too: the tax flips sign with T (T13). What resolves the coupling **by
-construction** is the **position of first mention** (T13b, SWIP-0001): each
-key's first occurrence, normalised by the arm's own length. On the
-matched-budget cells the fragmented arm surfaces the keys **0.279 of its own
-length earlier**, 95 % CI **[0.178, 0.361]**, with the confound gone
-(ρ = **+0.075**). The criterion, restated as "fragmentation must not bury the
-keys", is **met**.
+The abandonment criterion **has not been measured** — and the cleanest
+measurement is a cost. The aggregate tax is confounded with output length in
+**both directions** (full budget: the fragmented arm writes 1.39× the
+monolithic and scores more; divided budget: 0.43× and scores less; T09R
+refuses). Truncating both arms to a fixed reading budget **T** fails too: the
+tax flips sign with T (T13). The position of first mention (T13b, SWIP-0001),
+corrected so an omitted key is charged at the end of the text, also refuses:
+displacement **+0.0036** of the arm's own length, 95 % CI
+**[−0.0948, +0.0994]** — a null, ~5× wider than the threshold — and the corpus
+halves disagree in sign (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**; of 423 keys, the fragmented arm omits **217** against the monolithic's **82**). What survives is economic: under the equalised
+budget, fragmenting **costs in all five families** (means **+6.2 %** to
+**+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI
+**[+4.80, +17.34]**), and the measured per-class policy is **not to fragment**
+(**+0.0 %** against **+14.8 %**).
 
 The cause is located in the code and corrected. The run that settles the matter
 is a single command:
@@ -131,12 +132,14 @@ monolithic arm clears the **0.50** floor with **llama3.2:3b at 61.1 %**
 do not clear it (19.4–30.6 %), so the L-curve campaign must run with llama3.2
 or be reported per family. The auditable run is `data/admission.json`.
 
-The campaign has now run (llama3.2, every declared cell, `data/lcurve_v2_runs.jsonl`):
-the curve is **monotone decreasing** — L=5: **77.8 %**, L=10: **69.4 %**,
-L=20: **58.3 %**, L=40: **44.4 %** (36 global questions per L). The mechanism
-is per-fragment extraction fidelity, and the fragmented arm at small L beats
-the monolithic baseline (**77.8 %** vs **61.1 %**) — the first
-length-confound-free win on the solvability axis.
+The first fragmented run over the declared cells was **withdrawn**: each
+fragment copied its rows verbatim, the concatenation reconstructed the
+original document, and the 48 cells coincided with their monolithic
+counterpart one for one (48/48) — it measured nothing about fragmentation, and
+L was confounded with document size. The redesigned run (each fragment
+*answers* per-row values and its own partial sum; the assembler combines
+deterministically, `run_lcurve_v2.py`) is the one that measures the curve;
+its numbers are reported here when the campaign completes.
 
 ## 5. Related documents
 

@@ -84,10 +84,10 @@ CLAIMS = [
     ("T0LR", "+0.360", "+0.360"),
     ("T13", "−15.66", "-15.66"),
     ("T13", "+7.69", "+7.69"),
-    ("T13b", "−0.279", "-0.279"),
-    ("T13b", "−0.361", "-0.361"),
-    ("T13b", "−0.178", "-0.178"),
-    ("T13b", "+0.075", "+0.075"),
+    ("T13b", "+0.0036", "+0.0036"),
+    ("T13b", "−0.0948", "-0.0948"),
+    ("T13b", "+0.0994", "+0.0994"),
+    ("T13b", "−0.452", "-0.452"),
 ]
 
 #: The documents that quote the campaign. Both languages of each pair, because a
@@ -142,6 +142,34 @@ def test_some_document_quotes_each_checked_figure(
 def test_the_campaign_size_is_stated_consistently(name: str) -> None:
     assert "473" in _text(name), (
         f"{name} no longer states the size of the corpus it rests on."
+    )
+
+
+#: Frases que afirman que el criterio de abandono se CUMPLE. Un documento no
+#: puede decir ninguna mientras el arnés no dé PASS en T09R ni T13b.
+MET_PHRASES = [
+    "criterion is **met**", "criterion restated and **met**",
+    "criterion is judgeable again and is met",
+    "el criterio vuelve a ser juzgable y se cumple",
+    "re-expresado como «fragmentar no debe enterrar las claves», se **cumple**",
+    "restated as \"fragmentation must not bury the keys\", is **met**",
+]
+
+
+@pytest.mark.parametrize("name", QUOTING, ids=lambda n: n)
+def test_no_document_claims_a_met_criterion_while_the_harness_refuses(
+    results: dict, name: str
+) -> None:
+    met = any(
+        results.get(tid, {}).get("verdict") == "PASS"
+        for tid in ("T09R", "T13b")
+    )
+    text = _text(name)
+    offenders = [phrase for phrase in MET_PHRASES if phrase in text]
+    assert met or not offenders, (
+        f"{name} claims the criterion is met ({offenders}) while the harness "
+        "gives no PASS to T09R nor T13b. Align the document with the verdict "
+        "or re-argue the verdict in the harness."
     )
 
 

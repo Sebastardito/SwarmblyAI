@@ -128,6 +128,13 @@ empírica generada por la arquitectura de referencia responde:
 | **Curva-L** | {t08.summary} | {veredicto(t08)} |
 | **L por clase de nodo (§5.7)** | {tl_summary} | {veredicto(tl)} |
 
+**La medición más limpia de la campaña es un costo.** Con el presupuesto de
+salida igualado entre brazos, fragmentar cuesta en **las cinco familias**
+(medias +6.2 % a +22.1 %, medianas +4.3 % a +29.4 %; agregado +11.17 %, IC95
+[+4.80, +17.34]), y la política por clase medida es **no fragmentar** (+0.0 %
+frente a +14.8 % fragmentando siempre). Es el resultado que la evidencia
+sostiene con más fuerza, y el que el proyecto reporta primero.
+
 **Léase la tercera fila antes que ninguna otra.** El agregado medido favorece a
 la fragmentación, y **no se puede usar**: el brazo fragmentado recibió más
 presupuesto de salida que el monolítico, y a tarea fija escribir más puntúa más.
@@ -162,21 +169,26 @@ tamaño observado con error medio {err_txt} — la derivación del whitepaper §
 vez de heredar un porcentaje ahorra ~29% del cómputo de la red sin relajar
 ninguna garantía.
 
-### 2.2 Criterio de abandono: medido, y rehusado
+### 2.2 Criterio de abandono: sin medir; la medición más limpia es un costo
 
 {t09_summary}.
 
 El criterio exige que el límite superior de un IC95 agrupado por prompt caiga
-bajo el 5% en una celda nombrada. El agregado de esta campaña **no puede
-saldarlo en ninguna dirección**: el brazo fragmentado escribió 1.39× lo que el
-monolítico y, dentro de una misma tarea, escribir más puntúa más (mediana
-+0.683, positiva en 16 de 18 tareas). Estratificando por longitud, el estrato
-donde el fragmentado **no** escribe más da −6.3% con IC [−22.3, +14.1] — cruza
-el cero.
+bajo el 5% en una celda nombrada. La campaña no puede saldarlo **en ninguna
+dirección con el impuesto agregado**: está confundido con la longitud de
+salida en ambas direcciones (presupuesto completo: el fragmentado escribe
+1.39× el monolítico y puntúa más; presupuesto repartido: 0.43× y puntúa
+menos). Truncar a un presupuesto de lectura fijo T cambia el signo con T
+(T13), y el impuesto por posición de primera mención corregido (T13b,
+SWIP-0001) tampoco decide: desplazamiento +0.0036 [−0.0948, +0.0994], mitades
+del corpus discordantes y confundido reintroducido por la imputación
+(ρ = −0.452).
 
-Ése es el estado real: **no cumplido, no incumplido, sin medir.** Salvedades
-adicionales que seguirían en pie aunque el confundido no existiera: las celdas
-son de varias categorías y no de los 72 prompts de una sola.
+**Lo que sí queda medido es económico**: con presupuesto igualado, fragmentar
+cuesta en las cinco familias (medias +6.2 % a +22.1 %, medianas +4.3 % a
++29.4 %; agregado +11.17 %, IC95 [+4.80, +17.34]) y la política por clase
+medida es **no fragmentar** (+0.0 % frente a +14.8 %). Ése es el estado real:
+**no cumplido, no incumplido, sin medir — con un costo medido en contra.**
 
 ### 2.3 Contención de fallos (M3): el incidente 42/60 no se reproduce
 

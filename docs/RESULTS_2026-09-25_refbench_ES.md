@@ -52,7 +52,7 @@ falla y el resto no llega a correr.
 | T0RR2 | P2 | ✘ | AUC **0.57** con sondas de capacidad |
 | T0LR | §5.7 | ✔ | `L*` varía por familia; ganancia media sobre `L` común: **+0.360** |
 | T13 | — | ◌ negado | el impuesto truncado cambia de signo con el presupuesto de lectura T (**−15.66 %** en T=40, **+7.69 %** en T=120): el acoplamiento con la longitud es estructural |
-| T13b | SWIP-0001 | ✔ | impuesto por posición: las claves salen **−0.279** de la propia longitud antes, IC 95 % **[−0.361, −0.178]**, confundido ρ = **+0.075** — criterio re-expresado y **cumplido** |
+| T13b | SWIP-0001 | ◌ negado | impuesto por posición corregido por omisiones: desplazamiento **+0.0036**, IC 95 % **[−0.0948, +0.0994]**, mitades del corpus discordantes — el criterio sigue **sin medir** |
 
 ## 3. Lo que cada veredicto permite afirmar
 
@@ -96,20 +96,20 @@ siempre, sin necesitar la predicción que no existe.
 
 ## 4. Lo que no se puede afirmar, y por qué
 
-El criterio de abandono **estaba sin medir y ahora es juzgable** — con un
-instrumento nuevo, no con otra configuración de presupuesto. El impuesto
-agregado está confundido con la longitud de salida **en las dos direcciones**
-(presupuesto completo: el fragmentado escribe 1.39× el monolítico y puntúa
-más; presupuesto repartido: 0.43× y puntúa menos; agregado **+11.17 %**, IC
-95 % **[+4.80, +17.34]**, T09R — negado y no citado como criterio). Truncar
-ambos brazos a un presupuesto de lectura fijo **T** tampoco funciona: el
-impuesto cambia de signo con T (T13). Lo que resuelve el acoplamiento **por
-construcción** es la **posición de primera mención** (T13b, SWIP-0001): la
-primera aparición de cada clave, normalizada por la longitud del propio brazo.
-Sobre las celdas con presupuesto igualado, el fragmentado saca las claves
-**0.279 de su propia longitud antes**, IC 95 % **[0.178, 0.361]**, con el
-confundido desaparecido (ρ = **+0.075**). El criterio, re-expresado como
-«fragmentar no debe enterrar las claves», se **cumple**.
+El criterio de abandono **no se ha medido** — y la medición más limpia es un
+costo. El impuesto agregado está confundido con la longitud de salida **en las
+dos direcciones** (presupuesto completo: el fragmentado escribe 1.39× el
+monolítico y puntúa más; presupuesto repartido: 0.43× y puntúa menos; T09R se
+niega). Truncar ambos brazos a un presupuesto de lectura fijo **T** tampoco
+funciona: el impuesto cambia de signo con T (T13). La posición de primera
+mención (T13b, SWIP-0001), corregida para que una clave omitida se impute al
+final del texto, también se niega: desplazamiento **+0.0036** de la propia
+longitud, IC 95 % **[−0.0948, +0.0994]** — un nulo, ~5× más ancho que el
+umbral — y las mitades del corpus disienten en signo (la imputación del peor caso también re-acopla la métrica a la longitud: ρ = **−0.452**; de 423 claves, el fragmentado omite **217** frente a **82** del monolítico). Lo que sobrevive es
+económico: con presupuesto igualado, fragmentar **cuesta en las cinco
+familias** (medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**;
+agregado **+11.17 %**, IC 95 % **[+4.80, +17.34]**), y la política por clase
+medida es **no fragmentar** (**+0.0 %** frente a **+14.8 %**).
 
 La causa está localizada en el código y corregida. La corrida que resuelve el
 asunto es una sola orden:
@@ -133,13 +133,14 @@ despejan (19.4–30.6 %), así que la campaña de la curva-L debe correrse con
 llama3.2 o reportarse por familia. La corrida auditable es
 `data/admission.json`.
 
-La campaña ya corrió (llama3.2, cada celda declarada,
-`data/lcurve_v2_runs.jsonl`): la curva es **monótona decreciente** — L=5:
-**77.8 %**, L=10: **69.4 %**, L=20: **58.3 %**, L=40: **44.4 %** (36 preguntas
-globales por L). El mecanismo es la fidelidad de extracción por fragmento, y
-el brazo fragmentado con L pequeño gana al monolítico (**77.8 %** vs
-**61.1 %**) — la primera victoria sin confundido de longitud en el eje de
-solvabilidad.
+La primera corrida fragmentada sobre las celdas declaradas **se retiró**:
+cada fragmento copiaba sus filas verbatim, la concatenación reconstruía el
+documento original y las 48 celdas coincidieron con su contraparte monolítica
+una a una (48/48) — no medía nada de la fragmentación, y L quedaba confundido
+con el tamaño del documento. La corrida rediseñada (cada fragmento *responde*
+los valores por fila y su propia suma parcial; el ensamblador combina de forma
+determinista, `run_lcurve_v2.py`) es la que mide la curva; sus números se
+reportan aquí cuando la campaña termine.
 
 ## 5. Documentos relacionados
 

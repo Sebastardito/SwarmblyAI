@@ -2572,7 +2572,7 @@ agente con self-consistency**, no sólo contra el monolítico ingenuo. Una
 arquitectura multi-agente que sólo bate al monolítico de una pasada está
 comparándose contra el rival equivocado.
 
-**El criterio pasó de «sin medir» a «juzgable», con un instrumento nuevo (SWIP-0001).** El impuesto agregado está confundido con la longitud de salida **en las dos direcciones** —con el presupuesto completo el brazo fragmentado escribía **1.39×** el monolítico y puntuaba más; con el presupuesto repartido escribe **0.43×** y puntúa menos— y truncar ambos brazos a un presupuesto fijo **T** no ayuda: el impuesto cambia de signo con T (de **−15.66 %** en T=40 a **+7.69 %** en T=120, T13). Los dos brazos colocan los hechos a profundidades distintas, así que ningún presupuesto de lectura decide. El instrumento que lo resuelve por construcción es la **posición de primera mención** (T13b): para cada clave, dónde aparece por primera vez, normalizado por la longitud del propio brazo. Sobre las celdas con presupuesto igualado, el fragmentado saca las claves **0.279 de su propia longitud antes**, IC 95 % **[0.178, 0.361]**, con el confundido de longitud desaparecido (ρ = **+0.075**). El criterio, re-expresado como «fragmentar no debe enterrar las claves», se **cumple** — el +11.17 % agregado de T09R sigue negado y no se cita como criterio.
+**El criterio no se ha medido — y la medición más limpia es un costo.** El impuesto agregado está confundido con la longitud de salida **en las dos direcciones** (presupuesto completo: el fragmentado escribe **1.39×** el monolítico y puntúa más; presupuesto repartido: **0.43×** y puntúa menos), y truncar a un presupuesto de lectura fijo **T** cambia el signo del impuesto con T (de **−15.66 %** en T=40 a **+7.69 %** en T=120, T13). El instrumento por posición de primera mención (T13b, SWIP-0001), corregido para que una clave omitida se impute al final del texto (peor caso), tampoco decide: desplazamiento **+0.0036** de la propia longitud, IC 95 % **[−0.0948, +0.0994]** — un nulo con un intervalo ~5× más ancho que el umbral — y las dos mitades del corpus disienten en signo, así que el instrumento **se niega** (la imputación del peor caso además re-acopla la métrica a la longitud: ρ = **−0.452**, sobre 423 claves de las que el fragmentado omite **217** frente a **82** del monolítico). La medición que sí sobrevive es económica: con presupuesto igualado, fragmentar **cuesta en las cinco familias** (medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**; agregado **+11.17 %**, IC 95 % **[+4.80, +17.34]**, T09R), y la política por clase medida es **no fragmentar** (**+0.0 %** frente a **+14.8 %** fragmentando siempre). Es el resultado que esta sección reporta primero, porque es el que los datos sostienen.
 
 ### 15.3 Lo que se midió, y lo que se retiró
 
@@ -2637,21 +2637,21 @@ pequeño. Hasta tenerla, la curva L no es medible, y la mitad final del corpus
 —que sigue sin usarse— **no debe correrse**, porque gastar la partición reservada
 contra un instrumento que no discrimina destruye la única reserva que queda.
 
-**Actualización de §15.4 (corpus reconstruido, admitido, curva medida).** El
-corpus se reconstruyó con preguntas globales de aridad ≤ 3 —
-`prompts/lcurve_v2.json`, generado por `make_corpus.py` — y pasó su compuerta
-de admisión: el brazo monolítico despeja el piso de 0.50 con llama3.2:3b al
-**61.1 %** (azar **0.182**; las otras cuatro familias no lo despejan). Sobre la
-mitad dev, el brazo fragmentado corrió en cada celda declarada (N, L) con
-llama3.2, y la curva L ya es medible. Es **monótona decreciente** — L=5:
-**77.8 %**, L=10: **69.4 %**, L=20: **58.3 %**, L=40: **44.4 %** (36 preguntas
-globales por L). El mecanismo es la fidelidad de extracción por fragmento: un
-nodo débil reporta cinco filas verbatim pero pierde filas cuando se le piden
-cuarenta. Dos consecuencias: la predicción de §5 de que la calidad sube con L
-hacia un piso queda **falsada en este régimen** (ocurre lo contrario), y el
-brazo fragmentado con L pequeño **gana al monolítico** (77.8 % vs 61.1 %) —
-la primera victoria limpia, sin confundido de longitud, en el eje de
-solvabilidad.
+**Actualización de §15.4 (corpus reconstruido y admitido; la primera corrida
+de la curva fue inválida y se retiró).** El corpus se reconstruyó con
+preguntas globales de aridad ≤ 3 — `prompts/lcurve_v2.json` — y pasó su
+compuerta de admisión: el brazo monolítico despeja el piso de 0.50 con
+llama3.2:3b al **61.1 %** (azar **0.182**; las otras cuatro familias no lo
+despejan). La primera corrida fragmentada sobre las celdas declaradas (N, L)
+**se retiró**: cada fragmento copiaba sus filas verbatim, la concatenación
+reconstruía el documento original y el modelo respondía el mismo texto que el
+monolítico — las 48 celdas coincidieron con su contraparte monolítica una a
+una (48/48), así que la corrida no medía nada de la fragmentación, y L quedaba
+confundido con el tamaño del documento. La corrida rediseñada (cada fragmento
+*responde* los valores por fila y su propia suma parcial; el ensamblador
+combina de forma determinista, `run_lcurve_v2.py`) es la que mide la curva;
+sus números se reportan en el documento de resultados cuando la campaña
+termine.
 
 ### 15.5 Composición: el tamaño de muestra que hace falta
 
@@ -2800,7 +2800,7 @@ recomputa ejecutándolos.
 | T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.57** y **0.57** |
 | T0LR | ✔ | `L*` varía por familia — §5.7 medido por primera vez |
 | T13 | ◌ | el impuesto truncado cambia de signo con el presupuesto de lectura T — el acoplamiento con la longitud es estructural y el instrumento de truncado se niega |
-| T13b | ✔ | el impuesto por posición lo resuelve: el fragmentado saca las claves **−0.279** de su propia longitud antes, IC 95 % **[−0.361, −0.178]**, confundido ρ = **+0.075** — el criterio vuelve a ser juzgable y se cumple |
+| T13b | ◌ | impuesto por posición, corregido por omisiones (SWIP-0001): desplazamiento **+0.0036** [**−0.0948**, **+0.0994**], mitades discordantes — el criterio **no se ha medido** |
 
 **M4 queda falsado, y el experimento que lo mata es el que la estrategia declaró
 decisivo.** T07R corta el **mismo prompt** dos veces con el **mismo `L`**: una

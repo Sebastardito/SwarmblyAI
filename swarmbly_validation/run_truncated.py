@@ -162,12 +162,6 @@ def run(data=None, recs=None, quiet=False):
             "Análisis offline sobre los textos guardados: 0 corridas nuevas."])
 
 
-if __name__ == "__main__":
-    print(report.render_console([run()]))
-
-
-# --- T13b: impuesto por POSICIÓN de primera mención (invariante a longitud) --
-
 def _first_mention_frac(text, item):
     """Posición (fracción de palabras) de la primera mención de `item`, o None."""
     import re as _re
@@ -183,17 +177,21 @@ def _first_mention_frac(text, item):
 
 
 def run_position(data=None, recs=None, quiet=False):
-    """Impuesto por posición: ¿el fragmentado menciona las claves ANTES o
-    DESPUÉS que el monolítico, en fracción de su propia longitud?
+    """Impuesto por posición de primera mención — SWIP-0001, versión completa.
 
-    Invariante a la longitud POR CONSTRUCCIÓN: la posición se normaliza por el
-    largo de cada brazo. Sin parámetro libre T."""
+    Reglas que la SWIP declara y que aquí se cumplen TODAS:
+      - una clave ausente en un brazo se imputa al FINAL del texto (peor caso,
+        1.0), no desaparece: omitir cuesta;
+      - contadores de ausencia missing_frag / missing_mono por brazo;
+      - el criterio se juzga contra el límite SUPERIOR del IC95 (+2 %);
+      - rechazo si <20 celdas, <50 claves, |rho|>=0.20 o signo distinto entre
+        las dos mitades del corpus (split por tarea par/impar)."""
     if recs is None:
         data = data or rr.ap_default_data()
         recs = rr.prefer_matched(rr.load(data))
     pairs = cells_operative(recs)
-    deltas, ratios, clusters = [], [], []
-    n_items = 0
+    cells, ratios, clusters = [], [], []
+    n_items = miss_frag = miss_mono = 0
     for r, m in pairs:
         task = ref_corpus.ALL_TASKS.get(r["task"])
         if task is None:
@@ -203,55 +201,75 @@ def run_position(data=None, recs=None, quiet=False):
         if not items:
             continue
         mt, ft = m.get("text"), r.get("assembled_text")
-        d = []
+        ds = []
         for it in items:
             pm = _first_mention_frac(mt, it)
             pf = _first_mention_frac(ft, it)
-            if pm is None or pf is None:
-                continue
-            d.append(pf - pm)   # positivo = fragmentado lo menciona más tarde
-        if not d:
-            continue
-        deltas.append(sum(d) / len(d))
-        n_items += len(d)
-        ratios.append(_words(ft) / max(1, _words(mt)))
-        clusters.append(r["task"])
-    if len(deltas) < 20:
+            if pm is None and pf is None:
+                continue   # ausente en ambos brazos: nada que desplazar
+            n_items += 1
+            if pm is None:
+                miss_mono += 1
+            if pf is None:
+                miss_frag += 1
+            ds.append((1.0 if pf is None else pf)
+                      - (1.0 if pm is None else pm))
+        if ds:
+            cells.append((r["task"], sum(ds) / len(ds)))
+            ratios.append(_words(ft) / max(1, _words(mt)))
+            clusters.append(r["task"])
+    if len(cells) < 20 or n_items < 50:
         return Result(id="T13b", name="Impuesto por posición de primera mención",
                       model="—", verdict=REFUSE,
-                      summary=f"{len(deltas)} celdas < 20: negarse",
-                      killed_if="—", refusal=f"{len(deltas)} celdas < 20",
+                      summary=f"{len(cells)} celdas / {n_items} claves: "
+                              f"mínimos de la SWIP (20/50) no alcanzados",
+                      killed_if="—",
+                      refusal=f"celdas={len(cells)}, claves={n_items}",
                       details=[])
-    mean, lo, hi, _se = clustered_bootstrap(deltas, clusters)
-    rho = spearman(ratios, deltas)
+    mean, lo, hi, _se = clustered_bootstrap([c[1] for c in cells],
+                                            [c[0] for c in cells])
+    rho = spearman(ratios, [c[1] for c in cells])
+    tasks = sorted({c[0] for c in cells})
+    even = [c[1] for c in cells if tasks.index(c[0]) % 2 == 0]
+    odd = [c[1] for c in cells if tasks.index(c[0]) % 2 == 1]
+    me = sum(even) / len(even)
+    mo = sum(odd) / len(odd)
+    same_sign = me * mo > 0
     confound_gone = abs(rho) < NEGLIGIBLE
-    worse = mean > 0.02   # umbral declarado: +2% de longitud desplazada = peor
+    met = hi <= 0.02
     details = [
-        f"{len(deltas)} celdas, {n_items} claves con primera mención medible.",
-        f"Desplazamiento medio de primera mención (fragmentado − monolítico): "
-        f"**{mean:+.4f}** de la longitud, IC95 [{lo:+.4f}, {hi:+.4f}].",
-        f"Confundido de longitud: ρ(posición, razón de longitud) = {rho:+.3f} "
-        f"— {'resuelto por construcción' if confound_gone else 'persiste'}.",
-        f"Veredicto del criterio restablecido (desplazar las claves > +2% de "
-        f"longitud = fragmentar perjudica): "
-        f"{'PERJUDICA' if worse else 'NO perjudica'}.",
+        f"{len(cells)} celdas, {n_items} claves; AUSENCIAS imputadas al final "
+        f"(peor caso): frag omite **{miss_frag}**, mono omite **{miss_mono}**.",
+        f"Desplazamiento medio (fragmentado − monolítico): **{mean:+.4f}** de "
+        f"la longitud, IC95 [{lo:+.4f}, {hi:+.4f}].",
+        f"Mitades del corpus (tarea par/impar): {me:+.4f} / {mo:+.4f} — "
+        f"{'mismo signo' if same_sign else 'SIGNOS OPUESTOS'}.",
+        f"Confundido: ρ(posición, razón de longitud) = {rho:+.3f} "
+        f"({'resuelto' if confound_gone else 'persiste'}).",
+        f"Criterio (límite superior ≤ +2 %): "
+        f"{'CUMPLIDO' if met else 'NO cumple'}; la mitad de la anchura del IC "
+        f"({(hi-lo)/2:+.3f}) es {(hi-lo)/2/0.02:.0f}x el umbral.",
     ]
-    verdict = PASS if (confound_gone and not worse) else \
-        (FAIL if (confound_gone and worse) else REFUSE)
+    if not confound_gone or not same_sign:
+        verdict = REFUSE
+    else:
+        verdict = PASS if met else FAIL
     return Result(
         id="T13b", name="Impuesto por posición de primera mención", model="—",
         verdict=verdict,
-        summary=f"desplazamiento de claves {mean:+.3f} [ {lo:+.3f}, {hi:+.3f} ]; "
-                f"confundido {'resuelto' if confound_gone else 'persistente'}; "
-                f"fragmentar {'PERJUDICA' if worse else 'no perjudica'}",
-        killed_if="el fragmentado entierra las claves (desplazamiento > +2%)",
-        refusal="confundido persistente",
+        summary=f"desplazamiento {mean:+.4f} [ {lo:+.4f}, {hi:+.4f} ]; "
+                f"mitades {'concordantes' if same_sign else 'DISCORDANTES'}; "
+                f"criterio {'CUMPLIDO' if met else 'no cumple'}",
+        killed_if="el fragmentado desplaza las claves más de +2 % de longitud",
+        refusal="signo discordante entre mitades o confundido persistente",
         details=details,
         notes=[
             "La posición se mide en fracción de la longitud del propio brazo: "
             "escribir más no ayuda ni perjudica por construcción.",
-            "Esto mide DÓNDE pone el texto las claves, no cuánto escribió — el "
-            "reemplazo natural del impuesto agregado para el criterio."])
+            "Lo omitido NO desaparece: se imputa al final del texto (peor "
+            "caso), así que omitir una clave cuesta exactamente su posición.",
+            "El criterio se juzga contra el límite superior del IC95, como "
+            "exige SWIP-0001."])
 
 
 if __name__ == "__main__":
