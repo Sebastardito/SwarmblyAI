@@ -104,6 +104,20 @@ models/
 .huggingface/
 hf_cache/
 
+# Salidas generadas por el arnés de validación / harness-generated outputs
+# ---------------------------------------------------------------------------
+# `swarmbly_validation/` escribe su reporte y su JSON cada vez que corre. Son
+# derivados de codigo versionado mas `swarmbly_ref/data/benchmark.jsonl`, que si
+# esta versionado, asi que cualquiera los regenera con una orden. El corpus
+# JSONL en cambio SI se versiona: no es reproducible (las salidas de un modelo
+# no son deterministas) y es la evidencia de las afirmaciones de la seccion 15.9
+# del whitepaper. Un resultado no reproducible que sostiene una afirmacion
+# publicada es una fuente, no una salida.
+swarmbly_validation/REPORT*.md
+swarmbly_validation/results*.json
+swarmbly_validation/FUNDING_CASE.md
+prompts/lcurve_v2.json
+
 # Local node state
 *.sqlite
 *.sqlite3

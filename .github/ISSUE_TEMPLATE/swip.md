@@ -24,7 +24,7 @@ A SWIP IS required if the change:
 
 Process, in full: CONTRIBUTING.md Section 6.
 This issue is STEP 1 (the discussion). If it gets traction, you then write
-gips/SWIP-<this issue number>-short-title.md and open a PR containing only that
+swips/SWIP-<this issue number>-short-title.md and open a PR containing only that
 file. Implementation goes in a separate PR.
 
 Review window: 14 days minimum for anything touching wire format, security, or

@@ -4,10 +4,6 @@ Swarmbly AI
 Copyright (C) 2026 Sebastián A. Espinoza-Ulloa (Independent Researcher)
 
 Contact: sebas_saeu@hotmail.com
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-         PLACEHOLDER — the author must replace this with a real, working
-         contact address before publication. Do not publish with the
-         placeholder in place.
 
 This product includes software and documentation developed as part of the
 Swarmbly project: a decentralized AI inference protocol that fragments the
@@ -17,9 +13,12 @@ running complete small language models (SLMs, 1–8B parameters), and
 reassembles the result locally with a client-side orchestrator SLM.
 
 Published components at the time of this notice:
-  - Whitepaper                 v1.0
-  - Protocol specification     v0.2
+  - Whitepaper                 v1.4 (published; superseded by v2.0)
+  - Whitepaper                 v2.0 (current)
+  - Protocol specification     v0.2 (revision 2)
   - Reference implementation   V0
+  - Reference bench (Ollama)   swarmbly_ref
+  - Validation harness         swarmbly_validation
 
 --------------------------------------------------------------------------
 LICENSE SUMMARY

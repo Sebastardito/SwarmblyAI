@@ -1,6 +1,8 @@
 ---
-status: current
+status: superseded
 lang: en
+superseded_by: WHITEPAPER_V2_EN.md
+reason: version 2.0 absorbs it whole and extends it: it derives the fragmentation fundamentals, adds the models M1–M5, and reports the 341-run campaign that measures them. Both withdrawals in this version still stand in the successor.
 ---
 # Semantic Fragmentation and Stochastic Assembly: A Protocol for Decentralized Language-Model Inference over Untrusted Volunteer Nodes
 

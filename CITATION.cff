@@ -144,7 +144,7 @@ references:
 preferred-citation:
   type: article
   title: >-
-    Swarmbly: Decentralized AI Inference by Fragmenting the Problem, Not the
+    Swarmbly AI: Decentralized AI Inference by Fragmenting the Problem, Not the
     Model
   abstract: >-
     Whitepaper v1.4 specifying the Swarmbly protocol: semantic decomposition of
@@ -159,10 +159,11 @@ preferred-citation:
     inference cannot produce. Limitations and negative results are stated in
     full.
   authors:
-    - given-names: "Sebastián"
-      family-names: "Espinoza"
+    - given-names: "Sebastián A."
+      family-names: "Espinoza-Ulloa"
       affiliation: "Independent Researcher"
       email: "sebas_saeu@hotmail.com"
+      orcid: "https://orcid.org/0000-0003-1497-356X"
   year: 2026
   month: 8
   # Paper DOI: the Zenodo preprint record, which carries the whitepaper's full

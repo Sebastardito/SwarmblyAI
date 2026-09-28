@@ -27,7 +27,7 @@ learn whether you may quote it**.
 
 ---
 
-## Vigente · Current — 26
+## Vigente · Current — 31
 
 Se puede citar. Es lo que el proyecto sostiene hoy.
 
@@ -42,6 +42,7 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 | [`INCIDENT_2026-09-04_chain_misplan.md`](INCIDENT_2026-09-04_chain_misplan.md) | [`INCIDENT_2026-09-04_chain_misplan_ES.md`](INCIDENT_2026-09-04_chain_misplan_ES.md) | — |
 | [`ONEPAGER_EN.md`](ONEPAGER_EN.md) | [`ONEPAGER_ES.md`](ONEPAGER_ES.md) | — |
 | [`POSTMORTEM_2026-09-05_four_tiers.md`](POSTMORTEM_2026-09-05_four_tiers.md) | [`POSTMORTEM_2026-09-05_four_tiers_ES.md`](POSTMORTEM_2026-09-05_four_tiers_ES.md) | — |
+| [`PREREGISTRATION_2026-09-25_interaction_EN.md`](PREREGISTRATION_2026-09-25_interaction_EN.md) | [`PREREGISTRATION_2026-09-25_interaction_ES.md`](PREREGISTRATION_2026-09-25_interaction_ES.md) | — |
 | [`PREREGISTRATION_L_curve.md`](PREREGISTRATION_L_curve.md) | [`PREREGISTRATION_L_curve_EN.md`](PREREGISTRATION_L_curve_EN.md) | Escrita antes de generar el corpus y antes de escribir el runner. La medición todavía no existe. |
 | [`PREREGISTRATION_comp_final_once.md`](PREREGISTRATION_comp_final_once.md) | [`PREREGISTRATION_comp_final_once_EN.md`](PREREGISTRATION_comp_final_once_EN.md) | — |
 | [`PREREGISTRATION_composition.md`](PREREGISTRATION_composition.md) | [`PREREGISTRATION_composition_ES.md`](PREREGISTRATION_composition_ES.md) | — |
@@ -55,13 +56,17 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 | [`RESULTS_2026-09-05_term_once.md`](RESULTS_2026-09-05_term_once.md) | [`RESULTS_2026-09-05_term_once_EN.md`](RESULTS_2026-09-05_term_once_EN.md) | — |
 | [`RESULTS_2026-09-05_three_tiers.md`](RESULTS_2026-09-05_three_tiers.md) | [`RESULTS_2026-09-05_three_tiers_ES.md`](RESULTS_2026-09-05_three_tiers_ES.md) | — |
 | [`RESULTS_2026-09-22_lcurve_dev.md`](RESULTS_2026-09-22_lcurve_dev.md) | [`RESULTS_2026-09-22_lcurve_dev_EN.md`](RESULTS_2026-09-22_lcurve_dev_EN.md) | La corrida no habla sobre L. Se publica porque el defecto que encontró es de método y no de resultado. |
+| [`RESULTS_2026-09-25_interaction_EN.md`](RESULTS_2026-09-25_interaction_EN.md) | [`RESULTS_2026-09-25_interaction_ES.md`](RESULTS_2026-09-25_interaction_ES.md) | — |
+| [`RESULTS_2026-09-25_refbench_EN.md`](RESULTS_2026-09-25_refbench_EN.md) | [`RESULTS_2026-09-25_refbench_ES.md`](RESULTS_2026-09-25_refbench_ES.md) | — |
 | [`RESULTS_TABLES_DEV2.md`](RESULTS_TABLES_DEV2.md) | [`RESULTS_TABLES_DEV2_ES.md`](RESULTS_TABLES_DEV2_ES.md) | — |
 | [`RESULTS_TABLES_FINAL_CORRECTED.md`](RESULTS_TABLES_FINAL_CORRECTED.md) | [`RESULTS_TABLES_FINAL_CORRECTED_ES.md`](RESULTS_TABLES_FINAL_CORRECTED_ES.md) | — |
 | [`REVISION_2026-08-12.md`](REVISION_2026-08-12.md) | [`REVISION_2026-08-12_EN.md`](REVISION_2026-08-12_EN.md) | — |
 | [`REVISION_2026-09-05_que_hemos_medido.md`](REVISION_2026-09-05_que_hemos_medido.md) | [`REVISION_2026-09-05_que_hemos_medido_EN.md`](REVISION_2026-09-05_que_hemos_medido_EN.md) | — |
 | [`RUNBOOK.md`](RUNBOOK.md) | [`RUNBOOK_ES.md`](RUNBOOK_ES.md) | — |
 | [`SPEC_EN.md`](SPEC_EN.md) | [`SPEC_ES.md`](SPEC_ES.md) | — |
-| [`WHITEPAPER_EN.md`](WHITEPAPER_EN.md) | [`WHITEPAPER_ES.md`](WHITEPAPER_ES.md) | — |
+| [`VALIDATION_STRATEGY_V2_EN.md`](VALIDATION_STRATEGY_V2_EN.md) | [`VALIDATION_STRATEGY_V2_ES.md`](VALIDATION_STRATEGY_V2_ES.md) | — |
+| [`WHITEPAPER_EXT_EN.md`](WHITEPAPER_EXT_EN.md) | [`WHITEPAPER_EXT_ES.md`](WHITEPAPER_EXT_ES.md) | — |
+| [`WHITEPAPER_V2_EN.md`](WHITEPAPER_V2_EN.md) | [`WHITEPAPER_V2_ES.md`](WHITEPAPER_V2_ES.md) | — |
 
 
 ---
@@ -80,7 +85,7 @@ Correcto tal como fue escrito, en su fecha. No es una instrucción viva.
 
 ---
 
-## Superado · Superseded — 3
+## Superado · Superseded — 4
 
 Hay una medición posterior de lo mismo. Citar la sucesora.
 
@@ -92,6 +97,7 @@ Hay una medición posterior de lo mismo. Citar la sucesora.
 | `RESULTS_COMPOSITION_FINAL.md` | [`RESULTS_COMPOSITION_FINAL_ES.md`](RESULTS_COMPOSITION_FINAL_ES.md) | [`RESULTS_2026-09-05_final_dedup.md`](RESULTS_2026-09-05_final_dedup.md) | Its +22.40 was measured before term_once was enforced at the assembler. On the same split with enforcement the figure is +7.64, and on a corpus nobody had seen it is -0.35. |
 | `RESULTS_TABLES_FINAL.md` | [`RESULTS_TABLES_FINAL_ES.md`](RESULTS_TABLES_FINAL_ES.md) | [`RESULTS_TABLES_FINAL_CORRECTED.md`](RESULTS_TABLES_FINAL_CORRECTED.md) | Run on a defective instrument. The verdict is unchanged -- NOT MET -- but every figure moved, and the distribution behind the figure moved a great deal more. |
 | `STATE_2026-09-04.md` | [`STATE_2026-09-04_ES.md`](STATE_2026-09-04_ES.md) | [`STATUS.md`](STATUS.md) | It was the state of the evidence on 4 September. STATUS.md is the standing index and does not go stale on a date. |
+| `WHITEPAPER_EN.md` | [`WHITEPAPER_ES.md`](WHITEPAPER_ES.md) | [`WHITEPAPER_V2_EN.md`](WHITEPAPER_V2_EN.md) | version 2.0 absorbs it whole and extends it: it derives the fragmentation fundamentals, adds the models M1–M5, and reports the 341-run campaign that measures them. Both withdrawals in this version still stand in the successor. |
 
 
 ---

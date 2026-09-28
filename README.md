@@ -11,7 +11,9 @@ Swarmbly dispatches semantic micro-tasks to volunteer nodes running complete sma
 Existing peer-to-peer inference systems split the **model**: layers or tensors live on different machines, and activations cross the public internet on **every token**. Swarmbly splits the **problem**: each fragment crosses the network **once**, and every worker runs a whole, small, independent model.
 
 - **Start here (two pages):** [`docs/ONEPAGER_EN.md`](docs/ONEPAGER_EN.md) · [`docs/ONEPAGER_ES.md`](docs/ONEPAGER_ES.md)
-- **Whitepaper:** [`docs/WHITEPAPER_EN.md`](docs/WHITEPAPER_EN.md) · [`docs/WHITEPAPER_ES.md`](docs/WHITEPAPER_ES.md)
+- **Whitepaper (v2, current):** [`docs/WHITEPAPER_V2_EN.md`](docs/WHITEPAPER_V2_EN.md) · [`docs/WHITEPAPER_V2_ES.md`](docs/WHITEPAPER_V2_ES.md) — v1.4 is kept as [`docs/WHITEPAPER_EN.md`](docs/WHITEPAPER_EN.md) · [`docs/WHITEPAPER_ES.md`](docs/WHITEPAPER_ES.md), superseded
+- **Fragmentation fundamentals (focused extension):** [`docs/WHITEPAPER_EXT_EN.md`](docs/WHITEPAPER_EXT_EN.md) · [`docs/WHITEPAPER_EXT_ES.md`](docs/WHITEPAPER_EXT_ES.md)
+- **Validation strategy and its execution:** [`docs/VALIDATION_STRATEGY_V2_EN.md`](docs/VALIDATION_STRATEGY_V2_EN.md) · [`docs/VALIDATION_STRATEGY_V2_ES.md`](docs/VALIDATION_STRATEGY_V2_ES.md)
 - **Protocol specification:** [`docs/SPEC_EN.md`](docs/SPEC_EN.md) · [`docs/SPEC_ES.md`](docs/SPEC_ES.md)
 - **Critical analysis and red team:** [`docs/`](docs/README.md) — the project publishes its own audit alongside its claims.
 - **Annotated bibliography:** [`docs/REFERENCES.md`](docs/REFERENCES.md)
@@ -67,6 +69,29 @@ arithmetically cannot bring a 9.5-point interval under a 5-point threshold
 whatever the true effect is; widening the corpus is a prerequisite for
 re-testing, not a way of getting a better answer. Full result:
 [`docs/RESULTS_TABLES_FINAL_CORRECTED.md`](docs/RESULTS_TABLES_FINAL_CORRECTED.md).
+
+### The reference campaign: five models, 341 runs
+
+Whitepaper v2 adds five falsifiable models, M1–M5, and a campaign that measures
+them: a separate reference implementation run against five local SLM families
+over 22 tasks. The record is committed
+(`swarmbly_ref/data/benchmark.jsonl`, 341 runs, digest anchored in the harness),
+so the table below is recomputed rather than quoted:
+
+| | Verdict | What decided it |
+|---|---|---|
+| **M4** — δ as a second axis | **falsified** | at constant ρ, cutting to maximise δ raises δ in 32/32 pairs and worsens the tax in only 19/32 |
+| **M2** — cardinality in the representation | **survives, corrected** | nodes obey `unique_here` 6/35 times; with mechanical enforcement, 35/35, with zero omissions |
+| **M3** — per-level triage gate | **survives** | contaminated packets do not reach assembly |
+| **M1** — learned-substitution aligner | **no instrument** | the corpus produced no genuine-disagreement regime |
+| **Per-cell routability** | **refuted** | AUC 0.38 with δ and reputation; node *class* separates, individual cells do not |
+| **Abandonment criterion** | **not measured** | the aggregate is confounded with the output budget; the harness refuses to rule |
+
+That last row is the important one. The fragmented arm was given more output
+budget than the monolithic one, and within a task writing more scores more, so
+the apparent advantage is not interpretable. The cause is located, the fix is
+committed, and the run that settles it is one command. Full record:
+[`docs/RESULTS_2026-09-25_refbench_EN.md`](docs/RESULTS_2026-09-25_refbench_EN.md).
 
 **An earlier version of this section reported a coherence tax falling 24.1 % →
 13.7 % across ρ and said the prediction held. That result is withdrawn.** Two
@@ -248,13 +273,27 @@ A trusted swarm relocates trust to whoever holds the whitelist; it does not remo
 ## Repository layout
 
 ```
-swarmbly_v0/        V0 harness: privacy (tier routing), router, planner, packing,
-                   assembler (macro), consensus (micro), metrics, experiment, report
-tests/             pytest suite
-prompts/           labelled prompt set (category, expected_decomposable) — doubles as router eval
-docs/              whitepaper, protocol spec, analysis, references
-.github/           SWIP proposal template, PR template
+swarmbly_v0/         V0 harness: privacy (tier routing), router, planner, packing,
+                    assembler (macro), consensus (micro), metrics, experiment, report
+swarmbly_ref/        reference implementation (protocol v0.3) + the 341-run corpus
+swarmbly_validation/ falsification harness for M1–M5, zero dependencies
+tests/               pytest suite
+prompts/             labelled prompt set (category, expected_decomposable) — doubles as router eval
+docs/                whitepaper, protocol spec, analysis, references
+.github/             SWIP proposal template, PR template
 ```
+
+The last two are what makes the claims in whitepaper v2 checkable rather than
+assertable:
+
+```bash
+python3 swarmbly_validation/run_all.py --all
+```
+
+That runs the thirteen empirical tests against `swarmbly_ref/data/benchmark.jsonl`
+and exits non-zero if any fails. See
+[`swarmbly_validation/README_EN.md`](swarmbly_validation/README_EN.md) for what
+reproduces from a clean clone and what refuses.
 
 ## Prior art and patents
 

@@ -31,8 +31,10 @@ leerlo.
 > `tests/test_docs_boundary.py` fails when a tracked file cites a document that
 > is not in the tree.*
 
-**Versions covered / Versiones cubiertas:** whitepaper **v1.4** · protocol
-specification **v0.2 revision 2** · reference implementation **V0**.
+**Versions covered / Versiones cubiertas:** whitepaper **v2.0** (v1.4 kept,
+superseded) · protocol specification **v0.2 revision 2** · reference
+implementation **V0** · new reference implementation **swarmbly_ref**
+(Ollama bench) · validation harness **swarmbly_validation**.
 
 ---
 
@@ -41,11 +43,11 @@ specification **v0.2 revision 2** · reference implementation **V0**.
 | Read this if… | Go to |
 |---|---|
 | You have two minutes and want the argument | `ONEPAGER_EN.md` · `ONEPAGER_ES.md` |
-| You have five minutes and want to know what Swarmbly is | `WHITEPAPER_EN.md` Section 1 (or the repository root `README.md`) |
-| You want the full argument for the design | `WHITEPAPER_EN.md` |
+| You have five minutes and want to know what Swarmbly is | `WHITEPAPER_V2_EN.md` Section 1 (or the repository root `README.md`) |
+| You want the full argument for the design | `WHITEPAPER_V2_EN.md` (v1.4 kept as `WHITEPAPER_EN.md`, superseded) |
 | You are going to implement a node or a client | `SPEC_EN.md` |
 | You want to see the numbers | the dashboard, `Swarmbly_AI_Dashboard.html` |
-| You want the reasoning, the alternatives, and the open questions | `WHITEPAPER_EN.md` Sections 5.4, 11 and 12 — where the design is argued against itself |
+| You want the reasoning, the alternatives, and the open questions | `WHITEPAPER_V2_EN.md` Sections 5–6, 11 and 16 — where the design is argued against itself |
 | You want to know where an idea came from | `REFERENCES.md` |
 | You want to contribute | `../CONTRIBUTING.md` |
 | You want to know who controls this | `../GOVERNANCE.md` |
@@ -56,19 +58,28 @@ specification **v0.2 revision 2** · reference implementation **V0**.
 
 ### Whitepaper — the argument
 
-**`WHITEPAPER_EN.md`** · **`WHITEPAPER_ES.md`** — *v1.4*
+**`WHITEPAPER_V2_EN.md`** · **`WHITEPAPER_V2_ES.md`** — *v2.0, current*
 
-The case for Swarmbly: why fragmenting the *problem* is a different and better
-bet than fragmenting the *model*, what the shotgun-assembly analogy buys, the
-architecture at a level a reader can hold in their head, the failure and threat
-model, and what has and has not been demonstrated. This is the document
-submitted to arXiv and the one to cite. Read it first.
+The case for Swarmbly, with the theory of fragmentation the earlier version
+lacked: the semantic unit and the fragment, the derived context budget, the
+five falsifiable models M1–M5 **measured against 341 real runs** (§15.9), the
+validation strategy (`VALIDATION_STRATEGY_V2`) and the fragmentation
+fundamentals extension (`WHITEPAPER_EXT`). This is the one to cite. Read it
+first.
 
-*El planteamiento de Swarmbly: por qué fragmentar el problema es una apuesta
-distinta y mejor que fragmentar el modelo, qué aporta la analogía del
-ensamblado shotgun, la arquitectura a un nivel que quepa en la cabeza, el
-modelo de fallos y de amenazas, y qué se ha demostrado y qué no. Es el
-documento que se envía a arXiv y el que hay que citar.*
+**`WHITEPAPER_EN.md`** · **`WHITEPAPER_ES.md`** — *v1.4, superseded*
+
+Kept as the published prior-art record (arXiv submission). Its measurements
+remain valid with the corrections documented in v2.
+
+*El planteamiento de Swarmbly, con la teoría de la fragmentación que a la
+versión anterior le faltaba: la unidad semántica y el fragmento, el presupuesto
+de contexto derivado, los cinco modelos falsables M1–M5 **medidos contra 341
+corridas reales** (§15.9), la estrategia de validación
+(`VALIDATION_STRATEGY_V2`) y la extensión de fundamentos (`WHITEPAPER_EXT`).
+Éste es el que hay que citar. Se conserva v1.4 como registro de prior art
+publicado (envío a arXiv), con sus mediciones válidas bajo las correcciones
+documentadas en v2.*
 
 ### Protocol specification — the contract
 

@@ -1,6 +1,8 @@
 ---
-status: current
+status: superseded
 lang: es
+superseded_by: WHITEPAPER_V2_ES.md
+reason: la versión 2.0 la absorbe entera y la extiende: deriva los fundamentos de la fragmentación, añade los modelos M1–M5 y reporta la campaña de 341 corridas que los mide. Las dos retiradas de esta versión siguen en pie en la sucesora.
 ---
 # Fragmentación semántica y ensamblaje estocástico: un protocolo de inferencia descentralizada de modelos de lenguaje sobre nodos voluntarios no confiables
 

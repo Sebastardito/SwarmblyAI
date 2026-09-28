@@ -96,7 +96,7 @@ failure 4.
 ### And then rehearsal produced a defect of its own
 
 The first seven rehearsals wrote into `results/` under the tiers' real names.
-One of them was `results/comp-dev-20260905-045427` — newer than
+One of them was `results/comp-dev-20260904-122727` — newer than
 `results/comp-dev-20260904-122727`, which is the run the declared composition
 verdict was calibrated against. Every reader in this project selects a run by
 glob and takes the last one, including the snippet in the runbook I wrote

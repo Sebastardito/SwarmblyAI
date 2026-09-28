@@ -98,7 +98,7 @@ llamador puede repetir la falla 4.
 ### Y después el ensayo produjo un defecto propio
 
 Los primeros siete ensayos escribieron dentro de `results/` bajo los nombres
-reales de los tramos. Uno de ellos fue `results/comp-dev-20260905-045427` — más
+reales de los tramos. Uno de ellos fue `results/comp-dev-20260904-122727` — más
 nuevo que `results/comp-dev-20260904-122727`, que es la corrida contra la que se
 calibró el veredicto de composición declarado. Todo lector en este proyecto
 selecciona una corrida por glob y toma la última, incluido el fragmento del
