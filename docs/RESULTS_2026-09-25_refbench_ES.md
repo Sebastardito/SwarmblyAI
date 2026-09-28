@@ -133,6 +133,14 @@ despejan (19.4–30.6 %), así que la campaña de la curva-L debe correrse con
 llama3.2 o reportarse por familia. La corrida auditable es
 `data/admission.json`.
 
+La campaña ya corrió (llama3.2, cada celda declarada,
+`data/lcurve_v2_runs.jsonl`): la curva es **monótona decreciente** — L=5:
+**77.8 %**, L=10: **69.4 %**, L=20: **58.3 %**, L=40: **44.4 %** (36 preguntas
+globales por L). El mecanismo es la fidelidad de extracción por fragmento, y
+el brazo fragmentado con L pequeño gana al monolítico (**77.8 %** vs
+**61.1 %**) — la primera victoria sin confundido de longitud en el eje de
+solvabilidad.
+
 ## 5. Documentos relacionados
 
 - `WHITEPAPER_V2_ES.md` §15.9 — el análisis razonado y sus consecuencias de diseño.

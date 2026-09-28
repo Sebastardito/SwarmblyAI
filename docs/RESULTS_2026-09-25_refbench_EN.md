@@ -131,6 +131,13 @@ monolithic arm clears the **0.50** floor with **llama3.2:3b at 61.1 %**
 do not clear it (19.4–30.6 %), so the L-curve campaign must run with llama3.2
 or be reported per family. The auditable run is `data/admission.json`.
 
+The campaign has now run (llama3.2, every declared cell, `data/lcurve_v2_runs.jsonl`):
+the curve is **monotone decreasing** — L=5: **77.8 %**, L=10: **69.4 %**,
+L=20: **58.3 %**, L=40: **44.4 %** (36 global questions per L). The mechanism
+is per-fragment extraction fidelity, and the fragmented arm at small L beats
+the monolithic baseline (**77.8 %** vs **61.1 %**) — the first
+length-confound-free win on the solvability axis.
+
 ## 5. Related documents
 
 - `WHITEPAPER_V2_EN.md` §15.9 — the reasoned analysis and its design consequences.

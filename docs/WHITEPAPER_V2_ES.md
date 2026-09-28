@@ -2637,6 +2637,22 @@ pequeño. Hasta tenerla, la curva L no es medible, y la mitad final del corpus
 —que sigue sin usarse— **no debe correrse**, porque gastar la partición reservada
 contra un instrumento que no discrimina destruye la única reserva que queda.
 
+**Actualización de §15.4 (corpus reconstruido, admitido, curva medida).** El
+corpus se reconstruyó con preguntas globales de aridad ≤ 3 —
+`prompts/lcurve_v2.json`, generado por `make_corpus.py` — y pasó su compuerta
+de admisión: el brazo monolítico despeja el piso de 0.50 con llama3.2:3b al
+**61.1 %** (azar **0.182**; las otras cuatro familias no lo despejan). Sobre la
+mitad dev, el brazo fragmentado corrió en cada celda declarada (N, L) con
+llama3.2, y la curva L ya es medible. Es **monótona decreciente** — L=5:
+**77.8 %**, L=10: **69.4 %**, L=20: **58.3 %**, L=40: **44.4 %** (36 preguntas
+globales por L). El mecanismo es la fidelidad de extracción por fragmento: un
+nodo débil reporta cinco filas verbatim pero pierde filas cuando se le piden
+cuarenta. Dos consecuencias: la predicción de §5 de que la calidad sube con L
+hacia un piso queda **falsada en este régimen** (ocurre lo contrario), y el
+brazo fragmentado con L pequeño **gana al monolítico** (77.8 % vs 61.1 %) —
+la primera victoria limpia, sin confundido de longitud, en el eje de
+solvabilidad.
+
 ### 15.5 Composición: el tamaño de muestra que hace falta
 
 La celda declarada del experimento de composición dio media **−0.35**, con
