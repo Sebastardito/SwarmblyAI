@@ -2562,8 +2562,17 @@ document, and the model answered the same text as the monolithic arm — the
 the run measured nothing about fragmentation, and L was confounded with
 document size. The redesigned run (each fragment *answers* per-row values and
 its own partial sum; the assembler combines deterministically, `run_lcurve_v2.py`)
-is the one that measures the curve; its numbers are reported in the results
-document when the campaign completes.
+is the one that measures the curve. On the same documents, with L varying
+inside each one, the fragmented global rate is **63.9 %** at L=5, **55.6 %**
+at L=10, **38.9 %** at L=20 and **25.0 %** at L=40 — against the monolithic
+**61.1 %**. Two conclusions: the quality curve is real now and **falls with
+L** (per-fragment extraction fidelity: 100 % of rows extracted at L=5,
+degrading at larger L — the mechanism the invalid run only gestured at), and
+the fragmented arm at small L reaches **parity with the monolithic, not a
+win** (63.9 % vs 61.1 %). A diagnostic of the same run is worth more than the
+curve: the fragment models never sum their own block correctly (0 correct
+partial sums in every cell), which is exactly the arithmetic the deterministic
+assembler removes from the nodes.
 
 ### 15.5 Composition: the sample size required
 

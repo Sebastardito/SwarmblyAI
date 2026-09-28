@@ -138,8 +138,14 @@ original document, and the 48 cells coincided with their monolithic
 counterpart one for one (48/48) — it measured nothing about fragmentation, and
 L was confounded with document size. The redesigned run (each fragment
 *answers* per-row values and its own partial sum; the assembler combines
-deterministically, `run_lcurve_v2.py`) is the one that measures the curve;
-its numbers are reported here when the campaign completes.
+deterministically, `run_lcurve_v2.py`) measures the curve on the same
+documents, with L varying inside each one: **63.9 %** (L=5), **55.6 %**
+(L=10), **38.9 %** (L=20), **25.0 %** (L=40) against the monolithic
+**61.1 %**. The curve falls with L (per-fragment extraction fidelity), and at
+small L the fragmented arm reaches **parity with the monolithic, not a win**.
+Diagnostic: the fragment models never sum their own block correctly (0
+correct partial sums per cell) — the arithmetic the deterministic assembler
+removes from the nodes.
 
 ## 5. Related documents
 

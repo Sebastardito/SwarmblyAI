@@ -2649,9 +2649,18 @@ monolítico — las 48 celdas coincidieron con su contraparte monolítica una a
 una (48/48), así que la corrida no medía nada de la fragmentación, y L quedaba
 confundido con el tamaño del documento. La corrida rediseñada (cada fragmento
 *responde* los valores por fila y su propia suma parcial; el ensamblador
-combina de forma determinista, `run_lcurve_v2.py`) es la que mide la curva;
-sus números se reportan en el documento de resultados cuando la campaña
-termine.
+combina de forma determinista, `run_lcurve_v2.py`) es la que mide la curva.
+Sobre los mismos documentos, con L variando dentro de cada uno, la tasa
+global del fragmentado es **63.9 %** en L=5, **55.6 %** en L=10, **38.9 %**
+en L=20 y **25.0 %** en L=40 — contra el monolítico **61.1 %**. Dos
+conclusiones: la curva de calidad es real ahora y **cae con L** (fidelidad de
+extracción por fragmento: 100 % de filas extraídas en L=5, degradándose a L
+mayores — el mecanismo que la corrida inválida apenas apuntaba), y el brazo
+fragmentado con L pequeño llega a **paridad con el monolítico, no a una
+victoria** (63.9 % vs 61.1 %). Un diagnóstico de la misma corrida vale más que
+la curva: los fragmentos nunca suman bien su propio bloque (0 sumas parciales
+correctas en cada celda), que es exactamente la aritmética que el ensamblador
+determinista le quita a los nodos.
 
 ### 15.5 Composición: el tamaño de muestra que hace falta
 

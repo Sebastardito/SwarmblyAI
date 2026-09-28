@@ -54,38 +54,57 @@ def _parse_row(line):
 
 
 def fragment_answer(model, rows, n_ctx=4096):
-    """El fragmento RESPONDE: por fila on_hand y almacén, y la suma parcial."""
+    """El fragmento RESPONDE, pregunta por pregunta: el on_hand de cada fila y
+    la SUMA de su bloque. Formato '1: <número>' sin ejemplos numéricos (v2
+    mostró que el modelo copia el ejemplo y mezcla ids si debe reproducir la
+    tabla entera)."""
+    questions = [
+        f"{i+1}) What is the on_hand of {r.split(' | ')[0]}?"
+        for i, r in enumerate(rows)
+    ]
+    questions.append(f"{len(rows)+1}) What is the SUM of the on_hand values "
+                     f"of the {len(rows)} rows listed above?")
     prompt = (
-        "Read the rows below. Answer for EACH row its on_hand value and its "
-        "warehouse, one per line, in the format 'R-001: 941 | Harbour'. "
-        "Then answer the TOTAL sum of on_hand over all rows shown, in the "
-        "format 'TOTAL: 2815'. Output nothing else.\n\n"
-        + "\n".join(rows)
+        "Read the rows below. Then answer each question with ONE number on "
+        "its own line, in the format 'N: number'. Output nothing else.\n\n"
+        + "\n".join(rows) + "\n\n"
+        + "\n".join(questions)
     )
-    out = llm.generate(model, prompt, max_tokens=700, num_ctx=n_ctx,
+    out = llm.generate(model, prompt, max_tokens=500, num_ctx=n_ctx,
                        temperature=0.0)
     return out["text"]
 
 
 def parse_fragment(text, rows):
-    """Devuelve (dict id->on_hand, dict id->warehouse, total_declarado|None)."""
-    on_hand, warehouse, total = {}, {}, None
+    """Respuestas por número de pregunta: 1..n filas, n+1 la suma."""
+    ids = [r.split(" | ")[0] for r in rows]
     truth = {}
     for line in rows:
         r = _parse_row(line)
         if r:
             truth[r["id"]] = r
+    answers = {}
+    bare = []
     for line in text.splitlines():
-        m = re.match(r"\s*R-(\d+)\s*[:=]\s*(\d+)\s*(?:\|\s*(.+?))?\s*$", line)
+        m = re.match(r"\s*(\d{1,3})\s*[:.)]\s*(\d+)\s*$", line)
         if m:
-            rid = f"R-{m.group(1)}"
-            on_hand[rid] = int(m.group(2))
-            if m.group(3):
-                warehouse[rid] = m.group(3).strip()
-        mt = re.match(r"\s*TOTAL\s*[:=]\s*(\d+)", line, re.I)
-        if mt:
-            total = int(mt.group(1))
-    return on_hand, warehouse, total, truth
+            answers[int(m.group(1))] = int(m.group(2))
+            continue
+        b = re.match(r"\s*(\d+)\s*$", line)
+        if b:
+            bare.append(int(b.group(1)))
+    on_hand = {}
+    for i, rid in enumerate(ids, start=1):
+        if i in answers:
+            on_hand[rid] = answers[i]
+        elif len(answers) == 0 and len(bare) >= len(ids):
+            # el modelo ignora el formato pedido y responde números desnudos,
+            # en orden: las primeras n son las filas, la siguiente la suma
+            on_hand[rid] = bare[i - 1]
+    total = answers.get(len(ids) + 1)
+    if total is None and len(answers) == 0 and len(bare) > len(ids):
+        total = bare[len(ids)]
+    return on_hand, total, truth
 
 
 def answer_globals(doc, on_hand, warehouse):
@@ -106,7 +125,7 @@ def answer_globals(doc, on_hand, warehouse):
             missing.append((q["id"], [r for r, v in zip(rows, vals) if v is None]))
             continue   # pérdida de extracción: la global no es computable
         if q["form"] == "pair_diff":
-            got = str(vals[0] - vals[1])
+            got = str(abs(vals[0] - vals[1]))   # "cuánto más grande" no lleva signo
         elif q["form"] == "triple_sum":
             got = str(sum(vals))
         elif q["form"] == "pair_argmax":
@@ -127,18 +146,17 @@ def answer_globals(doc, on_hand, warehouse):
 def run_cell(model, doc, N, L, quiet=False):
     rows = _rows_of(doc)
     fragments = [rows[i:i + L] for i in range(0, min(len(rows), N * L), L)][:N]
-    on_hand, warehouse, totals = {}, {}, []
+    on_hand, totals = {}, []
     for frag in fragments:
         text = fragment_answer(model, frag)
-        oh, wh, tot, truth = parse_fragment(text, frag)
+        oh, tot, truth = parse_fragment(text, frag)
         on_hand.update(oh)
-        warehouse.update(wh)
         totals.append((tot, sum(r["on_hand"] for r in truth.values())))
-    g_ok, g_n, l_ok, l_n, missing = answer_globals(doc, on_hand, warehouse)
+    g_ok, g_n, _l_ok, _l_n, missing = answer_globals(doc, on_hand, {})
     rec = {
         "doc": doc["id"], "model": model, "N": N, "L": L,
         "n_rows": doc["n_rows"], "global_ok": g_ok, "global_n": g_n,
-        "local_ok": l_ok, "local_n": l_n,
+        "local_ok": 0, "local_n": 0,
         "rows_extracted": len(on_hand),
         "rows_expected": sum(len(f) for f in fragments),
         "total_declared_correct": sum(1 for t, s in totals
@@ -173,6 +191,7 @@ def main():
     open(path, "w", encoding="utf-8").close()   # campaña nueva: piso limpio
     recs = []
     done = 0
+    print("(v3: preguntas numeradas por fila, sin ejemplos numéricos)")
     for doc in docs:
         for N, L in doc["cells"]:
             if args.max_cells and done >= args.max_cells:
