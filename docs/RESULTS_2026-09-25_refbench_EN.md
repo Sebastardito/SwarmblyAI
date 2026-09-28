@@ -46,7 +46,7 @@ never runs.
 | T06R | — | ✔ | grader **21/21** on the perfect answer; **100** of **105** monolithic runs above the floor |
 | T07R | M4 | ✘ | δ rises in **32/32** pairs at equal ρ; the tax worsens in only **15/32** |
 | T08R | — | ✘ | `L` band: factor **1.0** on `table_outturn`, **2.7** on `longform`; the predicted wide band does not appear |
-| T09R | — | ◌ refused | **+11.17 %** 95 % CI [**−31.00**, **−6.95**] over **95** cells, confounded with output length |
+| T09R | — | ◌ refused | **+11.17 %** 95 % CI [**+4.80**, **+17.34**] over **95** cells, confounded with output length |
 | T10R | M1 | ▣ blocked | no non-saturated regime in this corpus |
 | T0RR | P2 | ✘ | AUC **0.57** with δ and reputation; **0.61** with neither |
 | T0RR2 | P2 | ✘ | AUC **0.57** with capability probes |

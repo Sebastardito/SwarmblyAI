@@ -46,7 +46,7 @@ falla y el resto no llega a correr.
 | T06R | — | ✔ | calificador **21/21** sobre la respuesta perfecta; **100** de **105** monolíticos sobre el piso |
 | T07R | M4 | ✘ | δ sube en **32/32** pares a ρ igual; el impuesto empeora sólo en **15/32** |
 | T08R | — | ✘ | banda de `L`: factor **1.0** en `table_outturn`, **2.7** en `longform`; la banda ancha predicha no aparece |
-| T09R | — | ◌ rehusado | **+11.17 %** IC 95 % [**−31.00**, **−6.95**] sobre **130** celdas, confundido con la longitud de salida |
+| T09R | — | ◌ rehusado | **+11.17 %** IC 95 % [**+4.80**, **+17.34**] sobre **95** celdas, confundido con la longitud de salida |
 | T10R | M1 | ▣ bloqueado | sin régimen no saturado en este corpus |
 | T0RR | P2 | ✘ | AUC **0.57** con δ y reputación; **0.61** sin ninguno de los dos |
 | T0RR2 | P2 | ✘ | AUC **0.57** con sondas de capacidad |

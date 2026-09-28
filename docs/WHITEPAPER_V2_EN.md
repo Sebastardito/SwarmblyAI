@@ -2733,7 +2733,7 @@ prompt, so a plan of `N` fragments had `N` times the output available. Three
 independent statistics confirm this suffices to explain the advantage: the
 statistic with no denominator gives **+0.595**, the artifact floor — the same
 calculation with the tax permuted — gives only **+0.125**, and the direct test
-within each task gives a median of **+0.683**, positive in 16 of 18 tasks.
+within each task gives a median of **+0.571**, positive in 10 of 18 tasks.
 
 Stratifying by length, the aggregate comes apart where it should:
 
