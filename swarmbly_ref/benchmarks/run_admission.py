@@ -136,14 +136,14 @@ def main():
         "floor": CO.MONOLITHIC_FLOOR,
         "rate_used": pool_max,
     }
-    print("\n=== compuerta de admisión ===")
-    print(rep)
-    print(f"ADMITIDO: {'SÍ' if rep.admitted() else 'NO'} "
-          f"(tasa global máxima {pool_max:.1%}, piso {CO.MONOLITHIC_FLOOR})")
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     json.dump(report, open(args.out, "w", encoding="utf-8"),
               ensure_ascii=False, indent=2)
     print(f"reporte: {args.out}")
+    print("\n=== compuerta de admisión ===")
+    print(rep)
+    print(f"ADMITIDO: {'SÍ' if rep.admitted else 'NO'} "
+          f"(tasa global máxima {pool_max:.1%}, piso {CO.MONOLITHIC_FLOOR})")
 
 
 if __name__ == "__main__":
