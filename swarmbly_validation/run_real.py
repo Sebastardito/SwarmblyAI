@@ -1369,6 +1369,11 @@ def run_suite(data=None, embed=False, quiet=False):
                t05_real(recs), t06_real(recs), t07_real(recs), t08_real(recs),
                t09_real(recs), t10_real(recs, embed=embed),
                tR_real(recs), tR2_real(recs), tL_real(recs)]
+    # T13/T13b: el instrumento del criterio (SWIP-0001) — import perezoso
+    # para no crear un ciclo de módulos con run_truncated
+    from run_truncated import run as _t13, run_position as _t13b
+    results.append(_t13(recs=recs, quiet=True))
+    results.append(_t13b(recs=recs, quiet=True))
     return results, data
 
 

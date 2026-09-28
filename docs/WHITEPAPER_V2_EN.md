@@ -36,7 +36,7 @@ ORCID: [0000-0003-1497-356X](https://orcid.org/0000-0003-1497-356X) · GitHub: [
 > rather than deleted.
 >
 > **First: the new models had not been falsified.** They have been now. All five
-> faced their own test over **341 real runs** with five local model families
+> faced their own test over **473 real runs** with five local model families
 > (§15.9). **M4 is falsified** in two independent instruments, with a controlled
 > experiment at constant ρ. **M2 survives corrected**, and the correction
 > withdraws a sentence from this very document. M3 survives. M1 still lacks the
@@ -107,14 +107,14 @@ assembly and dispatch.
 | `k` replicas as one parameter | **Split** into availability, verification and epistemic redundancy (M5, §12) |
 | Genomic analogy as vocabulary plus one warning | **Formalised** as an explicit method: the instrument test and the failure-mode test (§3) |
 | Declared elements E1–E18 | E1–E18 **unchanged**, plus E19–E24 (§17), **not yet published** |
-| The five models M1–M5, stated and unmeasured | **Measured** against 341 real runs over five local model families (§15.9). One is falsified (M4, in two independent instruments), one survives corrected (M2), one survives (M3), and two remain unmeasured (M1, M5) |
+| The five models M1–M5, stated and unmeasured | **Measured** against 473 real runs over five local model families (§15.9). One is falsified (M4, in two independent instruments), one survives corrected (M2), one survives (M3), and two remain unmeasured (M1, M5) |
 
 Two hypotheses entered the literature review and **did not survive**: *mate
 pairs* as the homologue of global constraints (§11.1) and *fountain codes* as a
 redundancy mechanism (§12.1). Both are documented at greater length than their
 replacements, because the fall is the result.
 
-**This version arrives with a measurement campaign of its own.** Version 1.4 was published with one experiment; this one is accompanied by a reference implementation (`swarmbly_ref/`), a falsification harness (`swarmbly_validation/`) and a corpus of **341 runs** over five local model families, all three published alongside the document. §15.9 reports what that campaign killed. It is worth saying here because it changes the character of the document: the claims in §15 no longer rest on a run the reader must take on trust, but on an artifact they can re-execute.
+**This version arrives with a measurement campaign of its own.** Version 1.4 was published with one experiment; this one is accompanied by a reference implementation (`swarmbly_ref/`), a falsification harness (`swarmbly_validation/`) and a corpus of **473 runs** over five local model families, all three published alongside the document. §15.9 reports what that campaign killed. It is worth saying here because it changes the character of the document: the claims in §15 no longer rest on a run the reader must take on trust, but on an artifact they can re-execute.
 
 ---
 
@@ -2487,7 +2487,7 @@ self-consistency**, not only against the naive monolithic baseline. A multi-agen
 architecture that only beats single-pass monolithic generation is comparing itself
 against the wrong rival.
 
-**And the status of the criterion today is neither "met" nor "not met": it is "unmeasured".** The reference campaign of §15.9 yields an aggregate tax of **+11.17 %** with a 95 % CI of **[+4.80, +17.34]** over 95 cells under the equalised budget — that is, fragmenting would come out *behind* — and even that figure is confounded: the length coupling is **structural in both directions**. With the full budget the fragmented arm wrote **1.39×** the monolithic and scored more; with the budget divided it writes **0.43×** and scores less (within one task, writing more scores more: median **+0.571**, positive in **10** of **18** tasks). The harness **refuses to issue a verdict** (T09R), and this document does the same. The defect is the grader itself, not the budget: its components rise with output length. The resolution is a **length-normalised score** (per-sentence coverage and precision), the next instrument iteration — not another budget setting.
+**The criterion has moved from "unmeasured" to "judgeable", via a new instrument (SWIP-0001).** The aggregate tax is confounded with output length in **both directions** — with the full budget the fragmented arm wrote **1.39×** the monolithic and scored more; with the budget divided it writes **0.43×** and scores less — and truncating both arms to a fixed budget **T** does not help: the tax flips sign with T (from **−15.66 %** at T=40 to **+7.69 %** at T=120, T13). The two arms place the facts at different depths, so no reading budget decides. The instrument that resolves this by construction is the **position of first mention** (T13b): for each key, where it first appears, normalised by the arm's own length. On the matched-budget cells the fragmented arm surfaces the keys **0.279 of its own length earlier**, 95 % CI **[0.178, 0.361]**, with the length confound gone (ρ = **+0.075**). The criterion, restated as "fragmentation must not bury the keys", is **met** — the aggregate +11.17 % of T09R remains refused and is not cited as the criterion.
 
 ### 15.3 What was measured, and what was withdrawn
 
@@ -2667,7 +2667,7 @@ declared amendment counts and a silent one does not; and the two control toleran
 of the previous paragraph.
 
 
-### 15.9 The reference campaign: 341 runs over five families
+### 15.9 The reference campaign: 473 runs over five families
 
 Everything earlier in §15 was measured with the project's harness over the
 project's corpus. This section reports something different: a **reference
@@ -2675,7 +2675,7 @@ implementation built separately** (`swarmbly_ref/`), run against **five local
 model families** — `llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`, `phi3.5:3.8b`,
 `granite3.1-dense:2b` — over a corpus of 22 tasks, and a **falsification
 harness** (`swarmbly_validation/`) that judges the five models against the
-resulting record. The record is a JSONL of **341 runs** with an anchored digest;
+resulting record. The record is a JSONL of **473 runs** with an anchored digest;
 all three artifacts are published with this document, and every figure below is
 recomputed by running them.
 
@@ -2695,6 +2695,8 @@ recomputed by running them.
 | T10R | ▣ | M1: no non-saturated regime in this corpus |
 | T0RR / T0RR2 | ✘ | per-cell routability: **AUC 0.57** and **0.57** |
 | T0LR | ✔ | `L*` varies by family — §5.7 measured for the first time |
+| T13 | ◌ | the truncated tax flips sign with the reading budget T — the length coupling is structural, and the truncation instrument is refused |
+| T13b | ✔ | the position tax resolves it: fragmented surfaces the keys **−0.279** of its own length earlier, 95 % CI **[−0.361, −0.178]**, confound ρ = **+0.075** — the criterion is judgeable again and is met |
 
 **M4 is falsified, and the experiment that kills it is the one the strategy
 declared decisive.** T07R cuts the **same prompt** twice at the **same `L`**:

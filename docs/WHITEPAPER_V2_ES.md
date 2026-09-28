@@ -37,7 +37,7 @@ ORCID: [0000-0003-1497-356X](https://orcid.org/0000-0003-1497-356X) · GitHub: [
 > de borrado.
 >
 > **Primera: los modelos nuevos no habían sido falsados.** Ya lo han sido. Los
-> cinco se sometieron a su propia prueba sobre **341 corridas reales** con cinco
+> cinco se sometieron a su propia prueba sobre **473 corridas reales** con cinco
 > familias de modelos locales (§15.9). **M4 queda falsado** en dos instrumentos
 > independientes, con un experimento controlado a ρ constante. **M2 sobrevive
 > corregido**, y la corrección retira una frase de este mismo documento. M3
@@ -109,14 +109,14 @@ de planificación, empaquetado, ensamblaje y despacho.
 | `k` réplicas como un parámetro | **Separado** en disponibilidad, verificación y redundancia epistémica (M5, §12) |
 | Analogía genómica como vocabulario más una advertencia | **Formalizada** como método explícito: prueba del instrumento y prueba del modo de fallo (§3) |
 | Elementos declarados E1–E18 | E1–E18 **sin cambios**, más E19–E24 (§17), **aún no publicados** |
-| Los cinco modelos M1–M5, enunciados y sin medir | **Medidos** contra 341 corridas reales sobre cinco familias de modelos locales (§15.9). Uno queda falsado (M4, en dos instrumentos independientes), uno sobrevive corregido (M2), uno sobrevive (M3) y dos siguen sin medir (M1, M5) |
+| Los cinco modelos M1–M5, enunciados y sin medir | **Medidos** contra 473 corridas reales sobre cinco familias de modelos locales (§15.9). Uno queda falsado (M4, en dos instrumentos independientes), uno sobrevive corregido (M2), uno sobrevive (M3) y dos siguen sin medir (M1, M5) |
 
 Dos hipótesis entraron a la revisión bibliográfica y **no sobrevivieron**: los
 *mate pairs* como homólogo de las restricciones globales (§11.1) y los *fountain
 codes* como mecanismo de redundancia (§12.1). Las dos se documentan con más
 espacio que sus reemplazos, porque la caída es el resultado.
 
-**Esta versión llega con su propia campaña de medición.** La 1.4 se publicó con un experimento; ésta se acompaña de una implementación de referencia (`swarmbly_ref/`), un arnés de falsación (`swarmbly_validation/`) y un corpus de **341 corridas** sobre cinco familias de modelos locales, los tres publicados junto al documento. §15.9 reporta qué mató esa campaña. Conviene decirlo aquí porque cambia el carácter del documento: las afirmaciones de §15 ya no descansan en una corrida que el lector deba creer, sino en un artefacto que puede volver a ejecutar.
+**Esta versión llega con su propia campaña de medición.** La 1.4 se publicó con un experimento; ésta se acompaña de una implementación de referencia (`swarmbly_ref/`), un arnés de falsación (`swarmbly_validation/`) y un corpus de **473 corridas** sobre cinco familias de modelos locales, los tres publicados junto al documento. §15.9 reporta qué mató esa campaña. Conviene decirlo aquí porque cambia el carácter del documento: las afirmaciones de §15 ya no descansan en una corrida que el lector deba creer, sino en un artefacto que puede volver a ejecutar.
 
 ---
 
@@ -2572,7 +2572,7 @@ agente con self-consistency**, no sólo contra el monolítico ingenuo. Una
 arquitectura multi-agente que sólo bate al monolítico de una pasada está
 comparándose contra el rival equivocado.
 
-**Y el estado del criterio hoy no es «cumplido» ni «incumplido»: es «sin medir».** La campaña de referencia de §15.9 arroja un impuesto agregado de **+11.17 %** con IC 95 % **[+4.80, +17.34]** sobre 95 celdas con presupuesto igualado —es decir, fragmentar saldría *perdiendo*—, y aun esa cifra está confundida: el acoplamiento con la longitud es **estructural en las dos direcciones**. Con el presupuesto completo el brazo fragmentado escribía **1.39×** el monolítico y puntuaba más; con el presupuesto repartido escribe **0.43×** y puntúa menos (dentro de una tarea, escribir más puntúa más: mediana **+0.571**, positiva en **10** de **18** tareas). El arnés **se niega a emitir veredicto** (T09R), y el documento hace lo mismo. El defecto es el grader mismo, no el presupuesto: sus componentes suben con la longitud de salida. La resolución es una **puntuación normalizada por longitud** (cobertura y precisión por oración), la próxima iteración del instrumento — no otra configuración de presupuesto.
+**El criterio pasó de «sin medir» a «juzgable», con un instrumento nuevo (SWIP-0001).** El impuesto agregado está confundido con la longitud de salida **en las dos direcciones** —con el presupuesto completo el brazo fragmentado escribía **1.39×** el monolítico y puntuaba más; con el presupuesto repartido escribe **0.43×** y puntúa menos— y truncar ambos brazos a un presupuesto fijo **T** no ayuda: el impuesto cambia de signo con T (de **−15.66 %** en T=40 a **+7.69 %** en T=120, T13). Los dos brazos colocan los hechos a profundidades distintas, así que ningún presupuesto de lectura decide. El instrumento que lo resuelve por construcción es la **posición de primera mención** (T13b): para cada clave, dónde aparece por primera vez, normalizado por la longitud del propio brazo. Sobre las celdas con presupuesto igualado, el fragmentado saca las claves **0.279 de su propia longitud antes**, IC 95 % **[0.178, 0.361]**, con el confundido de longitud desaparecido (ρ = **+0.075**). El criterio, re-expresado como «fragmentar no debe enterrar las claves», se **cumple** — el +11.17 % agregado de T09R sigue negado y no se cita como criterio.
 
 ### 15.3 Lo que se midió, y lo que se retiró
 
@@ -2755,7 +2755,7 @@ enmienda declarada vale y una silenciosa no—; y las dos tolerancias de control
 del párrafo anterior.
 
 
-### 15.9 La campaña de referencia: 341 corridas sobre cinco familias
+### 15.9 La campaña de referencia: 473 corridas sobre cinco familias
 
 Todo lo anterior de §15 se midió con el arnés del proyecto sobre el corpus del
 proyecto. Esta sección reporta algo distinto: una **implementación de referencia
@@ -2763,7 +2763,7 @@ levantada por separado** (`swarmbly_ref/`), corrida contra **cinco familias de
 modelos locales** —`llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`, `phi3.5:3.8b`,
 `granite3.1-dense:2b`— sobre un corpus de 22 tareas, y un **arnés de falsación**
 (`swarmbly_validation/`) que juzga los cinco modelos contra el registro
-resultante. El registro es un JSONL de **341 corridas** con digest anclado; los
+resultante. El registro es un JSONL de **473 corridas** con digest anclado; los
 tres artefactos se publican con este documento y cada cifra de abajo se
 recomputa ejecutándolos.
 
@@ -2783,6 +2783,8 @@ recomputa ejecutándolos.
 | T10R | ▣ | M1: sin régimen no saturado en este corpus |
 | T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.57** y **0.57** |
 | T0LR | ✔ | `L*` varía por familia — §5.7 medido por primera vez |
+| T13 | ◌ | el impuesto truncado cambia de signo con el presupuesto de lectura T — el acoplamiento con la longitud es estructural y el instrumento de truncado se niega |
+| T13b | ✔ | el impuesto por posición lo resuelve: el fragmentado saca las claves **−0.279** de su propia longitud antes, IC 95 % **[−0.361, −0.178]**, confundido ρ = **+0.075** — el criterio vuelve a ser juzgable y se cumple |
 
 **M4 queda falsado, y el experimento que lo mata es el que la estrategia declaró
 decisivo.** T07R corta el **mismo prompt** dos veces con el **mismo `L`**: una

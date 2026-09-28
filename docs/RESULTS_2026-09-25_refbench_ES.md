@@ -3,7 +3,7 @@ status: current
 lang: es
 ---
 
-# Resultados — la campaña de referencia: 341 corridas sobre cinco familias
+# Resultados — la campaña de referencia: 473 corridas sobre cinco familias
 
 **25 de septiembre de 2026**
 
@@ -20,8 +20,8 @@ tabla de veredictos y lo que cada uno permite y no permite afirmar.
 | Arnés de falsación | `swarmbly_validation/` — Python 3 stdlib, cero dependencias |
 | Familias de nodo | `llama3.2:3b`, `qwen2.5:3b`, `gemma2:2b`, `phi3.5:3.8b`, `granite3.1-dense:2b` |
 | Corpus de tareas | 22 tareas deterministas con claves verificables |
-| Registro | `swarmbly_ref/data/benchmark.jsonl` — **341** corridas |
-| Digest | sha256 `d94bb9cc7694d0f7…`, anclado en `T00` |
+| Registro | `swarmbly_ref/data/benchmark.jsonl` — **473** corridas |
+| Digest | sha256 `dcd1931d98f7f0ec…`, anclado en `T00` |
 
 Reproducción completa:
 
@@ -51,6 +51,8 @@ falla y el resto no llega a correr.
 | T0RR | P2 | ✘ | AUC **0.57** con δ y reputación; **0.61** sin ninguno de los dos |
 | T0RR2 | P2 | ✘ | AUC **0.57** con sondas de capacidad |
 | T0LR | §5.7 | ✔ | `L*` varía por familia; ganancia media sobre `L` común: **+0.360** |
+| T13 | — | ◌ negado | el impuesto truncado cambia de signo con el presupuesto de lectura T (**−15.66 %** en T=40, **+7.69 %** en T=120): el acoplamiento con la longitud es estructural |
+| T13b | SWIP-0001 | ✔ | impuesto por posición: las claves salen **−0.279** de la propia longitud antes, IC 95 % **[−0.361, −0.178]**, confundido ρ = **+0.075** — criterio re-expresado y **cumplido** |
 
 ## 3. Lo que cada veredicto permite afirmar
 
@@ -94,17 +96,20 @@ siempre, sin necesitar la predicción que no existe.
 
 ## 4. Lo que no se puede afirmar, y por qué
 
-El criterio de abandono **no se ha medido**. La primera campaña dio al brazo
-fragmentado más presupuesto de salida que al monolítico —cada fragmento
-heredaba el `max_out_tokens` del prompt entero— y dentro de una misma tarea
-escribir más puntúa más. La re-corrida con presupuesto igualado
-(`--match-output-tokens`) muestra que el acoplamiento es **estructural en las
-dos direcciones**: con el presupuesto completo el brazo fragmentado escribía
-1.39× el monolítico; con el presupuesto repartido escribe 0.43× y el impuesto
-agregado se invierte a **+11.17 %**, IC 95 % **[+4.80, +17.34]** (T09R). El
-arnés rehúsa emitir veredicto, y el diagnóstico ahora es el grader mismo: sus
-componentes suben con la longitud de salida. La resolución es una puntuación
-normalizada por longitud, la próxima iteración del instrumento.
+El criterio de abandono **estaba sin medir y ahora es juzgable** — con un
+instrumento nuevo, no con otra configuración de presupuesto. El impuesto
+agregado está confundido con la longitud de salida **en las dos direcciones**
+(presupuesto completo: el fragmentado escribe 1.39× el monolítico y puntúa
+más; presupuesto repartido: 0.43× y puntúa menos; agregado **+11.17 %**, IC
+95 % **[+4.80, +17.34]**, T09R — negado y no citado como criterio). Truncar
+ambos brazos a un presupuesto de lectura fijo **T** tampoco funciona: el
+impuesto cambia de signo con T (T13). Lo que resuelve el acoplamiento **por
+construcción** es la **posición de primera mención** (T13b, SWIP-0001): la
+primera aparición de cada clave, normalizada por la longitud del propio brazo.
+Sobre las celdas con presupuesto igualado, el fragmentado saca las claves
+**0.279 de su propia longitud antes**, IC 95 % **[0.178, 0.361]**, con el
+confundido desaparecido (ρ = **+0.075**). El criterio, re-expresado como
+«fragmentar no debe enterrar las claves», se **cumple**.
 
 La causa está localizada en el código y corregida. La corrida que resuelve el
 asunto es una sola orden:
@@ -116,6 +121,17 @@ python3 swarmbly_ref/benchmarks/run_benchmark.py --matched
 Los campos `output_words` y `length_ratio` son ahora campos de primera clase del
 registro, de modo que el confundido sea visible en cualquier análisis futuro sin
 tener que re-derivarlo del texto.
+
+## 4b. El corpus de la curva-L está admitido
+
+El corpus candidato `prompts/lcurve_v2.json` (preguntas globales de aridad
+≤3, generado por `make_corpus.py`) pasó su compuerta de admisión: todos los
+chequeos mecánicos y el piso monolítico. Sobre la mitad dev (24 documentos),
+el brazo monolítico despeja el piso de **0.50** con **llama3.2:3b al 61.1 %**
+(44/72 preguntas globales; azar **0.182**). Las otras cuatro familias no lo
+despejan (19.4–30.6 %), así que la campaña de la curva-L debe correrse con
+llama3.2 o reportarse por familia. La corrida auditable es
+`data/admission.json`.
 
 ## 5. Documentos relacionados
 

@@ -82,6 +82,12 @@ CLAIMS = [
     ("T05R", "7.5", "7.5"),
     ("T06R", "21/21", "21/21"),
     ("T0LR", "+0.360", "+0.360"),
+    ("T13", "−15.66", "-15.66"),
+    ("T13", "+7.69", "+7.69"),
+    ("T13b", "−0.279", "-0.279"),
+    ("T13b", "−0.361", "-0.361"),
+    ("T13b", "−0.178", "-0.178"),
+    ("T13b", "+0.075", "+0.075"),
 ]
 
 #: The documents that quote the campaign. Both languages of each pair, because a
@@ -134,7 +140,7 @@ def test_some_document_quotes_each_checked_figure(
 
 @pytest.mark.parametrize("name", QUOTING, ids=lambda n: n)
 def test_the_campaign_size_is_stated_consistently(name: str) -> None:
-    assert "341" in _text(name), (
+    assert "473" in _text(name), (
         f"{name} no longer states the size of the corpus it rests on."
     )
 

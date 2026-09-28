@@ -99,9 +99,10 @@ def sweep(recs):
     return rows, pairs
 
 
-def run(data=None, quiet=False):
-    data = data or rr.ap_default_data()
-    recs = rr.prefer_matched(rr.load(data))
+def run(data=None, recs=None, quiet=False):
+    if recs is None:
+        data = data or rr.ap_default_data()
+        recs = rr.prefer_matched(rr.load(data))
     rows, pairs = sweep(recs)
     if not rows:
         return Result(id="T13", name="Grader truncado (normalizado por longitud)",
@@ -181,14 +182,15 @@ def _first_mention_frac(text, item):
     return before / len(words)
 
 
-def run_position(data=None, quiet=False):
+def run_position(data=None, recs=None, quiet=False):
     """Impuesto por posición: ¿el fragmentado menciona las claves ANTES o
     DESPUÉS que el monolítico, en fracción de su propia longitud?
 
     Invariante a la longitud POR CONSTRUCCIÓN: la posición se normaliza por el
     largo de cada brazo. Sin parámetro libre T."""
-    data = data or rr.ap_default_data()
-    recs = rr.prefer_matched(rr.load(data))
+    if recs is None:
+        data = data or rr.ap_default_data()
+        recs = rr.prefer_matched(rr.load(data))
     pairs = cells_operative(recs)
     deltas, ratios, clusters = [], [], []
     n_items = 0
