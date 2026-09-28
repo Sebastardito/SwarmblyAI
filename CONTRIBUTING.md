@@ -262,7 +262,7 @@ behaviour change, performance work that preserves semantics, tooling and CI.
 
 ```markdown
 ---
-gip: XXXX
+swip: XXXX
 title: <short, descriptive>
 author: <name> <<email or @handle>>
 status: Draft            # Draft | Accepted | Rejected | Withdrawn | Deferred | Final
@@ -641,7 +641,7 @@ preserva la semántica, herramientas y CI.
 
 ```markdown
 ---
-gip: XXXX
+swip: XXXX
 title: <corto y descriptivo>
 author: <nombre> <<correo o @usuario>>
 status: Draft            # Draft | Accepted | Rejected | Withdrawn | Deferred | Final
