@@ -107,6 +107,14 @@ CLAIMS = [
     ("T08R3", "+46.9", "+46.9"),
     ("T08R3", "+33.3", "+33.3"),
     ("T08R3", "+59.4", "+59.4"),
+    # control N=1: partir frente a agregar con código
+    ("T08R4", "+38.5", "+38.5"),
+    ("T08R4", "+12.5", "+12.5"),
+    ("T08R4", "+68.8", "+68.8"),
+    ("T08R4", "+8.3", "+8.3"),
+    ("T08R4", "+41.7", "+41.7"),
+    ("T08R4", "+77.1", "+77.1"),
+    ("T08R4", "+42.7", "+42.7"),
 ]
 
 #: The documents that quote the campaign. Both languages of each pair, because a

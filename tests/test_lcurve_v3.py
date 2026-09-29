@@ -94,3 +94,16 @@ def test_the_full_control_extracts_the_whole_document_in_one_call(tmp_path) -> N
     recs = [json.loads(l) for l in out.read_text(encoding="utf-8").splitlines()]
     assert recs and all(r["N"] == 1 and r["L"] == r["n_rows"] for r in recs)
     assert all(r["global_ok"] == r["global_n"] for r in recs)
+
+
+def test_unnumbered_answers_are_read_by_position() -> None:
+    """A model that answers correctly but ignores the 'N: answer' format must
+    not score zero: that would measure the format, not the extraction."""
+    rows = ["R-001 | Harbour | seals | on_hand=10 | reorder_at=1",
+            "R-002 | Eastdock | gaskets | on_hand=20 | reorder_at=2"]
+    on_hand, wh, total, mode = v3.parse_fragment("10\n20\nHarbour\nEastdock",
+                                                 rows, with_mode=True)
+    assert mode == "positional"
+    assert on_hand == {"R-001": 10, "R-002": 20}
+    assert wh == {"R-001": "Harbour", "R-002": "Eastdock"}
+    assert total is None

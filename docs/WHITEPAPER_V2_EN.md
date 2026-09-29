@@ -2613,17 +2613,35 @@ worse, none gets better and 6 tie. The raw answers are auditable: the fragments
 extract almost without error, but sum their own block correctly only 1 time in
 360.
 
-**What this figure does not yet license.** Two things change between the arms
-at once: the document is split, and the arithmetic moves from the model to
-code. The +46.9 points do not say how much each contributes. The arm that
-separates them — the same extraction over the whole document (N=1) with the
-same assembler — is implemented (`run_lcurve_v3.py --full-control`, 8 calls)
-and its verdict is T08R4. If N=1 plus code matches the fragments, the gain
-belongs to deterministic aggregation, which the protocol prescribes but which
-does not require splitting; if it falls short, the difference is the effect of
-splitting. Until then this section claims that **extracting with the model and
-aggregating with code beats the model alone on this task**, not that
-fragmenting does.
+**And the control that separates the two effects has run** (T08R4): the
+same extraction over the whole document (N=1), with the same reader and the
+same assembler, on the same 8 documents. In 3 of them the model answered
+without numbering and was read by position, re-graded from the raw answers.
+
+| rows | monolithic | N=1 + code | N=1 fidelity | fragments + code | effect of aggregating by code | effect of splitting |
+|---|---|---|---|---|---|---|
+| 80 | 58.3 % | 100.0 % | 314/320 | 100.0 % | +41.7 | +0.0 |
+| 160 | 41.7 % | 16.7 % | 158/640 | 93.8 % | −25.0 | +77.1 |
+
+Across the 8 documents, the effect of splitting is **+38.5** points, 95 % CI
+**[+12.5, +68.8]**, and that of aggregating by code **+8.3** [−16.7, +33.3].
+But the average hides what matters: **these are two different mechanisms, and
+each dominates in its own regime.** At 80 rows, extracting the whole document
+in a single call is already near-perfect, and all of the gain comes from taking
+the arithmetic away from the model; splitting adds nothing. At 160 rows,
+single-call extraction collapses — the model loses the format and loops: 1,140
+lines with barely a hundred distinct values — and only splitting keeps it near
+100 %. It is the first direct measurement of the §7.5 thesis that the worker
+size that suffices depends on the budget it is asked to carry: a 3B node
+extracts well up to some task size and falls off a cliff above it, and
+fragmenting is what keeps each task below that threshold.
+
+**Limits, declared.** These are 8 documents, one family and two sizes, so the
+threshold lies between 80 and 160 rows and has not been located. What collapses
+may be the input length, the output length (321 answers per call) or both; this
+design does not separate them. The monolithic grader is lenient, which works in
+its favour. And the conclusion does not depend on reading by position: without
+it, the effect of splitting is larger (+42.7).
 
 ### 15.5 Composition: the sample size required
 
@@ -2768,7 +2786,7 @@ recomputed by running them.
 | T08R | ✘ | L curve: the predicted band (factor 3–6×) does not appear |
 | T08R2 | ◌ | L curve on the admitted corpus: the assembler covers 54.9 % of the globals, so the verdict refuses; on the computable ones, +18.9 points in favour of the fragmented arm |
 | T08R3 | ✔ | L curve v3: fragments + code **+46.9** points over the monolithic arm; mixes splitting with aggregating by code |
-| T08R4 | ▣ | N=1 control: separates the effect of splitting from that of aggregating by code — run pending (`--full-control`) |
+| T08R4 | ✔ | N=1 control: splitting **+38.5** points; at 80 rows the gain is from aggregating by code, at 160 rows from splitting |
 | T09R | ◌ | abandonment criterion: **refused**, confounded with output length |
 | T10R | ▣ | M1: no non-saturated regime in this corpus |
 | T0RR / T0RR2 | ✘ | per-cell routability: **AUC 0.57** and **0.57** |

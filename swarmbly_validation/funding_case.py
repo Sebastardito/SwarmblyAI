@@ -43,6 +43,20 @@ def build(recs, embed=True):
     t08b = rr.tLC_real()
     t08c = rr.tLC_real(runs_name="lcurve_v3_runs.jsonl", test_id="T08R3")
     t08d = rr.tSplit_real()
+    if str(t08d.verdict).upper() == "PASS":
+        split_reading = ("Con el control corrido, partir aporta por sí mismo, pero no en "
+                         "todo tamaño: donde la extracción en una llamada ya es fiable "
+                         "la ganancia es de agregar con código, y partir sólo cuenta "
+                         "cuando la tarea supera lo que un nodo extrae bien "
+                         "(ver la tabla por tamaño en T08R4).")
+    elif str(t08d.verdict).upper() in ("FAIL", "REFUSE"):
+        split_reading = ("El control no atribuye la ventaja a partir: lo que se puede "
+                         "afirmar es que extraer con el modelo y agregar con código "
+                         "supera al modelo solo en esta tarea.")
+    else:
+        split_reading = ("Mientras ese control no exista, lo que se puede afirmar es que "
+                         "extraer con el modelo y agregar con código supera al modelo "
+                         "solo en esta tarea, no que fragmentar lo haga.")
     from run_truncated import run_position as _t13b
     t13b = _t13b(recs=recs, quiet=True)
     tr = rr.tR_real(recs)
@@ -244,9 +258,7 @@ preguntas computables la señal favorece a fragmentar.
 La corrida v3 (seis formas, todos los L sobre los mismos documentos) da:
 {t08c.summary}. Esa ventaja mezcla dos cosas —partir el documento y pasar la
 aritmética del modelo al código— y el control N=1 las separa: {t08d.summary}.
-Mientras ese control no exista, lo que se puede afirmar es que extraer con el
-modelo y agregar con código supera al modelo solo en esta tarea, no que
-fragmentar lo haga.
+{split_reading}
 
 El alineador M1 está construido y verificado en banco, pero este corpus no
 produjo el régimen de desacuerdo genuino que necesita: {t10.summary}. Veredicto

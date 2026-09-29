@@ -100,16 +100,33 @@ def fragment_prompt(rows):
             + "\n".join(rows) + "\n\n" + "\n".join(qs))
 
 
-def parse_fragment(text, rows):
+def parse_fragment(text, rows, with_mode=False):
     """Devuelve (on_hand, warehouse, suma) predichos. Lectura tolerante: para
-    las preguntas numéricas vale el ÚLTIMO entero de la línea."""
+    las preguntas numéricas vale el ÚLTIMO entero de la línea.
+
+    Si el modelo ignora el formato «N: respuesta» y contesta en líneas sueltas,
+    se lee **por posición**: las primeras n líneas numéricas son los on_hand y
+    las primeras n líneas de texto, los almacenes. Sin esto, un brazo que
+    responde bien pero sin numerar puntúa cero, y la comparación mide el
+    formato en lugar de la extracción (ocurrió con el control N=1 sobre 160
+    filas, 29-09-2026). La suma parcial no se lee en modo posicional: no hay
+    manera de saber qué línea es."""
     ids = [r.split(" | ")[0] for r in rows]
     n = len(ids)
     ans = {}
-    for line in str(text or "").splitlines():
+    lines = str(text or "").splitlines()
+    for line in lines:
         m = re.match(r"\s*(\d{1,3})\s*[:.)\-]\s*(.+?)\s*$", line)
         if m:
             ans.setdefault(int(m.group(1)), m.group(2))
+    if not ans:
+        nums = [int(x) for x in re.findall(r"^\s*(-?\d+)\s*$", "\n".join(lines), re.M)]
+        words = [l.strip().strip(".") for l in lines
+                 if l.strip() and not re.match(r"^\s*-?\d+\s*$", l)]
+        on_hand = {rid: nums[i] for i, rid in enumerate(ids) if i < len(nums)}
+        wh = {rid: words[i] for i, rid in enumerate(ids) if i < len(words)}
+        out = (on_hand, wh, None)
+        return out + ("positional",) if with_mode else out
     on_hand, wh = {}, {}
     for i, rid in enumerate(ids, start=1):
         a = ans.get(i)
@@ -126,7 +143,8 @@ def parse_fragment(text, rows):
         nums = re.findall(r"-?\d+", s.replace(",", ""))
         if nums:
             total = int(nums[-1])
-    return on_hand, wh, total
+    out = (on_hand, wh, total)
+    return out + ("numbered",) if with_mode else out
 
 
 # ------------------------------------------------------------- ensamblador --
@@ -225,7 +243,7 @@ def run_cell(gen, doc, L, model, mono=None):
         max_t = 40 + 14 * len(frag)
         n_ctx = max(4096, min(32768, len(prompt.split()) * 3 + max_t + 512))
         text = gen(prompt, max_t, n_ctx)
-        oh, w, tot = parse_fragment(text, frag)
+        oh, w, tot, mode = parse_fragment(text, frag, with_mode=True)
         on_hand.update(oh)
         wh.update(w)
         ids = [x.split(" | ")[0] for x in frag]
@@ -236,6 +254,7 @@ def run_cell(gen, doc, L, model, mono=None):
             "warehouse": {i: w.get(i) for i in ids},
             "partial_sum": tot, "partial_sum_true": true_sum,
             "partial_sum_ok": tot == true_sum,
+            "parse_mode": mode,
         })
     pq = assemble(doc, on_hand, wh)
     g_ok = sum(1 for v in pq.values() if v["ok"])
@@ -259,6 +278,38 @@ def run_cell(gen, doc, L, model, mono=None):
     return rec
 
 
+def regrade_record(rec, doc):
+    """Re-califica un registro desde sus respuestas crudas guardadas, con el
+    lector y el ensamblador ACTUALES. Cero llamadas al modelo: la fuente de
+    verdad es el texto que el modelo escribió, no la calificación de entonces."""
+    rows = rows_of(doc)
+    truth = {r["id"]: r for r in (parse_row(x) for x in rows) if r}
+    on_hand, wh = {}, {}
+    for f in rec["fragments"]:
+        frag = [x for x in rows if x.split(" | ")[0] in set(f["rows"])]
+        oh, w, tot, mode = parse_fragment(f["raw"], frag, with_mode=True)
+        on_hand.update(oh); wh.update(w)
+        f["on_hand"] = {i: oh.get(i) for i in f["rows"]}
+        f["warehouse"] = {i: w.get(i) for i in f["rows"]}
+        f["partial_sum"] = tot
+        f["partial_sum_ok"] = tot == f["partial_sum_true"]
+        f["parse_mode"] = mode
+    pq = assemble(doc, on_hand, wh)
+    rec.update({
+        "per_question": pq,
+        "global_ok": sum(1 for v in pq.values() if v["ok"]),
+        "global_n": len(pq),
+        "global_computable": sum(1 for v in pq.values() if v["computable"]),
+        "rows_answered": sum(1 for i in truth if i in on_hand),
+        "rows_correct": sum(1 for i in truth if on_hand.get(i) == truth[i]["on_hand"]),
+        "wh_correct": sum(1 for i in truth
+                          if _norm(wh.get(i)) == _norm(truth[i]["warehouse"])),
+        "partial_sums_ok": sum(f["partial_sum_ok"] for f in rec["fragments"]),
+        "regraded": True,
+    })
+    return rec
+
+
 def cells_for(doc, sizes):
     if doc["n_rows"] not in sizes:
         return []
@@ -278,7 +329,28 @@ def main(argv=None):
                           "Separa el efecto de partir del efecto de agregar con "
                           "código. Escribe en data/lcurve_v3_full.jsonl"))
     ap.add_argument("--out", default=None)
+    ap.add_argument("--regrade", default=None, metavar="JSONL",
+                    help=("re-califica un archivo de registros desde sus "
+                          "respuestas crudas, sin llamar al modelo, y lo reescribe"))
     args = ap.parse_args(argv)
+
+    if args.regrade:
+        d = json.load(open(os.path.join(ROOT, "prompts", "lcurve_v2.json"),
+                           encoding="utf-8"))
+        docs = {x["id"]: x for x in d["prompts"]}
+        recs = [json.loads(l) for l in open(args.regrade, encoding="utf-8") if l.strip()]
+        before = [(r["global_ok"], r["rows_correct"]) for r in recs]
+        recs = [regrade_record(r, docs[r["doc"]]) for r in recs]
+        with open(args.regrade, "w", encoding="utf-8") as f:
+            for r in recs:
+                f.write(json.dumps(r, ensure_ascii=False) + "\n")
+        for r, (g0, c0) in zip(recs, before):
+            modes = sorted({f["parse_mode"] for f in r["fragments"]})
+            print(f"  {r['doc']} L={r['L']:>3}: global {g0}->{r['global_ok']}/{r['global_n']}, "
+                  f"filas exactas {c0}->{r['rows_correct']}/{r['rows_expected']} "
+                  f"(lectura: {', '.join(modes)})")
+        print(f"re-calificado: {args.regrade}")
+        return
 
     sizes = {int(x) for x in args.sizes.split(",") if x}
     base = "lcurve_v3_full" if args.full_control else "lcurve_v3_runs"

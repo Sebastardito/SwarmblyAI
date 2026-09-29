@@ -2699,16 +2699,35 @@ empeoran, ninguno mejora y 6 empatan. Las respuestas crudas son auditables: los
 fragmentos extraen casi sin error, pero suman bien su propio bloque sólo 1 vez
 de 360.
 
-**Lo que esta cifra no permite afirmar todavía.** Entre los dos brazos cambian
-dos cosas a la vez: se parte el documento, y la aritmética pasa del modelo al
-código. Los +46.9 puntos no dicen cuánto aporta cada una. El brazo que lo
-separa —la misma extracción sobre el documento entero (N=1) con el mismo
-ensamblador— está implementado (`run_lcurve_v3.py --full-control`, 8 llamadas)
-y su veredicto es T08R4. Si N=1 más código alcanza a los fragmentos, la ganancia
-es de la agregación determinista, que el protocolo prescribe pero que no exige
-partir; si queda por debajo, la diferencia es el efecto de partir. Hasta
-entonces esta sección afirma que **extraer con el modelo y agregar con código
-supera al modelo solo en esta tarea**, no que fragmentar lo haga.
+**Y el control que separa los dos efectos ya corrió** (T08R4): la misma
+extracción sobre el documento entero (N=1), con el mismo lector y el mismo
+ensamblador, sobre los mismos 8 documentos. En 3 de ellos el modelo contestó
+sin numerar y se leyó por posición, re-calificando desde las respuestas crudas.
+
+| filas | monolítico | N=1 + código | fidelidad N=1 | fragmentos + código | efecto de agregar con código | efecto de partir |
+|---|---|---|---|---|---|---|
+| 80 | 58.3 % | 100.0 % | 314/320 | 100.0 % | +41.7 | +0.0 |
+| 160 | 41.7 % | 16.7 % | 158/640 | 93.8 % | −25.0 | +77.1 |
+
+Sobre los 8 documentos, el efecto de partir es **+38.5** puntos, IC 95 %
+**[+12.5, +68.8]**, y el de agregar con código **+8.3** [−16.7, +33.3]. Pero el
+promedio esconde lo importante: **son dos mecanismos distintos, y cada uno
+domina en un régimen.** Con 80 filas, extraer el documento entero en una sola
+llamada ya es casi perfecto, y toda la ganancia viene de sacarle la aritmética
+al modelo; partir no añade nada. Con 160 filas, la extracción en una sola
+llamada colapsa —el modelo pierde el formato y entra en bucle: 1.140 líneas con
+apenas un centenar de valores distintos— y sólo partir la mantiene cerca del
+100 %. Es la primera medición directa de la tesis de §7.5 según la cual el
+tamaño de trabajador que basta depende del presupuesto que se le pide: un nodo
+de 3B extrae bien hasta cierto tamaño de tarea y se desploma por encima, y
+fragmentar es lo que mantiene cada tarea por debajo de ese umbral.
+
+**Límites, declarados.** Son 8 documentos, una familia y dos tamaños, así que el
+umbral está entre 80 y 160 filas y no se ha localizado. Lo que colapsa puede ser
+la longitud de la entrada, la de la salida (321 respuestas por llamada) o
+ambas; este diseño no las separa. El calificador del monolítico es tolerante,
+lo que juega a su favor. Y la conclusión no depende de la lectura por posición:
+sin ella, el efecto de partir es mayor (+42.7).
 
 ### 15.5 Composición: el tamaño de muestra que hace falta
 
@@ -2854,7 +2873,7 @@ recomputa ejecutándolos.
 | T08R | ✘ | curva-L: la banda predicha (factor 3–6×) no aparece |
 | T08R2 | ◌ | curva-L del corpus admitido: el ensamblador cubre el 54.9 % de las globales, así que el veredicto se niega; sobre las computables, +18.9 puntos a favor del fragmentado |
 | T08R3 | ✔ | curva-L v3: fragmentos + código **+46.9** puntos sobre el monolítico; mezcla partir y agregar con código |
-| T08R4 | ▣ | control N=1: separa el efecto de partir del de agregar con código — corrida pendiente (`--full-control`) |
+| T08R4 | ✔ | control N=1: partir **+38.5** puntos; con 80 filas la ganancia es de agregar con código, con 160 filas es de partir |
 | T09R | ◌ | criterio de abandono: **rehusado**, confundido con la longitud de salida |
 | T10R | ▣ | M1: sin régimen no saturado en este corpus |
 | T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.57** y **0.57** |

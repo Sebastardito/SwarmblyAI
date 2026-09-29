@@ -48,7 +48,7 @@ falla y el resto no llega a correr.
 | T08R | — | ✘ | banda de `L`: factor **1.0** en `table_outturn`, **2.7** en `longform`; la banda ancha predicha no aparece |
 | T08R2 | §5 | ◌ rehusado | curva-L del corpus admitido: cobertura del ensamblador **54.9 %**; sobre las computables **+18.9** [**+1.4**, **+37.5**] a favor del fragmentado |
 | T08R3 | §5 | ✔ | curva-L v3: **+46.9** [**+33.3**, **+59.4**] frente al monolítico; mezcla partir y agregar con código |
-| T08R4 | §5 | ▣ pendiente | control N=1 — `run_lcurve_v3.py --full-control` |
+| T08R4 | §5 | ✔ | control N=1: partir **+38.5** [**+12.5**, **+68.8**]; agregar con código **+8.3** |
 | T09R | — | ◌ rehusado | **+11.17 %** IC 95 % [**+4.80**, **+17.34**] sobre **95** celdas, confundido con la longitud de salida |
 | T10R | M1 | ▣ bloqueado | sin régimen no saturado en este corpus |
 | T0RR | P2 | ✘ | AUC **0.57** con δ y reputación; **0.61** sin ninguno de los dos |
@@ -173,9 +173,18 @@ monolítico re-corrido e idéntico al de la admisión):
 
 Diferencia pareada **+46.9** puntos, IC 95 % **[+33.3, +59.4]**; pendiente
 intra-documento plana hasta L=20 y con caída en L=40. Los fragmentos suman bien
-su bloque 1 vez de 360. La cifra mezcla dos efectos —partir y agregar con
-código—; el control N=1 (`--full-control`, T08R4) los separa, y hasta entonces
-no se atribuye a la fragmentación.
+su bloque 1 vez de 360. La cifra mezcla dos efectos, y el control N=1 (T08R4) los separa:
+
+| filas | monolítico | N=1 + código | fidelidad N=1 | fragmentos + código | efecto de agregar con código | efecto de partir |
+|---|---|---|---|---|---|---|
+| 80 | 58.3 % | 100.0 % | 314/320 | 100.0 % | +41.7 | +0.0 |
+| 160 | 41.7 % | 16.7 % | 158/640 | 93.8 % | −25.0 | +77.1 |
+
+Partir: **+38.5** puntos, IC 95 % **[+12.5, +68.8]**; agregar con código:
+**+8.3** [−16.7, +33.3]. Con 80 filas la ganancia es toda de la agregación
+determinista y partir no añade nada; con 160 filas la extracción en una sola
+llamada colapsa y sólo partir la sostiene. 8 documentos, una familia, dos
+tamaños: el umbral no está localizado.
 
 ## 5. Documentos relacionados
 

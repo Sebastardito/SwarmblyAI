@@ -48,7 +48,7 @@ never runs.
 | T08R | — | ✘ | `L` band: factor **1.0** on `table_outturn`, **2.7** on `longform`; the predicted wide band does not appear |
 | T08R2 | §5 | ◌ refused | L curve on the admitted corpus: assembler coverage **54.9 %**; on the computable ones **+18.9** [**+1.4**, **+37.5**] in favour of the fragmented arm |
 | T08R3 | §5 | ✔ | L curve v3: **+46.9** [**+33.3**, **+59.4**] against the monolithic arm; mixes splitting with aggregating by code |
-| T08R4 | §5 | ▣ pending | N=1 control — `run_lcurve_v3.py --full-control` |
+| T08R4 | §5 | ✔ | N=1 control: splitting **+38.5** [**+12.5**, **+68.8**]; aggregating by code **+8.3** |
 | T09R | — | ◌ refused | **+11.17 %** 95 % CI [**+4.80**, **+17.34**] over **95** cells, confounded with output length |
 | T10R | M1 | ▣ blocked | no non-saturated regime in this corpus |
 | T0RR | P2 | ✘ | AUC **0.57** with δ and reputation; **0.61** with neither |
@@ -172,9 +172,18 @@ re-run and identical to the admission run):
 
 Paired difference **+46.9** points, 95 % CI **[+33.3, +59.4]**; within-document
 slope flat up to L=20 with a drop at L=40. The fragments sum their block
-correctly 1 time in 360. The figure mixes two effects — splitting and
-aggregating with code —; the N=1 control (`--full-control`, T08R4) separates
-them, and until then it is not attributed to fragmentation.
+correctly 1 time in 360. The figure mixes two effects, and the N=1 control (T08R4) separates them:
+
+| rows | monolithic | N=1 + code | N=1 fidelity | fragments + code | effect of aggregating by code | effect of splitting |
+|---|---|---|---|---|---|---|
+| 80 | 58.3 % | 100.0 % | 314/320 | 100.0 % | +41.7 | +0.0 |
+| 160 | 41.7 % | 16.7 % | 158/640 | 93.8 % | −25.0 | +77.1 |
+
+Splitting: **+38.5** points, 95 % CI **[+12.5, +68.8]**; aggregating by code:
+**+8.3** [−16.7, +33.3]. At 80 rows the gain is all deterministic aggregation
+and splitting adds nothing; at 160 rows single-call extraction collapses and
+only splitting sustains it. 8 documents, one family, two sizes: the threshold
+has not been located.
 
 ## 5. Related documents
 

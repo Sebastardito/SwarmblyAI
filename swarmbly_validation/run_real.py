@@ -1609,6 +1609,7 @@ def tSplit_real(root=None):
 
     rows_doc, d_code, d_split, cl = [], [], [], []
     byL = {}
+    bysize = {}
     for doc_id in sorted({r["doc"] for r in frag}):
         if doc_id not in full:
             continue
@@ -1620,6 +1621,10 @@ def tSplit_real(root=None):
         d_code.append((f1 - m) * 100.0)
         d_split.append((fl - f1) * 100.0)
         cl.append(doc_id)
+        z = bysize.setdefault(docs[doc_id]["n_rows"], {"m": [], "f1": [], "fl": [],
+                                                      "x1": [0, 0]})
+        z["m"].append(m); z["f1"].append(f1); z["fl"].append(fl)
+        z["x1"][0] += full[doc_id]["rows_correct"]; z["x1"][1] += full[doc_id]["rows_expected"]
         for r in fr:
             b = byL.setdefault(r["L"], [0, 0, 0, 0])
             b[0] += r["global_ok"]; b[1] += r["global_n"]
@@ -1639,6 +1644,25 @@ def tSplit_real(root=None):
         verdict, reading = FAIL, "partir empeora respecto de la extracción monolítica"
     else:
         verdict, reading = REFUSE, "el efecto de partir no se distingue de cero"
+    size_rows = []
+    for n_rows, z in sorted(bysize.items()):
+        mm, a1, al = (sum(z[k]) / len(z[k]) for k in ("m", "f1", "fl"))
+        size_rows.append([n_rows, len(z["m"]), f"{mm:.1%}", f"{a1:.1%}",
+                          f"{z['x1'][0]}/{z['x1'][1]}", f"{al:.1%}",
+                          f"{(a1 - mm) * 100:+.1f}", f"{(al - a1) * 100:+.1f}"])
+    positional = sum(1 for d in cl for f in full[d].get("fragments", [])
+                     if f.get("parse_mode") == "positional")
+    # Sensibilidad al lector: con un lector estricto (sólo «N: respuesta»), un
+    # control N=1 leído por posición no aporta ningún valor y sus globales
+    # quedan en cero. La conclusión no debe depender de esa elección.
+    strict = []
+    for d, ds in zip(cl, d_split):
+        if any(f.get("parse_mode") == "positional" for f in full[d].get("fragments", [])):
+            f1 = full[d]["global_ok"] / full[d]["global_n"]
+            strict.append(ds + f1 * 100.0)
+        else:
+            strict.append(ds)
+    mst, _lst, _hst, _ = clustered_bootstrap(strict, cl)
     f_rows = sum(full[d]["rows_correct"] for d in cl)
     f_n = sum(full[d]["rows_expected"] for d in cl)
     details = [
@@ -1647,6 +1671,12 @@ def tSplit_real(root=None):
         f"**{mc:+.1f}** puntos, IC95 [{loc:+.1f}, {hic:+.1f}].",
         f"Efecto de partir ((fragmentos + código) − (N=1 + código)): "
         f"**{ms:+.1f}** puntos, IC95 [{los:+.1f}, {his:+.1f}] → {reading}.",
+        (f"El control N=1 contestó sin numerar en {positional} de {len(cl)} "
+         f"documentos y se leyó por posición (re-calificado desde las "
+         f"respuestas crudas). Con un lector estricto el efecto de partir "
+         f"sería {mst:+.1f} puntos: la conclusión no depende de esa lectura."
+         if positional else
+         "Todas las respuestas del control N=1 venían numeradas."),
         f"Fidelidad de extracción N=1: {f_rows}/{f_n} = {f_rows / f_n:.1%}; "
         + "; ".join(f"L={L}: {b[2]}/{b[3]} = {b[2] / b[3]:.1%}"
                     for L, b in sorted(byL.items())) + ".",
@@ -1660,7 +1690,11 @@ def tSplit_real(root=None):
         details=details,
         tables={"Por documento: tres brazos": (
             ["documento", "filas", "monolítico", "N=1 + código",
-             "fidelidad N=1", "fragmentos + código"], rows_doc)},
+             "fidelidad N=1", "fragmentos + código"], rows_doc),
+            "Por tamaño de documento": (
+            ["filas", "docs", "monolítico", "N=1 + código", "fidelidad N=1",
+             "fragmentos + código", "efecto código", "efecto partir"],
+            size_rows)},
         notes=["Mismo prompt de extracción, mismo lector, mismo ensamblador en "
                "los dos brazos con código: lo único que cambia entre ellos es "
                "el tamaño del fragmento."])
