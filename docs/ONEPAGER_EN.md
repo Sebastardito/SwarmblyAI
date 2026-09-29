@@ -7,7 +7,7 @@ lang: en
 ### The barrier to serving artificial intelligence stops being capital and becomes participation
 
 **Sebastián A. Espinoza-Ulloa, Ph.D.** · Independent researcher
-Whitepaper v2.0 · specification v0.2 · reference implementations, validation harness and measurements published
+Whitepaper v2.0 (doi:10.5281/zenodo.23031305) · specification v0.2 · reference implementations, validation harness and measurements published
 AGPL-3.0-or-later (software) · CC BY 4.0 (text) · `github.com/Sebastardito/Swarmbly-AI`
 
 ---

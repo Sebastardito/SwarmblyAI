@@ -66,11 +66,13 @@ lacked: the semantic unit and the fragment, the derived context budget, the
 five falsifiable models M1–M5 **measured against 473 real runs** (§15.9), the
 validation strategy (`VALIDATION_STRATEGY_V2`) and the fragmentation
 fundamentals extension (`WHITEPAPER_EXT`). This is the one to cite. Read it
-first. PDFs alongside: `WHITEPAPER_V2_EN.pdf` · `WHITEPAPER_V2_ES.pdf`.
+first. PDFs alongside: `WHITEPAPER_V2_EN.pdf` · `WHITEPAPER_V2_ES.pdf`. Deposited on
+Zenodo as [`10.5281/zenodo.23031305`](https://doi.org/10.5281/zenodo.23031305).
 
 **`WHITEPAPER_EN.md`** · **`WHITEPAPER_ES.md`** — *v1.4, superseded*
 
-Kept as the published prior-art record (Zenodo, 14 August 2026). Its measurements
+Kept as the published prior-art record (Zenodo, 14 August 2026,
+[`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088)). Its measurements
 remain valid with the corrections documented in v2.
 
 *El planteamiento de Swarmbly, con la teoría de la fragmentación que a la

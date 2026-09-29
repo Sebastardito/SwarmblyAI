@@ -5,9 +5,8 @@
 # No placeholder values remain in this file. Fields that cannot yet be known
 # are commented out rather than filled with something unresolvable: an
 # invalid DOI in a published citation record is worse than an absent one.
-# As of 29 September 2026 two such fields remain: the arXiv identifier, which
-# waits on endorsement for cs.DC, and the DOI of the version 2 record, which
-# Zenodo mints on deposit.
+# As of 29 September 2026 the only such field is the arXiv identifier, which
+# waits on endorsement for cs.DC.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -80,8 +79,11 @@ identifiers:
     value: "10.5281/zenodo.21956743"
     description: "Zenodo archive of the GitHub v1 release (the software artifact)"
   - type: doi
+    value: "10.5281/zenodo.23031305"
+    description: "Zenodo preprint of the whitepaper, version 2 (the paper)"
+  - type: doi
     value: "10.5281/zenodo.21957088"
-    description: "Zenodo preprint of the whitepaper (the paper)"
+    description: "Zenodo preprint of the whitepaper, version 1.4 (previous version)"
   - type: url
     value: "https://github.com/Sebastardito/Swarmbly-AI/releases/tag/v1"
     description: "The disclosing release, commit ceb40143faea544ddd795be7efa60542013437b2"
@@ -176,15 +178,15 @@ preferred-citation:
       orcid: "https://orcid.org/0000-0003-1497-356X"
   year: 2026
   month: 9
-  # Paper DOI: the Zenodo record of version 2, added when Zenodo mints (or
-  # reserves) it. The v1.4 record (10.5281/zenodo.21957088) is the previous
-  # version, not this one, so it is not reused here. An arXiv DOI will be added
-  # alongside it if and when the submission clears endorsement.
-  url: "https://github.com/Sebastardito/Swarmbly-AI"
+  # Paper DOI: the Zenodo record of version 2. The v1.4 record
+  # (10.5281/zenodo.21957088) is the previous version of the same work. An arXiv
+  # DOI will be added alongside it if and when the submission clears endorsement.
+  doi: "10.5281/zenodo.23031305"
+  url: "https://doi.org/10.5281/zenodo.23031305"
   # journal: not applicable while it is a preprint
   notes: >-
-    Version 2, 2026-09-29; supersedes v1.4 (Zenodo 10.5281/zenodo.21957088,
-    deposited 2026-08-14). Intended additional venue: arXiv,
+    Version 2, deposited on Zenodo 2026-09-29 (10.5281/zenodo.23031305);
+    supersedes v1.4 (10.5281/zenodo.21957088, deposited 2026-08-14). Intended additional venue: arXiv,
     primary category cs.DC — deferred, because a first-time submitter to that
     archive requires endorsement and none had been obtained at time of
     publication. The prior-art position does not depend on arXiv: the Zenodo

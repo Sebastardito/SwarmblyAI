@@ -1,7 +1,7 @@
 # Swarmbly AI
 
 [![DOI (software)](https://zenodo.org/badge/DOI/10.5281/zenodo.21956743.svg)](https://doi.org/10.5281/zenodo.21956743)
-[![DOI (paper)](https://zenodo.org/badge/DOI/10.5281/zenodo.21957088.svg)](https://doi.org/10.5281/zenodo.21957088)
+[![DOI (paper, v2)](https://zenodo.org/badge/DOI/10.5281/zenodo.23031305.svg)](https://doi.org/10.5281/zenodo.23031305)
 [![Licence: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
 
 **A decentralized inference protocol that fragments the *problem*, not the *model*.**
@@ -18,7 +18,7 @@ Existing peer-to-peer inference systems split the **model**: layers or tensors l
 - **Critical analysis and red team:** [`docs/`](docs/README.md) — the project publishes its own audit alongside its claims.
 - **Annotated bibliography:** [`docs/REFERENCES.md`](docs/REFERENCES.md)
 - **Licence:** AGPL-3.0-or-later. Network use triggers clause 13 — see [`NOTICE`](NOTICE).
-- **Cite this:** the artifact as [`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743), the paper as [`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088). Machine-readable metadata in [`CITATION.cff`](CITATION.cff).
+- **Cite this:** the artifact as [`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743), the paper (v2) as [`10.5281/zenodo.23031305`](https://doi.org/10.5281/zenodo.23031305); v1.4 remains [`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088). Machine-readable metadata in [`CITATION.cff`](CITATION.cff).
 
 ---
 
@@ -310,11 +310,14 @@ they remain free for anyone to implement.
 **The author asserts no patent claims over the disclosed techniques and places
 them in the public domain for patenting purposes.**
 
-The disclosure is dated by two independent Zenodo records —
+The disclosure is dated by independent Zenodo records —
 [`10.5281/zenodo.21956743`](https://doi.org/10.5281/zenodo.21956743) for the
 artifact and
 [`10.5281/zenodo.21957088`](https://doi.org/10.5281/zenodo.21957088) for the
-paper — and by this repository at tag `v1`.
+paper, version 1.4 (14 August 2026, elements E1–E18), and
+[`10.5281/zenodo.23031305`](https://doi.org/10.5281/zenodo.23031305) for the
+paper, version 2 (29 September 2026, elements E19–E24) — and by this repository
+at tag `v1`.
 
 ## Contributing
 

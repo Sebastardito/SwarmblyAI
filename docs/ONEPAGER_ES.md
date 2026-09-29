@@ -7,7 +7,7 @@ lang: es
 ### La barrera para servir inteligencia artificial deja de ser el capital y pasa a ser la participación
 
 **Sebastián A. Espinoza-Ulloa, Ph.D.** · Investigador independiente
-Whitepaper v2.0 · especificación v0.2 · implementaciones de referencia, arnés de validación y mediciones publicadas
+Whitepaper v2.0 (doi:10.5281/zenodo.23031305) · especificación v0.2 · implementaciones de referencia, arnés de validación y mediciones publicadas
 AGPL-3.0-or-later (software) · CC BY 4.0 (texto) · `github.com/Sebastardito/Swarmbly-AI`
 
 ---
