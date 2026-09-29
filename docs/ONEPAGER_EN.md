@@ -6,8 +6,8 @@ lang: en
 
 ### The barrier to serving artificial intelligence stops being capital and becomes participation
 
-**Sebastián Espinoza** · Pontificia Universidad Católica del Ecuador · University of Saskatchewan
-Whitepaper v1.4 · specification v0.2 · reference implementation and first measurements published
+**Sebastián A. Espinoza-Ulloa, Ph.D.** · Independent researcher
+Whitepaper v2.0 · specification v0.2 · reference implementations, validation harness and measurements published
 AGPL-3.0-or-later (software) · CC BY 4.0 (text) · `github.com/Sebastardito/Swarmbly-AI`
 
 ---
@@ -40,61 +40,13 @@ A small orchestrator on the user's own computer decomposes a request into semant
 
 ## What has already been measured
 
-The design rests on one falsifiable claim: **the more shared context each fragment carries, the less quality is lost when the pieces are rejoined.** A go/no-go threshold was registered publicly *before any data existed* — if the loss never fell below 5 % in any task category, the architecture was to be abandoned.
+Two things are now measured, and they point in different directions. Both are stated here.
 
-It has now been tested on a corrected instrument, on a held-out corpus, against a
-cell named before the run. **The criterion was not met.**
+**Fragmenting has a cost, and the project's own abandonment test cannot yet rule on it.** A go/no-go threshold was registered publicly *before any data existed*: if the loss never fell below 5 % in any task category, the architecture was to be abandoned. On the first held-out test, 16 prompts, the loss was **+2.30 %**, 95 % CI **[−2.05 %, +7.49 %]**. The criterion was written against the upper bound, which misses the threshold, so the verdict was **not met** — and the threshold was not moved. The cost was bimodal: 11 of 16 prompts lost nothing or less, and two prompts carried the whole mean. A second campaign, **473 runs** over five families of small models, measured the cost at an equal output budget: **+11.17 %**, 95 % CI **[+4.80, +17.34]**. That aggregate is still confounded with how much each arm writes, so the published harness **refuses** to call the criterion met or failed. It is reported as *not measured*.
 
-| | |
-|---|---|
-| Cell, named in advance | `table_summary`, ρ = 3.5, N = 2, k = 1 |
-| Quality lost to fragmentation | **+2.30 %** |
-| 95 % CI, bootstrap clustered by prompt | **[−2.05 %, +7.49 %]** |
-| Criterion | the *upper bound* must clear 5 % |
-| Verdict | **NOT MET**, short by 2.49 points |
-| Corpus | 16 held-out prompts |
-| Control (N = 8, k = 1, required to fail) | +16.23 %, CI [+11.33 %, +20.28 %] — behaved |
+**Where the design says fragmenting should win, it does.** On structured extraction — reading the records out of a long document and answering questions over all of them — a small model extracting the pieces, with code aggregating them, beats the same model answering alone by **+46.9 points**, 95 % CI **[+33.3, +59.4]**. A control that extracts the whole document in a single call separates the two mechanisms. At 80 rows the whole gain comes from taking the arithmetic away from the model, and splitting adds nothing. At 160 rows single-call extraction collapses and only splitting holds it up, by **+77.1 points**. A small node extracts reliably up to some task size, and fragmenting is what keeps each task below that size. That is the thesis of the design, measured directly for the first time. It is also narrow — 8 documents, one model family, two sizes — and it is stated as narrow.
 
-The point estimate is comfortably under 5 %. The interval is not, and the
-criterion was written against the interval so that a favourable point estimate
-could not carry it on its own. The criterion is not met and is not being
-rewritten.
-
-The distribution is the more useful finding, and it is new. **The median prompt
-loses exactly nothing — 0.00 % — and 11 of 16 prompts are at or below zero** (six
-negative, five exactly zero). The mean is manufactured by two prompts:
-`tbl24_outturn` (+28.50 %) and `tbl24_bonded` (+23.08 %) together account for
-140 % of it, and without them the mean over the remaining fourteen is **−1.06 %**.
-So: **on 11 of 16 table-summarisation prompts, splitting the work in two was
-free; on two of them it was expensive.** Those two are also the only prompts
-where two fragments cost *more* than eight (+28.50 % vs +13.57 %, +23.08 % vs
-+14.00 %) — more fragments helping is not what a coherence-tax story predicts,
-which points at a partition-quality failure rather than a cost of fragmentation.
-That is a clue, not a tested claim, and it does not clear the bar: a bimodal cost
-with an identifiable boundary is worth more to a router than a low uniform one,
-but the threshold the project set for itself has not been met.
-
-**An earlier version of this page reported that loss falling 24.1 % → 13.7 % as
-shared context rose, and said the prediction held. That table is withdrawn.**
-Two defects, both in the measuring instrument rather than in the architecture.
-The first: a context budget below a prompt's *packing floor* — what the
-micro-tasks and their headers cost before any context is added — makes every
-packet collapse to its bare task, so two different budget labels produce
-identical packets. On that corpus 13 of 96 cells were above floor, and the two
-rows carrying the descent had none. The second: the coherence metric was not
-arm-neutral — the same text scored 0.9375 unfragmented and 0.5000 at eight
-fragments, an apparent loss of 46.7 % on text that never changed. Both are fixed
-and regression-tested; the harness now refuses to publish a below-floor cell.
-The withdrawal is kept in full in `docs/RESULTS_V0_V3C.md`.
-
-What survives is smaller and better established: at two fragments, on a held-out
-corpus, with a control that behaved, the cost of fragmentation is a few per cent
-and its distribution is bimodal. The project's own threshold says that is not
-good enough yet, and this page says so rather than moving the threshold. With a
-between-prompt variance this size, sixteen prompts cannot arithmetically bring a
-9.5-point interval under a 5-point threshold whatever the true effect is:
-widening the corpus is a prerequisite for re-testing, not a way of getting a
-better answer.
+**An earlier version of this page reported a loss falling 24.1 % → 13.7 % as shared context rose, and said the prediction held. That table is withdrawn**: the context axis had not actually moved, and the metric was not arm-neutral. The withdrawal is kept in full, with its arithmetic, in `docs/RESULTS_V0_V3C.md`.
 
 ## What has not been proven — stated here, not buried
 
@@ -108,11 +60,12 @@ everything, so the honest verdict then was *unsupported, not refuted*. Three
 later runs graded against an answer key instead put the common odds ratio at
 **3.47, then 0.26, then 1.24** — above, below and astride 1 on the same
 question. That is not a weak signal; it is no signal, measured three times. The
-confidence map has been **withdrawn**, not demoted, and it is dropped from the
-V7 benchmark.
+confidence map has been **withdrawn**, not demoted, and no reliability benefit
+is claimed for it.
 
-The measurements are also small: 16 held-out prompts, one seed, 2–3B models. A
-signal to act on, not a benchmark.
+The measurements are also small: models of 2–4B parameters on local hardware,
+and task families chosen because they can be checked. A signal to act on, not a
+benchmark.
 
 **Four things this project does not claim.** It is **not faster than a commercial API** for someone who already owns the hardware to run one — single-node speculative decoding beats any fragmentation scheme on latency, and Swarmbly's own latency has not been measured. It does **not offer unlimited context**, only a much higher limit that sits on the user's machine instead of in a vendor's price tier. It is **not encryption**: fragmentation raises the cost of reconstruction and nothing more, which is why genuinely sensitive work is routed to a closed circle or kept entirely local. And it has **not demonstrated an environmental benefit** — the argument is strong, the measurement is not yet made, and the project commits to publishing it whatever it shows.
 
@@ -122,12 +75,12 @@ This section exists because a project that hides its first negative result has n
 
 Small models crossed the capability line that makes this possible only recently; the bandwidth gap that killed model-splitting is not closing. The opportunity is a timing one.
 
-Published and public as of August 2026: a 27-page whitepaper with 90 references, a complete wire specification, a reference implementation with **558 passing tests**, a labelled evaluation corpus, an experimental harness that reports its own measurement failures, and the first real measurements in full. Everything is AGPL-3.0-or-later so that a hosted deployment cannot close it, with a public-domain-dated prior-art record.
+Published and public as of September 2026: whitepaper version 2 in English and Spanish, with 135 references; a complete wire specification; two reference implementations; a validation harness that refuses when its instrument cannot decide; a 473-run benchmark that anyone can re-execute; and every measurement in full, including the withdrawn ones. Everything is AGPL-3.0-or-later so that a hosted deployment cannot close it, with a dated prior-art record.
 
-**What it needs next is not funding first — it is participants.** The likeliest way this fails is not an engineering fault; it is that nobody connects. Volunteer computing has been declining for twenty years, and the best protocol in the world is worth nothing to an empty network.
+**What it needs next is a team and the means to run it at scale.** The next questions — where the extraction threshold sits for each class of node, and whether a context budget exists that satisfies coherence, privacy, verifiability and worker capability at once — need more than one person's hardware. And the likeliest way this fails is not an engineering fault; it is that nobody connects. Volunteer computing has been declining for twenty years, and the best protocol in the world is worth nothing to an empty network.
 
 The knowledge is already public. The hardware is already built. What remains is the protocol, and it is now on the table where anyone can check it.
 
 ---
 
-*Full technical argument: `docs/WHITEPAPER_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Current result in full: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. The withdrawn first measurements, kept with the arithmetic: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*
+*Full technical argument: `docs/WHITEPAPER_V2_EN.md`. Plain-language version: `docs/DIVULGACION_EN.md`. Current results in full: `docs/RESULTS_2026-09-25_refbench_EN.md`; the first held-out test: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. The withdrawn first measurements, kept with the arithmetic: `docs/RESULTS_V0_V3C.md`. Spanish version of this page: `ONEPAGER_ES.md`.*

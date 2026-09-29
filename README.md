@@ -70,27 +70,31 @@ whatever the true effect is; widening the corpus is a prerequisite for
 re-testing, not a way of getting a better answer. Full result:
 [`docs/RESULTS_TABLES_FINAL_CORRECTED.md`](docs/RESULTS_TABLES_FINAL_CORRECTED.md).
 
-### The reference campaign: five models, 341 runs
+### The reference campaign: five models, 473 runs
 
 Whitepaper v2 adds five falsifiable models, M1–M5, and a campaign that measures
 them: a separate reference implementation run against five local SLM families
 over 22 tasks. The record is committed
-(`swarmbly_ref/data/benchmark.jsonl`, 341 runs, digest anchored in the harness),
+(`swarmbly_ref/data/benchmark.jsonl`, 473 runs, digest anchored in the harness),
 so the table below is recomputed rather than quoted:
 
 | | Verdict | What decided it |
 |---|---|---|
-| **M4** — δ as a second axis | **falsified** | at constant ρ, cutting to maximise δ raises δ in 32/32 pairs and worsens the tax in only 19/32 |
-| **M2** — cardinality in the representation | **survives, corrected** | nodes obey `unique_here` 6/35 times; with mechanical enforcement, 35/35, with zero omissions |
+| **M4** — δ as a second axis | **falsified** | at constant ρ, cutting to maximise δ raises δ in 32/32 pairs and worsens the tax in only 15/32 |
+| **M2** — cardinality in the representation | **survives, corrected** | nodes obey `unique_here` exactly once in 23/35 cases; with mechanical enforcement, 35/35, with zero omissions |
 | **M3** — per-level triage gate | **survives** | contaminated packets do not reach assembly |
 | **M1** — learned-substitution aligner | **no instrument** | the corpus produced no genuine-disagreement regime |
-| **Per-cell routability** | **refuted** | AUC 0.38 with δ and reputation; node *class* separates, individual cells do not |
-| **Abandonment criterion** | **not measured** | the aggregate is confounded with the output budget; the harness refuses to rule |
+| **Per-cell routability** | **refuted** | AUC 0.57 with δ and reputation (0.61 with neither); node *class* separates, individual cells do not |
+| **Extract with the model, aggregate with code** (L curve v3) | **holds** | +46.9 points [+33.3, +59.4] over the model alone; the whole-document control credits aggregation by code at 80 rows and splitting at 160 rows (+77.1) |
+| **Abandonment criterion** | **not measured** | with a matched output budget fragmenting costs +11.17 % [+4.80, +17.34], but the aggregate stays confounded with output length; the harness refuses to rule |
 
-That last row is the important one. The fragmented arm was given more output
-budget than the monolithic one, and within a task writing more scores more, so
-the apparent advantage is not interpretable. The cause is located, the fix is
-committed, and the run that settles it is one command. Full record:
+The last two rows are the ones to read together. With the output budget
+matched, fragmenting costs quality in all five families, and the harness still
+refuses to turn that into a verdict because the two arms write different amounts
+and, within a task, writing more scores more. Where the design says fragmenting
+should win — small nodes extracting, code aggregating, on a task too large for
+one small node to extract in one call — it wins by a wide margin. That result is
+narrow (8 documents, one family, two sizes) and is declared as such. Full record:
 [`docs/RESULTS_2026-09-25_refbench_EN.md`](docs/RESULTS_2026-09-25_refbench_EN.md).
 
 **An earlier version of this section reported a coherence tax falling 24.1 % →
@@ -275,7 +279,7 @@ A trusted swarm relocates trust to whoever holds the whitelist; it does not remo
 ```
 swarmbly_v0/         V0 harness: privacy (tier routing), router, planner, packing,
                     assembler (macro), consensus (micro), metrics, experiment, report
-swarmbly_ref/        reference implementation (protocol v0.3) + the 341-run corpus
+swarmbly_ref/        reference implementation (protocol v0.3) + the 473-run corpus
 swarmbly_validation/ falsification harness for M1–M5, zero dependencies
 tests/               pytest suite
 prompts/             labelled prompt set (category, expected_decomposable) — doubles as router eval
@@ -290,8 +294,8 @@ assertable:
 python3 swarmbly_validation/run_all.py --all
 ```
 
-That runs the thirteen empirical tests against `swarmbly_ref/data/benchmark.jsonl`
-and exits non-zero if any fails. See
+That runs the eighteen empirical tests against `swarmbly_ref/data/benchmark.jsonl`
+and the L-curve records in `data/`, and exits non-zero if any fails. See
 [`swarmbly_validation/README_EN.md`](swarmbly_validation/README_EN.md) for what
 reproduces from a clean clone and what refuses.
 

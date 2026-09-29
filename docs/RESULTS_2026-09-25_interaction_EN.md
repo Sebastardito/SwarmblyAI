@@ -59,7 +59,7 @@ gradient manufactured by the denominator.
 ## 3. How the error was produced
 
 The finding was found by **exploring** the data, and was presented as settled
-before it was confirmed: in the review of 25 September it was described as "the
+before it was confirmed: in its first reading it was described as "the
 finding the context unlocked", it was claimed to resolve an open objection, and
 it was said to change the project's statement.
 

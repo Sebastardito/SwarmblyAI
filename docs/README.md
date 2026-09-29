@@ -46,7 +46,8 @@ implementation **V0** · new reference implementation **swarmbly_ref**
 | You have five minutes and want to know what Swarmbly is | `WHITEPAPER_V2_EN.md` Section 1 (or the repository root `README.md`) |
 | You want the full argument for the design | `WHITEPAPER_V2_EN.md` (v1.4 kept as `WHITEPAPER_EN.md`, superseded) |
 | You are going to implement a node or a client | `SPEC_EN.md` |
-| You want to see the numbers | the dashboard, `Swarmbly_AI_Dashboard.html` |
+| You want to see the numbers | `RESULTS_2026-09-25_refbench_EN.md` for the current campaign, `STATUS.md` for what may be quoted, and `python3 swarmbly_validation/run_all.py --all` to recompute them |
+| You want to know how a figure was reached, or why one was withdrawn | the research record below |
 | You want the reasoning, the alternatives, and the open questions | `WHITEPAPER_V2_EN.md` Sections 5–6, 11 and 16 — where the design is argued against itself |
 | You want to know where an idea came from | `REFERENCES.md` |
 | You want to contribute | `../CONTRIBUTING.md` |
@@ -62,23 +63,23 @@ implementation **V0** · new reference implementation **swarmbly_ref**
 
 The case for Swarmbly, with the theory of fragmentation the earlier version
 lacked: the semantic unit and the fragment, the derived context budget, the
-five falsifiable models M1–M5 **measured against 341 real runs** (§15.9), the
+five falsifiable models M1–M5 **measured against 473 real runs** (§15.9), the
 validation strategy (`VALIDATION_STRATEGY_V2`) and the fragmentation
 fundamentals extension (`WHITEPAPER_EXT`). This is the one to cite. Read it
-first.
+first. PDFs alongside: `WHITEPAPER_V2_EN.pdf` · `WHITEPAPER_V2_ES.pdf`.
 
 **`WHITEPAPER_EN.md`** · **`WHITEPAPER_ES.md`** — *v1.4, superseded*
 
-Kept as the published prior-art record (arXiv submission). Its measurements
+Kept as the published prior-art record (Zenodo, 14 August 2026). Its measurements
 remain valid with the corrections documented in v2.
 
 *El planteamiento de Swarmbly, con la teoría de la fragmentación que a la
 versión anterior le faltaba: la unidad semántica y el fragmento, el presupuesto
-de contexto derivado, los cinco modelos falsables M1–M5 **medidos contra 341
+de contexto derivado, los cinco modelos falsables M1–M5 **medidos contra 473
 corridas reales** (§15.9), la estrategia de validación
 (`VALIDATION_STRATEGY_V2`) y la extensión de fundamentos (`WHITEPAPER_EXT`).
 Éste es el que hay que citar. Se conserva v1.4 como registro de prior art
-publicado (envío a arXiv), con sus mediciones válidas bajo las correcciones
+publicado (Zenodo, 14 de agosto de 2026), con sus mediciones válidas bajo las correcciones
 documentadas en v2.*
 
 ### Protocol specification — the contract
@@ -122,27 +123,26 @@ ensamblado de secuencias y genómica, consenso en sistemas no confiables y
 gobernanza de software libre. Toda afirmación sobre trabajo previo en el
 whitepaper y en los documentos maestros se remite a una entrada de aquí.*
 
-### Dashboard — the numbers
+### Research record — how each figure was reached
 
-**`Swarmbly_AI_Dashboard.html`**
+Every measurement the whitepaper rests on has its own document, and so does every
+one that was withdrawn. They are kept as written; the header of each states
+whether it is current, superseded or withdrawn, and `STATUS.md` collects those
+states on one page. Pairs are EN · ES.
 
-Self-contained interactive HTML. Open it in a browser; nothing to install and
-no network access required. Presents the measured results, the comparative
-analysis, and the state of the V0 reference implementation in a form that is
-faster to interrogate than a table in a PDF.
+*Cada medición en la que descansa el whitepaper tiene su propio documento, y
+también cada una que se retiró. Se conservan tal como se escribieron; el
+encabezado de cada uno dice si está vigente, superado o retirado, y `STATUS.md`
+reúne esos estados en una página.*
 
-Every figure it displays is backed by a reproducible measurement — the
-measurement rule in `../CONTRIBUTING.md` Section 5 applies to this dashboard as
-strictly as it applies to a pull request. If a number appears here without a
-reproducible source behind it, that is a defect worth an issue.
-
-*HTML interactivo y autocontenido. Ábrelo en un navegador; no hay nada que
-instalar y no necesita red. Presenta los resultados medidos, el análisis
-comparativo y el estado de la implementación de referencia V0 en un formato más
-rápido de interrogar que una tabla en un PDF. Toda cifra que muestra está
-respaldada por una medición reproducible: la regla de medición de
-`../CONTRIBUTING.md` Section 5 se aplica a este panel con el mismo rigor que a un pull
-request.*
+| Kind | Documents |
+|---|---|
+| Current campaign | `RESULTS_2026-09-25_refbench_EN.md` · `_ES` — 473 runs, the verdicts on M1–M5 and the L curve · `VALIDATION_STRATEGY_V2_EN.md` · `_ES` · `WHITEPAPER_EXT_EN.md` · `_ES` |
+| Pre-registrations | `PREREGISTRATION_composition.md` · `_ES` · `PREREGISTRATION_term_once.md` · `_ES` · `PREREGISTRATION_comp_final_once_EN.md` · `PREREGISTRATION_comp_final_once.md` · `PREREGISTRATION_feasibility_EN.md` · `PREREGISTRATION_feasibility.md` · `PREREGISTRATION_L_curve_EN.md` · `PREREGISTRATION_L_curve.md` · `PREREGISTRATION_2026-09-25_interaction_EN.md` · `_ES` |
+| Results, September 2026 | `RESULTS_2026-09-05_three_tiers.md` · `_ES` · `RESULTS_2026-09-05_oracle_and_k3.md` · `_ES` · `RESULTS_2026-09-05_oracle_v2.md` · `_ES` · `RESULTS_2026-09-05_term_once_EN.md` · `RESULTS_2026-09-05_term_once.md` · `RESULTS_2026-09-05_final_dedup_EN.md` · `RESULTS_2026-09-05_final_dedup.md` · `RESULTS_2026-09-22_lcurve_dev_EN.md` · `RESULTS_2026-09-22_lcurve_dev.md` (a method defect; the L curve itself is measured in whitepaper v2, §15.4) · `RESULTS_2026-09-25_interaction_EN.md` · `_ES` · `RESULTS_COMPOSITION_FINAL.md` · `_ES` (superseded) |
+| Results, August 2026 | `RESULTS_V0_V3C.md` · `_ES` · `RESULTS_V3C_FF_COMPOSITION.md` · `_ES` · `RESULTS_V3C_GT_CORRECTED.md` · `_ES` · `RESULTS_V4.md` · `_ES` · `RESULTS_V5.md` · `_ES` · `RESULTS_V6.md` · `_ES` · `RESULTS_TABLES_DEV.md` · `_ES` · `RESULTS_TABLES_DEV2.md` · `_ES` · `RESULTS_TABLES_FINAL.md` · `_ES` (superseded) · `RESULTS_TABLES_FINAL_CORRECTED.md` · `_ES` |
+| Reviews, incidents and decisions | `REVISION_2026-08-12_EN.md` · `REVISION_2026-08-12.md` · `REVISION_2026-09-05_que_hemos_medido_EN.md` · `REVISION_2026-09-05_que_hemos_medido.md` · `STATE_2026-09-04.md` · `_ES` · `INCIDENT_2026-09-04_chain_misplan.md` · `_ES` · `FINDING_2026-09-04_segmenter_splits_question_from_data.md` · `_ES` · `POSTMORTEM_2026-09-05_four_tiers.md` · `_ES` · `ADR-001_instrument_boundary.md` · `_ES` |
+| Operations | `RUNBOOK.md` · `RUNBOOK_ES.md` — how to run each tier, and how to rehearse it first |
 
 ---
 
@@ -184,14 +184,11 @@ this page is a complete index.
 
 ---
 
-*Contact / Contacto: `sebas_saeu@hotmail.com` — placeholder; must be
-replaced before publication.*
+*Contact / Contacto: `sebas_saeu@hotmail.com`.*
 
 ## Public-facing material / Material divulgativo
 
 - `ONEPAGER_EN.md` · `ONEPAGER_ES.md` — the two-page argument for the project, written for a general and a prospective-supporter audience: the asymmetry, why model-splitting fails, the reframing, what the first measurements showed, and what they did not show. It states the negative result rather than omitting it — a summary that hides its first failure has not earned its first success. Companion PDFs alongside.
 - `DIVULGACION_ES.md` · `DIVULGACION_EN.md` — plain-language explainer of the project for a general audience. No jargon, no licensing or funding content. Companion PDFs alongside.
-- `Swarmbly_AI_Explicativo.html` — interactive bilingual dashboard that teaches the project by exploration: the bandwidth-gap comparison, the seven-step walkthrough, the confidence-map demonstration and the "when splitting does not work" checkpoint.
-- `Swarmbly_AI_Dashboard.html` — technical project dashboard (status, resolutions, architecture, coverage model, limitations, roadmap).
 
-**Note on cross-references.** All section references in the whitepaper and the specification are written out as "Section 5.4.1" / "sección 5.4.1". The Section symbol is not used anywhere in this documentation set.
+**Note on cross-references.** The v1.4 whitepaper and the specification write section references out as "Section 5.4.1" / "sección 5.4.1". Whitepaper v2 and the results documents use the section sign, "§5.4.1".

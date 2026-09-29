@@ -5,8 +5,9 @@
 # No placeholder values remain in this file. Fields that cannot yet be known
 # are commented out rather than filled with something unresolvable: an
 # invalid DOI in a published citation record is worse than an absent one.
-# As of 16 August 2026 the only such field is the arXiv identifier, which
-# waits on endorsement for cs.DC.
+# As of 29 September 2026 two such fields remain: the arXiv identifier, which
+# waits on endorsement for cs.DC, and the DOI of the version 2 record, which
+# Zenodo mints on deposit.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -45,12 +46,18 @@ abstract: >-
   and a reference harness that measures the coherence tax against a stated
   abandonment criterion. No claim is made of latency parity, unlimited context,
   cryptographic confidentiality or a demonstrated environmental benefit;
-  limitations and negative results are stated in full. This release comprises
-  whitepaper v1.4, protocol specification v0.2 (revision 2), and the V0 reference
-  implementation.
+  limitations and negative results are stated in full. Version 2 adds a theory
+  of the fragment (cut at weak-coupling interfaces, size L measured per node
+  class, overlap derived from observables, context budget formalised as an
+  indirect rate-distortion problem), five falsifiable models measured over 473
+  real runs, and a direct measurement of the design's thesis: extracting with a
+  small model and aggregating with code beats the model alone, and splitting
+  helps by itself once the task exceeds what a small node extracts reliably.
+  This release comprises whitepaper version 2 (English and Spanish), the
+  reference implementation, the validation harness and the benchmark corpus.
 
-version: "1.4.0"
-date-released: "2026-08-14"
+version: "2.0.0"
+date-released: "2026-09-29"
 license: AGPL-3.0-or-later
 
 authors:
@@ -144,10 +151,13 @@ references:
 preferred-citation:
   type: article
   title: >-
-    Swarmbly AI: Decentralized AI Inference by Fragmenting the Problem, Not the
-    Model
+    Semantic Fragmentation and Stochastic Assembly, version 2: A Protocol for
+    Decentralized Language-Model Inference over Untrusted Volunteer Nodes
   abstract: >-
-    Whitepaper v1.4 specifying the Swarmbly protocol: semantic decomposition of
+    Whitepaper version 2 of the Swarmbly protocol. It supersedes v1.4 and adds a
+    theory of the fragment, five falsifiable models measured over 473 real runs,
+    and a direct measurement of extraction by small nodes with aggregation by
+    code. Version 1.4 specified the Swarmbly protocol: semantic decomposition of
     a request into micro-tasks, asynchronous dispatch to volunteer nodes each
     running a complete small language model, and local reassembly by a
     client-side orchestrator. Its three substantive contributions are the
@@ -165,16 +175,16 @@ preferred-citation:
       email: "sebas_saeu@hotmail.com"
       orcid: "https://orcid.org/0000-0003-1497-356X"
   year: 2026
-  month: 8
-  # Paper DOI: the Zenodo preprint record, which carries the whitepaper's full
-  # academic title. An arXiv DOI (10.48550/arXiv.YYMM.NNNNN) will be added
-  # alongside it if and when the submission clears endorsement; it replaces
-  # nothing, because the Zenodo record is already the citable one.
-  doi: "10.5281/zenodo.21957088"
-  url: "https://doi.org/10.5281/zenodo.21957088"
+  month: 9
+  # Paper DOI: the Zenodo record of version 2, added when Zenodo mints (or
+  # reserves) it. The v1.4 record (10.5281/zenodo.21957088) is the previous
+  # version, not this one, so it is not reused here. An arXiv DOI will be added
+  # alongside it if and when the submission clears endorsement.
+  url: "https://github.com/Sebastardito/Swarmbly-AI"
   # journal: not applicable while it is a preprint
   notes: >-
-    Preprint, deposited on Zenodo 2026-08-14. Intended additional venue: arXiv,
+    Version 2, 2026-09-29; supersedes v1.4 (Zenodo 10.5281/zenodo.21957088,
+    deposited 2026-08-14). Intended additional venue: arXiv,
     primary category cs.DC — deferred, because a first-time submitter to that
     archive requires endorsement and none had been obtained at time of
     publication. The prior-art position does not depend on arXiv: the Zenodo

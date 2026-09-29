@@ -58,7 +58,7 @@ fabricado por el denominador.
 ## 3. Cómo se produjo el error
 
 El hallazgo se encontró **explorando** los datos, y se presentó como resuelto
-antes de confirmarlo: en la revisión del 25 de septiembre se describió como «el
+antes de confirmarlo: en su primera lectura se describió como «el
 hallazgo que el contexto destrabó», se afirmó que resolvía una objeción abierta
 y se dijo que cambiaba el enunciado del proyecto.
 

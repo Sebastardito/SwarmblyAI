@@ -7,7 +7,7 @@ lang: en
 ## An artificial intelligence built by everyone
 
 **Public explainer**
-Sebastián A. Espinoza-Ulloa, Ph.D. · 14 August 2026
+Sebastián A. Espinoza-Ulloa, Ph.D. · 14 August 2026 · updated 29 September 2026
 
 ---
 
@@ -210,6 +210,23 @@ On this last point an honest qualification is in order. By making AI cheaper and
 ---
 
 ## 11. What the first measurements showed
+
+> **Update, September 2026.** Since this section was written, a much larger round
+> of tests has been run: 473 runs, with five different families of small models.
+> Two things came out of it. The first is a cost: when both ways of working are
+> given the same room to write, splitting a task still loses some quality — about
+> 11 % on average — although the software that checks the results refuses to
+> call that final, because the two ways of working also write different amounts,
+> and that alone moves the score. The second is the result the design was built
+> around. On a task where a small model has to read many records out of a long
+> document and answer questions about all of them, letting the model only read,
+> and letting ordinary code do the counting, gave far better answers than asking
+> the same model to do everything at once. And when the document was long enough,
+> reading it in pieces was the only way the small model kept up: in one go, it
+> lost track. That is exactly the situation Swarmbly is meant for. It was
+> measured on a small set of documents, with one model family, and the full
+> account is in the whitepaper, version 2. What follows is the earlier round,
+> kept as it was written.
 
 The project has now been run against real language models — small models on one laptop. Two predictions were put to the test. **Neither of them passed**, and the reasons are different in each case. Both are below.
 

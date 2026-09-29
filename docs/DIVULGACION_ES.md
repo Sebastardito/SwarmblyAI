@@ -7,7 +7,7 @@ lang: es
 ## Una inteligencia artificial construida entre todos
 
 **Documento divulgativo**
-Sebastián A. Espinoza-Ulloa, Ph.D. · 14 de agosto de 2026
+Sebastián A. Espinoza-Ulloa, Ph.D. · 14 de agosto de 2026 · actualizado el 29 de septiembre de 2026
 
 ---
 
@@ -210,6 +210,25 @@ Sobre este último punto conviene una precisión honesta. Al abaratar y facilita
 ---
 
 ## 11. Qué mostraron las primeras mediciones
+
+> **Actualización, septiembre de 2026.** Desde que se escribió esta sección se
+> hizo una ronda de pruebas mucho más grande: 473 corridas, con cinco familias
+> distintas de modelos pequeños. Salieron dos cosas. La primera es un costo:
+> cuando a las dos formas de trabajar se les da el mismo espacio para escribir,
+> repartir una tarea todavía pierde algo de calidad —alrededor de un 11 % en
+> promedio—, aunque el programa que revisa los resultados se niega a darlo por
+> definitivo, porque las dos formas de trabajar también escriben cantidades
+> distintas, y eso por sí solo mueve la nota. La segunda es el resultado en torno
+> al cual se construyó el diseño. En una tarea en la que un modelo pequeño tiene
+> que leer muchos registros de un documento largo y responder preguntas sobre
+> todos ellos, dejar que el modelo sólo lea, y que un programa corriente haga las
+> cuentas, dio respuestas mucho mejores que pedirle al mismo modelo que lo hiciera
+> todo de una vez. Y cuando el documento era lo bastante largo, leerlo por partes
+> fue la única manera de que el modelo pequeño no se perdiera: de una sola vez,
+> perdía el hilo. Es exactamente la situación para la que existe Swarmbly. Se
+> midió con un conjunto pequeño de documentos y una sola familia de modelos, y el
+> relato completo está en la versión 2 del whitepaper. Lo que sigue es la ronda
+> anterior, conservada tal como se escribió.
 
 El proyecto ya se ha ejecutado contra modelos de lenguaje reales: modelos pequeños en un portátil. Se pusieron a prueba dos predicciones. **Ninguna de las dos pasó**, y las razones son distintas en cada caso. Las dos están aquí abajo.
 

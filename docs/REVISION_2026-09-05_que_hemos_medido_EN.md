@@ -4,10 +4,10 @@ lang: en
 ---
 # Are we going in circles? — a review of the framing
 
-**September 5, 2026.** Written because Seb asked two things that had to be
-answered without getting defensive: whether there is something wrong in how the
-tests are framed, and whether there is a bias toward exposing weaknesses instead
-of seeing the strength of the foundation.
+**September 5, 2026.** A review of the framing that answers two questions
+without getting defensive: whether there is something wrong in how the tests are
+framed, and whether there is a bias toward exposing weaknesses instead of seeing
+the strength of the foundation.
 
 Both answers are **yes, in part** — and the second points to a framing defect
 that is larger than any of the execution errors.
@@ -54,9 +54,8 @@ That does not invalidate any measurement. It invalidates them as an
 * `packing_ceiling`, `predict_rho` and `check_grid` exist to eliminate **false
   failures** — cells that aborted because of the grid, not because of the
   architecture.
-* The oracle arm was built to give the architecture its **best case**, and when
-  the first policy was unfairly hard on myself I corrected it and measured both
-  halves.
+* The oracle arm was built to give the architecture its **best case**, and when the first policy turned out unfairly hard on the architecture itself it was
+corrected and both halves were measured.
 
 ### Where the framing IS tilted
 
@@ -66,15 +65,14 @@ That does not invalidate any measurement. It invalidates them as an
    measure that means always taking the most pessimistic estimate. It is the
    right choice for a claim of the form "it costs less than 5 points", but it
    means a marginally good result reads as a failure.
-3. **I replaced a favorable instrument with an unfavorable one.** The coherence
-   tax read +0.14%; I argued it was saturated and blind to duplication and
-   omission — which is true and demonstrable — and I replaced it with a count
+3. **A favorable instrument was replaced with an unfavorable one.** The coherence
+tax read +0.14%; it was argued to be saturated and blind to duplication and
+omission — which is true and demonstrable — and it was replaced with a count
    that reads 22 points. The justification is solid; **the direction of the
    change deserves to be written down**.
 4. **The composition corpus is built with the hardest possible conjunction for
-   parallel workers**: `must_mention` + `term_once` on the same term. I built it
-   that way so the baseline would not saturate. The side effect is that I
-   selected exactly the constraints that are sensitive to coordination.
+   parallel workers**: `must_mention` + `term_once` on the same term. It was built that way so the baseline would not saturate. The side effect is
+that it selected exactly the constraints that are sensitive to coordination.
 5. **3B models confuse capability with architecture.** A good part of the loss
    on `must_mention` is the model not following the instruction, not the
    architecture losing information. There is no arm that separates the two.
@@ -153,6 +151,6 @@ architecture and are documented.
 **There is a bias in the framing**, and it is this: for three weeks we evaluated
 Swarmbly solely on the axis where fragmenting can only lose, on tasks that never
 needed fragmenting. That was not a decision anyone made; it was one nobody made,
-and I should have seen it before you did.
+and it should have been seen sooner.
 
 The foundation has not been refuted. **It has been left untested.**

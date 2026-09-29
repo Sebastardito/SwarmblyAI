@@ -4,9 +4,9 @@ lang: es
 ---
 # ¿Vamos en círculos? — revisión del planteamiento
 
-**5 de septiembre de 2026.** Escrito porque Seb preguntó dos cosas que había que
-contestar sin defenderse: si hay algo mal en cómo están planteadas las pruebas, y
-si hay un sesgo hacia evidenciar debilidades en vez de ver la fortaleza del
+**5 de septiembre de 2026.** Una revisión del planteamiento que responde dos
+preguntas, sin defenderse: si hay algo mal en cómo están planteadas las pruebas,
+y si hay un sesgo hacia evidenciar debilidades en vez de ver la fortaleza del
 fundamento.
 
 Las dos respuestas son **sí, en parte** — y la segunda apunta a un defecto de
@@ -54,8 +54,8 @@ arquitectura**.
 * `packing_ceiling`, `predict_rho` y `check_grid` existen para eliminar
   **falsos fallos** — celdas que abortaban por la grilla, no por la arquitectura.
 * El brazo oráculo se construyó para darle a la arquitectura su **mejor caso**, y
-  cuando la primera política fue injustamente dura conmigo mismo la corregí y
-  medí las dos mitades.
+  cuando la primera política resultó injustamente dura con la propia arquitectura
+se corrigió y se midieron las dos mitades.
 
 ### Donde el planteamiento SÍ está inclinado
 
@@ -66,15 +66,15 @@ arquitectura**.
    medida de *costo* eso significa tomar siempre la estimación más pesimista. Es
    la elección correcta para una afirmación del tipo "cuesta menos de 5 puntos",
    pero significa que un resultado marginalmente bueno se lee como fracaso.
-3. **Reemplacé un instrumento favorable por uno desfavorable.** El impuesto de
-   coherencia leía +0.14 %; argumenté que estaba saturado y ciego a duplicación y
-   omisión — lo cual es cierto y demostrable — y lo sustituí por un conteo que
+3. **Se reemplazó un instrumento favorable por uno desfavorable.** El impuesto de
+coherencia leía +0.14 %; se argumentó que estaba saturado y ciego a duplicación
+y omisión — lo cual es cierto y demostrable — y se sustituyó por un conteo que
    lee 22 puntos. La justificación es sólida; **la dirección del cambio merece
    quedar escrita**.
 4. **El corpus de composición está construido con la conjunción más difícil
    posible para trabajadores paralelos**: `must_mention` + `term_once` sobre el
-   mismo término. Lo construí así para que la línea base no se saturara. El
-   efecto lateral es que seleccioné justo las restricciones sensibles a
+   mismo término. Se construyó así para que la línea base no se saturara. El efecto lateral es que
+se seleccionaron justo las restricciones sensibles a
    coordinación.
 5. **Modelos de 3B confunden capacidad con arquitectura.** Buena parte de la
    pérdida en `must_mention` es que el modelo no sigue la instrucción, no que la
@@ -154,6 +154,6 @@ arquitectura y están documentados.
 **Sí hay un sesgo en el encuadre**, y es este: durante tres semanas evaluamos
 Swarmbly únicamente en el eje donde fragmentar sólo puede perder, sobre tareas
 que nunca necesitaron fragmentarse. Eso no fue una decisión que alguien tomara;
-fue una que nadie tomó, y yo tenía que haberla visto antes que tú.
+fue una que nadie tomó, y tenía que haberse visto antes.
 
 El fundamento no ha sido refutado. **Ha sido no probado.**

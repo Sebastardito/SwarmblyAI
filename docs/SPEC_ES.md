@@ -7,7 +7,7 @@ lang: es
 **Versión 0.2 — 13 de agosto de 2026**
 *Revisión 2, 14 de agosto de 2026: añade la sección 15c (niveles de privacidad y enjambres de confianza), los campos `tier` y `swarm_id` del paquete, el bloque opcional `swarm` del anuncio de nodo, el bloque `routing` de la respuesta y los códigos de error `E_TIER_VIOLATION`, `E_MTLS_REQUIRED` y `E_SWARM_UNKNOWN`. Toda adición es compatible a nivel MINOR según la sección 3: una implementación que ignore los campos nuevos se comporta exactamente como el nivel `GLOBAL`, de modo que la versión de protocolo sigue siendo `0.2`.*
 Estado: **Borrador.** Normativa para la implementación de referencia; se espera que cambie antes de la v1.0.
-Documentos complementarios: `WHITEPAPER_ES.md` (fundamento y evidencia), `SPEC_EN.md` (inglés).
+Documentos complementarios: `WHITEPAPER_V2_ES.md` (fundamento y evidencia; la sección 9 describe los cambios del protocolo hacia la v0.3), `WHITEPAPER_ES.md` (v1.4, la versión contra la que se escribió esta revisión), `SPEC_EN.md` (inglés).
 
 Las palabras clave MUST, MUST NOT, REQUIRED, SHALL, SHOULD, SHOULD NOT, MAY y OPTIONAL deben interpretarse tal como se describe en RFC 2119. Se conservan deliberadamente en inglés y en mayúsculas, conforme a la práctica habitual en las especificaciones técnicas redactadas en español, para que su fuerza normativa sea inequívoca y coincida exactamente con la del texto de RFC 2119.
 
@@ -541,4 +541,4 @@ Omitir `rho_floor` o `rho_reachable` es no conformante. Sin ellos, quien consuma
 
 ---
 
-*Especificación v0.2 (revisión 2), 14 de agosto de 2026. Normativa para la implementación de referencia en `swarmbly_v0/`. Fundamento, evidencia y citas: `WHITEPAPER_ES.md`.*
+*Especificación v0.2 (revisión 2), 14 de agosto de 2026. Normativa para la implementación de referencia en `swarmbly_v0/`. Fundamento, evidencia y citas: `WHITEPAPER_V2_ES.md`.*

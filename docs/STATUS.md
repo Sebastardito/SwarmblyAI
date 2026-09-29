@@ -71,20 +71,6 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 
 ---
 
-## Histórico · Historical — 1
-
-Correcto tal como fue escrito, en su fecha. No es una instrucción viva.
-
-*Correct as written, on its date. Not a live instruction.*
-
-
-| documento | otro idioma | por qué |
-|---|---|---|
-| `AUDIT_VERSIONING.md` | [`AUDIT_VERSIONING_ES.md`](AUDIT_VERSIONING_ES.md) | A dated audit of 27 August. Its findings are left as written; the remedial steps it prescribes were carried out and are not a live instruction. |
-
-
----
-
 ## Superado · Superseded — 4
 
 Hay una medición posterior de lo mismo. Citar la sucesora.

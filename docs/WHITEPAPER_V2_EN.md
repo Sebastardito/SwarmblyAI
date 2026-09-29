@@ -25,33 +25,32 @@ ORCID: [0000-0003-1497-356X](https://orcid.org/0000-0003-1497-356X) · GitHub: [
 > used throughout this document derives from that background; Section 3 states
 > the criterion by which an analogy of that origin is accepted or discarded.
 
-**Version 2.0 — 25 September 2026**
+**Version 2.0 — 29 September 2026**
 
 ---
 
 > ## Status of this document: PUBLISHED
 >
-> The previous version of this block said **DO NOT PUBLISH**, for two reasons
-> with a declared expiry date. They have been met, and the trade is written down
-> rather than deleted.
+> Version 2.0, dated 29 September 2026. It supersedes version 1.4, dated 14
+> August 2026, which is kept as `WHITEPAPER_EN.md`.
 >
-> **First: the new models had not been falsified.** They have been now. All five
-> faced their own test over **473 real runs** with five local model families
-> (§15.9). **M4 is falsified** in two independent instruments, with a controlled
-> experiment at constant ρ. **M2 survives corrected**, and the correction
-> withdraws a sentence from this very document. M3 survives. M1 still lacks the
-> regime it needs and M5 is unmeasured. The document is published **with** those
-> verdicts inside it, not in spite of them.
+> **The new models faced their own test.** All five were measured over **473
+> real runs** with five local model families (§15.9). **M4 is falsified** in two
+> independent instruments, with a controlled experiment at constant ρ. **M2
+> survives corrected**, and the correction withdraws a sentence from this very
+> document. M3 survives. M1 still lacks the regime it needs and M5 is
+> unmeasured. The document is published **with** those verdicts inside it.
 >
-> **Second: publication is what creates prior art.** The elements E19–E24 that
-> Section 17 declares become prior art **upon publication of this document**, and
-> not before.
+> **Prior art.** The elements E19–E24 that Section 17 declares become prior art
+> **upon publication of this document**.
 >
-> **What this document still cannot claim** is in L21 and §15.9: the measured
-> aggregate advantage of fragmenting is confounded with the output budget, so the
-> abandonment criterion has **neither been met nor failed — it has not been
-> measured**. The missing claim is identified, the cause is located in the code,
-> and the run that resolves it is implemented.
+> **What this document does not claim** is in L21 and §15.9: with a matched
+> output budget, fragmenting costs (T09R), but the aggregate is still confounded
+> with output length, so the abandonment criterion has **neither been met nor
+> failed — it has not been measured**. **What it does claim, with its scope
+> declared**, is in §15.4: extracting with the model and aggregating with code
+> beats the model alone (T08R3), and splitting helps by itself when the task
+> exceeds what a small node extracts reliably (T08R4).
 
 ---
 
@@ -106,7 +105,7 @@ assembly and dispatch.
 | DAG with no control between levels | **Extended** with a per-level triage gate, by analogy with chaperones (M3, §8.2, §10.7) |
 | `k` replicas as one parameter | **Split** into availability, verification and epistemic redundancy (M5, §12) |
 | Genomic analogy as vocabulary plus one warning | **Formalised** as an explicit method: the instrument test and the failure-mode test (§3) |
-| Declared elements E1–E18 | E1–E18 **unchanged**, plus E19–E24 (§17), **not yet published** |
+| Declared elements E1–E18 | E1–E18 **unchanged**, plus E19–E24 (§17), **published with this version** |
 | The five models M1–M5, stated and unmeasured | **Measured** against 473 real runs over five local model families (§15.9). One is falsified (M4, in two independent instruments), one survives corrected (M2), one survives (M3), and two remain unmeasured (M1, M5) |
 
 Two hypotheses entered the literature review and **did not survive**: *mate
@@ -176,8 +175,8 @@ internet — serves Llama-2-70B on three T4s at 2.29 steps/s over a 1 Gbit/s lin
 with sub-5 ms RTT, falling to 1.57 steps/s at 100 Mbit/s and 100 ms: a 31% loss
 attributable to the network alone. A real geodistributed swarm of fourteen
 heterogeneous servers achieves 0.83 steps/s [1, 2]. Analyses of model-parallel
-schemes at public-internet latency find that pipeline parallelism is the *only*
-viable model-parallel arrangement — it communicates least — and that
+schemes at public-internet latency find that pipeline parallelism is the best-suited
+model-parallel arrangement — it communicates least — and that
 asynchronous micro-batching does not help, because decoding is bound by KV-cache
 movement rather than by compute [25].
 
@@ -360,7 +359,7 @@ Two things have changed since v1.4 and both must be faced head-on.
 **The nearest neighbour now exists.** SWARM-LLM (Dahshan, Mamun & Debnath, VTC
 2026) [134] routes a query to a local SLM, to several peer SLMs at the edge with
 **weighted consensus where lower-uncertainty nodes weigh more**, or escalates to
-the cloud. It reports ~28% cloud usage and accuracy on hard questions rising from
+the cloud. It reports \~28% cloud usage and accuracy on hard questions rising from
 0% to 15% over a load of **50 queries**. That is weak empirical evidence — 50
 queries — but it claims the territory, and it must be cited and differentiated
 from. The difference is that its consensus is a scalar weighting per node, and
@@ -1207,8 +1206,8 @@ c  ≥  ln(1/ε) / (1 − p)
 **And the field numbers to feed it.** Anderson & Fedak (2006) [131], over more
 than 330,000 SETI@home hosts: mean on-fraction **0.81**, connected fraction
 **0.83**, mean active fraction **0.84**, **host mean lifetime 91 days**. The 2018
-version [132] reports ~700,000 devices and availability of **~60%** for desktop
-machines and **~40%** for mobile. A loss rate of 16–40% is exactly the regime
+version [132] reports \~700,000 devices and availability of **\~60%** for desktop
+machines and **\~40%** for mobile. A loss rate of 16–40% is exactly the regime
 threshold redundancy is designed for (§12.3).
 
 **Scope, and a claim.** The model bounds *availability*: the probability that a
@@ -2040,7 +2039,7 @@ positive side: Mallick et al. (2019) [127] obtain up to **3× speedup** applying
 rateless codes to distributed matrix-vector multiplication — **because
 matrix-vector multiplication is linear**. And the only serious attempt at coding
 non-linear inference, ApproxIFER [129], achieves **approximate** recovery over
-low-dimensional classification outputs, with accuracy losses of up to ~6–9% in
+low-dimensional classification outputs, with accuracy losses of up to \~6–9% in
 degraded mode.
 
 A specific search was made for prior work applying fountain codes to LLM agent
@@ -2242,7 +2241,7 @@ affordable: single-digit percentage overhead is the only confidentiality primiti
 in this space with that property.
 
 The `SANITISABLE` lane must be described honestly. Against an undefended model on a
-legal-text corpus, PII extraction reaches ~23% recall and ~30% precision, and PII
+legal-text corpus, PII extraction reaches \~23% recall and \~30% precision, and PII
 *inference* from 100 candidates reaches 70%, 50% and 28% on three corpora.
 Differential privacy at ε=8 reduces extraction recall to about 3% — but not to zero
 [74], and differentially private generation measurably degrades language quality
@@ -2374,9 +2373,10 @@ proprietary stack; the licence covers software, not the protocol, so a clean-roo
 reimplementation is lawful; and its practical force is deterrence rather than
 litigation.
 
-The strongest empirical guidance comes from the recent relicensing wave: four of
-four projects that hardened their licences produced a successful independent fork,
-and two of the four subsequently reverted to AGPL [81, 82]. Starting at AGPL and
+The strongest empirical guidance comes from the recent relicensing wave: of the four
+best-known projects that hardened their licences, three produced a successful
+independent fork (OpenSearch, Valkey, OpenTofu), and two of the four subsequently
+reverted to AGPL [81, 82]. Starting at AGPL and
 staying there is the position that history supports.
 
 Two structural decisions follow. Dual licensing is rejected — it requires an entity
@@ -2403,9 +2403,9 @@ support the *motivation*.
 They do not support a claim of net benefit, and I do not make one. Energy per token
 varies by nearly three orders of magnitude across configurations, and datacenter
 accelerators achieve the lowest energy per token in the large majority of
-scenarios; idle draw of 12–90 W is paid in full by a node that is available but
+scenarios; idle draw of 12–59 W is paid in full by a node that is available but
 unused [85]. Global PUE is 1.54, but hyperscalers operate at 1.09–1.15 against a
-home's effective ~1.0 — a margin of 9–15%, not an order of magnitude [86].
+home's effective \~1.0 — a margin of 9–15%, not an order of magnitude [86].
 
 The commitment I make instead is procedural: adopt the Software Carbon Intensity
 standard — `SCI = ((E × I) + M) / R`, ISO/IEC 21031:2024, which explicitly excludes
@@ -2487,7 +2487,7 @@ self-consistency**, not only against the naive monolithic baseline. A multi-agen
 architecture that only beats single-pass monolithic generation is comparing itself
 against the wrong rival.
 
-**The criterion is not measured — and the cleanest measurement is a cost.** The aggregate tax is confounded with output length in **both directions** (full budget: the fragmented arm writes **1.39×** the monolithic and scores more; divided budget: **0.43×** and scores less), and truncating to a fixed reading budget **T** flips the sign of the tax with T (**−15.66 %** at T=40 to **+7.69 %** at T=120, T13). The position-of-first-mention instrument (T13b, SWIP-0001), corrected so that an omitted key is charged at the end of the text (worst case), also does not decide: displacement **+0.0036** of the arm's own length, 95 % CI **[−0.0948, +0.0994]** — a null with an interval ~5× wider than the threshold — and the two corpus halves disagree in sign, so the instrument **refuses** (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**, over 423 keys of which the fragmented arm omits **217** against the monolithic's **82**). The measurement that does survive is economic: under the equalised budget, fragmenting **costs in all five families** (over the 95 criterion cells, T09R: means **+6.2 %** to **+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI **[+4.80, +17.34]**, T09R), and the measured per-class policy is **not to fragment** (**+0.0 %** against **+14.8 %** for always fragmenting). That is the result this section reports first, because it is the one the data support.
+**The criterion is not measured — and the cleanest measurement is a cost.** The aggregate tax is confounded with output length in **both directions** (full budget: the fragmented arm writes **1.39×** the monolithic and scores more; divided budget: **0.43×** and scores less), and truncating to a fixed reading budget **T** flips the sign of the tax with T (**−15.66 %** at T=40 to **+7.69 %** at T=120, T13). The position-of-first-mention instrument (T13b, SWIP-0001), corrected so that an omitted key is charged at the end of the text (worst case), also does not decide: displacement **+0.0036** of the arm's own length, 95 % CI **[−0.0948, +0.0994]** — a null with an interval \~5× wider than the threshold — and the two corpus halves disagree in sign, so the instrument **refuses** (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**, over 423 keys of which the fragmented arm omits **217** against the monolithic's **82**). The measurement that does survive is economic: under the equalised budget, fragmenting **costs in all five families** (over the 95 criterion cells, T09R: means **+6.2 %** to **+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI **[+4.80, +17.34]**, T09R), and the measured per-class policy is **not to fragment** (**+0.0 %** against **+14.8 %** for always fragmenting). That is the result this section reports first, because it is the one the data support.
 
 ### 15.3 What was measured, and what was withdrawn
 
@@ -2539,7 +2539,7 @@ there is no difference to measure.
 **Verifying the instrument is what saved the run.** Before concluding anything, the
 grading was checked: a hand-built perfect answer scores 100% on all 72 documents.
 The grader is not the problem. Five model families were then probed on the same
-material: **4 of 5 do the local lookups at ~0.84**, and global questions come out
+material: **4 of 5 do the local lookups at \~0.84**, and global questions come out
 at **4 of 60** across all of them. A hypothesis that the contract wrapper was
 strangling the global answer was tested with an A/B and **was refuted by its own
 measurement**: 4/60 both ways, delta 0.000.
@@ -2970,7 +2970,7 @@ has one working coherence instrument, not two.
 
 **[v0.3] L15 — The L curve is not measurable with the current corpus.** The
 monolithic arm answers 1 of 72 global questions. The grader is verified and the five
-families do local lookups at ~0.84, so the defect is in corpus design rather than in
+families do local lookups at \~0.84, so the defect is in corpus design rather than in
 the instrument or the models — but the practical effect is that `L`, the parameter
 Section 5 makes central, **has no measured curve yet**. The held-out split must not
 be spent until an answerable global question exists (§15.4).
@@ -3008,8 +3008,10 @@ quality: real, measurable and small.
 **L21 — The measured tax depends on the output budget, and until it is matched
 there is no feasibility verdict.** This is the most important limitation of this
 version. All of the §15.9 material on M2, M3 and M4 stands; the claim
-"fragmenting pays" **has not been measured**. The correction is implemented and
-the pending run costs minutes of compute (§15.9).
+"fragmenting pays" **has not been measured**. The matched-budget run has been
+done and gives a cost, not an advantage (T09R); but that aggregate is still
+confounded with output length in both directions, so the feasibility verdict
+**refuses** (§15.9).
 
 **L22 — The recurring defect of §15.7 appeared a fifth time, inside the analysis
 that documents it.** The defence that worked was not more care: it was
@@ -3180,27 +3182,32 @@ turns into a criterion.
 The case against is equally specific and is in Section 16. Independent generation
 loses quality for theoretical rather than incidental reasons. The client-side model
 on which the design depends sits at the weak end of measured planning ability.
-Volunteer computing has been contracting for twenty years. And the measurements
-made so far have gone against the design: the coherence criterion was not met, the
-ρ-tax curve is withdrawn, the confidence map's reliability claim is withdrawn, and
-the `L` curve — the axis this version makes central — is still not measurable with
-the corpus that exists.
+Volunteer computing has been contracting for twenty years. And several measurements
+have gone against the design: the coherence criterion was not met, the ρ-tax curve
+and the confidence map's reliability claim remain withdrawn, M4 is falsified, and
+with a matched output budget fragmenting **costs** in all five families measured.
 
-What survives is specific and is enough to continue: a measured and **bimodal**
-cost — eleven of sixteen prompts fragment for free, two are expensive — a control
-that failed as it was required to, a verified grading instrument, and a set of
-models that say in advance what would kill them. What remains to settle is what
-separates the eleven prompts from the two, and whether a context budget exists that
-satisfies coherence, privacy, verifiability and worker capability at once, at a cost
-below the value of the aggregated capacity.
+What survives is specific and is enough to continue. The `L` curve — the axis this
+version makes central — has now been measured with a genuine fragmented arm, and it
+measures the design's thesis directly: **extracting with the model and aggregating
+with code beats the model alone** (T08R3), and the whole-document control separates
+the two mechanisms (T08R4). At 80 rows the gain comes from taking the arithmetic
+away from the model and splitting adds nothing; at 160 rows single-call extraction
+collapses and only splitting sustains it. A small node extracts reliably up to some
+task size, and fragmenting is what keeps each task below that threshold. The scope
+is narrow — few documents, one family, two sizes — and §15.4 declares it as such.
+Add to that a control that failed as it was required to, a verified grading
+instrument, a harness that refuses when its instrument cannot decide, and a set of
+models that say in advance what would kill them. What remains to settle is where
+that threshold lies and how it moves with the node class, and whether a context
+budget exists that satisfies coherence, privacy, verifiability and worker
+capability at once, at a cost below the value of the aggregated capacity.
 
-This document is not published yet, and the reason is consistent with all of the
-above: **the models it proposes are falsifiable and have not been falsified.**
-Publishing them before submitting them would be claiming credit for the easy part.
-Section 15.6 says in what order to attack them and what each costs; the first costs
-nothing and the last produces the most distinctive property. Once that agenda has
-been run — whatever its outcome — this document is published, and then it is prior
-art.
+This document is published now for the same reason that previously held it back:
+**the models it proposes were falsifiable, and they have now faced their test.**
+The verdicts are inside — one falsified, one corrected, one standing, two
+unmeasured — and Section 15.6 says how to attack the remaining ones and what each
+costs. With this publication, elements E19–E24 become prior art.
 
 If it works, the result is not a cheaper way to buy what is already sold. It is
 inference capacity that grows with the number of people who participate rather than
@@ -3218,128 +3225,208 @@ open, where it can be checked.
 > are new in this version and correspond to the bibliographic review of the
 > fragmentation fundamentals; all of them were verified against the online source
 > indicated, and where only the abstract could be confirmed this is noted. Entries
-> marked ⚠ carry forward an unconfirmed identifier from v1.4 and **must be completed
-> before any publication**; they are left visibly incomplete rather than filled in
-> from memory.
+> that carried forward an unconfirmed identifier from v1.4 were completed against
+> the source for this publication. Those still marked ⚠ are only partly confirmed
+> and say so, rather than being filled in from memory.
 
 ### Decentralized inference and training
 
 [1] Borzunov, A., et al. (2023). Petals: Collaborative inference and fine-tuning of large models. *ACL 2023: System Demonstrations*. https://arxiv.org/abs/2209.01188
+
 [2] Borzunov, A., et al. (2023). Distributed inference and fine-tuning of large language models over the internet. *arXiv*. https://arxiv.org/abs/2312.08361
+
 [3] Petals project. (2023). *Petals project repository, release v2.2.0* [software].
+
 [4] Ryabinin, M., & Gusev, A. (2020). Towards crowdsourced training of large neural networks using decentralized mixture-of-experts. *NeurIPS, 33*, 3659–3672.
+
 [5] Ryabinin, M., Dettmers, T., Diskin, M., & Borzunov, A. (2023). SWARM parallelism. *ICML*, 29633–29654.
+
 [6] Bittensor. (n.d.). *Incentivizing intelligence*. https://bittensor.com/academia
-[7] *Stake-concentration analysis of Bittensor subnets*. (n.d.). ⚠ unverified.
+
+[7] Lui, E., & Sun, J. (2025). Bittensor protocol: The Bitcoin in decentralized artificial intelligence? A critical and empirical analysis. *arXiv*. https://arxiv.org/abs/2507.02951
+
 [8] Douillard, A., et al. (2023). DiLoCo. *arXiv*. https://arxiv.org/abs/2311.08105
+
 [9] Jaghouar, S., et al. (2024). OpenDiLoCo. *arXiv*. https://arxiv.org/abs/2407.07852
+
 [10] Jaghouar, S., et al. (2024). *INTELLECT-1 technical report*. https://arxiv.org/abs/2412.01152
-[11] *Protocol/Subspace Networks*. (n.d.). ⚠ unverified.
+
+[11] Ramasinghe, S., et al. (2025). Subspace Networks: Scaling decentralized training with communication-efficient model parallelism. *NeurIPS*. https://arxiv.org/abs/2506.01260
 
 ### Parallel decoding and decomposition
 
 [12] Ning, X., Lin, Z., Zhou, Z., Wang, Z., Yang, H., & Wang, Y. (2024). Skeleton-of-thought. *ICLR*. https://arxiv.org/abs/2307.15337
+
 [13] Leviathan, Y., Kalman, M., & Matias, Y. (2023). Fast inference from transformers via speculative decoding. *ICML*. https://arxiv.org/abs/2211.17192
+
 [14] Cai, T., et al. (2024). Medusa. *arXiv*. https://arxiv.org/abs/2401.10774
+
 [15] Fu, Y., et al. (2024). Break the sequential dependency of LLM inference using lookahead decoding. *ICML*. https://arxiv.org/abs/2402.02057
+
 [16] Liu, M., et al. (2024). APAR. *arXiv*. https://arxiv.org/abs/2401.06761
+
 [17] Jin, T., et al. (2025). Learning to keep a promise (PASTA). *ICML*. https://arxiv.org/abs/2502.11517
+
 [18] Jin, S., Wu, Y., Zheng, H., Zhang, Q., & Lentz, M. (2024). Adaptive skeleton graph decoding. *arXiv*. https://arxiv.org/abs/2402.12280
+
 [19] Rodionov, G., et al. (2025). Hogwild! Inference. *NeurIPS*. https://arxiv.org/abs/2504.06261
+
 [20] Kang, W., Galim, K., Oh, S., et al. (2026). ParallelBench. *ICLR*. https://arxiv.org/abs/2510.04767
+
 [21] Tran, H., & Kiela, D. (2026). Single-agent LLMs outperform multi-agent systems on multi-hop reasoning under equal thinking token budgets. *arXiv*. https://arxiv.org/abs/2604.02460
+
 [51] Zhou, D., et al. (2023). Least-to-most prompting. *ICLR*. https://arxiv.org/abs/2205.10625
+
 [52] Jiang, Z., et al. (2024). LongRAG. *arXiv*. https://arxiv.org/abs/2406.15319
 
 ### Network and hardware
 
 [22] NVIDIA. (n.d.). *NVIDIA H100 product documentation*.
+
 [23] NVIDIA. (n.d.). *NVIDIA Quantum-2 InfiniBand documentation*.
+
 [24] Sevilla, J. (2025). *How far can decentralized training over the internet scale?* Epoch AI.
-[25] *Analysis of model-parallel schemes at public-internet latency*. (n.d.). ⚠ unverified.
+
+[25] Prime Intellect. (2025). *Planetary-scale inference: Building a distributed inference engine for the public internet* [blog post]. https://www.primeintellect.ai/blog/inference
 
 ### Genome assembly
 
 [26] Lander, E. S., & Waterman, M. S. (1988). Genomic mapping by fingerprinting random clones. *Genomics, 2*(2), 231–239. https://doi.org/10.1016/0888-7543(88)90007-9
+
 [27] Khadiev, K., & Safina, L. (2024). Quantum algorithms for the shortest common superstring and text assembling problems. *QIC, 24*(3–4), 267–294.
-[28] *Survey of distributed and HPC genome assembly*. (n.d.). ⚠ unverified.
+
+[28] Ahmed, M., et al. (2015). A survey of genome sequence assembly techniques and algorithms using high-performance computing. *The Journal of Supercomputing, 71*(1), 293–339. https://doi.org/10.1007/s11227-014-1297-4
+
 [29] Pevzner, P. A., Tang, H., & Waterman, M. S. (2001). An Eulerian path approach to DNA fragment assembly. *PNAS, 98*(17), 9748–9753.
+
 [30] Nagarajan, N., & Pop, M. (2013). Sequence assembly demystified. *Nature Reviews Genetics, 14*, 157–167.
+
 [31] Kingsford, C., Schatz, M. C., & Pop, M. (2010). Assembly complexity of prokaryotic genomes using short reads. *BMC Bioinformatics*.
+
 [32] Chaisson, M. J. P., Wilson, R. K., & Eichler, E. E. (2015). Genetic variation and the de novo assembly of human genomes. *Nature Reviews Genetics*.
 
 ### Multi-agent systems, selection and aggregation
 
 [33] Yan, W. (2025). *Don't build multi-agents*. Cognition engineering blog.
+
 [38] Brown, B., et al. (2024). Large language monkeys. *arXiv*. https://arxiv.org/abs/2407.21787
+
 [39] Maryanskyy, A., Budnikov, D., & Kaliyev, A. T. (2026). When agents disagree. *arXiv*. https://arxiv.org/abs/2603.20324
+
 [40] Żywot, A., Chen, Y., Yuan, S., Søgaard, A., & de Rijke, M. (2026). Can small agents collaborate to beat a single large language model? *arXiv*. https://arxiv.org/abs/2601.11327
+
 [41] Wang, J., et al. (2025). Mixture-of-agents. *ICLR*. https://arxiv.org/abs/2406.04692
+
 [42] Chen, Y., Niu, G., Cheng, J., Han, B., & Sugiyama, M. (2025). When and why does multi-agent debate fail? *arXiv*. https://arxiv.org/abs/2510.20963
-[71] *AgenTracer*. (2025). *arXiv*. https://arxiv.org/abs/2509.03312 ⚠ authorship unverified.
+
+[71] Zhang, G., et al. (2025). AgenTracer: Who is inducing failure in the LLM agentic systems? *arXiv*. https://arxiv.org/abs/2509.03312
+
 [90] Cemri, M., et al. (2025). Why do multi-agent LLM systems fail? *arXiv*. https://arxiv.org/abs/2503.13657
 
 ### Small models, planning and routing
 
 [43] Belcak, P., et al. (2025). Small language models are the future of agentic AI. *arXiv*. https://arxiv.org/abs/2506.02153
+
 [44] Schepanowski, C., & Ling, C. (2025). On the limits of innate planning in large language models. *arXiv*. https://arxiv.org/abs/2511.21591
+
 [45] Valmeekam, K., et al. (2022). PlanBench. *arXiv*. https://arxiv.org/abs/2206.10498
+
 [46] Ong, I., et al. (2024). RouteLLM. *arXiv*. https://arxiv.org/abs/2406.18665
 
 ### Embeddings and coherence
 
 [34] Ethayarajh, K. (2019). How contextual are contextualized word representations? *EMNLP*. https://arxiv.org/abs/1909.00512
+
 [35] Steck, H., et al. (2024). Is cosine-similarity of embeddings really about similarity? *WWW '24 Companion*. https://arxiv.org/abs/2403.05440
+
 [36] Muennighoff, N., et al. (2023). MTEB. *EACL*. https://arxiv.org/abs/2210.07316
+
 [37] Sentence-Transformers. (n.d.). *Semantic similarity and paraphrase mining* [documentation].
+
 [53] Barzilay, R., & Lapata, M. (2008). Modeling local coherence: An entity-based approach. *Computational Linguistics, 34*(1).
+
 [54] Chang, Y., et al. (2024). BooookScore. *ICLR*. https://arxiv.org/abs/2310.00785
+
 [88] Chroma. (2025). *Context rot* [technical report].
+
 [89] Liu, N. F., et al. (2023). Lost in the middle. *TACL*. https://arxiv.org/abs/2307.03172
 
 ### Verification, privacy and security
 
 [50] Zhang, Y., Wang, S., Liu, X., Tan, S., Popa, R. A., & Moallemi, C. C. (2024). Proof of sampling. *arXiv*. https://arxiv.org/abs/2405.00295
+
 [55] Sweeney, L. (2002). k-Anonymity. *IJUFKS, 10*(5), 557–570.
+
 [56] Machanavajjhala, A., et al. (2007). ℓ-Diversity. *ACM TKDD, 1*(1).
+
 [57] Narayanan, A., & Shmatikov, V. (2008). Robust de-anonymization of large sparse datasets. *IEEE S&P*.
+
 [58] Narayanan, A., et al. (2012). On the feasibility of internet-scale author identification. *IEEE S&P*.
-[59] *Cross-domain authorship attribution*. (2016). *PETS*. ⚠ authorship unverified.
-[60] *Forensic authorship analysis of microblogging texts*. (2020). https://arxiv.org/abs/2003.11545 ⚠ authorship unverified.
+
+[59] Overdorf, R., & Greenstadt, R. (2016). Blogs, Twitter feeds, and Reddit comments: Cross-domain authorship attribution. *Proceedings on Privacy Enhancing Technologies, 2016*(3), 155–171. https://doi.org/10.1515/popets-2016-0021
+
+[60] Belvisi, N. M. S., et al. (2020). Forensic authorship analysis of microblogging texts using n-grams and stylometric features. *IEEE 8th International Workshop on Biometrics and Forensics (IWBF 2020)*. https://arxiv.org/abs/2003.11545
+
 [61] Morris, J. X., et al. (2023). Text embeddings reveal (almost) as much as text. *EMNLP*. https://arxiv.org/abs/2310.06816
+
 [62] Zhang, C., et al. (2024). Extracting prompts by inverting LLM outputs. *EMNLP*.
+
 [63] Fan, M., Liu, Y., Wang, F., & Chen, C. (2026). What does the server see? *arXiv*. https://arxiv.org/abs/2605.23158
+
 [64] Keller, M. (2020). MP-SPDZ. *ACM CCS*.
+
 [65] Hao, M., et al. (2022). Iron: Private inference on transformers. *NeurIPS*.
+
 [66] Lu, W., et al. (2025). BumbleBee. *NDSS*.
+
 [67] Sun, H., Li, J., & Zhang, H. (2024). zkLLM. *ACM CCS*. https://arxiv.org/abs/2404.16109
-[68] Ong, J., et al. (n.d.). *TOPLOC*. ⚠ unverified.
-[69] *VeriLLM*. (2025). https://arxiv.org/abs/2509.24257 ⚠ authorship unverified.
+
+[68] Ong, J. M., et al. (2025). TOPLOC: A locality sensitive hashing scheme for trustless verifiable inference. *ICML*. https://arxiv.org/abs/2501.16007
+
+[69] Wang, K., et al. (2025). VeriLLM: A lightweight framework for publicly verifiable decentralized inference. *arXiv*. https://arxiv.org/abs/2509.24257
+
 [70] OWASP Foundation. (2025). *OWASP top 10 for LLM applications*.
-[72] *Confidential computing on NVIDIA Hopper GPUs*. (n.d.). ⚠ unverified.
-[73] *Benchmarking confidential GPU inference on NVIDIA H100 under Intel TDX*. (n.d.). ⚠ unverified.
+
+[72] Zhu, J., et al. (2024). Confidential computing on NVIDIA Hopper GPUs: A performance benchmark study. *arXiv*. https://arxiv.org/abs/2409.03992
+
+[73] Wang, W., et al. (2026). Benchmarking confidential GPU inference on NVIDIA H100 under Intel TDX. *arXiv*. https://arxiv.org/abs/2607.19353
+
 [74] Lukas, N., et al. (2023). Analyzing leakage of personally identifiable information in language models. *IEEE S&P*.
-[75] *Differentially-private text generation degrades output language quality*. (2025). https://arxiv.org/abs/2509.11176 ⚠ authorship unverified.
+
+[75] Çano, E., & Habernal, I. (2025). Differentially-private text generation degrades output language quality. *arXiv*. https://arxiv.org/abs/2509.11176
+
 [76] Douceur, J. R. (2002). The Sybil attack. *IPTPS*. https://doi.org/10.1007/3-540-45748-8_24
+
 [77] Kamvar, S. D., Schlosser, M. T., & Garcia-Molina, H. (2003). The EigenTrust algorithm. *WWW*.
 
 ### Volunteer computing
 
 [47] Anderson, D. P. (2019). BOINC: A platform for volunteer computing. *Journal of Grid Computing*. https://arxiv.org/abs/1903.01699
+
 [48] Anderson, D. P., & Fedak, G. (2006). The computational and storage potential of volunteer computing. *CCGrid*.
-[49] *Idle consumer GPUs versus enterprise GPUs for LLM inference*. (2025). *ACM AIBC*. ⚠ unverified.
+
+[49] de Almeida, A. R. (2025). Idle consumer GPUs as a complement to enterprise hardware for LLM inference: Performance, cost and carbon analysis. *Proceedings of the 6th International Artificial Intelligence and Blockchain Conference (AIBC 2025)*. ACM. https://doi.org/10.1145/3775043.3775047 ⚠ authorship unverified.
 
 ### Licensing, governance, energy
 
 [78] FINMA. (n.d.). *Guidelines for enquiries regarding the regulatory framework for ICOs*.
+
 [79] European Parliament & Council of the EU. (2023). *Regulation (EU) 2023/1114 (MiCA)*.
+
 [80] Free Software Foundation. (2007). *GNU Affero General Public License, version 3* (clause 13).
-[81] *Redis relicensing to AGPLv3 (May 2025); Elastic adding AGPLv3 (August 2024)*. ⚠ unverified.
-[82] *Comparative analysis of the 2021–2025 relicensing wave*. (n.d.). ⚠ unverified.
+
+[81] Trollope, R. (2025). *Redis is now available under the AGPLv3 open source license*. Redis blog. https://redis.io/blog/agplv3/; Banon, S. (2024). *Elasticsearch is open source. Again!* Elastic blog. https://www.elastic.co/blog/elasticsearch-is-open-source-again
+
+[82] Wondrasek, J. A. (2026). *The open source license change pattern – MongoDB to Redis timeline 2018 to 2026 and what comes next*. SoftwareSeni blog. https://www.softwareseni.com/the-open-source-license-change-pattern-mongodb-to-redis-timeline-2018-to-2026-and-what-comes-next/ ⚠ secondary source; claim support partial.
+
 [83] International Energy Agency. (2025). *Energy and AI*.
-[84] *Facility-level study of US hyperscale data centre grid carbon intensity*. (2026). ⚠ unverified.
-[85] *Energy-aware LLM inference benchmark*. (2026). ⚠ unverified.
+
+[84] Guidi, G., et al. (2026). Assessing the carbon emissions and energy consumption of U.S. hyperscale data centers. *arXiv*. https://arxiv.org/abs/2606.05420
+
+[85] Fadel Argerich, M., et al. (2026). Watt Counts: Energy-aware benchmark for sustainable LLM inference on heterogeneous GPU architectures. *arXiv*. https://arxiv.org/abs/2604.09048
+
 [86] Uptime Institute. (2025). *Global data center survey 2025*.
+
 [87] Green Software Foundation. (2024). *Software carbon intensity (SCI) specification* (ISO/IEC 21031:2024).
 
 ---
@@ -3347,69 +3434,105 @@ open, where it can be checked.
 ### New in version 2 — alignment and substitution matrices
 
 [92] Henikoff, S., & Henikoff, J. G. (1992). Amino acid substitution matrices from protein blocks. *PNAS, 89*(22), 10915–10919. https://www.pnas.org/doi/10.1073/pnas.89.22.10915
+
 [93] Gotoh, O. (1982). An improved algorithm for matching biological sequences. *J. Mol. Biol., 162*(3), 705–708. https://doi.org/10.1016/0022-2836(82)90398-9
+
 [94] Notredame, C., Higgins, D. G., & Heringa, J. (2000). T-Coffee: A novel method for fast and accurate multiple sequence alignment. *J. Mol. Biol., 302*(2), 205–217. https://tcoffee.org/Publications/Ps_pdf/tcoffee.pdf
+
 [95] Eddy, S. R. (1998). Profile hidden Markov models. *Bioinformatics, 14*(9), 755–763. https://doi.org/10.1093/bioinformatics/14.9.755
 
 ### Learned costs and text alignment
 
 [96] Ristad, E. S., & Yianilos, P. N. (1998). Learning string-edit distance. *IEEE TPAMI, 20*(5), 522–531.
+
 [97] Pavlick, E., Rastogi, P., Ganitkevitch, J., Van Durme, B., & Callison-Burch, C. (2015). PPDB 2.0. *ACL-IJCNLP 2015*, 425–430. https://doi.org/10.3115/v1/P15-2070
 
 ### Uncertainty and agreement between generations
 
 [98] Kuhn, L., Gal, Y., & Farquhar, S. (2023). Semantic uncertainty. *ICLR*. https://arxiv.org/abs/2302.09664
+
 [99] Farquhar, S., Kossen, J., Kuhn, L., & Gal, Y. (2024). Detecting hallucinations in large language models using semantic entropy. *Nature, 630*, 625–630. https://doi.org/10.1038/s41586-024-07421-0
+
 [100] Manakul, P., Liusie, A., & Gales, M. (2023). SelfCheckGPT. *EMNLP*, 9004–9017. https://doi.org/10.18653/v1/2023.emnlp-main.557
+
 [101] Soiffer, D., Kolawole, S., & Smith, V. (2025). Semantic agreement enables efficient open-ended LLM cascades. *arXiv*. https://arxiv.org/abs/2509.21837 *(preprint, not peer reviewed)*
 
 ### Assembly, coverage, repeats and uniqueness
 
 [102] Bresler, G., Bresler, M., & Tse, D. (2013). Optimal assembly for high throughput shotgun sequencing. *BMC Bioinformatics, 14*(Suppl 5), S18. https://arxiv.org/abs/1301.0068
+
 [103] Motahari, A. S., Bresler, G., & Tse, D. N. C. (2013). Information theory of DNA shotgun sequencing. *IEEE Trans. Inf. Theory, 59*(10), 6273–6288. https://web.stanford.edu/~dntse/papers/mbt.pdf
+
 [104] Compeau, P. E. C., Pevzner, P. A., & Tesler, G. (2011). How to apply de Bruijn graphs to genome assembly. *Nature Biotechnology, 29*(11), 987–991. https://doi.org/10.1038/nbt.2023
+
 [105] Myers, E. W. (1995). Toward simplifying and accurately formulating fragment assembly. *J. Comput. Biol., 2*(2), 275–290. https://doi.org/10.1089/cmb.1995.2.275
+
 [106] Weber, J. L., & Myers, E. W. (1997). Human whole-genome shotgun sequencing. *Genome Research, 7*(5), 401–409.
+
 [107] Myers, E. W., et al. (2000). A whole-genome assembly of Drosophila. *Science, 287*(5461), 2196–2204.
+
 [108] Gao, S., Sung, W.-K., & Nagarajan, N. (2011). Opera: Reconstructing optimal genomic scaffolds. *J. Comput. Biol., 18*(11), 1681–1691. https://doi.org/10.1089/cmb.2011.0170
+
 [109] Medvedev, P., Pham, S., Chaisson, M., Tesler, G., & Pevzner, P. (2011). Paired de Bruijn graphs. *RECOMB 2011*, LNCS 6577, 238–251. https://doi.org/10.1007/978-3-642-20036-6_22
 
 ### Folding, domains and quality control
 
 [110] Porter, L. L., & Rose, G. D. (2012). A thermodynamic definition of protein domains. *PNAS, 109*(24), 9420–9425. https://doi.org/10.1073/pnas.1202604109
+
 [111] Han, J.-H., Batey, S., Nickson, A. A., Teichmann, S. A., & Clarke, J. (2007). The folding and evolution of multidomain proteins. *Nature Rev. Mol. Cell Biol., 8*(4), 319–330. https://doi.org/10.1038/nrm2144
+
 [112] Bashton, M., & Chothia, C. (2007). The generation of new protein functions by the combination of domains. *Structure, 15*(1), 85–99. https://doi.org/10.1016/j.str.2006.11.009
+
 [113] Zhang, Y., Chandonia, J.-M., Ding, C., & Holbrook, S. R. (2005). Comparative mapping of sequence-based and structure-based protein domains. *BMC Bioinformatics, 6*, 77. https://doi.org/10.1186/1471-2105-6-77
+
 [114] Schaeffer, R. D., et al. (2023). ECOD domain classification of 48 whole proteomes from AlphaFold Structure Database using DPAM2. *PLoS Comput. Biol.*
+
 [115] Zhu, K., Su, H., Peng, Z., & Yang, J. (2023). A unified approach to protein domain parsing with inter-residue distance matrix. *Bioinformatics, 39*(2), btad070. https://doi.org/10.1093/bioinformatics/btad070
+
 [116] Gottesman, S., Wickner, S., & Maurizi, M. R. (1997). Protein quality control: Triage by chaperones and proteases. *Genes & Development, 11*, 815–823.
+
 [117] Xu, Z., Horwich, A. L., & Sigler, P. B. (1997). The crystal structure of the asymmetric GroEL–GroES–(ADP)₇ chaperonin complex. *Nature, 388*(6644), 741–750. https://doi.org/10.1038/41944
+
 [118] Netzer, W. J., & Hartl, F. U. (1997). Recombination of protein domains facilitated by co-translational folding in eukaryotes. *Nature, 388*(6640), 343–349. https://doi.org/10.1038/41024
+
 [119] Marsh, J. A., et al. (2013). Protein complexes are under evolutionary selection to assemble via ordered pathways. *Cell, 153*(2), 461–470. https://doi.org/10.1016/j.cell.2013.02.044
+
 [120] Shiber, A., et al. (2018). Cotranslational assembly of protein complexes in eukaryotes revealed by ribosome profiling. *Nature, 561*(7722), 268–272. https://doi.org/10.1038/s41586-018-0462-y
 
 ### Information theory and coding
 
 [121] Shannon, C. E. (1959). Coding theorems for a discrete source with a fidelity criterion. *IRE Int. Convention Record, 7*, 325–350.
+
 [122] Cover, T. M., & Thomas, J. A. (1991). *Elements of information theory*, ch. 13. Wiley.
+
 [123] Nagle, A., Girish, A., Bondaschi, M., Gastpar, M., Makkuva, A. V., & Kim, H. (2024). Fundamental limits of prompt compression: A rate–distortion framework for black-box language models. *NeurIPS*. https://arxiv.org/abs/2407.15504
+
 [124] Luby, M. (2002). LT codes. *FOCS 2002*, 271–282. https://doi.org/10.1109/SFCS.2002.1181950
+
 [125] Shokrollahi, A. (2006). Raptor codes. *IEEE Trans. Inf. Theory, 52*(6), 2551–2567.
+
 [126] Weatherspoon, H., & Kubiatowicz, J. D. (2002). Erasure coding vs. replication: A quantitative comparison. *IPTPS 2002*, LNCS 2429, 328–337.
+
 [127] Mallick, A., Chaudhari, M., Palanikumar, G., Sheth, U., & Joshi, G. (2019). Rateless codes for near-perfect load balancing in distributed matrix-vector multiplication. *Proc. ACM Meas. Anal. Comput. Syst., 3*(3), art. 58.
+
 [128] Kosaian, J., Rashmi, K. V., & Venkataraman, S. Learning a code: Machine learning for approximate non-linear coded computation. *arXiv*. https://arxiv.org/abs/1806.01259
+
 [129] Soleymani, M., Ali, R. E., Mahdavifar, H., & Avestimehr, A. S. (2022). ApproxIFER. *AAAI-22*, 8342–8350.
 
 ### Volunteer computing (new)
 
 [130] Anderson, D. P. (2004). BOINC: A system for public-resource computing and storage. *5th IEEE/ACM Int. Workshop on Grid Computing*. https://doi.org/10.1109/GRID.2004.14
+
 [131] Anderson, D. P., & Fedak, G. (2006). The computational and storage potential of volunteer computing. *arXiv*. https://arxiv.org/abs/cs/0602061
+
 [132] Anderson, D. P. (2018). BOINC: A platform for volunteer computing. *arXiv*. https://arxiv.org/abs/1903.01699
+
 [133] Sarmenta, L. F. G. (2002). Sabotage-tolerance mechanisms for volunteer computing systems. *Future Generation Computer Systems, 18*(4), 561–572.
 
 ### Decentralised and decomposed inference (new)
 
 [134] Dahshan, M., Mamun, Q., & Debnath, T. (2026). SWARM-LLM: Collaborative inference for edge-based small language models. *IEEE VTC2026-Spring*.
+
 [135] Zhang, H., et al. (2025). If multi-agent debate is the answer, what is the question? *arXiv*. https://arxiv.org/abs/2502.08788
 
 ---

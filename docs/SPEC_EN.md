@@ -7,7 +7,7 @@ lang: en
 **Version 0.2 — 13 August 2026**
 *Revision 2, 14 August 2026: adds Section 15c (privacy tiers and trusted swarms), the `tier` and `swarm_id` packet fields, the optional `swarm` block in the node advertisement, the `routing` response block, and the error codes `E_TIER_VIOLATION`, `E_MTLS_REQUIRED` and `E_SWARM_UNKNOWN`. Every addition is MINOR-compatible under Section 3: an implementation that ignores the new fields behaves exactly as tier `GLOBAL`, so the wire version remains `0.2`.*
 Status: **Draft.** Normative for the reference implementation; expected to change before v1.0.
-Companion documents: `WHITEPAPER_EN.md` (rationale and evidence), `SPEC_ES.md` (Spanish).
+Companion documents: `WHITEPAPER_V2_EN.md` (rationale and evidence; Section 9 describes the protocol changes toward v0.3), `WHITEPAPER_EN.md` (v1.4, the version this revision was written against), `SPEC_ES.md` (Spanish).
 
 The key words MUST, MUST NOT, REQUIRED, SHALL, SHOULD, SHOULD NOT, MAY and OPTIONAL are to be interpreted as described in RFC 2119.
 
@@ -534,4 +534,4 @@ Omitting `rho_floor` or `rho_reachable` is non-conformant. Without them a consum
 
 ---
 
-*Specification v0.2 (revision 2), 14 August 2026. Normative for the reference implementation in `swarmbly_v0/`. Rationale, evidence and citations: `WHITEPAPER_EN.md`.*
+*Specification v0.2 (revision 2), 14 August 2026. Normative for the reference implementation in `swarmbly_v0/`. Rationale, evidence and citations: `WHITEPAPER_V2_EN.md`.*

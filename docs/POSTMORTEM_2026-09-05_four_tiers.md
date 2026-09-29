@@ -2,16 +2,16 @@
 status: current
 lang: en
 ---
-# Post-mortem — four tiers failed in a row, and the pattern is mine
+# Post-mortem — four tiers failed in a row, and one pattern explains them
 
-**Written:** 5 September 2026, after Seb asked the right question: *what
-happened to the review process, and why are there suddenly so many errors?*
+**Written:** 5 September 2026, to answer two questions: *what happened to the
+review process, and why did so many errors appear at once?*
 
-**Cost:** roughly fifteen hours of his compute, across four aborted runs, none
+**Cost:** roughly fifteen hours of compute, across four aborted runs, none
 of which produced a usable figure.
 
-This is not an apology. It is a diagnosis, because the answer turned out to be
-specific and testable rather than "I was careless".
+It is written as a diagnosis, because the answer turned out to be specific and
+testable rather than a matter of care.
 
 ---
 
@@ -22,7 +22,7 @@ specific and testable rather than "I was careless".
 | 1 | `v0` | ρ 5.5 asked at N=2, packing **ceiling** 4.90. Undershot, invariant aborted at hour five. | grid meets corpus |
 | 2 | `v0` | grid moved; ρ 3.95 at N=8 on a **chain**, whose mandatory carries force an overshoot in the band above its floor. +5.6 %, aborted at hour five. | grid meets corpus |
 | 3 | *(found while diagnosing #1)* | `tables-dev`/`tables-final` had been running their **declared** cell above the ceiling all along, undershooting a systematic −3.4 % that passed the fidelity check. | grid meets corpus |
-| 4 | `v0` | the sweep **completed** — `results.csv`, `summary.json`, `report.html` all written — and `run_tier` marked it FAILED because I had not created the per-N subdirectory it tees `run.log` into. | shell |
+| 4 | `v0` | the sweep **completed** — `results.csv`, `summary.json`, `report.html` all written — and `run_tier` marked it FAILED because nothing had created the per-N subdirectory it tees `run.log` into. | shell |
 
 ## 2. What the review process actually covered, and what it did not
 
@@ -32,10 +32,9 @@ hypothesis, and it produced `REVISION_2026-08-12.md`, ADR-001 and most of the
 gates now in the harness.
 
 **It reviewed code that already existed.** In the twenty-four hours before this
-post-mortem I wrote nine commits and roughly two thousand new lines — a
+post-mortem nine commits and roughly two thousand new lines were added — a
 composition criterion, a corpus generator, a benchmark runner, a segmenter
-repair, a ρ ceiling, a ρ predictor, a grid checker — and applied nothing like
-that review depth to any of it.
+repair, a ρ ceiling, a ρ predictor, a grid checker — and none of it received anything like that review depth.
 
 That alone would be an ordinary answer ("review the new code too"). It is not
 the real answer, because **a code review would not have caught any of the
@@ -44,17 +43,16 @@ the code reveals; failure 4 is shell, which the Python suite cannot execute.
 
 ## 3. The actual gap, and it is one line
 
-**I verified everything except the thing I was shipping.**
+**Everything was verified except the thing being shipped.**
 
-For each of the four I ran: the unit suite (648 tests, all passing), and for the
+For each of the four, what was run was the unit suite (648 tests, all passing), and for the
 grid failures `check_grid.py`, which packs cells correctly and says nothing
-about the rest of the pipeline. **I never once ran `bash scripts/run_ollama.sh
-v0`.**
+about the rest of the pipeline. **`bash scripts/run_ollama.sh v0` was not run once.**
 
 The evidence is clean, and it is the reason this post-mortem exists rather than
 a general resolution to be more careful:
 
-| tier | did I run it end to end before shipping? | outcome |
+| tier | was it run end to end before shipping? | outcome |
 |---|---|---|
 | `comp-dev` | **yes** | worked first time |
 | `comp-final` | **yes** | worked first time, produced the verdict |
@@ -79,7 +77,7 @@ through the real runner as part of the suite. It is slow by the standards of
 that file — 84 seconds against 25 — and that is the correct trade against five
 hours.
 
-**And it immediately found two more**, before either reached Seb:
+**And it immediately found two more**, before either reached a real run:
 
 * `v3c` would have aborted at ρ 2.5, N=4 on the same chain, +8.6 %. Moved to
   3.0, which `check_grid` says is inside the usable range. **That is three hours
@@ -99,8 +97,7 @@ The first seven rehearsals wrote into `results/` under the tiers' real names.
 One of them was `results/comp-dev-20260904-122727` — newer than
 `results/comp-dev-20260904-122727`, which is the run the declared composition
 verdict was calibrated against. Every reader in this project selects a run by
-glob and takes the last one, including the snippet in the runbook I wrote
-myself. **A mock run had become the newest `comp-dev` on disk.**
+glob and takes the last one, including the snippet in the project's own runbook. **A mock run had become the newest `comp-dev` on disk.**
 
 `harness_validation_only: true` was in its metadata and would have caught it if
 anyone read the metadata first. That is precisely the assumption this project
@@ -114,18 +111,18 @@ worth stating plainly: **new safety machinery is new code, and new code gets no
 exemption from the gates.** The seven stray directories have been moved out of
 `results/` on the working copy.
 
-## 5. The thing I got wrong twice, separately from the process
+## 5. The same mistake twice, separately from the process
 
-On failures 1 and 2 I patched the ρ grid **from a hypothesis about the cause**,
-shipped it, and was wrong both times. I then tried three more explanations for
-failure 2 — quantisation, separator accounting, a realised floor from mandatory
-tokens — and measured each one false.
+On failures 1 and 2 the ρ grid was patched **from a hypothesis about the cause**,
+shipped, and the hypothesis was wrong both times. Three more explanations for
+failure 2 were then tried — quantisation, separator accounting, a realised floor
+from mandatory tokens — and each was measured false.
 
 The fix that worked was to stop hypothesising: `predict_rho` packs a cell
 exactly as the sweep does and returns the achieved ρ in milliseconds, as an
-upper bound rather than a sample. I should have written it after the first
-failure, not the third. A guard I had built on the realised-floor hypothesis
-was reverted before shipping, because I could not demonstrate it firing — that
+upper bound rather than a sample. It should have been written after the first failure, not the third. A guard
+built on the realised-floor hypothesis was reverted before shipping, because it
+could not be shown firing — that
 part, at least, was the right instinct applied too late.
 
 ## 6. What this says about the project, which is the part worth keeping

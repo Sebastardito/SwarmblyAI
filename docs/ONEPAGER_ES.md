@@ -6,8 +6,8 @@ lang: es
 
 ### La barrera para servir inteligencia artificial deja de ser el capital y pasa a ser la participación
 
-**Sebastián Espinoza** · Pontificia Universidad Católica del Ecuador · University of Saskatchewan
-Whitepaper v1.4 · especificación v0.2 · implementación de referencia y primeras mediciones publicadas
+**Sebastián A. Espinoza-Ulloa, Ph.D.** · Investigador independiente
+Whitepaper v2.0 · especificación v0.2 · implementaciones de referencia, arnés de validación y mediciones publicadas
 AGPL-3.0-or-later (software) · CC BY 4.0 (texto) · `github.com/Sebastardito/Swarmbly-AI`
 
 ---
@@ -40,66 +40,13 @@ Un orquestador pequeño, en el computador del propio usuario, descompone la peti
 
 ## Lo que ya está medido
 
-El diseño descansa sobre una afirmación falsable: **cuanto más contexto compartido lleve cada fragmento, menos calidad se pierde al volver a juntar las piezas.** Se registró públicamente un criterio de continuar o abandonar *antes de que existiera dato alguno*: si la pérdida no bajaba del 5 % en ninguna categoría de tarea, había que descartar la arquitectura.
+Hay dos cosas medidas, y apuntan en direcciones distintas. Las dos se dicen aquí.
 
-Ya se ha ejecutado sobre un instrumento corregido, en un corpus reservado y
-contra una celda nombrada antes de la ejecución. **El criterio no se alcanzó.**
+**Fragmentar tiene un costo, y el propio criterio de abandono del proyecto todavía no puede pronunciarse.** Se registró públicamente un criterio de continuar o abandonar *antes de que existiera dato alguno*: si la pérdida no bajaba del 5 % en ninguna categoría de tarea, había que descartar la arquitectura. En la primera prueba sobre un corpus reservado, 16 prompts, la pérdida fue de **+2.30 %**, IC 95 % **[−2.05 %, +7.49 %]**. El criterio se escribió contra la cota superior, que queda por encima del umbral, así que el veredicto fue **no alcanzado**, y el umbral no se movió. El costo fue bimodal: 11 de 16 prompts no perdieron nada o ganaron, y dos prompts cargaron toda la media. Una segunda campaña, **473 corridas** sobre cinco familias de modelos pequeños, midió el costo con presupuesto de salida igualado: **+11.17 %**, IC 95 % **[+4.80, +17.34]**. Ese agregado sigue confundido con cuánto escribe cada brazo, así que el arnés publicado **se niega** a declarar el criterio cumplido o incumplido. Se reporta como *no medido*.
 
-| | |
-|---|---|
-| Celda, nombrada de antemano | `table_summary`, ρ = 3.5, N = 2, k = 1 |
-| Calidad perdida por fragmentar | **+2.30 %** |
-| IC del 95 %, bootstrap agrupado por prompt | **[−2.05 %, +7.49 %]** |
-| Criterio | el *límite superior* debe quedar por debajo del 5 % |
-| Veredicto | **NO ALCANZADO**, le faltan 2.49 puntos |
-| Corpus | 16 prompts reservados |
-| Control (N = 8, k = 1, obligado a fallar) | +16.23 %, IC [+11.33 %, +20.28 %] — se comportó |
+**Donde el diseño dice que fragmentar debería ganar, gana.** En extracción estructurada —leer los registros de un documento largo y responder preguntas sobre todos ellos—, un modelo pequeño que extrae las piezas, con código que las agrega, supera al mismo modelo respondiendo solo por **+46.9 puntos**, IC 95 % **[+33.3, +59.4]**. Un control que extrae el documento entero en una sola llamada separa los dos mecanismos. Con 80 filas toda la ganancia viene de sacarle la aritmética al modelo, y partir no añade nada. Con 160 filas la extracción en una sola llamada colapsa y sólo partir la sostiene, por **+77.1 puntos**. Un nodo pequeño extrae bien hasta cierto tamaño de tarea, y fragmentar es lo que mantiene cada tarea por debajo de ese tamaño. Es la tesis del diseño, medida directamente por primera vez. Es también estrecha —8 documentos, una familia de modelos, dos tamaños— y se dice que lo es.
 
-La estimación puntual queda cómodamente por debajo del 5 %. El intervalo no, y
-el criterio se escribió contra el intervalo justamente para que una estimación
-puntual favorable no pudiera sostenerlo por sí sola. El criterio no se alcanzó y
-no se va a reescribir.
-
-La distribución es el hallazgo más útil, y es nuevo. **El prompt mediano no
-pierde absolutamente nada —0.00 %— y 11 de 16 prompts quedan en cero o por
-debajo** (seis negativos, cinco exactamente cero). La media está *fabricada* por
-dos prompts: `tbl24_outturn` (+28.50 %) y `tbl24_bonded` (+23.08 %) suman entre
-los dos el 140 % de ella, y sin ellos la media de los catorce restantes es
-**−1.06 %**. Es decir: **en 11 de 16 prompts de resumen de tablas, partir el
-trabajo en dos salió gratis; en dos de ellos salió caro.** Esos dos son además
-los únicos prompts donde dos fragmentos cuestan *más* que ocho (+28.50 % frente a
-+13.57 %; +23.08 % frente a +14.00 %) — que más fragmentos ayuden no es lo que
-predice una historia de impuesto de coherencia, lo que apunta a un fallo de
-calidad de partición y no a un costo de fragmentar. Es una pista, no una
-afirmación puesta a prueba, y no alcanza el listón: un costo bimodal con una
-frontera identificable vale más para un enrutador que uno bajo y uniforme, pero
-el umbral que el propio proyecto se fijó no se ha cumplido.
-
-**Una versión anterior de esta página reportaba esa pérdida cayendo de 24.1 % a
-13.7 % a medida que subía el contexto compartido, y afirmaba que la predicción se
-había cumplido. Esa tabla queda retirada.** Dos defectos, ambos en el
-instrumento de medición y no en la arquitectura. El primero: un presupuesto de
-contexto por debajo del *piso de empaquetado* del prompt —lo que cuestan las
-microtareas y sus cabeceras antes de añadir contexto alguno— hace que todo
-paquete se reduzca a su tarea desnuda, de modo que dos etiquetas de presupuesto
-distintas producen paquetes idénticos. En ese corpus, 13 de 96 celdas quedaban
-por encima del piso, y las dos filas que sostenían el descenso no tenían
-ninguna. El segundo: la métrica de coherencia no era neutral respecto del brazo
-—el mismo texto puntuó 0.9375 sin fragmentar y 0.5000 con ocho fragmentos, una
-pérdida aparente del 46.7 % sobre un texto que nunca cambió. Ambos están
-corregidos y cubiertos por pruebas de regresión; el banco de pruebas ahora se
-niega a publicar una celda por debajo del piso. La retractación se conserva
-completa en `docs/RESULTS_V0_V3C.md`.
-
-Lo que sobrevive es más pequeño y está mejor establecido: con dos fragmentos, en
-un corpus reservado y con un control que se comportó, el costo de fragmentar es
-de unos pocos puntos porcentuales y su distribución es bimodal. El umbral que el
-propio proyecto se fijó dice que eso todavía no es suficiente, y esta página lo
-dice en lugar de mover el umbral. Con una varianza entre prompts de este tamaño,
-dieciséis prompts no pueden, por pura aritmética, meter un intervalo de 9.5
-puntos por debajo de un umbral de 5 puntos, sea cual sea el efecto verdadero:
-ampliar el corpus es un requisito previo para volver a poner a prueba el
-criterio, no una manera de obtener una respuesta mejor.
+**Una versión anterior de esta página reportaba una pérdida que caía de 24.1 % a 13.7 % al subir el contexto compartido, y decía que la predicción se había cumplido. Esa tabla queda retirada**: el eje de contexto no se había movido de verdad, y la métrica no era neutral entre brazos. La retirada se conserva íntegra, con su aritmética, en `docs/RESULTS_V0_V3C.md`.
 
 ## Lo que no está demostrado — dicho aquí, no escondido
 
@@ -114,11 +61,12 @@ débil que aceptaba el 93 % de todo, así que el veredicto honesto entonces era
 clave de respuestas, dieron en cambio razones de momios comunes de **3.47, luego
 0.26, luego 1.24**: por encima, por debajo y a caballo del 1 en la misma
 pregunta. Eso no es una señal débil; es ninguna señal, medida tres veces. El
-mapa de confianza queda **retirado**, no degradado, y sale del banco de pruebas
-V7.
+mapa de confianza queda **retirado**, no degradado, y no se le atribuye ningún
+beneficio de fiabilidad.
 
-Las mediciones son además pequeñas: 16 prompts reservados, una semilla, modelos
-de 2–3 B. Una señal sobre la que actuar, no un banco de referencia.
+Las mediciones son además pequeñas: modelos de 2–4 B parámetros en hardware
+local, y familias de tareas elegidas porque se pueden comprobar. Una señal sobre
+la que actuar, no un banco de referencia.
 
 **Cuatro cosas que este proyecto no afirma.** **No es más rápido que una API comercial** para quien ya tiene el equipo para usarla: la decodificación especulativa en un solo nodo le gana en latencia a cualquier esquema de fragmentación, y la latencia propia de Swarmbly ni siquiera está medida. **No ofrece contexto ilimitado**, solo un límite mucho más alto que vive en la máquina del usuario en vez de en el plan de precios de un proveedor. **No es cifrado**: fragmentar encarece la reconstrucción y nada más, y por eso el trabajo realmente sensible se enruta a un círculo cerrado o se mantiene enteramente local. Y **no ha demostrado un beneficio ambiental**: el argumento es sólido, la medición todavía no está hecha, y el proyecto se compromete a publicarla sea cual sea el resultado.
 
@@ -128,12 +76,12 @@ Esta sección existe porque un proyecto que esconde su primer resultado negativo
 
 Los modelos pequeños cruzaron hace poco la línea de capacidad que hace esto posible; la brecha de ancho de banda que mató al reparto de modelos no se está cerrando. La oportunidad es de temporización.
 
-Publicado y público a agosto de 2026: un whitepaper de 27 páginas con 90 referencias, una especificación completa del protocolo, una implementación de referencia con **558 pruebas en verde**, un corpus de evaluación etiquetado, un banco de pruebas que reporta sus propios fallos de medición, y las primeras mediciones reales completas. Todo bajo AGPL-3.0-or-later para que un despliegue alojado no pueda cerrarlo, con un registro de anterioridad fechado públicamente.
+Publicado y público a septiembre de 2026: la versión 2 del whitepaper, en español e inglés, con 135 referencias; una especificación completa del protocolo; dos implementaciones de referencia; un arnés de validación que se niega a dar veredicto cuando su instrumento no puede decidir; un banco de 473 corridas que cualquiera puede volver a ejecutar; y todas las mediciones completas, incluidas las retiradas. Todo bajo AGPL-3.0-or-later para que un despliegue alojado no pueda cerrarlo, con un registro de anterioridad fechado.
 
-**Lo que necesita a continuación no es financiación primero: son participantes.** La forma más probable de que esto fracase no es un fallo de ingeniería; es que nadie se conecte. El cómputo voluntario lleva veinte años en declive, y el mejor protocolo del mundo no vale nada en una red vacía.
+**Lo que necesita a continuación es un equipo y los medios para correrlo a escala.** Las siguientes preguntas —dónde está el umbral de extracción para cada clase de nodo, y si existe un presupuesto de contexto que satisfaga a la vez coherencia, privacidad, verificabilidad y capacidad del trabajador— necesitan más que el hardware de una sola persona. Y la forma más probable de que esto fracase no es un fallo de ingeniería; es que nadie se conecte. El cómputo voluntario lleva veinte años en declive, y el mejor protocolo del mundo no vale nada en una red vacía.
 
 El conocimiento ya es público. El hardware ya está construido. Lo que faltaba es el protocolo, y ya está sobre la mesa, donde cualquiera puede revisarlo.
 
 ---
 
-*Argumento técnico completo: `docs/WHITEPAPER_ES.md`. Versión divulgativa: `docs/DIVULGACION_ES.md`. Resultado actual completo: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. Las primeras mediciones, retiradas y conservadas con su aritmética: `docs/RESULTS_V0_V3C.md`. Versión en inglés de esta página: `ONEPAGER_EN.md`.*
+*Argumento técnico completo: `docs/WHITEPAPER_V2_ES.md`. Versión divulgativa: `docs/DIVULGACION_ES.md`. Resultados actuales completos: `docs/RESULTS_2026-09-25_refbench_ES.md`; la primera prueba sobre corpus reservado: `docs/RESULTS_TABLES_FINAL_CORRECTED.md`. Las primeras mediciones, retiradas y conservadas con su aritmética: `docs/RESULTS_V0_V3C.md`. Versión en inglés de esta página: `ONEPAGER_EN.md`.*
