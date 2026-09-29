@@ -107,6 +107,15 @@ def parse_fragment(text, rows):
     return on_hand, total, truth
 
 
+#: Formas de pregunta global que ESTE ensamblador computa. Las otras tres del
+#: corpus (`pair_sum`, `triple_argmax`, `pair_warehouse`: 32 de 72 globales en
+#: dev) caen en `got = None` y se califican como fallo sin importar la
+#: extracción. Los registros de `data/lcurve_v2_runs.jsonl` se produjeron con
+#: este ensamblador, así que la constante describe esos datos y no se cambia;
+#: el ensamblador completo está en `run_lcurve_v3.py`. Detectado el 29-09-2026.
+SUPPORTED_FORMS = frozenset({"pair_diff", "triple_sum", "pair_argmax"})
+
+
 def answer_globals(doc, on_hand, warehouse):
     """Ensamblador determinista: combina y computa cada pregunta global."""
     g_ok = g_n = l_ok = l_n = 0

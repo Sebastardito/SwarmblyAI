@@ -40,6 +40,11 @@ def build(recs, embed=True):
     t08 = rr.t08_real(recs)
     t09 = rr.t09_real(recs)
     t10 = rr.t10_real(recs, embed=embed)
+    t08b = rr.tLC_real()
+    t08c = rr.tLC_real(runs_name="lcurve_v3_runs.jsonl", test_id="T08R3")
+    t08d = rr.tSplit_real()
+    from run_truncated import run_position as _t13b
+    t13b = _t13b(recs=recs, quiet=True)
     tr = rr.tR_real(recs)
     tl = rr.tL_real(recs)
 
@@ -59,6 +64,12 @@ def build(recs, embed=True):
     tl_summary = tl.summary
     t07_summary = t07.summary
     t09_summary = t09.summary
+    # Rango por familia y T13b: se leen del arnés. La versión anterior los
+    # llevaba escritos a mano en el texto de abajo.
+    fam_line = next((d for d in t09.details if d.startswith("Por familia")), "")
+    fam_txt = (fam_line.split(": ", 1)[1].rstrip(".") if ": " in fam_line
+               else "n/d")
+    t13b_summary = t13b.summary
 
     # El veredicto de la tabla ejecutiva se DERIVA del arnés. Si una prueba
     # rehúsa o falla, aquí no puede aparecer un «SÍ».
@@ -125,22 +136,23 @@ empírica generada por la arquitectura de referencia responde:
 | **Factible (criterio de abandono)** | {t09_summary} | {veredicto(t09)} |
 | **Factible (enrutabilidad por celda)** | {auc_line} — la predicción por celda no supera el azar | {veredicto(tr)} |
 | **Tiene futuro (vs rival honesto)** | contra self-consistency (k=5), la fragmentación ≥ SC en {sc_line.split('en ')[-1] if sc_line else 'n/d'} | **Paridad, con el mismo confundido pendiente** |
-| **Curva-L** | {t08.summary} | {veredicto(t08)} |
+| **Curva-L (bench de referencia)** | {t08.summary} | {veredicto(t08)} |
+| **Curva-L v2 (corpus admitido, mismo documento)** | {t08b.summary} | {veredicto(t08b)} |
+| **Extraer + agregar con código vs modelo solo (curva-L v3)** | {t08c.summary} | {veredicto(t08c)} |
+| **¿Ayuda partir? (control N=1)** | {t08d.summary} | {veredicto(t08d)} |
 | **L por clase de nodo (§5.7)** | {tl_summary} | {veredicto(tl)} |
 
 **La medición más limpia de la campaña es un costo.** Con el presupuesto de
 salida igualado entre brazos, fragmentar cuesta en **las cinco familias**
-(medias +6.2 % a +22.1 %, medianas +4.3 % a +29.4 %; agregado +11.17 %, IC95
-[+4.80, +17.34]), y la política por clase medida es **no fragmentar** (+0.0 %
+(T09R, población del criterio — {fam_txt}; {t09_summary}), y la política por clase medida es **no fragmentar** (+0.0 %
 frente a +14.8 % fragmentando siempre). Es el resultado que la evidencia
 sostiene con más fuerza, y el que el proyecto reporta primero.
 
-**Léase la tercera fila antes que ninguna otra.** El agregado medido favorece a
-la fragmentación, y **no se puede usar**: el brazo fragmentado recibió más
-presupuesto de salida que el monolítico, y a tarea fija escribir más puntúa más.
-El arnés se niega a emitir veredicto y este documento hereda esa negativa. La
-causa está localizada en el código, corregida, y la corrida que lo resuelve es
-una sola orden (§5).
+**Léase la tercera fila antes que ninguna otra.** El criterio de abandono sigue
+**sin medir**: el impuesto agregado está acoplado a la longitud de salida en las
+dos direcciones, y ningún presupuesto lo desacopla. El arnés se niega y este
+documento hereda esa negativa. Lo que sí está medido apunta en contra de
+fragmentar, y se reporta como tal.
 
 Lo que sí se sostiene hoy, y no es poco: **la ley de escala de ρ verificada
 contra datos reales**, **la contención de fallos demostrada**, **un instrumento
@@ -180,13 +192,10 @@ salida en ambas direcciones (presupuesto completo: el fragmentado escribe
 1.39× el monolítico y puntúa más; presupuesto repartido: 0.43× y puntúa
 menos). Truncar a un presupuesto de lectura fijo T cambia el signo con T
 (T13), y el impuesto por posición de primera mención corregido (T13b,
-SWIP-0001) tampoco decide: desplazamiento +0.0036 [−0.0948, +0.0994], mitades
-del corpus discordantes y confundido reintroducido por la imputación
-(ρ = −0.452).
+SWIP-0001) tampoco decide: {t13b_summary}.
 
 **Lo que sí queda medido es económico**: con presupuesto igualado, fragmentar
-cuesta en las cinco familias (medias +6.2 % a +22.1 %, medianas +4.3 % a
-+29.4 %; agregado +11.17 %, IC95 [+4.80, +17.34]) y la política por clase
+cuesta en las cinco familias (T09R — {fam_txt}) y la política por clase
 medida es **no fragmentar** (+0.0 % frente a +14.8 %). Ése es el estado real:
 **no cumplido, no incumplido, sin medir — con un costo medido en contra.**
 
@@ -225,6 +234,19 @@ a 6. La banda medida es de factor 2.7 en `longform` y de 1.0 en
 `table_outturn`. **La predicción no se cumple**, y así consta. Lo que sí se mide
 por primera vez es que `L*` varía por familia de nodo ({tl_summary}), que es la
 parte de §5.7 que sí transfiere.
+
+Sobre el corpus admitido (`lcurve_v2`, una familia), comparando cada celda
+contra el monolítico **del mismo documento** y pregunta por pregunta:
+{t08b.summary}. El ensamblador de esa corrida computa sólo parte de las formas
+de pregunta, así que el veredicto sobre la arquitectura se niega; sobre las
+preguntas computables la señal favorece a fragmentar.
+
+La corrida v3 (seis formas, todos los L sobre los mismos documentos) da:
+{t08c.summary}. Esa ventaja mezcla dos cosas —partir el documento y pasar la
+aritmética del modelo al código— y el control N=1 las separa: {t08d.summary}.
+Mientras ese control no exista, lo que se puede afirmar es que extraer con el
+modelo y agregar con código supera al modelo solo en esta tarea, no que
+fragmentar lo haga.
 
 El alineador M1 está construido y verificado en banco, pero este corpus no
 produjo el régimen de desacuerdo genuino que necesita: {t10.summary}. Veredicto
@@ -323,7 +345,10 @@ def main():
     ap.add_argument("--embed", action="store_true")
     ap.add_argument("--out", default=os.path.join(HERE, "FUNDING_CASE.md"))
     args = ap.parse_args()
-    recs = rr.load(args.data)
+    # Misma población que el arnés: celdas |matched preferidas. Sin esto el
+    # caso de financiamiento citaba T0LR/T0RR/T03R/T07R de la corrida sin
+    # igualar y discrepaba de los documentos.
+    recs = rr.prefer_matched(rr.load(args.data))
     doc = build(recs, embed=args.embed)
     with open(args.out, "w") as f:
         f.write(doc)

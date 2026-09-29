@@ -88,6 +88,25 @@ CLAIMS = [
     ("T13b", "−0.0948", "-0.0948"),
     ("T13b", "+0.0994", "+0.0994"),
     ("T13b", "−0.452", "-0.452"),
+    # la población del criterio, por familia (antes escrita a mano)
+    ("T09R", "+6.2", "+6.2"),
+    ("T09R", "+22.1", "+22.1"),
+    # curva-L del corpus admitido, contra el monolítico del MISMO documento
+    ("T08R2", "−16.7", "-16.7"),
+    ("T08R2", "−27.8", "-27.8"),
+    ("T08R2", "−4.6", "-4.6"),
+    ("T08R2", "77.8", "77.8"),
+    ("T08R2", "44.4", "44.4"),
+    # sobre las preguntas que el ensamblador v2 sabe computar
+    ("T08R2", "+18.9", "+18.9"),
+    ("T08R2", "+1.4", "+1.4"),
+    ("T08R2", "+37.5", "+37.5"),
+    ("T08R2", "54.9", "54.9"),
+    ("T08R2", "73.9", "73.9"),
+    # curva-L v3: seis formas, todos los L por documento
+    ("T08R3", "+46.9", "+46.9"),
+    ("T08R3", "+33.3", "+33.3"),
+    ("T08R3", "+59.4", "+59.4"),
 ]
 
 #: The documents that quote the campaign. Both languages of each pair, because a

@@ -2572,7 +2572,7 @@ agente con self-consistency**, no sólo contra el monolítico ingenuo. Una
 arquitectura multi-agente que sólo bate al monolítico de una pasada está
 comparándose contra el rival equivocado.
 
-**El criterio no se ha medido — y la medición más limpia es un costo.** El impuesto agregado está confundido con la longitud de salida **en las dos direcciones** (presupuesto completo: el fragmentado escribe **1.39×** el monolítico y puntúa más; presupuesto repartido: **0.43×** y puntúa menos), y truncar a un presupuesto de lectura fijo **T** cambia el signo del impuesto con T (de **−15.66 %** en T=40 a **+7.69 %** en T=120, T13). El instrumento por posición de primera mención (T13b, SWIP-0001), corregido para que una clave omitida se impute al final del texto (peor caso), tampoco decide: desplazamiento **+0.0036** de la propia longitud, IC 95 % **[−0.0948, +0.0994]** — un nulo con un intervalo ~5× más ancho que el umbral — y las dos mitades del corpus disienten en signo, así que el instrumento **se niega** (la imputación del peor caso además re-acopla la métrica a la longitud: ρ = **−0.452**, sobre 423 claves de las que el fragmentado omite **217** frente a **82** del monolítico). La medición que sí sobrevive es económica: con presupuesto igualado, fragmentar **cuesta en las cinco familias** (medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**; agregado **+11.17 %**, IC 95 % **[+4.80, +17.34]**, T09R), y la política por clase medida es **no fragmentar** (**+0.0 %** frente a **+14.8 %** fragmentando siempre). Es el resultado que esta sección reporta primero, porque es el que los datos sostienen.
+**El criterio no se ha medido — y la medición más limpia es un costo.** El impuesto agregado está confundido con la longitud de salida **en las dos direcciones** (presupuesto completo: el fragmentado escribe **1.39×** el monolítico y puntúa más; presupuesto repartido: **0.43×** y puntúa menos), y truncar a un presupuesto de lectura fijo **T** cambia el signo del impuesto con T (de **−15.66 %** en T=40 a **+7.69 %** en T=120, T13). El instrumento por posición de primera mención (T13b, SWIP-0001), corregido para que una clave omitida se impute al final del texto (peor caso), tampoco decide: desplazamiento **+0.0036** de la propia longitud, IC 95 % **[−0.0948, +0.0994]** — un nulo con un intervalo ~5× más ancho que el umbral — y las dos mitades del corpus disienten en signo, así que el instrumento **se niega** (la imputación del peor caso además re-acopla la métrica a la longitud: ρ = **−0.452**, sobre 423 claves de las que el fragmentado omite **217** frente a **82** del monolítico). La medición que sí sobrevive es económica: con presupuesto igualado, fragmentar **cuesta en las cinco familias** (sobre las 95 celdas del criterio, T09R: medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**; agregado **+11.17 %**, IC 95 % **[+4.80, +17.34]**, T09R), y la política por clase medida es **no fragmentar** (**+0.0 %** frente a **+14.8 %** fragmentando siempre). Es el resultado que esta sección reporta primero, porque es el que los datos sostienen.
 
 ### 15.3 Lo que se midió, y lo que se retiró
 
@@ -2649,18 +2649,66 @@ monolítico — las 48 celdas coincidieron con su contraparte monolítica una a
 una (48/48), así que la corrida no medía nada de la fragmentación, y L quedaba
 confundido con el tamaño del documento. La corrida rediseñada (cada fragmento
 *responde* los valores por fila y su propia suma parcial; el ensamblador
-combina de forma determinista, `run_lcurve_v2.py`) es la que mide la curva.
-Sobre los mismos documentos, con L variando dentro de cada uno, la tasa
-global del fragmentado es **63.9 %** en L=5, **55.6 %** en L=10, **38.9 %**
-en L=20 y **25.0 %** en L=40 — contra el monolítico **61.1 %**. Dos
-conclusiones: la curva de calidad es real ahora y **cae con L** (fidelidad de
-extracción por fragmento: 100 % de filas extraídas en L=5, degradándose a L
-mayores — el mecanismo que la corrida inválida apenas apuntaba), y el brazo
-fragmentado con L pequeño llega a **paridad con el monolítico, no a una
-victoria** (63.9 % vs 61.1 %). Un diagnóstico de la misma corrida vale más que
-la curva: los fragmentos nunca suman bien su propio bloque (0 sumas parciales
-correctas en cada celda), que es exactamente la aritmética que el ensamblador
-determinista le quita a los nodos.
+combina de forma determinista, `run_lcurve_v2.py`) sí mide algo de la
+fragmentación, pero **su ensamblador computa sólo 3 de las 6 formas de pregunta
+global**: `pair_sum`, `triple_argmax` y `pair_warehouse` —32 de las 72 globales
+de dev— se califican como fallo por construcción. Sobre las celdas de la
+corrida el ensamblador cubre 79 de 144 globales (54.9 %), y ése es el techo del
+brazo fragmentado: en L=5 y L=10 lo alcanza exactamente. Comparado contra el
+monolítico del mismo documento, pregunta por pregunta (T08R2):
+
+| L | computables | fragmentado (computables) | monolítico (computables) | fragmentado (todas) | monolítico (todas) |
+|---|---|---|---|---|---|
+| 5 | 23/36 | 100.0 % | 73.9 % | 63.9 % | 77.8 % |
+| 10 | 20/36 | 100.0 % | 75.0 % | 55.6 % | 69.4 % |
+| 20 | 19/36 | 73.7 % | 63.2 % | 38.9 % | 58.3 % |
+| 40 | 17/36 | 52.9 % | 47.1 % | 25.0 % | 44.4 % |
+
+Sobre las preguntas que el ensamblador sabe computar, el fragmentado **supera**
+al monolítico en todos los L: diferencia pareada **+18.9** puntos, IC 95 %
+**[+1.4, +37.5]**. Sobre todas las globales la diferencia es −16.7 puntos
+[−27.8, −4.6], pero esa cifra mide la cobertura del ensamblador y no la
+fragmentación, así que el veredicto de arquitectura **se niega**. Dos
+advertencias sobre la ventaja: parte de ella es de diseño —el fragmentado
+agrega con código exacto y el monolítico hace su propia aritmética, que es
+justo lo que el protocolo propone—, y la muestra es pequeña (79 preguntas, una
+familia). Tres límites más: la pendiente en L no está medida (cada L usa su
+propia banda de tamaños; en los 15 documentos con dos o más L hay 11 empates, 3
+a favor del L menor y 1 del mayor); la fidelidad de valor tampoco (el registro
+cuenta filas respondidas, no correctas); y las sumas parciales no son
+verificables sin las respuestas crudas. `run_lcurve_v3.py` implementa las seis
+formas, corre todos los L sobre los mismos documentos y guarda la fidelidad por
+fila y las respuestas crudas. Con la v2 sola, esta sección **no afirma paridad,
+costo ni victoria** en la curva-L.
+
+**La corrida v3 existe** (`data/lcurve_v3_runs.jsonl`): ensamblador con las seis
+formas, L = 5, 10, 20 y 40 sobre los mismos 8 documentos de 80 y 160 filas,
+fidelidad por fila y respuestas crudas; el monolítico se re-corrió en las mismas
+condiciones y salió idéntico, byte a byte, al de la admisión. Resultado (T08R3):
+
+| L | fragmentado | monolítico | fidelidad de extracción |
+|---|---|---|---|
+| 5 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 10 | 24/24 = 100.0 % | 12/24 = 50.0 % | 958/960 |
+| 20 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 40 | 21/24 = 87.5 % | 12/24 = 50.0 % | 923/960 |
+
+Diferencia pareada **+46.9** puntos, IC 95 % **[+33.3, +59.4]**. Dentro de
+documento la pendiente en L es plana hasta L=20 y cae en L=40: 2 documentos
+empeoran, ninguno mejora y 6 empatan. Las respuestas crudas son auditables: los
+fragmentos extraen casi sin error, pero suman bien su propio bloque sólo 1 vez
+de 360.
+
+**Lo que esta cifra no permite afirmar todavía.** Entre los dos brazos cambian
+dos cosas a la vez: se parte el documento, y la aritmética pasa del modelo al
+código. Los +46.9 puntos no dicen cuánto aporta cada una. El brazo que lo
+separa —la misma extracción sobre el documento entero (N=1) con el mismo
+ensamblador— está implementado (`run_lcurve_v3.py --full-control`, 8 llamadas)
+y su veredicto es T08R4. Si N=1 más código alcanza a los fragmentos, la ganancia
+es de la agregación determinista, que el protocolo prescribe pero que no exige
+partir; si queda por debajo, la diferencia es el efecto de partir. Hasta
+entonces esta sección afirma que **extraer con el modelo y agregar con código
+supera al modelo solo en esta tarea**, no que fragmentar lo haga.
 
 ### 15.5 Composición: el tamaño de muestra que hace falta
 
@@ -2804,6 +2852,9 @@ recomputa ejecutándolos.
 | T06R | ✔ | el calificador puntúa **21/21** la respuesta perfecta; **100** de **105** monolíticos despejan el piso |
 | T07R | ✘ | M4, experimento controlado: δ sube en **32/32** pares y el impuesto empeora sólo en **15/32** |
 | T08R | ✘ | curva-L: la banda predicha (factor 3–6×) no aparece |
+| T08R2 | ◌ | curva-L del corpus admitido: el ensamblador cubre el 54.9 % de las globales, así que el veredicto se niega; sobre las computables, +18.9 puntos a favor del fragmentado |
+| T08R3 | ✔ | curva-L v3: fragmentos + código **+46.9** puntos sobre el monolítico; mezcla partir y agregar con código |
+| T08R4 | ▣ | control N=1: separa el efecto de partir del de agregar con código — corrida pendiente (`--full-control`) |
 | T09R | ◌ | criterio de abandono: **rehusado**, confundido con la longitud de salida |
 | T10R | ▣ | M1: sin régimen no saturado en este corpus |
 | T0RR / T0RR2 | ✘ | enrutabilidad por celda: **AUC 0.57** y **0.57** |

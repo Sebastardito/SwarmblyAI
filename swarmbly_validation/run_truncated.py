@@ -246,9 +246,13 @@ def run_position(data=None, recs=None, quiet=False):
         f"{'mismo signo' if same_sign else 'SIGNOS OPUESTOS'}.",
         f"Confundido: ρ(posición, razón de longitud) = {rho:+.3f} "
         f"({'resuelto' if confound_gone else 'persiste'}).",
-        f"Criterio (límite superior ≤ +2 %): "
-        f"{'CUMPLIDO' if met else 'NO cumple'}; la mitad de la anchura del IC "
-        f"({(hi-lo)/2:+.3f}) es {(hi-lo)/2/0.02:.0f}x el umbral.",
+        (f"Criterio (límite superior ≤ +2 %): "
+         f"{'CUMPLIDO' if met else 'NO cumple'}; la mitad de la anchura del IC "
+         f"({(hi-lo)/2:+.3f}) es {(hi-lo)/2/0.02:.0f}x el umbral."
+         if (confound_gone and same_sign) else
+         f"Criterio: **sin veredicto** — el instrumento se niega, así que no "
+         f"se lee el límite superior contra el umbral. (La mitad de la anchura "
+         f"del IC, {(hi-lo)/2:+.3f}, es {(hi-lo)/2/0.02:.0f}x el umbral.)"),
     ]
     if not confound_gone or not same_sign:
         verdict = REFUSE
@@ -259,7 +263,9 @@ def run_position(data=None, recs=None, quiet=False):
         verdict=verdict,
         summary=f"desplazamiento {mean:+.4f} [ {lo:+.4f}, {hi:+.4f} ]; "
                 f"mitades {'concordantes' if same_sign else 'DISCORDANTES'}; "
-                f"criterio {'CUMPLIDO' if met else 'no cumple'}",
+                + (f"criterio {'CUMPLIDO' if met else 'no cumple'}"
+                   if verdict != REFUSE else
+                   "el instrumento se niega: criterio sin veredicto"),
         killed_if="el fragmentado desplaza las claves más de +2 % de longitud",
         refusal="signo discordante entre mitades o confundido persistente",
         details=details,

@@ -46,6 +46,9 @@ falla y el resto no llega a correr.
 | T06R | — | ✔ | calificador **21/21** sobre la respuesta perfecta; **100** de **105** monolíticos sobre el piso |
 | T07R | M4 | ✘ | δ sube en **32/32** pares a ρ igual; el impuesto empeora sólo en **15/32** |
 | T08R | — | ✘ | banda de `L`: factor **1.0** en `table_outturn`, **2.7** en `longform`; la banda ancha predicha no aparece |
+| T08R2 | §5 | ◌ rehusado | curva-L del corpus admitido: cobertura del ensamblador **54.9 %**; sobre las computables **+18.9** [**+1.4**, **+37.5**] a favor del fragmentado |
+| T08R3 | §5 | ✔ | curva-L v3: **+46.9** [**+33.3**, **+59.4**] frente al monolítico; mezcla partir y agregar con código |
+| T08R4 | §5 | ▣ pendiente | control N=1 — `run_lcurve_v3.py --full-control` |
 | T09R | — | ◌ rehusado | **+11.17 %** IC 95 % [**+4.80**, **+17.34**] sobre **95** celdas, confundido con la longitud de salida |
 | T10R | M1 | ▣ bloqueado | sin régimen no saturado en este corpus |
 | T0RR | P2 | ✘ | AUC **0.57** con δ y reputación; **0.61** sin ninguno de los dos |
@@ -107,7 +110,7 @@ final del texto, también se niega: desplazamiento **+0.0036** de la propia
 longitud, IC 95 % **[−0.0948, +0.0994]** — un nulo, ~5× más ancho que el
 umbral — y las mitades del corpus disienten en signo (la imputación del peor caso también re-acopla la métrica a la longitud: ρ = **−0.452**; de 423 claves, el fragmentado omite **217** frente a **82** del monolítico). Lo que sobrevive es
 económico: con presupuesto igualado, fragmentar **cuesta en las cinco
-familias** (medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**;
+familias** (sobre las 95 celdas del criterio, T09R: medias **+6.2 %** a **+22.1 %**, medianas **+4.3 %** a **+29.4 %**;
 agregado **+11.17 %**, IC 95 % **[+4.80, +17.34]**), y la política por clase
 medida es **no fragmentar** (**+0.0 %** frente a **+14.8 %**).
 
@@ -139,14 +142,40 @@ documento original y las 48 celdas coincidieron con su contraparte monolítica
 una a una (48/48) — no medía nada de la fragmentación, y L quedaba confundido
 con el tamaño del documento. La corrida rediseñada (cada fragmento *responde*
 los valores por fila y su propia suma parcial; el ensamblador combina de forma
-determinista, `run_lcurve_v2.py`) mide la curva sobre los mismos documentos,
-con L variando dentro de cada uno: **63.9 %** (L=5), **55.6 %** (L=10),
-**38.9 %** (L=20), **25.0 %** (L=40) contra el monolítico **61.1 %**. La curva
-cae con L (fidelidad de extracción por fragmento), y con L pequeño el brazo
-fragmentado llega a **paridad con el monolítico, no a una victoria**.
-Diagnóstico: los fragmentos nunca suman bien su propio bloque (0 sumas
-parciales correctas por celda) — la aritmética que el ensamblador determinista
-le quita a los nodos.
+determinista, `run_lcurve_v2.py`) tiene un ensamblador que computa sólo 3 de
+las 6 formas de pregunta global (79 de 144 globales, 54.9 %); el resto se
+califica como fallo por construcción. Contra el monolítico del mismo documento
+(T08R2):
+
+| L | computables | fragmentado (computables) | monolítico (computables) | fragmentado (todas) | monolítico (todas) |
+|---|---|---|---|---|---|
+| 5 | 23/36 | 100.0 % | 73.9 % | 63.9 % | 77.8 % |
+| 10 | 20/36 | 100.0 % | 75.0 % | 55.6 % | 69.4 % |
+| 20 | 19/36 | 73.7 % | 63.2 % | 38.9 % | 58.3 % |
+| 40 | 17/36 | 52.9 % | 47.1 % | 25.0 % | 44.4 % |
+
+Sobre las preguntas computables el fragmentado supera al monolítico en todos
+los L (**+18.9** puntos, IC 95 % **[+1.4, +37.5]**; agregación exacta por
+código de un lado, aritmética del modelo del otro; 79 preguntas, una familia).
+Sobre todas las globales la cifra (−16.7) mide la cobertura del ensamblador, y
+el veredicto se niega. La pendiente en L y la fidelidad de valor no están
+medidas. `run_lcurve_v3.py` corrige las tres cosas.
+
+**Corrida v3** (T08R3; seis formas, L = 5–40 sobre los mismos 8 documentos,
+monolítico re-corrido e idéntico al de la admisión):
+
+| L | fragmentado | monolítico | fidelidad de extracción |
+|---|---|---|---|
+| 5 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 10 | 24/24 = 100.0 % | 12/24 = 50.0 % | 958/960 |
+| 20 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 40 | 21/24 = 87.5 % | 12/24 = 50.0 % | 923/960 |
+
+Diferencia pareada **+46.9** puntos, IC 95 % **[+33.3, +59.4]**; pendiente
+intra-documento plana hasta L=20 y con caída en L=40. Los fragmentos suman bien
+su bloque 1 vez de 360. La cifra mezcla dos efectos —partir y agregar con
+código—; el control N=1 (`--full-control`, T08R4) los separa, y hasta entonces
+no se atribuye a la fragmentación.
 
 ## 5. Documentos relacionados
 

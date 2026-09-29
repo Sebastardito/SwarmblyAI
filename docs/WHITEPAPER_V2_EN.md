@@ -2487,7 +2487,7 @@ self-consistency**, not only against the naive monolithic baseline. A multi-agen
 architecture that only beats single-pass monolithic generation is comparing itself
 against the wrong rival.
 
-**The criterion is not measured — and the cleanest measurement is a cost.** The aggregate tax is confounded with output length in **both directions** (full budget: the fragmented arm writes **1.39×** the monolithic and scores more; divided budget: **0.43×** and scores less), and truncating to a fixed reading budget **T** flips the sign of the tax with T (**−15.66 %** at T=40 to **+7.69 %** at T=120, T13). The position-of-first-mention instrument (T13b, SWIP-0001), corrected so that an omitted key is charged at the end of the text (worst case), also does not decide: displacement **+0.0036** of the arm's own length, 95 % CI **[−0.0948, +0.0994]** — a null with an interval ~5× wider than the threshold — and the two corpus halves disagree in sign, so the instrument **refuses** (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**, over 423 keys of which the fragmented arm omits **217** against the monolithic's **82**). The measurement that does survive is economic: under the equalised budget, fragmenting **costs in all five families** (means **+6.2 %** to **+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI **[+4.80, +17.34]**, T09R), and the measured per-class policy is **not to fragment** (**+0.0 %** against **+14.8 %** for always fragmenting). That is the result this section reports first, because it is the one the data support.
+**The criterion is not measured — and the cleanest measurement is a cost.** The aggregate tax is confounded with output length in **both directions** (full budget: the fragmented arm writes **1.39×** the monolithic and scores more; divided budget: **0.43×** and scores less), and truncating to a fixed reading budget **T** flips the sign of the tax with T (**−15.66 %** at T=40 to **+7.69 %** at T=120, T13). The position-of-first-mention instrument (T13b, SWIP-0001), corrected so that an omitted key is charged at the end of the text (worst case), also does not decide: displacement **+0.0036** of the arm's own length, 95 % CI **[−0.0948, +0.0994]** — a null with an interval ~5× wider than the threshold — and the two corpus halves disagree in sign, so the instrument **refuses** (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**, over 423 keys of which the fragmented arm omits **217** against the monolithic's **82**). The measurement that does survive is economic: under the equalised budget, fragmenting **costs in all five families** (over the 95 criterion cells, T09R: means **+6.2 %** to **+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI **[+4.80, +17.34]**, T09R), and the measured per-class policy is **not to fragment** (**+0.0 %** against **+14.8 %** for always fragmenting). That is the result this section reports first, because it is the one the data support.
 
 ### 15.3 What was measured, and what was withdrawn
 
@@ -2562,17 +2562,68 @@ document, and the model answered the same text as the monolithic arm — the
 the run measured nothing about fragmentation, and L was confounded with
 document size. The redesigned run (each fragment *answers* per-row values and
 its own partial sum; the assembler combines deterministically, `run_lcurve_v2.py`)
-is the one that measures the curve. On the same documents, with L varying
-inside each one, the fragmented global rate is **63.9 %** at L=5, **55.6 %**
-at L=10, **38.9 %** at L=20 and **25.0 %** at L=40 — against the monolithic
-**61.1 %**. Two conclusions: the quality curve is real now and **falls with
-L** (per-fragment extraction fidelity: 100 % of rows extracted at L=5,
-degrading at larger L — the mechanism the invalid run only gestured at), and
-the fragmented arm at small L reaches **parity with the monolithic, not a
-win** (63.9 % vs 61.1 %). A diagnostic of the same run is worth more than the
-curve: the fragment models never sum their own block correctly (0 correct
-partial sums in every cell), which is exactly the arithmetic the deterministic
-assembler removes from the nodes.
+does measure something about fragmentation, but **its assembler computes only 3
+of the 6 global question forms**: `pair_sum`, `triple_argmax` and
+`pair_warehouse` — 32 of the 72 dev globals — are scored as failures by
+construction. Over the run's cells the assembler covers 79 of 144 globals
+(54.9 %), and that is the fragmented arm's ceiling: at L=5 and L=10 it reaches
+it exactly. Compared against the monolithic arm on the same document, question
+by question (T08R2):
+
+| L | computable | fragmented (computable) | monolithic (computable) | fragmented (all) | monolithic (all) |
+|---|---|---|---|---|---|
+| 5 | 23/36 | 100.0 % | 73.9 % | 63.9 % | 77.8 % |
+| 10 | 20/36 | 100.0 % | 75.0 % | 55.6 % | 69.4 % |
+| 20 | 19/36 | 73.7 % | 63.2 % | 38.9 % | 58.3 % |
+| 40 | 17/36 | 52.9 % | 47.1 % | 25.0 % | 44.4 % |
+
+On the questions the assembler can compute, the fragmented arm **beats** the
+monolithic arm at every L: paired difference **+18.9** points, 95 % CI
+**[+1.4, +37.5]**. Over all globals the difference is −16.7 points
+[−27.8, −4.6], but that figure measures the assembler's coverage and not
+fragmentation, so the architectural verdict **refuses**. Two caveats on the
+advantage: part of it is by design — the fragmented arm aggregates with exact
+code while the monolithic arm does its own arithmetic, which is precisely what
+the protocol proposes — and the sample is small (79 questions, one family).
+Three further limits: the slope in L is not measured (each L uses its own band
+of sizes; across the 15 documents with two or more L there are 11 ties, 3
+favouring the smaller L and 1 the larger); value fidelity is not measured
+either (the record counts answered rows, not correct ones); and the partial
+sums are not verifiable without the raw answers. `run_lcurve_v3.py` implements
+all six forms, runs every L on the same documents, and stores per-row fidelity
+and raw answers. On the v2 run alone, this section **claims no parity, cost or
+win** on the L curve.
+
+**The v3 run exists** (`data/lcurve_v3_runs.jsonl`): an assembler with all six
+forms, L = 5, 10, 20 and 40 on the same 8 documents of 80 and 160 rows,
+per-row fidelity and raw answers; the monolithic arm was re-run under the same
+conditions and came out identical, byte for byte, to the admission run. Result
+(T08R3):
+
+| L | fragmented | monolithic | extraction fidelity |
+|---|---|---|---|
+| 5 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 10 | 24/24 = 100.0 % | 12/24 = 50.0 % | 958/960 |
+| 20 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 40 | 21/24 = 87.5 % | 12/24 = 50.0 % | 923/960 |
+
+Paired difference **+46.9** points, 95 % CI **[+33.3, +59.4]**. Within
+document the slope in L is flat up to L=20 and drops at L=40: 2 documents get
+worse, none gets better and 6 tie. The raw answers are auditable: the fragments
+extract almost without error, but sum their own block correctly only 1 time in
+360.
+
+**What this figure does not yet license.** Two things change between the arms
+at once: the document is split, and the arithmetic moves from the model to
+code. The +46.9 points do not say how much each contributes. The arm that
+separates them — the same extraction over the whole document (N=1) with the
+same assembler — is implemented (`run_lcurve_v3.py --full-control`, 8 calls)
+and its verdict is T08R4. If N=1 plus code matches the fragments, the gain
+belongs to deterministic aggregation, which the protocol prescribes but which
+does not require splitting; if it falls short, the difference is the effect of
+splitting. Until then this section claims that **extracting with the model and
+aggregating with code beats the model alone on this task**, not that
+fragmenting does.
 
 ### 15.5 Composition: the sample size required
 
@@ -2715,6 +2766,9 @@ recomputed by running them.
 | T06R | ✔ | the grader scores the perfect answer **21/21**; **100** of **105** monolithic runs clear the floor |
 | T07R | ✘ | M4, controlled experiment: δ rises in **32/32** pairs and the tax worsens in only **15/32** |
 | T08R | ✘ | L curve: the predicted band (factor 3–6×) does not appear |
+| T08R2 | ◌ | L curve on the admitted corpus: the assembler covers 54.9 % of the globals, so the verdict refuses; on the computable ones, +18.9 points in favour of the fragmented arm |
+| T08R3 | ✔ | L curve v3: fragments + code **+46.9** points over the monolithic arm; mixes splitting with aggregating by code |
+| T08R4 | ▣ | N=1 control: separates the effect of splitting from that of aggregating by code — run pending (`--full-control`) |
 | T09R | ◌ | abandonment criterion: **refused**, confounded with output length |
 | T10R | ▣ | M1: no non-saturated regime in this corpus |
 | T0RR / T0RR2 | ✘ | per-cell routability: **AUC 0.57** and **0.57** |

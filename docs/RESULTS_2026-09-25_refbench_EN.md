@@ -46,6 +46,9 @@ never runs.
 | T06R | — | ✔ | grader **21/21** on the perfect answer; **100** of **105** monolithic runs above the floor |
 | T07R | M4 | ✘ | δ rises in **32/32** pairs at equal ρ; the tax worsens in only **15/32** |
 | T08R | — | ✘ | `L` band: factor **1.0** on `table_outturn`, **2.7** on `longform`; the predicted wide band does not appear |
+| T08R2 | §5 | ◌ refused | L curve on the admitted corpus: assembler coverage **54.9 %**; on the computable ones **+18.9** [**+1.4**, **+37.5**] in favour of the fragmented arm |
+| T08R3 | §5 | ✔ | L curve v3: **+46.9** [**+33.3**, **+59.4**] against the monolithic arm; mixes splitting with aggregating by code |
+| T08R4 | §5 | ▣ pending | N=1 control — `run_lcurve_v3.py --full-control` |
 | T09R | — | ◌ refused | **+11.17 %** 95 % CI [**+4.80**, **+17.34**] over **95** cells, confounded with output length |
 | T10R | M1 | ▣ blocked | no non-saturated regime in this corpus |
 | T0RR | P2 | ✘ | AUC **0.57** with δ and reputation; **0.61** with neither |
@@ -106,7 +109,7 @@ corrected so an omitted key is charged at the end of the text, also refuses:
 displacement **+0.0036** of the arm's own length, 95 % CI
 **[−0.0948, +0.0994]** — a null, ~5× wider than the threshold — and the corpus
 halves disagree in sign (the worst-case imputation also re-couples the metric to length: ρ = **−0.452**; of 423 keys, the fragmented arm omits **217** against the monolithic's **82**). What survives is economic: under the equalised
-budget, fragmenting **costs in all five families** (means **+6.2 %** to
+budget, fragmenting **costs in all five families** (over the 95 criterion cells, T09R: means **+6.2 %** to
 **+22.1 %**, medians **+4.3 %** to **+29.4 %**; aggregate **+11.17 %**, 95 % CI
 **[+4.80, +17.34]**), and the measured per-class policy is **not to fragment**
 (**+0.0 %** against **+14.8 %**).
@@ -138,14 +141,40 @@ original document, and the 48 cells coincided with their monolithic
 counterpart one for one (48/48) — it measured nothing about fragmentation, and
 L was confounded with document size. The redesigned run (each fragment
 *answers* per-row values and its own partial sum; the assembler combines
-deterministically, `run_lcurve_v2.py`) measures the curve on the same
-documents, with L varying inside each one: **63.9 %** (L=5), **55.6 %**
-(L=10), **38.9 %** (L=20), **25.0 %** (L=40) against the monolithic
-**61.1 %**. The curve falls with L (per-fragment extraction fidelity), and at
-small L the fragmented arm reaches **parity with the monolithic, not a win**.
-Diagnostic: the fragment models never sum their own block correctly (0
-correct partial sums per cell) — the arithmetic the deterministic assembler
-removes from the nodes.
+deterministically, `run_lcurve_v2.py`) has an assembler that computes only 3 of
+the 6 global question forms (79 of 144 globals, 54.9 %); the rest are scored as
+failures by construction. Against the monolithic arm on the same document
+(T08R2):
+
+| L | computable | fragmented (computable) | monolithic (computable) | fragmented (all) | monolithic (all) |
+|---|---|---|---|---|---|
+| 5 | 23/36 | 100.0 % | 73.9 % | 63.9 % | 77.8 % |
+| 10 | 20/36 | 100.0 % | 75.0 % | 55.6 % | 69.4 % |
+| 20 | 19/36 | 73.7 % | 63.2 % | 38.9 % | 58.3 % |
+| 40 | 17/36 | 52.9 % | 47.1 % | 25.0 % | 44.4 % |
+
+On the computable questions the fragmented arm beats the monolithic arm at
+every L (**+18.9** points, 95 % CI **[+1.4, +37.5]**; exact aggregation by code
+on one side, the model's own arithmetic on the other; 79 questions, one
+family). Over all globals the figure (−16.7) measures the assembler's coverage,
+and the verdict refuses. The slope in L and value fidelity are not measured.
+`run_lcurve_v3.py` corrects all three.
+
+**v3 run** (T08R3; six forms, L = 5–40 on the same 8 documents, monolithic arm
+re-run and identical to the admission run):
+
+| L | fragmented | monolithic | extraction fidelity |
+|---|---|---|---|
+| 5 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 10 | 24/24 = 100.0 % | 12/24 = 50.0 % | 958/960 |
+| 20 | 24/24 = 100.0 % | 12/24 = 50.0 % | 960/960 |
+| 40 | 21/24 = 87.5 % | 12/24 = 50.0 % | 923/960 |
+
+Paired difference **+46.9** points, 95 % CI **[+33.3, +59.4]**; within-document
+slope flat up to L=20 with a drop at L=40. The fragments sum their block
+correctly 1 time in 360. The figure mixes two effects — splitting and
+aggregating with code —; the N=1 control (`--full-control`, T08R4) separates
+them, and until then it is not attributed to fragmentation.
 
 ## 5. Related documents
 

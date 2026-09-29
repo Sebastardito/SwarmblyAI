@@ -116,7 +116,12 @@ hf_cache/
 swarmbly_validation/REPORT*.md
 swarmbly_validation/results*.json
 swarmbly_validation/FUNDING_CASE.md
-prompts/lcurve_v2.json
+swarmbly_validation/lcurve_v2.json
+data/lcurve_v3_mock.jsonl
+data/lcurve_v3_full_mock.jsonl
+# `prompts/lcurve_v2.json` NO va aquí: es el corpus admitido, con su
+# partición dev/final congelada, y T06, la admisión y la curva-L dependen
+# de él. Sin versionarlo, un clon no puede reproducir ninguna de las tres.
 
 # Local node state
 *.sqlite

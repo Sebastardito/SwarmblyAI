@@ -498,6 +498,24 @@ def t09_real(recs):
     met = hi < C.CRITERION_TAX
     at_or_below = sum(1 for t in taxes if t <= 0)
 
+    # Impuesto por familia sobre ESTA población (las celdas del criterio).
+    # Se calcula aquí para que el rango por familia que citan los documentos
+    # salga del arnés y no de un cálculo a mano; T0RR da otro rango porque
+    # mide otra población (80 celdas de tabla), y los documentos deben decir
+    # cuál citan.
+    fam = {}
+    for _t, mdl, tx in cells:
+        fam.setdefault(mdl, []).append(tx)
+    fam_rows = [[m, len(v), f"{fmean(v):+.1f}%", f"{median(v):+.1f}%"]
+                for m, v in sorted(fam.items(), key=lambda kv: fmean(kv[1]))]
+    fam_means = [fmean(v) for v in fam.values()]
+    fam_meds = [median(v) for v in fam.values()]
+    fam_line = (f"Por familia ({len(fam)} familias, esta población de "
+                f"{len(cells)} celdas): medias {min(fam_means):+.1f}% a "
+                f"{max(fam_means):+.1f}%, medianas {min(fam_meds):+.1f}% a "
+                f"{max(fam_meds):+.1f}%; positivas {sum(1 for x in fam_means if x > 0)}"
+                f"/{len(fam)}.") if fam else ""
+
     # --- baseline self-consistency (v0.3, Zhang et al.) ---------------------
     # una fila por (tarea, modelo): SC vs la celda frag PRIMARIA (L por defecto)
     sc_rows = []
@@ -551,14 +569,22 @@ def t09_real(recs):
             details=[
                 f"n={len(cells)} celdas; mediana {median(taxes):+.2f}%; "
                 f"{at_or_below} en ≤0.",
+                fam_line,
                 conf_detail,
-                "Para desbloquear: correr con presupuesto de salida igualado "
-                "(`--match-output-tokens`) y volver a juzgar.",
+                ("El presupuesto igualado ya se usa aquí y el confundido "
+                 "persiste invertido: el acoplamiento longitud–score es "
+                 "estructural. Desbloquear exige un instrumento invariante a "
+                 "la longitud que no se niegue (T13b), no otro presupuesto."
+                 if matched_any else
+                 "Para desbloquear: correr con presupuesto de salida igualado "
+                 "(`--match-output-tokens`) y volver a juzgar."),
             ] + sc_detail,
             tables={"Tax por celda": (
                 ["tarea", "modelo", "tax %"],
                 [[c[0][:14], c[1], f"{c[2]:+.1f}"]
                  for c in sorted(cells, key=lambda x: -x[2])]),
+                "Tax por familia (población del criterio)": (
+                    ["familia", "n", "media", "mediana"], fam_rows),
                 "Mono vs frag vs self-consistency (score)": (
                     ["tarea", "modelo", "mono", "frag", "SC", "tax SC %"],
                     [[r[0][:12], r[1], r[2],
@@ -1353,6 +1379,293 @@ def prefer_matched(recs):
     return [r for r in recs if r.get("key") in keep]
 
 
+def tLC_real(root=None, runs_name="lcurve_v2_runs.jsonl", test_id="T08R2",
+             supported=None):
+    """Curva-L sobre el corpus admitido, comparada DOCUMENTO A DOCUMENTO y
+    PREGUNTA A PREGUNTA.
+
+    Lee la corrida fragmentada (`data/<runs_name>`), el monolítico de la misma
+    familia sobre los mismos documentos (`data/admission.json`, re-calificado
+    pregunta por pregunta con el calificador de la admisión) y el corpus
+    (`prompts/lcurve_v2.json`).
+
+    Dos defectos de lectura motivan su forma, y los dos ocurrieron:
+
+    * comparar el fragmentado de un subconjunto de documentos contra el
+      monolítico promediado sobre todos — aquí la comparación es por documento;
+    * comparar sobre preguntas que el ensamblador **no sabe computar**. El
+      ensamblador de la corrida v2 sólo implementa 3 de las 6 formas de
+      pregunta global; las demás se califican como fallo por construcción. Una
+      comparación que incluye esas preguntas mide la cobertura del ensamblador,
+      no la fragmentación. Aquí se separa: si la cobertura no es total, el
+      veredicto sobre la arquitectura **se niega**, y la comparación sobre las
+      preguntas computables se reporta como descriptiva.
+
+    `supported`: formas que el ensamblador de esa corrida computa. Si los
+    registros traen `per_question` (v3), se usa eso y la cobertura es la
+    registrada.
+    """
+    import json as _json
+    root = root or ROOT
+    runs_p = os.path.join(root, "data", runs_name)
+    adm_p = os.path.join(root, "data", "admission.json")
+    corpus_p = os.path.join(root, "prompts", "lcurve_v2.json")
+    name = f"Curva-L en corpus admitido ({runs_name})"
+    missing = [x for x in (runs_p, adm_p, corpus_p) if not os.path.exists(x)]
+    if missing:
+        return Result(id=test_id, name=name, model="§5", verdict=BLOCKED,
+                      summary="faltan insumos: " + ", ".join(
+                          os.path.relpath(m, root) for m in missing),
+                      killed_if="—", refusal="sin datos", details=[])
+    if supported is None and runs_name == "lcurve_v2_runs.jsonl":
+        try:
+            from swarmbly_ref.benchmarks.run_lcurve_v2 import SUPPORTED_FORMS
+            supported = set(SUPPORTED_FORMS)
+        except Exception:
+            supported = {"pair_diff", "triple_sum", "pair_argmax"}
+    from swarmbly_ref.benchmarks.run_admission import parse_answers, check_answer
+
+    runs = [_json.loads(l) for l in open(runs_p, encoding="utf-8") if l.strip()]
+    adm = _json.load(open(adm_p, encoding="utf-8"))
+    corpus = _json.load(open(corpus_p, encoding="utf-8"))
+    docs = {x["id"]: x for x in corpus["prompts"]}
+    model = runs[0].get("model", "llama3.2:3b") if runs else "llama3.2:3b"
+    per = {d["id"]: d for d in adm["families"][model]["per_doc"]}
+    runs = [r for r in runs if r["doc"] in per and r["doc"] in docs]
+
+    def mono_q(doc_id, response=None):
+        # la respuesta re-corrida junto a la celda (`--rerun-mono`) tiene
+        # prioridad sobre la de la admisión: mismas condiciones que el brazo
+        # fragmentado
+        doc = docs[doc_id]
+        text = response if response is not None else per[doc_id]["response"]
+        ans = parse_answers(text)
+        return {q["id"]: bool(check_answer(q, ans.get(q["id"], text)))
+                for q in doc["questions"] if q["kind"] == "global"}
+
+    cells, byL, inconsistent = [], {}, []
+    for r in runs:
+        g = [q for q in docs[r["doc"]]["questions"] if q["kind"] == "global"]
+        mq = mono_q(r["doc"], r.get("mono_rerun"))
+        if "per_question" in r:
+            pq = {k: v for k, v in r["per_question"].items()}
+            comp = [q for q in g if pq.get(q["id"], {}).get("computable", True)]
+            f_sup = sum(1 for q in comp if pq.get(q["id"], {}).get("ok"))
+        else:
+            comp = [q for q in g if q.get("form") in (supported or set())]
+            f_sup = r["global_ok"]   # lo no computable suma 0 por construcción
+            if f_sup > len(comp):
+                inconsistent.append(r["doc"])
+        m_sup = sum(mq[q["id"]] for q in comp)
+        cells.append(dict(doc=r["doc"], L=r["L"], size=r.get("n_rows"),
+                          n=len(g), comp=len(comp), f_all=r["global_ok"],
+                          f_sup=f_sup, m_all=sum(mq.values()), m_sup=m_sup,
+                          rc=r.get("rows_correct"), rx=r.get("rows_expected", 0)))
+    if len(cells) < 8 or inconsistent:
+        why = (f"{len(cells)} celdas < 8" if len(cells) < 8 else
+               f"registros con más aciertos que preguntas computables: {inconsistent[:3]}")
+        return Result(id=test_id, name=name, model="§5", verdict=BLOCKED,
+                      summary=why, killed_if="—", refusal=why, details=[])
+
+    coverage = sum(c["comp"] for c in cells) / sum(c["n"] for c in cells)
+    full = all(c["comp"] == c["n"] for c in cells)
+
+    # comparación sobre preguntas computables, pareada por documento
+    d_sup = [(c["f_sup"] - c["m_sup"]) / c["comp"] * 100.0 for c in cells if c["comp"]]
+    cl_sup = [c["doc"] for c in cells if c["comp"]]
+    ms, los, his, _ = clustered_bootstrap(d_sup, cl_sup)
+    # comparación sobre todas las globales (sólo válida con cobertura total)
+    d_all = [(c["f_all"] - c["m_all"]) / c["n"] * 100.0 for c in cells]
+    ma, loa, hia, _ = clustered_bootstrap(d_all, [c["doc"] for c in cells])
+
+    if not full:
+        verdict = REFUSE
+        reading = (f"el ensamblador computa sólo el {coverage:.0%} de las "
+                   f"preguntas globales: la comparación completa mide su "
+                   f"cobertura, no la fragmentación, y se niega")
+    elif los >= -5.0:
+        verdict, reading = PASS, "el fragmentado no pierde más de 5 puntos"
+    elif his < 0:
+        verdict, reading = FAIL, "el fragmentado pierde contra el monolítico"
+    else:
+        verdict, reading = REFUSE, "no decide"
+
+    # pendiente en L, sólo dentro de documento y sobre computables
+    byd = {}
+    for c in cells:
+        if c["comp"]:
+            byd.setdefault(c["doc"], {})[c["L"]] = c["f_sup"] / c["comp"]
+    multi = {d: v for d, v in byd.items() if len(v) >= 2}
+    small = sum(1 for v in multi.values() if v[min(v)] > v[max(v)])
+    large = sum(1 for v in multi.values() if v[min(v)] < v[max(v)])
+    ties = len(multi) - small - large
+    bands = {}
+    for c in cells:
+        bands.setdefault(c["L"], set()).add(c["size"])
+    one_band = len({frozenset(v) for v in bands.values()}) == 1
+
+    rows = []
+    for L in sorted(bands):
+        cs = [c for c in cells if c["L"] == L]
+        n = sum(c["n"] for c in cs); cp = sum(c["comp"] for c in cs)
+        fa = sum(c["f_all"] for c in cs); fs = sum(c["f_sup"] for c in cs)
+        ma_ = sum(c["m_all"] for c in cs); ms_ = sum(c["m_sup"] for c in cs)
+        rc = [c for c in cs if c["rc"] is not None]
+        fid = (f"{sum(c['rc'] for c in rc)}/{sum(c['rx'] for c in rc)}"
+               if rc else "no medida")
+        rows.append([L, str(sorted(x for x in bands[L] if x)), f"{cp}/{n}",
+                     f"{fs}/{cp} = {fs / cp:.1%}" if cp else "—",
+                     f"{ms_}/{cp} = {ms_ / cp:.1%}" if cp else "—",
+                     f"{fa}/{n} = {fa / n:.1%}", f"{ma_}/{n} = {ma_ / n:.1%}",
+                     fid])
+
+    details = [
+        f"{len(cells)} celdas, familia `{model}`; monolítico del MISMO documento, "
+        f"re-calificado pregunta por pregunta ("
+        + ("re-corrido junto a cada celda" if any("mono_rerun" in r for r in runs)
+           else "respuestas de `admission.json`") + ").",
+        f"Cobertura del ensamblador: {sum(c['comp'] for c in cells)}/"
+        f"{sum(c['n'] for c in cells)} preguntas globales computables "
+        f"({coverage:.1%}).",
+        f"Sobre las preguntas computables (fragmentado − monolítico, pareado por "
+        f"documento): **{ms:+.1f}** puntos, IC95 [{los:+.1f}, {his:+.1f}].",
+        f"Sobre todas las globales: {ma:+.1f} puntos, IC95 [{loa:+.1f}, "
+        f"{hia:+.1f}] — " + ("válida." if full else
+                              "NO interpretable: incluye preguntas que el "
+                              "ensamblador califica como fallo por construcción."),
+        f"Pendiente en L dentro de documento ({len(multi)} documentos con ≥2 L, "
+        f"sobre computables): L menor mejor en {small}, L mayor mejor en "
+        f"{large}, empate en {ties}."
+        + ("" if one_band else " Cada L usa su propia banda de tamaños: la "
+           "curva agregada por L mezcla L con el tamaño."),
+        ("Fidelidad de valor medida (`rows_correct`)."
+         if any(c["rc"] is not None for c in cells) else
+         "Fidelidad de valor NO medida: `rows_extracted` cuenta filas con "
+         "alguna respuesta, no con la correcta."),
+    ]
+    return Result(
+        id=test_id, name=name, model="§5", verdict=verdict,
+        summary=(f"computables: fragmentado − monolítico {ms:+.1f} pts "
+                 f"[{los:+.1f}, {his:+.1f}]; cobertura del ensamblador "
+                 f"{coverage:.0%}; " + ("veredicto de arquitectura: "
+                 + ("niega" if verdict == REFUSE else str(verdict)))),
+        killed_if="con cobertura total, el fragmentado pierde contra el monolítico del mismo documento",
+        refusal="cobertura del ensamblador < 100 %; <8 celdas; IC indeciso",
+        details=details,
+        tables={"Por L (mismos documentos)": (
+            ["L", "tamaños", "computables", "frag (computables)",
+             "mono (computables)", "frag (todas)", "mono (todas)",
+             "fidelidad"], rows)},
+        notes=[reading,
+               "La ventaja del fragmentado en las preguntas computables incluye "
+               "que su agregación la hace código (exacta) y la del monolítico "
+               "la hace el modelo. Eso es el diseño del protocolo — el cliente "
+               "agrega —, pero hay que decirlo al citar la cifra."])
+
+
+def tSplit_real(root=None):
+    """T08R4 — ¿Ayuda PARTIR, o ayuda agregar con código?
+
+    T08R3 compara «el modelo extrae por fragmentos y el código agrega» contra
+    «el modelo lee todo y hace la aritmética». Ahí cambian DOS cosas a la vez,
+    y una ventaja no dice cuál la produjo. Este test añade el brazo que falta:
+    la MISMA extracción sobre el documento entero (N=1) con el MISMO
+    ensamblador (`run_lcurve_v3.py --full-control`). Con tres brazos sobre los
+    mismos documentos, la ventaja se descompone en:
+
+    * efecto de agregar con código  = (extracción N=1 + código) − monolítico
+    * efecto de partir              = (fragmentos + código) − (extracción N=1 + código)
+
+    El veredicto es sobre el segundo, que es la afirmación de la arquitectura.
+    """
+    import json as _json
+    root = root or ROOT
+    frag_p = os.path.join(root, "data", "lcurve_v3_runs.jsonl")
+    full_p = os.path.join(root, "data", "lcurve_v3_full.jsonl")
+    adm_p = os.path.join(root, "data", "admission.json")
+    corpus_p = os.path.join(root, "prompts", "lcurve_v2.json")
+    name = "Partir vs agregar con código (control N=1)"
+    missing = [x for x in (frag_p, full_p, adm_p, corpus_p) if not os.path.exists(x)]
+    if missing:
+        return Result(id="T08R4", name=name, model="§5", verdict=BLOCKED,
+                      summary="faltan insumos: " + ", ".join(
+                          os.path.relpath(m, root) for m in missing)
+                      + (" — correr `run_lcurve_v3.py --full-control`"
+                         if full_p in missing else ""),
+                      killed_if="—", refusal="sin datos", details=[])
+    from swarmbly_ref.benchmarks.run_admission import parse_answers, check_answer
+    frag = [_json.loads(l) for l in open(frag_p, encoding="utf-8") if l.strip()]
+    full = {r["doc"]: r for r in (_json.loads(l) for l in open(full_p, encoding="utf-8")
+                                  if l.strip())}
+    adm = _json.load(open(adm_p, encoding="utf-8"))
+    docs = {x["id"]: x for x in _json.load(open(corpus_p, encoding="utf-8"))["prompts"]}
+    model = frag[0].get("model", "llama3.2:3b")
+    per = {d["id"]: d for d in adm["families"][model]["per_doc"]}
+
+    def mono_rate(doc_id, text):
+        g = [q for q in docs[doc_id]["questions"] if q["kind"] == "global"]
+        a = parse_answers(text)
+        return sum(bool(check_answer(q, a.get(q["id"], text))) for q in g) / len(g)
+
+    rows_doc, d_code, d_split, cl = [], [], [], []
+    byL = {}
+    for doc_id in sorted({r["doc"] for r in frag}):
+        if doc_id not in full:
+            continue
+        fr = [r for r in frag if r["doc"] == doc_id]
+        mono_txt = fr[0].get("mono_rerun") or per[doc_id]["response"]
+        m = mono_rate(doc_id, mono_txt)
+        f1 = full[doc_id]["global_ok"] / full[doc_id]["global_n"]
+        fl = sum(r["global_ok"] for r in fr) / sum(r["global_n"] for r in fr)
+        d_code.append((f1 - m) * 100.0)
+        d_split.append((fl - f1) * 100.0)
+        cl.append(doc_id)
+        for r in fr:
+            b = byL.setdefault(r["L"], [0, 0, 0, 0])
+            b[0] += r["global_ok"]; b[1] += r["global_n"]
+            b[2] += r["rows_correct"]; b[3] += r["rows_expected"]
+        rows_doc.append([doc_id, docs[doc_id]["n_rows"], f"{m:.0%}", f"{f1:.0%}",
+                         f"{full[doc_id]['rows_correct']}/{full[doc_id]['rows_expected']}",
+                         f"{fl:.0%}"])
+    if len(cl) < 4:
+        return Result(id="T08R4", name=name, model="§5", verdict=BLOCKED,
+                      summary=f"{len(cl)} documentos con los tres brazos < 4",
+                      killed_if="—", refusal="muestra insuficiente", details=[])
+    mc, loc, hic, _ = clustered_bootstrap(d_code, cl)
+    ms, los, his, _ = clustered_bootstrap(d_split, cl)
+    if los > 0:
+        verdict, reading = PASS, "partir mejora sobre la extracción monolítica con el mismo ensamblador"
+    elif his < 0:
+        verdict, reading = FAIL, "partir empeora respecto de la extracción monolítica"
+    else:
+        verdict, reading = REFUSE, "el efecto de partir no se distingue de cero"
+    f_rows = sum(full[d]["rows_correct"] for d in cl)
+    f_n = sum(full[d]["rows_expected"] for d in cl)
+    details = [
+        f"{len(cl)} documentos con los tres brazos, familia `{model}`.",
+        f"Efecto de agregar con código ((N=1 + código) − monolítico): "
+        f"**{mc:+.1f}** puntos, IC95 [{loc:+.1f}, {hic:+.1f}].",
+        f"Efecto de partir ((fragmentos + código) − (N=1 + código)): "
+        f"**{ms:+.1f}** puntos, IC95 [{los:+.1f}, {his:+.1f}] → {reading}.",
+        f"Fidelidad de extracción N=1: {f_rows}/{f_n} = {f_rows / f_n:.1%}; "
+        + "; ".join(f"L={L}: {b[2]}/{b[3]} = {b[2] / b[3]:.1%}"
+                    for L, b in sorted(byL.items())) + ".",
+    ]
+    return Result(
+        id="T08R4", name=name, model="§5", verdict=verdict,
+        summary=(f"partir {ms:+.1f} pts [{los:+.1f}, {his:+.1f}]; agregar con "
+                 f"código {mc:+.1f} pts [{loc:+.1f}, {hic:+.1f}]"),
+        killed_if="partir no mejora sobre extraer el documento entero con el mismo ensamblador",
+        refusal="<4 documentos con los tres brazos; IC del efecto de partir que cruza cero",
+        details=details,
+        tables={"Por documento: tres brazos": (
+            ["documento", "filas", "monolítico", "N=1 + código",
+             "fidelidad N=1", "fragmentos + código"], rows_doc)},
+        notes=["Mismo prompt de extracción, mismo lector, mismo ensamblador en "
+               "los dos brazos con código: lo único que cambia entre ellos es "
+               "el tamaño del fragmento."])
+
+
 def run_suite(data=None, embed=False, quiet=False):
     """Ejecuta la batería empírica y devuelve (resultados, ruta_de_datos).
 
@@ -1374,6 +1687,9 @@ def run_suite(data=None, embed=False, quiet=False):
     from run_truncated import run as _t13, run_position as _t13b
     results.append(_t13(recs=recs, quiet=True))
     results.append(_t13b(recs=recs, quiet=True))
+    results.append(tLC_real())
+    results.append(tLC_real(runs_name="lcurve_v3_runs.jsonl", test_id="T08R3"))
+    results.append(tSplit_real())
     return results, data
 
 
