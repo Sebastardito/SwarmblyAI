@@ -27,7 +27,7 @@ learn whether you may quote it**.
 
 ---
 
-## Vigente · Current — 31
+## Vigente · Current — 32
 
 Se puede citar. Es lo que el proyecto sostiene hoy.
 
@@ -39,6 +39,7 @@ Se puede citar. Es lo que el proyecto sostiene hoy.
 | [`ADR-001_instrument_boundary.md`](ADR-001_instrument_boundary.md) | [`ADR-001_instrument_boundary_ES.md`](ADR-001_instrument_boundary_ES.md) | — |
 | [`DIVULGACION_EN.md`](DIVULGACION_EN.md) | [`DIVULGACION_ES.md`](DIVULGACION_ES.md) | — |
 | [`FINDING_2026-09-04_segmenter_splits_question_from_data.md`](FINDING_2026-09-04_segmenter_splits_question_from_data.md) | [`FINDING_2026-09-04_segmenter_splits_question_from_data_ES.md`](FINDING_2026-09-04_segmenter_splits_question_from_data_ES.md) | — |
+| [`FINDING_2026-10-04_correlated_errors_across_families.md`](FINDING_2026-10-04_correlated_errors_across_families.md) | [`FINDING_2026-10-04_correlated_errors_across_families_ES.md`](FINDING_2026-10-04_correlated_errors_across_families_ES.md) | — |
 | [`INCIDENT_2026-09-04_chain_misplan.md`](INCIDENT_2026-09-04_chain_misplan.md) | [`INCIDENT_2026-09-04_chain_misplan_ES.md`](INCIDENT_2026-09-04_chain_misplan_ES.md) | — |
 | [`ONEPAGER_EN.md`](ONEPAGER_EN.md) | [`ONEPAGER_ES.md`](ONEPAGER_ES.md) | — |
 | [`POSTMORTEM_2026-09-05_four_tiers.md`](POSTMORTEM_2026-09-05_four_tiers.md) | [`POSTMORTEM_2026-09-05_four_tiers_ES.md`](POSTMORTEM_2026-09-05_four_tiers_ES.md) | — |
