@@ -27,7 +27,7 @@ proveedor compartidos, como cabía esperar, pero el hallazgo que importa aquí e
 otro: **los modelos más grandes y capaces correlacionan fuertemente sus errores
 incluso con arquitecturas distintas y de desarrolladores distintos** [1].
 
-Jiang et al. (2025) muestran, sobre 26 000 consultas abiertas reales, que modelos
+Jiang et al. (2025) muestran, sobre 26.000 consultas abiertas reales, que modelos
 distintos producen respuestas sorprendentemente parecidas entre sí, además de
 repetirse cada uno consigo mismo, un efecto que llaman "mente colmena artificial"
 [2].
