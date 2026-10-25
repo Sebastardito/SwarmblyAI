@@ -1,0 +1,66 @@
+# Swarmbly AI — distribution checks.
+# 1. Every mirror folder is exactly the commit recorded in components.lock.
+# 2. The installer sets up the three components on macOS, Linux and Windows.
+# 3. The components' own test suites pass together.
+name: distribution
+
+on:
+  push:
+    branches: [main, edge]
+  pull_request:
+
+jobs:
+  mirrors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Mirrors match components.lock
+        run: python3 scripts/check_components.py --fetch
+      - name: Installer and distribution tests
+        run: |
+          python3 -m pip install --quiet pytest
+          python3 -m pytest -q tests
+
+  install:
+    needs: mirrors
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Quick install (no models, no system packages)
+        run: python installer/install.py --quick --yes --lang en --skip ollama,models,pdf,searxng,shortcuts
+      - name: Smoke test (POSIX)
+        if: runner.os != 'Windows'
+        run: |
+          .venv/bin/python -c "import swarmbly_app, swarmbly_lce, swarmbly_v0"
+          .venv/bin/swarmbly-app status --data-dir "$RUNNER_TEMP/swarmbly-data"
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          .venv\Scripts\python.exe -c "import swarmbly_app, swarmbly_lce, swarmbly_v0"
+          .venv\Scripts\swarmbly-app.exe status --data-dir "$env:RUNNER_TEMP\swarmbly-data"
+
+  tests:
+    needs: mirrors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install in developer mode
+        run: python installer/install.py --quick --yes --lang en --dev --skip ollama,models,pdf,searxng,shortcuts
+      - name: SwarmblyApp tests
+        run: cd SwarmblyApp && ../.venv/bin/python -m pytest -q
+      - name: SwarmblyLCE tests
+        run: cd SwarmblyLCE && ../.venv/bin/python -m pytest -q tests
+      - name: SwarmblyCore tests
+        run: cd SwarmblyCore && ../.venv/bin/python -m pytest -q tests

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "distribution": "3.0.0-dev",
+  "note": "Versions of the components tested together. Mirrors are copies (git subtree --squash) of the commit below; never edit them here: change the component's own repository and run scripts/sync_components.py.",
+  "components": {
+    "SwarmblyCore": {
+      "folder": "SwarmblyCore",
+      "source": "in-tree",
+      "package": "swarmbly-v0",
+      "version": "0.1.0",
+      "repository": "https://github.com/Sebastardito/SwarmblyAI",
+      "doi": "10.5281/zenodo.21956743"
+    },
+    "SwarmblyLCE": {
+      "folder": "SwarmblyLCE",
+      "source": "mirror",
+      "package": "swarmbly-lce",
+      "version": "0.2.0.dev0",
+      "repository": "https://github.com/Sebastardito/SwarmblyLCE",
+      "ref": "main",
+      "commit": "b659ac4d77b42d186609799f925520837db94bb3",
+      "tree": "678f91c0d854396509d780f34d89901a10b901ca",
+      "doi": "10.5281/zenodo.23289041"
+    },
+    "SwarmblyApp": {
+      "folder": "SwarmblyApp",
+      "source": "mirror",
+      "package": "swarmbly-app",
+      "version": "0.3.0",
+      "repository": "https://github.com/Sebastardito/SwarmblyApp",
+      "ref": "main",
+      "commit": "b0ad09f3ba3f47a83f43cb5c964ef4d38b93d2a7",
+      "tree": "8c8d74fdc678e983d9c61b99363066be383358f7",
+      "doi": "10.5281/zenodo.23322638"
+    }
+  }
+}

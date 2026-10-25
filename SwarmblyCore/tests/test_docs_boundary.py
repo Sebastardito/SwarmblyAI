@@ -138,7 +138,10 @@ def _is_placeholder(name: str) -> bool:
 def _document_exists(name: str, citing: Path) -> bool:
     if any(
         candidate.exists()
-        for candidate in (citing.parent / name, ROOT / "docs" / name, ROOT / name)
+        for candidate in (citing.parent / name, ROOT / "docs" / name, ROOT / name,
+                          # since the Swarmbly AI reorganisation the project-wide
+                          # documents (GOVERNANCE, TRADEMARK, .github) live one level up
+                          ROOT.parent / name, ROOT.parent / ".github" / "ISSUE_TEMPLATE" / name)
     ):
         return True
     # A bare basename may name a tracked file anywhere -- .github templates are

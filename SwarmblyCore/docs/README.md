@@ -51,7 +51,7 @@ implementation **V0** · new reference implementation **swarmbly_ref**
 | You want the reasoning, the alternatives, and the open questions | `WHITEPAPER_V2_EN.md` Sections 5–6, 11 and 16 — where the design is argued against itself |
 | You want to know where an idea came from | `REFERENCES.md` |
 | You want to contribute | `../CONTRIBUTING.md` |
-| You want to know who controls this | `../GOVERNANCE.md` |
+| You want to know who controls this | `../../GOVERNANCE.md` |
 
 ---
 
@@ -159,8 +159,8 @@ this page is a complete index.
 | `../LICENSE` | The full GNU AGPL v3.0 text — verbatim, 661 lines |
 | `../NOTICE` | Copyright, license summary, and the AGPL Section 13 network-use note |
 | `../CONTRIBUTING.md` | EN/ES. DCO sign-off, why not a CLA, code style, the SWIP process, the measurement rule |
-| `../GOVERNANCE.md` | EN/ES. Current status, the Verein → Stiftung path, what the Foundation will and will not do, and what would count as capture |
-| `../TRADEMARK.md` | Trademark policy. Marks are **not** registered; statement of intent |
+| `../../GOVERNANCE.md` | EN/ES. Current status, the Verein → Stiftung path, what the Foundation will and will not do, and what would count as capture |
+| `../../TRADEMARK.md` | Trademark policy. Marks are **not** registered; statement of intent |
 | `../CITATION.cff` | Machine-readable citation metadata (CFF 1.2.0) |
 | `../.zenodo.json` | Zenodo deposition metadata |
 | `RESULTS_V0_V3C.md` | First measurements against real models: the corrected coherence-tax curve, the go/no-go verdict, and the V3c agreement result |

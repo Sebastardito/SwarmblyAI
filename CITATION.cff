@@ -1,0 +1,121 @@
+# ---------------------------------------------------------------------------
+# Citation File Format (CFF) 1.2.0 — Swarmbly AI (integrated distribution)
+#
+# This repository is the umbrella of Swarmbly AI: SwarmblyCore (in-tree),
+# SwarmblyLCE and SwarmblyApp (mirrors). Each component has its own DOI,
+# listed under `identifiers`; cite the component you used and, for the design
+# argument, the whitepaper (`preferred-citation`). The DOI of distribution
+# 3.0.0 is minted by Zenodo at release and added here afterwards: an invalid
+# DOI in a published citation record is worse than an absent one.
+# ---------------------------------------------------------------------------
+
+cff-version: 1.2.0
+message: >-
+  If you use Swarmbly AI in academic work, please cite the component(s) you
+  used (DOIs below) and the whitepaper (see `preferred-citation`).
+type: software
+
+title: "Swarmbly AI"
+abstract: >-
+  Swarmbly AI is a decentralized, local-first AI system that splits the
+  problem rather than the model. A local orchestrator keeps personal and
+  sensitive work on the user's computer and sends public, decomposable work
+  once to volunteer nodes running complete small language models, assembling
+  the answer locally. This repository is the integrated distribution of its
+  three components: SwarmblyCore (protocol, specification, reference
+  implementation, measurement harness and benchmark), SwarmblyLCE (the Local
+  Cognitive Extension, a memory that lives only on the user's device) and
+  SwarmblyApp (the desktop client, peer-to-peer node and network monitor),
+  with an interactive installer for macOS, Linux and Windows. Alpha software;
+  measurements and their limits are stated in each component.
+
+version: "3.0.0-dev"
+license: AGPL-3.0-or-later
+
+authors:
+  - given-names: "Sebastián A."
+    family-names: "Espinoza-Ulloa"
+    affiliation: "Independent Researcher"
+    email: "sebas_saeu@hotmail.com"
+    orcid: "https://orcid.org/0000-0003-1497-356X"
+
+repository-code: "https://github.com/Sebastardito/SwarmblyAI"
+url: "https://github.com/Sebastardito/SwarmblyAI"
+
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21956743"
+    description: "SwarmblyCore (formerly the Swarmbly AI repository): Zenodo archive of the v1 release"
+  - type: doi
+    value: "10.5281/zenodo.23289041"
+    description: "SwarmblyLCE, software record v0.1.1"
+  - type: doi
+    value: "10.5281/zenodo.23150478"
+    description: "SwarmblyLCE whitepaper"
+  - type: doi
+    value: "10.5281/zenodo.23322638"
+    description: "SwarmblyApp, concept DOI (all versions)"
+  - type: doi
+    value: "10.5281/zenodo.23031305"
+    description: "Swarmbly whitepaper, version 2"
+
+keywords:
+  - "distributed inference"
+  - "decentralized AI"
+  - "local-first"
+  - "peer-to-peer"
+  - "small language models"
+  - "problem decomposition"
+  - "shotgun assembly"
+  - "retrieval-augmented generation"
+  - "privacy"
+  - "volunteer computing"
+  - "AGPL"
+
+contact:
+  - given-names: "Sebastián A."
+    family-names: "Espinoza-Ulloa"
+    affiliation: "Independent Researcher"
+    email: "sebas_saeu@hotmail.com"
+
+preferred-citation:
+  type: article
+  title: >-
+    Semantic Fragmentation and Stochastic Assembly, version 2: A Protocol for
+    Decentralized Language-Model Inference over Untrusted Volunteer Nodes
+  abstract: >-
+    Whitepaper version 2 of the Swarmbly protocol. It supersedes v1.4 and adds a
+    theory of the fragment, five falsifiable models measured over 473 real runs,
+    and a direct measurement of extraction by small nodes with aggregation by
+    code. Version 1.4 specified the Swarmbly protocol: semantic decomposition of
+    a request into micro-tasks, asynchronous dispatch to volunteer nodes each
+    running a complete small language model, and local reassembly by a
+    client-side orchestrator. Its three substantive contributions are the
+    context budget S as the single scalar governing coherence, verifiability,
+    privacy and required worker capability; a coverage model for semantic
+    assembly giving the design equation c >= ln(1/eps)/(1-p); and consensus by
+    multiple alignment of cross-family replicas, which returns a per-unit
+    agreement score and a map of low-confidence regions that centralized
+    inference cannot produce. Limitations and negative results are stated in
+    full.
+  authors:
+    - given-names: "Sebastián A."
+      family-names: "Espinoza-Ulloa"
+      affiliation: "Independent Researcher"
+      email: "sebas_saeu@hotmail.com"
+      orcid: "https://orcid.org/0000-0003-1497-356X"
+  year: 2026
+  month: 9
+  # Paper DOI: the Zenodo record of version 2. The v1.4 record
+  # (10.5281/zenodo.21957088) is the previous version of the same work. An arXiv
+  # DOI will be added alongside it if and when the submission clears endorsement.
+  doi: "10.5281/zenodo.23031305"
+  url: "https://doi.org/10.5281/zenodo.23031305"
+  # journal: not applicable while it is a preprint
+  notes: >-
+    Version 2, deposited on Zenodo 2026-09-29 (10.5281/zenodo.23031305);
+    supersedes v1.4 (10.5281/zenodo.21957088, deposited 2026-08-14). Intended additional venue: arXiv,
+    primary category cs.DC — deferred, because a first-time submitter to that
+    archive requires endorsement and none had been obtained at time of
+    publication. The prior-art position does not depend on arXiv: the Zenodo
+    DOIs and the public repository are independent dated records.

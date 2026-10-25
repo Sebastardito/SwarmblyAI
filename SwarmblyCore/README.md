@@ -1,5 +1,9 @@
 # Swarmbly AI
 
+> **This folder is SwarmblyCore**, the core of [Swarmbly AI](../README.md): protocol, specification, reference implementation, measurement harness and benchmark. Until release 2.0.0 it was the whole repository; from 3.0.0 the repository is the integrated distribution of SwarmblyCore, [SwarmblyLCE](../SwarmblyLCE/) and [SwarmblyApp](../SwarmblyApp/). Its content is unchanged.
+>
+> **Esta carpeta es SwarmblyCore**, el núcleo de [Swarmbly AI](../README.md): protocolo, especificación, implementación de referencia, banco de medición y benchmark. Hasta la versión 2.0.0 era el repositorio entero; desde la 3.0.0 el repositorio es la distribución integrada de SwarmblyCore, [SwarmblyLCE](../SwarmblyLCE/) y [SwarmblyApp](../SwarmblyApp/). Su contenido no cambia.
+
 [![DOI (software)](https://zenodo.org/badge/DOI/10.5281/zenodo.21956743.svg)](https://doi.org/10.5281/zenodo.21956743)
 [![DOI (paper, v2)](https://zenodo.org/badge/DOI/10.5281/zenodo.23031305.svg)](https://doi.org/10.5281/zenodo.23031305)
 [![Licence: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
@@ -372,7 +376,7 @@ DCO sign-off (`git commit -s`), not a CLA — see [`CONTRIBUTING.md`](CONTRIBUTI
 
 ### Governance
 
-Pre-foundation, benevolent maintainer, heading for a Swiss Verein and later a Stiftung. The Foundation will own copyright and trademark and will **not** sell proprietary exceptions — dual licensing is explicitly rejected as incompatible with the mandate. See [`GOVERNANCE.md`](GOVERNANCE.md).
+Pre-foundation, benevolent maintainer, heading for a Swiss Verein and later a Stiftung. The Foundation will own copyright and trademark and will **not** sell proprietary exceptions — dual licensing is explicitly rejected as incompatible with the mandate. See [`GOVERNANCE.md`](../GOVERNANCE.md).
 
 ### Citation and licence
 
@@ -743,7 +747,7 @@ Firma DCO (`git commit -s`), no un CLA: ver [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ### Gobernanza
 
-Antes de la fundación, con un mantenedor benevolente, rumbo a una Verein suiza y después a una Stiftung. La Fundación tendrá los derechos de autor y la marca y **no** venderá excepciones propietarias: la doble licencia se rechaza explícitamente por incompatible con el mandato. Ver [`GOVERNANCE.md`](GOVERNANCE.md).
+Antes de la fundación, con un mantenedor benevolente, rumbo a una Verein suiza y después a una Stiftung. La Fundación tendrá los derechos de autor y la marca y **no** venderá excepciones propietarias: la doble licencia se rechaza explícitamente por incompatible con el mandato. Ver [`GOVERNANCE.md`](../GOVERNANCE.md).
 
 ### Cita y licencia
 

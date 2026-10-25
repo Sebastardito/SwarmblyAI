@@ -7,7 +7,7 @@ must contain — is in [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
 
 Files are named `SWIP-XXXX-short-title.md`, where `XXXX` is the zero-padded
 number of the discussion issue that preceded the proposal. Open the issue first
-(the [SWIP issue template](../.github/ISSUE_TEMPLATE/swip.md)); a proposal with
+(the [SWIP issue template](../../.github/ISSUE_TEMPLATE/swip.md)); a proposal with
 no prior discussion is usually a proposal for something already ruled out.
 
 One SWIP per pull request, with no implementation in the same diff, so the
