@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarmbly-app"
+version = "0.3.0"
+description = "Swarmbly App — integrated decentralized AI client and network dashboard for SwarmblyAI + SwarmblyLCE. Fragments the problem, not the model."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Sebastián A. Espinoza-Ulloa", email = "sebas_saeu@hotmail.com" }]
+keywords = [
+  "distributed-inference", "decentralized-ai", "peer-to-peer", "local-first",
+  "small-language-models", "swarmbly", "lce", "agpl", "mdns", "observability",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: End Users/Desktop",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: System :: Distributed Computing",
+]
+dependencies = [
+  "swarmbly-v0 @ git+https://github.com/Sebastardito/SwarmblyAI.git@51eb44e8e471757f8abe2f90e60023633719fd0b",
+  "swarmbly-lce @ git+https://github.com/Sebastardito/SwarmblyLCE.git@b659ac4d77b42d186609799f925520837db94bb3",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "httpx>=0.27",
+  "psutil>=5.9",
+  "cryptography>=41",
+  "zeroconf>=0.132",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+swarmbly-app = "swarmbly_app.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Sebastardito/SwarmblyApp"
+Protocol = "https://github.com/Sebastardito/SwarmblyAI"
+LCE = "https://github.com/Sebastardito/SwarmblyLCE"
+
+[tool.setuptools.packages.find]
+include = ["swarmbly_app*"]
+
+[tool.setuptools.package-data]
+"swarmbly_app" = ["web/index.html", "web/css/*.css", "web/js/*.js",
+                   "web/js/vendor/*.js", "web/i18n/*.json", "web/img/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

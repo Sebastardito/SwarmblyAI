@@ -1,0 +1,30 @@
+# Swarmbly App — NOTICE
+
+Swarmbly App (this repository) is an integration application licensed under
+AGPL-3.0-or-later. It does **not** copy the implementations of the integrated
+projects; it depends on them as versioned, identifiable dependencies:
+
+## Integrated projects (dependencies, not vendored)
+
+| Project | Repository | Integrated as | License |
+|---|---|---|---|
+| Swarmbly AI | <https://github.com/Sebastardito/SwarmblyAI> (commit `51eb44e`) | `swarmbly-v0` pip package | AGPL-3.0-or-later |
+| Swarmbly LCE | <https://github.com/Sebastardito/SwarmblyLCE> (commit `fd8d97d`) | `swarmbly-lce` pip package | AGPL-3.0-or-later |
+
+Copyright © 2026 Sebastián A. Espinoza-Ulloa for both projects (see their
+`CITATION.cff` and `NOTICE` files). Text of both projects' documentation is
+CC BY 4.0; code and specifications are AGPL-3.0-or-later.
+
+## Attribution
+
+- Swarmbly fragments the *problem*, not the *model* (Swarmbly AI README).
+- Swarmbly AI validation data referenced: `swarmbly_ref/data/benchmark.jsonl`
+  (SHA-256 anchored, non-reproducible source, not redistributed here).
+- LongMemEval (MIT) subset used by SwarmblyLCE's harness is not redistributed
+  by Swarmbly App; see the SwarmblyLCE `NOTICE` for attribution.
+
+## Network use (AGPL §13)
+
+Swarmbly App may be used over a network (P2P LAN and, in later phases,
+internet). Per AGPL-3.0 §13, the complete Corresponding Source is this
+repository and the pinned versions of the integrated projects above.

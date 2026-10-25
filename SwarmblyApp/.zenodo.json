@@ -1,0 +1,87 @@
+{
+  "title": "Swarmbly App v0.2.0: desktop client and network dashboard for decentralized problem-fragmenting inference",
+  "description": "<p><strong>Swarmbly App</strong> is a desktop client and network dashboard for the Swarmbly protocol, which distributes the <em>problem</em> rather than the <em>model</em>: a request with a structural partition is split into micro-tasks, served in parallel by volunteer nodes running complete small language models, verified and assembled on the client. The app makes that protocol usable on a personal computer: local chat with Ollama or any OpenAI-compatible server, discovery of other Swarmbly computers on the local network without typing addresses (mDNS), Ed25519 node identities bound to TLS&nbsp;1.3 certificates, and a complete processing record for every answer.</p><p><strong>What version 0.2.0 contains.</strong> A one-command launcher that checks Python, git, the virtual environment, packages, Ollama and the port, asking before every change; a recommended configuration derived from measured hardware in which every value states its reason and whether it is measured or estimated; explicit permissions for local-network discovery and model downloads; plan admission (only structural partitions are fragmented, prose stays local); wire packets built from fields so that workers never receive the session identifier or the complete request; an asynchronous scheduler with family-diverse replicas, hedging and retries; consensus by multiple alignment reused from the reference implementation; a local interface protected by host, origin and per-launch token checks; and a browser interface showing the fourteen pipeline stages, every attempt, consensus units, seams and caveats, with reports in JSON, Markdown and HTML.</p><p><strong>Status: alpha, with declared limits.</strong> The app reports agreement between model replicas as agreement, never as correctness, because errors are correlated across model families. Verification is reported as partial: result signatures are checked, while the Layer-1 commitment has no normative construction in the specification and is never simulated. Internet swarms, mutual TLS for the TRUSTED tier and memory levels C2&ndash;C4 are later phases. The test suite (140 tests, Linux and macOS) runs real nodes over loopback with canned backends; canned answers validate instruments, never models. No performance claim is made beyond what the processing record measures on the user's own machine.</p><p><strong>This record is the software artifact.</strong> It integrates the Swarmbly AI reference implementation (commit 51eb44e) and the Swarmbly LCE reference implementation (commit fd8d97d) as pinned dependencies without copying their code, and adds the network layer, local API, interface, persistence and launcher. Documentation in English and Spanish. <strong>Licensing:</strong> AGPL-3.0-or-later.</p>",
+  "upload_type": "software",
+  "publication_date": "2026-10-12",
+  "version": "0.2.0",
+  "language": "eng",
+  "access_right": "open",
+  "license": "AGPL-3.0-or-later",
+  "creators": [
+    {
+      "name": "Espinoza-Ulloa, Sebastián A.",
+      "affiliation": "Independent Researcher",
+      "orcid": "0000-0003-1497-356X"
+    }
+  ],
+  "keywords": [
+    "decentralized AI",
+    "distributed inference",
+    "peer-to-peer",
+    "P2P",
+    "local-first",
+    "small language models",
+    "SLM",
+    "volunteer computing",
+    "mDNS",
+    "TLS",
+    "Ed25519",
+    "consensus",
+    "observability",
+    "privacy",
+    "Ollama",
+    "Swarmbly",
+    "AGPL"
+  ],
+  "subjects": [
+    {
+      "term": "Distributed, Parallel, and Cluster Computing",
+      "identifier": "cs.DC",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Networking and Internet Architecture",
+      "identifier": "cs.NI",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Computation and Language",
+      "identifier": "cs.CL",
+      "scheme": "arxiv"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.21956743",
+      "relation": "requires",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23289041",
+      "relation": "requires",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23031305",
+      "relation": "references",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23150478",
+      "relation": "references",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/Sebastardito/SwarmblyApp/tree/main/docs",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-technicalnote",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Alpha software, not peer reviewed. Integrates Swarmbly AI (commit 51eb44e, 10.5281/zenodo.21956743) and Swarmbly LCE (commit fd8d97d, 10.5281/zenodo.23289041) as pinned dependencies; it does not modify the protocol beyond MINOR-safe extensions documented in docs/LIMITATIONS.md and a SWIP draft (constraints.model_family). Protocol whitepaper v2: 10.5281/zenodo.23031305. LCE whitepaper: 10.5281/zenodo.23150478.",
+  "communities": []
+}

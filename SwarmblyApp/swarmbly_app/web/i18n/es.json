@@ -1,0 +1,798 @@
+{
+ "nav": {
+  "chat": "Chat",
+  "swarm": "Enjambre",
+  "memory": "Memoria",
+  "settings": "Ajustes",
+  "skip": "Saltar al contenido"
+ },
+ "common": {
+  "yes": "sí",
+  "no": "no",
+  "on": "activado",
+  "off": "desactivado",
+  "cancel": "Cancelar",
+  "close": "Cerrar"
+ },
+ "time": {
+  "seconds": "hace {n} s",
+  "minutes": "hace {n} min",
+  "hours": "hace {n} h"
+ },
+ "nature": {
+  "measured": "medido",
+  "estimated": "estimado",
+  "unknown": "desconocido"
+ },
+ "mode": {
+  "local": "Local",
+  "lan": "Enjambre LAN",
+  "auto": "Automático",
+  "internet": "Enjambre por internet (Fase 3)"
+ },
+ "status": {
+  "pending": "pendiente",
+  "running": "en curso",
+  "completed": "completada",
+  "partial": "parcial",
+  "skipped": "omitida",
+  "failed": "fallida"
+ },
+ "stage": {
+  "request_received": "Solicitud recibida",
+  "privacy_classification": "Clasificación de privacidad",
+  "routing_decomposability": "Enrutamiento y descomponibilidad",
+  "task_planning": "Planificación de tareas",
+  "packet_generation": "Generación de paquetes",
+  "node_selection": "Selección de nodos",
+  "dispatching": "Despacho",
+  "model_execution": "Ejecución en modelos",
+  "result_reception": "Recepción de resultados",
+  "verification": "Verificación",
+  "consensus_alignment": "Consenso y alineamiento",
+  "assembly": "Ensamblaje",
+  "coherence_report": "Reporte de coherencia",
+  "final_response": "Respuesta final"
+ },
+ "field": {
+  "tier": "tier",
+  "lane": "carril",
+  "decomposable": "descomponible",
+  "path": "vía",
+  "n_tasks": "tareas",
+  "n_levels": "niveles",
+  "n_packets": "paquetes",
+  "rho_achieved": "ρ",
+  "privacy_check": "control de privacidad",
+  "workers": "workers",
+  "families": "familias",
+  "k_min": "respuestas mín.",
+  "k_max": "respuestas máx.",
+  "attempts": "intentos",
+  "hedges": "intentos extra",
+  "retries": "reintentos",
+  "accepted": "aceptados",
+  "failed": "fallidos",
+  "timeouts": "tiempos agotados",
+  "signatures_checked": "firmas verificadas",
+  "signature_failures": "firmas inválidas",
+  "layer1_commitment": "compromiso capa 1",
+  "mean_agreement": "acuerdo medio",
+  "tasks": "tareas",
+  "n_seams": "costuras",
+  "bridges": "puentes",
+  "seam_policy": "política de costuras",
+  "entity_grid": "rejilla de entidades",
+  "mean_seam_similarity": "similitud de costuras",
+  "total_ms": "ms totales",
+  "group": {
+   "worker": "Compartir esta computadora (worker)",
+   "evidence": "Evidencia pública"
+  }
+ },
+ "node": {
+  "id": "Identidad del nodo",
+  "mode": "Modo por defecto",
+  "privacy": "Privacidad",
+  "lan": "Red local",
+  "peers": "Pares",
+  "workers": "workers",
+  "worker": "Worker",
+  "paused": "en pausa",
+  "peersValue": "{c} conectados, {w} compartiendo"
+ },
+ "activity": {
+  "title": "Solicitud actual",
+  "hide": "Ocultar",
+  "show": "Pipeline",
+  "empty": "Envía un mensaje para verlo recorrer el pipeline.",
+  "localAnswer": "respondida por el modelo local"
+ },
+ "chat": {
+  "conversations": "Conversaciones",
+  "new": "Nueva conversación",
+  "export": "Exportar",
+  "delete": "Eliminar",
+  "placeholder": "Pregunta algo. Las listas y tareas por ítems pueden compartirse con el enjambre.",
+  "attach": "Adjuntar texto",
+  "attachHint": "Archivos de texto de hasta 200 KB, leídos en esta computadora",
+  "attachTooBig": "{name} supera los 200 KB",
+  "removeAttachment": "Quitar adjunto",
+  "mode": "Modo",
+  "model": "Modelo",
+  "send": "Enviar",
+  "stop": "Detener",
+  "noModel": "no hay modelos instalados",
+  "noConversations": "Aún no hay conversaciones",
+  "untitled": "Sin título",
+  "welcomeTitle": "Empieza una conversación",
+  "welcome": "Tus mensajes se responden con los modelos de esta computadora. Con el enjambre activado, las solicitudes por ítems se dividen en microtareas y se comparten con otras computadoras Swarmbly.",
+  "welcomeHint": "Prueba: Extract one key fact per item from the following list of five items: apples, bridges, comets, drums, electrons. List 5 bullet points, one per item, separately.",
+  "deleteTitle": "¿Eliminar esta conversación?",
+  "deleteBody": "Se borra de esta computadora. Las exportaciones guardadas no se ven afectadas.",
+  "exportTitle": "Exportar conversación",
+  "exportBody": "Elige un formato. El archivo se queda en esta computadora.",
+  "explore": "Explorar procesamiento",
+  "retry": "Reintentar",
+  "stopped": "detenida",
+  "tokens": "{n} tokens",
+  "fragments": "{n} fragmentos",
+  "agreement": "acuerdo {v}",
+  "agreementTitle": "El acuerdo entre réplicas es convergencia, no corrección.",
+  "execLocal": "modelo local",
+  "execDistributed": "enjambre",
+  "execLocalPool": "modelos locales",
+  "hint": {
+   "local": "Local: se responde solo en esta computadora.",
+   "localMulti": "Local con varios modelos: las solicitudes por ítems se reparten entre tus modelos locales; nada sale de esta computadora.",
+   "lan": "Enjambre LAN: las solicitudes por ítems pueden compartirse con computadoras autenticadas de esta red. Lo demás se responde localmente.",
+   "auto": "Automático: Swarmbly comparte una solicitud solo cuando se divide limpiamente y hay workers disponibles.",
+   "internet": "Los enjambres por internet llegan en la Fase 3.",
+   "tierLocal": "Tu tier de privacidad es LOCAL, así que no se enviará nada. Cámbialo en Ajustes → Privacidad para usar el enjambre."
+  },
+  "replicas": "{n} réplicas",
+  "evidenceChip": "Fuentes públicas · {n}",
+  "evidenceTitle": "Se añadió contexto público de Wikipedia a {n} elementos; solo se enviaron los textos de esos elementos.",
+  "lceChip": "Fuentes locales · {n}",
+  "lceTitle": "La respuesta usó pasajes de tus fuentes (LCE C1); no salieron del equipo."
+ },
+ "explore": {
+  "title": "Cómo se construyó esta respuesta",
+  "executed": "Ejecución",
+  "tier": "Tier de privacidad",
+  "lane": "Carril del contenido",
+  "tasks": "Microtareas",
+  "rho": "Razón de contexto ρ",
+  "total": "Tiempo total",
+  "coverage": "Cobertura efectiva",
+  "embedder": "Similitud",
+  "exec": {
+   "local": "modelo local",
+   "distributed": "distribuida"
+  },
+  "pipeline": "Pipeline",
+  "attempts": "Intentos de despacho",
+  "consensus": "Consenso entre réplicas",
+  "seams": "Costuras",
+  "similarity": "similitud",
+  "caveats": "Para leer con cuidado",
+  "path": {
+   "splice": "empalmada",
+   "bridge": "con puente"
+  },
+  "caveat": {
+   "verification": "Se verificaron las firmas; los compromisos de capa 1 aún no existen en el protocolo y no se simularon.",
+   "agreement": "El acuerdo entre modelos es convergencia, no verdad: modelos de familias distintas comparten errores.",
+   "thresholds": "Los umbrales de costura y de acuerdo son provisionales hasta calibrarse."
+  },
+  "download": {
+   "markdown": "Reporte (Markdown)",
+   "json": "Reporte (JSON)",
+   "html": "Reporte (HTML)"
+  },
+  "save": "Guardar reporte en la carpeta de salida",
+  "saved": "Guardado en {path}",
+  "col": {
+   "task": "Tarea",
+   "attempt": "#",
+   "reason": "Motivo",
+   "node": "Nodo",
+   "family": "Familia",
+   "status": "Estado",
+   "time": "Tiempo",
+   "code": "Código"
+  },
+  "reason": {
+   "initial": "inicial",
+   "hedge": "intento extra",
+   "retry": "reintento"
+  },
+  "attempt": {
+   "accepted": "aceptado",
+   "failed": "fallido",
+   "cancelled_slow": "cancelado (lento)",
+   "dispatched": "en curso"
+  },
+  "meanAgreement": "media",
+  "agreementNote": "Cada unidad muestra cuánto coincidieron las réplicas. HIGH significa que convergieron; no significa que el contenido sea correcto.",
+  "label": {
+   "HIGH": "alto",
+   "MEDIUM": "medio",
+   "LOW": "bajo"
+  },
+  "sources": "Fuentes",
+  "evidenceNote": "Contexto público (Wikidata, Wikipedia CC BY-SA 4.0, PubMed…) añadido. Solo se enviaron estos nombres:",
+  "evidenceErrors": "Consultas fallidas:",
+  "evidenceSkipped": "Evidencia pública no aplicada:",
+  "lceNote": "Pasajes de tus fuentes usados en esta respuesta (no salieron del equipo):"
+ },
+ "monitor": {
+  "title": "Enjambre",
+  "lede": "Computadoras con Swarmbly en tu red. Un nodo cuenta como autenticado cuando prueba su identidad; antes, sus anuncios no son de confianza.",
+  "health": "Estado",
+  "graph": "Mapa",
+  "graphLabel": "Mapa de este nodo y sus pares",
+  "graphEmpty": "Aún no hay pares. Activa la red local o conecta por dirección.",
+  "peers": "Pares",
+  "discovery": "Caché de descubrimiento",
+  "discoveryNote": "Cada entrada registra cuándo se vio por primera vez, cuándo la confirmó por última vez una respuesta mDNS y cuándo vence. Solo se actualiza con respuestas reales.",
+  "contribution": "Tu contribución",
+  "contributionNote": "Trabajo que esta computadora hizo para otros. Tus propias solicitudes no cuentan aquí.",
+  "lan": "Red local",
+  "lanRefused": "Rechazaste el acceso a la red local. Cámbialo en Ajustes → Permisos.",
+  "workerToggle": "Compartir esta computadora",
+  "pause": "Pausar",
+  "resume": "Reanudar",
+  "search": "Buscar ahora",
+  "searchOff": "Activa primero la red local",
+  "searchDone": "Búsqueda hecha: {n} respuesta(s)",
+  "connect": "Conectar por dirección",
+  "connectTitle": "Conectar con una computadora",
+  "connectBody": "Úsalo si tu red bloquea el descubrimiento. La otra computadora debe ejecutar Swarmbly; su identidad se verifica antes de intercambiar nada.",
+  "host": "Dirección",
+  "port": "Puerto",
+  "connecting": "Conectando…",
+  "discovered": "Descubiertos",
+  "connected": "Conectados",
+  "authenticated": "Autenticados",
+  "workersAvailable": "Workers libres",
+  "workersBusy": "Workers ocupados",
+  "unreachable": "Inaccesibles",
+  "families": "Familias de modelos",
+  "latency": "Latencia",
+  "uptime": "Tiempo activo",
+  "distributedRequests": "Solicitudes compartidas (30 días)",
+  "dispatched": "Microtareas enviadas",
+  "dispatchFailed": "Microtareas fallidas",
+  "listening": "Escuchando",
+  "diversityCaveat": "Más familias reducen los errores correlacionados, pero no los eliminan.",
+  "noPeers": "No hay pares conectados.",
+  "noModels": "no comparte modelos",
+  "announced": "anunciado",
+  "thisNode": "esta computadora",
+  "authenticatedShort": "autenticado",
+  "connectedShort": "conectado",
+  "lost": "desconectado",
+  "roleWorker": "worker",
+  "roleClient": "cliente",
+  "col": {
+   "node": "Nodo",
+   "address": "Dirección",
+   "state": "Estado",
+   "role": "Rol",
+   "models": "Modelos",
+   "rtt": "Latencia",
+   "inflight": "En curso",
+   "seen": "Visto"
+  },
+  "cache": {
+   "hint": "Nodo",
+   "addresses": "Direcciones",
+   "source": "Origen",
+   "first": "Visto primero",
+   "verified": "Confirmado",
+   "expires": "Vence",
+   "auth": "Autenticado"
+  },
+  "cacheEmpty": "Aún no se ha descubierto nada. Prueba Buscar ahora.",
+  "discoveryOff": "El descubrimiento está desactivado.",
+  "served": "Tareas atendidas",
+  "servedTime": "Tiempo de procesamiento",
+  "servedTokens": "Tokens generados",
+  "bytesIn": "Datos recibidos",
+  "bytesOut": "Datos enviados",
+  "sharedModels": "Modelos compartidos",
+  "availability": "Tiempo disponible"
+ },
+ "memory": {
+  "title": "Memoria",
+  "lede": "La Extensión Cognitiva Local guarda una memoria personal en esta computadora. Es opcional y nunca cambia cómo esta computadora atiende a otros.",
+  "what": "Dos tipos de personalización",
+  "docTitle": "Memoria documental",
+  "docBody": "Tus documentos se quedan en una carpeta local. Las respuestas recuperan de ellos y la wiki registra de dónde viene cada afirmación, para poder olvidar una fuente por completo.",
+  "behaviourTitle": "Comportamiento",
+  "behaviourBody": "Estilo, terminología y procedimientos pueden orientar las solicitudes mediante una pequeña proyección (1 KB como máximo) añadida al contrato compartido. El ajuste fino personal (C4) es experimental y está desactivado.",
+  "levels": "Niveles",
+  "recommended": "recomendado",
+  "active": "activo",
+  "requires": "Requiere",
+  "thisMachine": "Esta computadora",
+  "compatible": "compatible",
+  "notCompatible": "no compatible",
+  "maturity": "Madurez",
+  "privacy": "Privacidad",
+  "use": "Usar {level}",
+  "activated": "{level} activo",
+  "notInVersion": "No disponible en esta versión de la app.",
+  "enable": "Usar memoria",
+  "sources": "Tus fuentes",
+  "sourcesBody": "Pon en esta carpeta los documentos que quieras que Swarmbly recuerde. Se leen, nunca se modifican.",
+  "sourcesOff": "Activa la memoria para usar una carpeta de fuentes.",
+  "noSources": "La carpeta está vacía.",
+  "otherFolders": "Otras carpetas",
+  "otherFoldersBody": "Carpetas de tu equipo que también se leen, sin copiarlas ni modificarlas (por ejemplo, tus documentos de trabajo).",
+  "addFolder": "Añadir carpeta",
+  "removeFolder": "Quitar",
+  "readCount": "{n} de {total} archivos se pueden consultar.",
+  "glossary": "glosario",
+  "unreadable": "no se puede leer",
+  "passages": "{n} pasajes",
+  "c1Ready": "Formatos: texto, Markdown, Word (.docx), HTML y PDF (con pdftotext). Los pasajes solo se usan en respuestas de este equipo y nunca salen de él; un archivo glosario.md («término = equivalentes») ayuda a cruzar idiomas."
+ },
+ "settings": {
+  "title": "Ajustes",
+  "lede": "Todo valor puede cambiarse y revertirse. Los valores por defecto priorizan la privacidad: nada se comparte hasta que lo decidas.",
+  "profile": "Perfil",
+  "saved": "Guardado",
+  "analyzing": "Revisando esta computadora…",
+  "moreInAdvanced": "Con el perfil Avanzado aparecen más parámetros.",
+  "notInstalled": "no instalado",
+  "tab": {
+   "recommended": "Recomendado",
+   "general": "General",
+   "models": "Modelos",
+   "swarm": "Enjambre",
+   "privacy": "Privacidad",
+   "results": "Resultados",
+   "permissions": "Permisos",
+   "system": "Sistema"
+  },
+  "sameModel": "Igual que la conversación"
+ },
+ "profile": {
+  "automatic": "Automático",
+  "custom": "Personalizado",
+  "advanced": "Avanzado"
+ },
+ "theme": {
+  "dark": "Oscuro",
+  "light": "Claro"
+ },
+ "backend": {
+  "auto": "Automático (Ollama primero)",
+  "openai": "Servidor compatible con OpenAI"
+ },
+ "embedder": {
+  "hash": "Coincidencia de palabras (sin descarga)",
+  "server": "Embeddings de Ollama"
+ },
+ "tier": {
+  "LOCAL": "LOCAL: nada sale de esta computadora",
+  "GLOBAL": "GLOBAL: pares autenticados pueden recibir fragmentos",
+  "TRUSTED": "TRUSTED: enjambre con lista blanca (aún no disponible)"
+ },
+ "detail": {
+  "minimal": "Mínimo (sin texto de solicitud ni respuesta)",
+  "standard": "Estándar",
+  "full": "Completo (cada intento)"
+ },
+ "setting": {
+  "language": {
+   "label": "Idioma",
+   "help": "Idioma de la interfaz."
+  },
+  "theme": {
+   "label": "Tema",
+   "help": "Colores oscuros o claros."
+  },
+  "reduce_motion": {
+   "label": "Reducir movimiento",
+   "help": "Desactiva pulsos y parpadeos. También se respeta la preferencia del sistema."
+  },
+  "output_dir": {
+   "label": "Carpeta de salida",
+   "help": "Dónde van las exportaciones y los reportes guardados. Vacío usa la carpeta output dentro de tu carpeta de datos de Swarmbly."
+  },
+  "log_retention_days": {
+   "label": "Conservar registros (días)",
+   "help": "Los registros más antiguos se eliminan."
+  },
+  "model__backend": {
+   "label": "Ejecutor de modelos",
+   "help": "Se recomienda Ollama. También sirve cualquier servidor compatible con OpenAI (llama.cpp, vLLM)."
+  },
+  "model__backend_url": {
+   "label": "Dirección del ejecutor",
+   "help": "Déjalo vacío para Ollama en esta computadora."
+  },
+  "model__api_key": {
+   "label": "Clave de API",
+   "help": "Solo para servidores que la piden. Se guarda en esta computadora."
+  },
+  "model__model_name": {
+   "label": "Modelo de chat",
+   "help": "Responde localmente, planifica y ensambla las respuestas compartidas."
+  },
+  "model__multi_model": {
+   "label": "Usar varios modelos locales",
+   "help": "Reparte el trabajo entre modelos locales de familias distintas y compara sus respuestas cuando pides más de una."
+  },
+  "model__local_models": {
+   "label": "Modelos locales a usar",
+   "help": "Elige al menos dos de familias distintas."
+  },
+  "model__local_parallel": {
+   "label": "Modelos locales a la vez",
+   "help": "Cuántos modelos locales pueden generar al mismo tiempo. Más requiere más memoria."
+  },
+  "model__max_tokens": {
+   "label": "Límite de longitud",
+   "help": "Máximo de tokens por respuesta local."
+  },
+  "model__temperature": {
+   "label": "Temperatura",
+   "help": "Más baja es más enfocada; más alta, más variada."
+  },
+  "model__max_tokens_per_fragment": {
+   "label": "Límite por fragmento",
+   "help": "Máximo de tokens que puede producir cada microtarea."
+  },
+  "model__embedder": {
+   "label": "Similitud",
+   "help": "Cómo se miden costuras y acuerdo. Los embeddings requieren un modelo como nomic-embed-text."
+  },
+  "model__embed_model": {
+   "label": "Modelo de embeddings",
+   "help": "Nombre del modelo de embeddings en Ollama."
+  },
+  "swarm__mode": {
+   "label": "Modo por defecto",
+   "help": "Modo de las conversaciones nuevas."
+  },
+  "swarm__lan_enabled": {
+   "label": "Red local",
+   "help": "Anuncia esta computadora y encuentra otras en esta red (mDNS). Nada se comparte sin un tier de privacidad que lo permita."
+  },
+  "swarm__k_min": {
+   "label": "Mínimo de respuestas por microtarea",
+   "help": "Réplicas enviadas desde el inicio. Dos o más dan un mapa de dónde discrepan los modelos, con un costo proporcional."
+  },
+  "swarm__k_max": {
+   "label": "Máximo de respuestas por microtarea",
+   "help": "Techo que incluye los intentos extra ante workers lentos o fallidos."
+  },
+  "swarm__n_fragments_max": {
+   "label": "Máximo de fragmentos",
+   "help": "Límite superior. El número real sale de la estructura de la solicitud y de la capacidad del enjambre."
+  },
+  "swarm__max_concurrency": {
+   "label": "Microtareas en curso",
+   "help": "Cuántas microtareas mantiene esta computadora en el enjambre a la vez."
+  },
+  "swarm__timeout_ms": {
+   "label": "Tiempo límite por microtarea (ms)",
+   "help": "Pasado este tiempo el intento cuenta como lento y puede probarse otro worker."
+  },
+  "swarm__worker_enabled": {
+   "label": "Compartir esta computadora",
+   "help": "Atiende microtareas de otros con tus modelos base. Tu memoria y tus archivos nunca se usan."
+  },
+  "swarm__worker_paused": {
+   "label": "Pausar",
+   "help": "Mantiene la conexión pero rechaza tareas nuevas."
+  },
+  "swarm__worker_models": {
+   "label": "Modelos ofrecidos a otros",
+   "help": "Vacío ofrece tu modelo de chat."
+  },
+  "swarm__worker_max_concurrent": {
+   "label": "Tareas a la vez",
+   "help": "Cuántas microtareas atiendes simultáneamente."
+  },
+  "swarm__worker_max_tokens_per_task": {
+   "label": "Tokens por tarea",
+   "help": "Las solicitudes mayores se rechazan."
+  },
+  "swarm__worker_only_idle": {
+   "label": "Solo en reposo",
+   "help": "Rechaza tareas mientras el procesador está ocupado (heurística)."
+  },
+  "swarm__worker_only_plugged": {
+   "label": "Solo conectada a la corriente",
+   "help": "En portátiles, rechaza tareas con batería."
+  },
+  "swarm__worker_max_task_seconds": {
+   "label": "Segundos máximos por tarea",
+   "help": "La generación se detiene después."
+  },
+  "swarm__hedge_fallback_ms": {
+   "label": "Intento extra tras (ms)",
+   "help": "Se usa hasta tener suficientes tiempos; luego se usa el percentil 95 observado."
+  },
+  "swarm__tau_sem": {
+   "label": "Umbral de costura τ",
+   "help": "Provisional hasta calibrarse. Por debajo se escribe una frase puente."
+  },
+  "swarm__discovery_ttl_s": {
+   "label": "Vida de la caché de descubrimiento (s)",
+   "help": "Las entradas sin una respuesta mDNS reciente vencen tras este tiempo."
+  },
+  "swarm__p2p_port": {
+   "label": "Puerto del enjambre (TCP)",
+   "help": "Se aplica al reiniciar la app. Permítelo en tu firewall."
+  },
+  "privacy__tier": {
+   "label": "Tier de privacidad",
+   "help": "Quién puede recibir fragmentos de tus solicitudes. Cada solicitud se clasifica antes en esta computadora y solo puede volverse más estricta automáticamente."
+  },
+  "privacy__trusted_networks": {
+   "label": "Redes de confianza",
+   "help": "Solo informativo. Estar en la misma red nunca implica confianza."
+  },
+  "results__export_format": {
+   "label": "Formato de exportación",
+   "help": "Formato por defecto de las exportaciones."
+  },
+  "results__report_detail": {
+   "label": "Detalle de los reportes",
+   "help": "Los reportes mínimos omiten el texto de solicitudes y respuestas, así que pueden compartirse con seguridad."
+  },
+  "results__auto_report": {
+   "label": "Guardar un reporte de cada solicitud compartida",
+   "help": "Se escribe en la carpeta de salida."
+  },
+  "results__export_dir": {
+   "label": "Carpeta de exportación",
+   "help": "Vacío usa la carpeta de salida."
+  },
+  "results__keep_stats": {
+   "label": "Conservar estadísticas",
+   "help": "Contadores diarios para la vista Enjambre."
+  },
+  "evidence__enabled": {
+   "label": "Añadir evidencia pública",
+   "help": "En listas de elementos que nombran algo («Piquero de patas azules», «Ecuador») y en las respuestas de este equipo que piden datos actuales, la app consulta fuentes públicas (Wikidata, Wikipedia, PubMed y, si lo instalaste, SearXNG) y añade la frase con el dato. Solo se envían los nombres de los elementos, nunca tu solicitud ni tus documentos, y nada si la solicitud se clasifica como sensible. Está activada por defecto: en las pruebas corrigió lo que los modelos no sabían (estado UICN 8/8, años de sucesos 5/5) sin empeorar lo que ya acertaban. Puedes apagarla aquí."
+  },
+  "evidence__timeout_s": {
+   "label": "Tiempo máximo por consulta (s)",
+   "help": "Si Wikipedia no responde a tiempo, el elemento se envía sin evidencia."
+  },
+  "evidence__max_chars": {
+   "label": "Caracteres máximos por evidencia",
+   "help": "Las dos primeras oraciones de la entrada se recortan a esta longitud."
+  },
+  "evidence__max_items": {
+   "label": "Elementos consultados por solicitud",
+   "help": "Máximo de búsquedas por solicitud."
+  },
+  "evidence__local_answers": {
+   "label": "También en respuestas de este equipo",
+   "help": "Cuando la respuesta se genera en este equipo (con tus fuentes locales), la app puede consultar Wikipedia sobre hasta tres nombres: especies, lugares o programas que nombra tu pregunta, o nombres científicos que aparecen en tus fuentes. Solo se envían esos nombres (se listan en «Explorar procesamiento»), nunca tu pregunta ni tus documentos. La respuesta distingue tus fuentes [1] de la evidencia pública [W1] y, si difieren, da ambas. Requiere activar la evidencia pública."
+  },
+  "evidence__local_max_entities": {
+   "label": "Nombres consultados por respuesta local",
+   "help": "Máximo de nombres enviados a Wikipedia por respuesta generada en este equipo."
+  },
+  "evidence__fusion_model": {
+   "label": "Modelo para respuestas con evidencia",
+   "help": "Cuando una respuesta de este equipo combina tus fuentes locales con evidencia pública, puede redactarla un modelo local más grande (más lento, mejor atribución). Las demás respuestas siguen con el modelo de la conversación."
+  },
+  "evidence__providers": {
+   "label": "Fuentes públicas",
+   "help": "Una por línea, en orden de confianza: wikidata (datos estructurados: estado UICN, fechas), wikipedia, pubmed (resúmenes de artículos científicos de NCBI) y web (tu SearXNG o Google, si configuras abajo la URL o la clave). A todas se envían solo nombres, nunca tu pregunta ni tus documentos."
+  },
+  "evidence__searxng_url": {
+   "label": "URL de tu SearXNG",
+   "help": "La rellena el instalador de abajo (Instalar y activar SearXNG). También puedes poner la URL de un SearXNG tuyo, con el formato JSON activado. Requiere «web» en las fuentes."
+  },
+  "evidence__google_cse_key": {
+   "label": "Clave de Google Custom Search",
+   "help": "Solo si ya tenías una clave de la API JSON de Google Custom Search: está cerrada a nuevos clientes y deja de funcionar el 1 de enero de 2027. Requiere también el identificador del buscador y «web» en las fuentes."
+  },
+  "evidence__google_cse_cx": {
+   "label": "Identificador del buscador de Google",
+   "help": "El «cx» de tu Programmable Search Engine."
+  }
+ },
+ "models": {
+  "installed": "Modelos instalados",
+  "none": "Aún no hay modelos instalados.",
+  "embedding": "embeddings",
+  "licence": "Licencia",
+  "licenceTitle": "Licencia de {name}",
+  "noLicence": "Ollama no informó una licencia para este modelo.",
+  "download": "Descargar modelos",
+  "downloadNote": "Ollama descarga los modelos después de que confirmas. Las sugerencias caben en la memoria de esta computadora.",
+  "downloadBtn": "Descargar",
+  "downloadOther": "Descargar otro",
+  "customName": "Nombre del modelo",
+  "memEstimate": "~{gb} GB en memoria",
+  "consentTitle": "¿Descargar {name}?",
+  "consentBody": "Ollama descargará este modelo en esta computadora.",
+  "consentAccept": "Descargar",
+  "size": "Tamaño de descarga",
+  "sizeUnknown": "lo informa Ollama al empezar",
+  "licenceLabel": "Licencia",
+  "origin": "Origen",
+  "page": "Página del modelo",
+  "freeDisk": "Disco libre",
+  "noSpace": "No hay suficiente espacio libre.",
+  "checkedOn": "Tamaño y licencia revisados el {date}; la licencia que Ollama informa tras descargar es la que aplica.",
+  "nonCommercial": "licencia no comercial",
+  "pulling": "Descargando {name}…",
+  "pulled": "{name} está listo",
+  "downloadsRefused": "Las descargas de modelos están desactivadas. Cámbialo en Ajustes → Permisos.",
+  "pull": {
+   "done": "listo",
+   "failed": "falló",
+   "cancelled": "cancelado",
+   "pending": "en espera"
+  }
+ },
+ "privacy": {
+  "identity": "Identidad del nodo",
+  "identityBody": "Esta clave pública Ed25519 identifica a esta computadora en el enjambre. La clave privada nunca sale de esta computadora.",
+  "lanNotTrust": "Estar en la misma red no es confianza: cada par prueba su identidad, y los workers nunca reciben la sesión ni tu solicitud completa."
+ },
+ "perm": {
+  "lan_discovery": {
+   "label": "Encontrar otras computadoras Swarmbly en esta red",
+   "help": "Anuncia esta computadora con mDNS y escucha a las demás. No se escanea ningún otro dispositivo."
+  },
+  "model_downloads": {
+   "label": "Permitir descargas de modelos con Ollama",
+   "help": "Igual confirmas cada descarga después de ver su tamaño y su licencia."
+  },
+  "internet": {
+   "label": "Unirse a enjambres por internet",
+   "help": "Llega en la Fase 3 con servidores de encuentro."
+  },
+  "state": {
+   "granted": "permitido",
+   "refused": "rechazado",
+   "unasked": "sin preguntar"
+  }
+ },
+ "rec": {
+  "ram": "Memoria",
+  "memoryKind": "Tipo de memoria",
+  "budget": "Presupuesto para modelos",
+  "cores": "Núcleos",
+  "disk": "Disco libre",
+  "backend": "Ejecutor de modelos",
+  "kind": {
+   "unified": "unificada (Apple Silicon)",
+   "vram": "GPU dedicada",
+   "ram": "RAM del sistema",
+   "unknown": "desconocido"
+  },
+  "apply": "Aplicar recomendación",
+  "revert": "Restaurar ajustes anteriores",
+  "applied": "Recomendación aplicada",
+  "reverted": "Ajustes anteriores restaurados",
+  "reversible": "Al aplicar se guardan primero tus ajustes actuales. Una recomendación nunca activa la red local ni compartir esta computadora."
+ },
+ "doctor": {
+  "venv": "Entorno aislado",
+  "ready": "App lista",
+  "inference": "Los modelos pueden ejecutarse",
+  "ollamaPurpose": "ejecuta los modelos en esta computadora",
+  "packages": "Paquetes de Python",
+  "col": {
+   "package": "Paquete",
+   "purpose": "Para qué",
+   "version": "Versión",
+   "status": "Estado"
+  },
+  "state": {
+   "ok": "ok",
+   "missing": "falta",
+   "outdated": "desactualizado",
+   "pin_mismatch": "versión distinta de la fijada ({pin}); «Instalar» la actualiza",
+   "not_running": "instalado, sin ejecutarse",
+   "too_old": "demasiado antiguo"
+  },
+  "install": "Instalar {n} paquete(s) faltante(s)",
+  "installTitle": "¿Instalar los paquetes faltantes?",
+  "installBody": "Se instalan con pip en el entorno propio de Swarmbly. El Python del sistema no se modifica.",
+  "installAccept": "Instalar",
+  "installing": "Instalando… puede tardar unos minutos.",
+  "manual": "Ejecuta esto en una terminal (Swarmbly nunca modifica el Python del sistema):",
+  "network": "Red",
+  "firewall": "Si otras computadoras no encuentran esta, permite el puerto del enjambre (TCP) y mDNS (UDP 5353) en tu firewall.",
+  "dataDir": "Carpeta de datos:",
+  "recheck": "Revisar de nuevo",
+  "port": {
+   "free": "libre",
+   "in_use": "en uso"
+  }
+ },
+ "wizard": {
+  "title": "Configurar Swarmbly",
+  "back": "Atrás",
+  "next": "Continuar",
+  "skipAll": "Omitir configuración",
+  "start": "Empezar a conversar",
+  "allow": "Permitir",
+  "deny": "Ahora no",
+  "notYet": "más adelante",
+  "step": {
+   "welcome": "Bienvenida",
+   "system": "Revisión",
+   "profile": "Configuración",
+   "models": "Modelos",
+   "permissions": "Permisos",
+   "memory": "Memoria",
+   "done": "Listo"
+  },
+  "welcomeTitle": "Tu computadora, parte de un enjambre",
+  "welcomeBody": "Swarmbly responde con los modelos de tu computadora. Si lo permites, divide las solicitudes por ítems en tareas pequeñas que otras computadoras Swarmbly resuelven en paralelo, y ensambla la respuesta aquí.",
+  "welcomePrivacy": "Nada sale de esta computadora hasta que elijas un tier de privacidad que lo permita.",
+  "systemTitle": "Revisando esta computadora",
+  "systemBody": "Swarmbly necesita algunos paquetes de Python y un ejecutor de modelos (Ollama).",
+  "profileTitle": "Configuración recomendada",
+  "profileBody": "Basada en lo que se midió. Cada valor explica por qué; puedes cambiar cualquiera más tarde.",
+  "modelsTitle": "Modelos",
+  "modelsBody": "Los modelos se ejecutan dentro de Ollama. Solo se descargan cuando lo confirmas.",
+  "suggested": "Sugeridos para esta computadora",
+  "downloadLater": "Las descargas siguen en segundo plano; también puedes descargar más tarde en Ajustes → Modelos.",
+  "permTitle": "Permisos",
+  "permBody": "Elige qué puede hacer Swarmbly en tu red. Puedes cambiarlo cuando quieras.",
+  "permLater": "Permitir la red local no comparte nada por sí solo: compartir requiere además un tier de privacidad y, para que otros usen esta computadora, activar compartirla.",
+  "memoryTitle": "Memoria",
+  "memoryBody": "Memoria personal opcional que se queda en esta computadora.",
+  "memoryLater": "Los demás niveles se describen en Memoria.",
+  "doneTitle": "Listo",
+  "doneBody": "Swarmbly está configurado. La vista Enjambre muestra otras computadoras a medida que aparecen, y cada respuesta puede explorarse paso a paso.",
+  "answerBoth": "Elige Permitir o Ahora no en cada pregunta para continuar."
+ },
+ "websearch": {
+  "title": "Búsqueda web (opcional)",
+  "body": "Un metabuscador libre (SearXNG) instalado en esta computadora permite consultar DuckDuckGo, Google, Google Scholar, Bing, Brave, PubMed, Semantic Scholar, OpenAlex y Crossref sin claves de API. Solo escucha en esta computadora (127.0.0.1) y arranca y se detiene con la app.",
+  "none": "No instalado",
+  "installing": "Instalando… {step}",
+  "running": "Activo en {url} ({method})",
+  "stopped": "Instalado, sin responder en {url}",
+  "external": "SearXNG propio en {url}",
+  "webOff": "«web» no está en Fuentes públicas: añádelo para usar esta búsqueda.",
+  "install": "Instalar y activar SearXNG",
+  "reinstall": "Reinstalar o actualizar",
+  "uninstall": "Desinstalar",
+  "removed": "SearXNG desinstalado",
+  "test": "Probar búsqueda web",
+  "testOk": "Búsqueda web correcta: {n} resultados ({engines})",
+  "testFail": "La búsqueda web no devolvió resultados: {why}",
+  "started": "Instalando SearXNG; puede tardar unos minutos",
+  "ready": "SearXNG instalado y activo; «web» se añadió a las fuentes públicas",
+  "failed": "No se pudo instalar SearXNG; mira el detalle en Ajustes → Privacidad",
+  "noInternet": "El acceso a internet está denegado en Permisos",
+  "consentTitle": "Instalar SearXNG en esta computadora",
+  "consentBody": "Se descargará SearXNG (licencia AGPL-3.0) y sus dependencias, unos 60 MB, en la carpeta de datos de Swarmbly. Quedará disponible solo en esta computadora y se añadirá «web» a las fuentes públicas.",
+  "howDocker": "Docker está disponible: se usará la imagen oficial searxng/searxng.",
+  "howNative": "Se instalará con Python en un entorno virtual propio (nada cambia en el Python del sistema).",
+  "howNone": "No se encontró Docker ni Python 3.11 o superior (ni uv). Instala uno de ellos y vuelve a intentarlo.",
+  "consentPrivacy": "Como con las demás fuentes públicas, a los buscadores solo se envían nombres (especies, lugares, sucesos), nunca tu pregunta ni tus documentos. Algunos motores (Google, Scholar) pueden bloquear temporalmente consultas automáticas; los demás siguen respondiendo.",
+  "consentAccept": "Instalar",
+  "google": "Google: la API Custom Search JSON está cerrada a nuevos clientes y deja de funcionar el 1 de enero de 2027. Google y Google Scholar se consultan a través de SearXNG. Si ya tienes una clave, ponla abajo con su identificador «cx» y pulsa «Probar búsqueda web».",
+  "step": {
+   "download": "descargando",
+   "venv": "entorno de Python",
+   "packages": "instalando dependencias",
+   "pull": "descargando la imagen",
+   "start": "arrancando",
+   "health": "comprobando",
+   "done": "listo",
+   "failed": "error"
+  }
+ }
+}
