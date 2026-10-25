@@ -474,6 +474,9 @@ Windows, Debian; 0.5 B to 8 B models)
   with no source folder; in the 25 Oct retest C1 was on without sources and
   the request went to the swarm again with the user's name. "Mis 3
   animales" in a batch is not a personal topic.
+- Funding campaign: Settings → System shows how to support the project
+  (buymeacoffee.com/swarmbly), and the README and `.github/FUNDING.yml` link
+  to it. Support never buys influence over the roadmap, licence or governance.
 - LCE C1, formats: Word (.docx), HTML and PDF (with `pdftotext` from poppler,
   on the PATH or in Homebrew's folders; ligatures normalised) are read, not
   only text files. Memory → Your sources lists every file with its passages,

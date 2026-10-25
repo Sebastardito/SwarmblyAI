@@ -794,5 +794,10 @@
    "done": "done",
    "failed": "error"
   }
+ },
+ "support": {
+  "title": "Support the project",
+  "body": "Swarmbly is developed independently, with no institutional funding, as an AGPL-licensed digital public good. If you find it useful, you can support its early development. Support never buys influence over the roadmap, the licence or the governance.",
+  "link": "buymeacoffee.com/swarmbly"
  }
 }

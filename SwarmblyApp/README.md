@@ -5,6 +5,7 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3cc8dc)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-e9b949)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23322639.svg)](https://doi.org/10.5281/zenodo.23322639)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
 **A desktop client and network dashboard for
 [SwarmblyAI](https://github.com/Sebastardito/SwarmblyAI) — decentralized
@@ -206,6 +207,10 @@ preprint, not peer-reviewed.
 - Every number in the interface is labelled *measured*, *estimated* or
   *unknown*. Canned answers validate instruments, never models.
 
+## Support the project
+
+Swarmbly is developed independently, with no institutional funding, as an AGPL-licensed digital public good. If you find it useful or want it to exist, you can support its early development at **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. Support never buys influence over the roadmap, the licence or the governance (see [`GOVERNANCE.md`](https://github.com/Sebastardito/SwarmblyAI/blob/main/GOVERNANCE.md)).
+
 ## Contributing, security, license
 
 Contributions are welcome — read [CONTRIBUTING.md](CONTRIBUTING.md). Report
@@ -300,6 +305,10 @@ Para la prueba con dos computadoras reales: [P2P testing](docs/P2P_TESTING.md).
 [Limitaciones](docs/LIMITATIONS.md) · [Cambios](docs/CHANGELOG.md) ·
 [Auditoría Fase 0](docs/AUDIT_FASE0_ES.md) · [Contribuir](CONTRIBUTING.md) ·
 [Seguridad](SECURITY.md). Cada documento incluye una sección en español.
+
+### Apoya el proyecto
+
+Swarmbly se desarrolla de forma independiente, sin financiación institucional, como un bien público digital con licencia AGPL. Si te resulta útil o quieres que exista, puedes apoyar su desarrollo en estas primeras etapas en **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. El apoyo nunca compra influencia sobre la hoja de ruta, la licencia ni la gobernanza (ver [`GOVERNANCE.md`](https://github.com/Sebastardito/SwarmblyAI/blob/main/GOVERNANCE.md)).
 
 Swarmbly App es **una** de las formas de participar en Swarmbly; el protocolo
 no depende de ella. Licencia **AGPL-3.0-or-later**. Véanse [NOTICE](NOTICE) y
