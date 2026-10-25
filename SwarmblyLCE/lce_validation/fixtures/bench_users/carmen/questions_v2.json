@@ -1,0 +1,49 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuánto cierra Manantial según el cierre firmado?",
+      "type": "updated",
+      "gold": [
+        "9.9"
+      ],
+      "old": [
+        "9.6"
+      ]
+    },
+    {
+      "q": "¿Qué retorno trimestral calcula la conciliación bancaria?",
+      "type": "simple",
+      "gold": [
+        "2.6"
+      ]
+    },
+    {
+      "q": "¿Qué retorno ponderado del trimestre reportas?",
+      "type": "contradiction",
+      "gold": [
+        "2.6"
+      ],
+      "allow_flag": true
+    },
+    {
+      "q": "¿Cuál era la provisión del borrador interno no publicado?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué variación de Manantial exige nota individual y cuál es la variación firmada?",
+      "type": "cross",
+      "gold": [
+        "5",
+        "7.4"
+      ]
+    },
+    {
+      "q": "¿Cuál es el retorno proyectado del próximo trimestre?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# lce_validation — real-model run
+
+**Run type: confirmatory.** Models: qwen2.5:3b, llama3.2:3b, gemma2:2b · 2026-10-05T06:45:29Z · commit f7a89197ec
+
+Pre-registration sha256 `f60937a51e52aa30…` · MCQ sha256 `c8991d3bab8578d0…`
+
+Scope: fixture corpus (1 synthetic user) for C1; 3 synthetic users x 20 topics for H-C2/H-C17a; 1500 MMLU items x 3 families for H-C17b; canary unverified (descriptive only).
+
+- Wiki: 12 claims; anchor rejection rate 0.67; malformed digester outputs 0.
+- C1 (positive control): accuracy with memory 0.70 vs without 0.00.
+- C2 / H-C2 lexicon adherence: n/a with Γ vs n/a without (difference n/a, 95% CI n/a; 0 cells). Projection bytes 2.
+- C2 / H-C17 homogeneity across users (mean cosine, 20 topics, T=0.7): baseline 0.880, projection 0.883, placebo 0.853. Reduction by projection -0.003 [-0.010, +0.003]; by placebo +0.026 [+0.006, +0.049]; projection beyond placebo -0.029 [-0.050, -0.011].
+- C2 / H-C17 error agreement given both wrong (1500 MCQ items): without Γ 0.563 (chance 0.354, excess [+0.178, +0.241]); with Γ 0.563; delta 0.000 [+0.000, +0.000]; invalid answers 0.002/0.002.
+- Canary (unverified, descriptive only): tail mass 0.00; identity violations 0.00.
+
+## Verdicts (lce_validation.decide)
+
+- **C1: holds** — positive control passed: retrieval over the real-model wiki answers user-specific questions
+- **H-C2_lexicon: refused** — no user with preferred terms in the projection
+- **H-C2_rho: not_tested** — redundancy rate rho needs the Swarmbly dispatch path; not part of this run
+- **H-C17a: falsified** — homogeneity across users does not decrease with projection (reduction NOT shown to exceed a non-personal placebo: attribute it to prompt variation, not to personalisation)
+- **H-C17b: holds** — error agreement unchanged within ±0.1 (equivalence)
+- Replication of Kim et al. (2025), descriptive: errors shared above chance across families (excess CI excludes 0).

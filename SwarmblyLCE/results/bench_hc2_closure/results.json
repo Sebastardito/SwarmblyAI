@@ -1,0 +1,2037 @@
+{
+  "planner_version": "sin __version__",
+  "planner_commit": "e4d1d80",
+  "provenance": {
+    "git_commit": "c614fd1491e3e4f7ee8fb31a84e528fe3e4760b9",
+    "git_dirty": false,
+    "prereg": "/Users/seb/Documents/Harness/LCE/docs/PREREGISTRATION_BENCH_R1X_ES.md",
+    "prereg_sha256": "62294aeb87121902da6ad66945ae4bc9f3dd2d54e4a7d91a95ef7510d7300693",
+    "ollama_version": "0.40.2",
+    "models": {
+      "qwen2.5:3b": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+      "llama3.2:3b": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+      "gemma2:2b": "8ccf136fdd5298f3ffe2d69862750ea7fb56555fa4d5b18c04e3fa4d82ee09d7"
+    },
+    "python": "3.9.6",
+    "utc": "2026-10-11T07:15:05Z"
+  },
+  "tasks": [
+    {
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 67.21
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 65.43
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 69.1
+    },
+    {
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 66.13
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 69.89
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 69.89
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.5
+    },
+    {
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 71.93
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 62.12
+    },
+    {
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.81
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.08
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál es la razón de riesgos vigente del resultado principal?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 64.06
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes reporta el documento fuente del estudio mayor?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.08
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes aporta el estudio mayor?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 66.49
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué número necesario a tamizar daba el borrador preliminar?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 65.78
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué razón de riesgos vigente reportas y con qué intervalo?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 69.49
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál fue la adherencia al tamizaje en las comunas piloto?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 60.89
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos tamizajes nuevos sumó el año?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.4
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál es la razón de riesgos vigente a 24 meses?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.4
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál es el número necesario a tamizar con los datos del año?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 66.85
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos trabajadores nuevos entrenó el programa y cuántos retuvo?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.5
+    },
+    {
+      "user": "andres",
+      "q": "¿En cuánto bajó el costo por tamizaje?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.19
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántas comunas nuevas se suman el tercer año y cuándo es la evaluación económica?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 80.79
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué porcentaje de cobertura poblacional alcanzó el programa?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 65.43
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes aportó el estudio mayor tras la auditoría?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 62.76
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué coeficiente mides el acuerdo entre revisores?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 72.78
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué tamaño muestral mínimo fijaba el borrador para los criterios de inclusión?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 62.44
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué razón de riesgos preliminar reportaba el borrador para el resultado principal?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 62.44
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué número necesario a tamizar preliminar calculó el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 65.78
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes reportaba el borrador en los 12 estudios?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 66.13
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué razón de riesgos atribuía el borrador al efecto en trabajadores?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 64.06
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo vigente de los criterios de inclusión y cuál era antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 67.96
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes aportó el estudio mayor tras la auditoría y cuántos antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.08
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál es el número necesario a tamizar vigente y cuál era antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 68.33
+    },
+    {
+      "user": "andres",
+      "q": "Según tus fuentes, ¿cuál es el tamaño muestral mínimo de inclusión y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 67.96
+    },
+    {
+      "user": "andres",
+      "q": "Según tus fuentes, ¿cuántos participantes sumaron los 12 estudios y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.81
+    },
+    {
+      "user": "andres",
+      "q": "Según tus fuentes, ¿cuál fue la razón de riesgos del resultado principal y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.5
+    },
+    {
+      "user": "andres",
+      "q": "Según tus fuentes, ¿cuál es el número necesario a tamizar y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 62.76
+    },
+    {
+      "user": "andres",
+      "q": "Según tus fuentes, ¿qué razón de riesgos tuvo el efecto en trabajadores y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 70.29
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y qué coeficiente mides el acuerdo entre revisores?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 69.89
+    },
+    {
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos se recalculó el número necesario a tamizar?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 71.1
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión y qué tamaño muestral mínimo exigen tus criterios?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 61.81
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos revisores independientes tamizaron los títulos?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 68.72
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué gestor de referencias usaste para la búsqueda sistemática?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 64.06
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuál fue el índice de citación del estudio mayor?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 60.89
+    },
+    {
+      "user": "andres",
+      "q": "¿Qué institución financió la revisión?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 63.08
+    },
+    {
+      "user": "andres",
+      "q": "¿Cuántos desacuerdos de tamizaje resolvió el tercer revisor?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 66.49
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 48.07
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 53.7
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 49.71
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 50.88
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 51.18
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 48.33
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 51.18
+    },
+    {
+      "user": "carmen",
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 54.37
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.79
+    },
+    {
+      "user": "carmen",
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 47.03
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.03
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuánto cierra Manantial según el cierre firmado?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 49.43
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué retorno trimestral calcula la conciliación bancaria?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 49.43
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué retorno ponderado del trimestre reportas?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.72
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál era la provisión del borrador interno no publicado?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 47.03
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué variación de Manantial exige nota individual y cuál es la variación firmada?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.72
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál es el retorno proyectado del próximo trimestre?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.94
+    },
+    {
+      "user": "carmen",
+      "q": "¿En cuánto cierra la cartera este año?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 49.43
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál fue la variación anual de Manantial?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 48.33
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué sector bajó del 18 al 15 por ciento y cuál subió del 16 al 19?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 44.39
+    },
+    {
+      "user": "carmen",
+      "q": "¿En cuánto cerró la provisión por deterioro?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 47.28
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál fue el retorno real del año?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 47.03
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuántas veces se reunió el comité de riesgo y por qué dos de ellas?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.79
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuándo se automatiza el informe trimestral?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.03
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 53.7
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.77
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué porcentaje de la cartera está en euros?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.79
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué materialidad fijaba el borrador para el informe trimestral?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 48.07
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuánto fue la provisión por deterioro preliminar del trimestre según el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.5
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué valor en riesgo preliminar a un día reportaba el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 53.37
+    },
+    {
+      "user": "carmen",
+      "q": "¿En cuánto reportaba el borrador la cartera?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.5
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué porcentaje de la cartera en euros reportaba el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.5
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad vigente del informe trimestral y cuál era antes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 47.54
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál es el límite de política vigente del valor en riesgo y cuál era antes?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 45.08
+    },
+    {
+      "user": "carmen",
+      "q": "¿En cuánto cierra la cartera el trimestre y en cuánto cerraba antes de la revisión?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 50.29
+    },
+    {
+      "user": "carmen",
+      "q": "Según tus fuentes, ¿cuál es la materialidad del informe trimestral y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.52
+    },
+    {
+      "user": "carmen",
+      "q": "Según tus fuentes, ¿cuánto subió el fondo Manantial este trimestre y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.94
+    },
+    {
+      "user": "carmen",
+      "q": "Según tus fuentes, ¿cuál fue el valor en riesgo a un día y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 48.88
+    },
+    {
+      "user": "carmen",
+      "q": "Según tus fuentes, ¿en cuánto cierra la cartera y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 44.62
+    },
+    {
+      "user": "carmen",
+      "q": "Según tus fuentes, ¿qué porcentaje de la cartera está en euros y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.77
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad vigente del informe y cuánto subió la provisión por deterioro entre trimestres?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 51.18
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué fondo superó el umbral de materialidad y en qué orden escribes las notas de los informes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 44.62
+    },
+    {
+      "user": "carmen",
+      "q": "¿En cuánto cierra la cartera y qué porcentaje está en euros?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.55
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuántos analistas integran el comité de inversiones?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 44.39
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué banco custodio usa la cartera internacional?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 44.85
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuál fue el costo de transacción medio del trimestre?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.77
+    },
+    {
+      "user": "carmen",
+      "q": "¿Qué calificación crediticia tiene el fondo Manantial?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 50.88
+    },
+    {
+      "user": "carmen",
+      "q": "¿Cuántas reuniones del directorio hubo este trimestre?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 50.58
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 35.2
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.76
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.5
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.88
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 34.33
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.67
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 35.38
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.67
+    },
+    {
+      "user": "julian",
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.38
+    },
+    {
+      "user": "julian",
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 36.13
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.98
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 37.1
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué p95 del listado reporta el panel de los últimos 30 días?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.7
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál es el p95 vigente tras el cambio de grupo de conexiones?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.7
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué tasa de errores móvil reporta el panel y qué reporta el exportador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.03
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántas peticiones por segundo sostenía la instancia en la etapa piloto?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.57
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué cuota de almacenamiento tiene cada inquilino y qué p95 exige la prueba de carga?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.66
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál es el SLA de disponibilidad del servicio de facturación?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.94
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántas filas tiene ahora la tabla de variantes del inquilino mayor?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 37.3
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántos inquilinos activos hay al cierre del año?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.35
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuánto duró el segundo incidente mayor y cuál fue su causa?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 36.13
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál es el p95 del listado al cierre del año?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.75
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuánto recaudó la facturación por exceso de cuota?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.5
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué dos códigos de error nuevos se añadieron?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.38
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuándo se retira el servicio de facturación heredado?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 42.07
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuánto duró tu último incidente mayor?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.1
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 42.59
+    },
+    {
+      "user": "julian",
+      "q": "¿Cada cuánto se refresca la vista materializada?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 36.51
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué p95 de latencia proponía el borrador para la API de consultas?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 46.31
+    },
+    {
+      "user": "julian",
+      "q": "¿Cada cuánto se refrescaba la vista materializada según el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.5
+    },
+    {
+      "user": "julian",
+      "q": "¿Con cuántos registros sembraba el borrador las pruebas de carga?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.3
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué límite de cuota de almacenamiento fijaba el borrador?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 37.1
+    },
+    {
+      "user": "julian",
+      "q": "¿En qué incrementos movía el tráfico el despliegue según el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 36.13
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál es la cobertura mínima de pruebas vigente y cuál era antes del incidente?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.2
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál es el p95 de latencia exigido vigente y cuál era antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.12
+    },
+    {
+      "user": "julian",
+      "q": "¿Con cuántos registros siembras la prueba de carga y con cuántos lo hacías antes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 36.9
+    },
+    {
+      "user": "julian",
+      "q": "Según tus fuentes, ¿cuál es la cobertura mínima de pruebas y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 42.86
+    },
+    {
+      "user": "julian",
+      "q": "Según tus fuentes, ¿cuántas filas tiene la tabla del inquilino mayor y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.7
+    },
+    {
+      "user": "julian",
+      "q": "Según tus fuentes, ¿qué p95 de latencia exiges y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.1
+    },
+    {
+      "user": "julian",
+      "q": "Según tus fuentes, ¿cada cuánto se refresca la vista materializada y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 41.57
+    },
+    {
+      "user": "julian",
+      "q": "Según tus fuentes, ¿en qué incrementos mueves el tráfico en el despliegue y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.85
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla del inquilino mayor y qué p95 de latencia exiges en la prueba de carga?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.38
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué formato usas para los errores y con cuántos registros siembras la prueba de carga?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 36.13
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué código tiene la variante huérfana y cada cuánto se refresca la vista materializada?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 47.26
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántos nodos tiene tu clúster de Kafka de producción?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 35.75
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué versión de PostgreSQL corre tu réplica de lectura?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.2
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuál fue el presupuesto de infraestructura del trimestre?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.91
+    },
+    {
+      "user": "julian",
+      "q": "¿Qué proveedor de DNS usas para el dominio de producción?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.1
+    },
+    {
+      "user": "julian",
+      "q": "¿Cuántos ingenieros rotan la guardia de disponibilidad?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.76
+    },
+    {
+      "user": "lme",
+      "q": "What degree did I graduate with?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 15.54
+    },
+    {
+      "user": "lme",
+      "q": "How long is my daily commute to work?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 16.04
+    },
+    {
+      "user": "lme",
+      "q": "What color did I repaint my bedroom walls?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 15.0
+    },
+    {
+      "user": "lme",
+      "q": "What breed is my dog?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 15.23
+    },
+    {
+      "user": "lme",
+      "q": "Where did I attend the Imagine Dragons concert?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 17.34
+    },
+    {
+      "user": "lme",
+      "q": "What book am I currently reading?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 17.24
+    },
+    {
+      "user": "lme",
+      "q": "Which event happened first, my cousin's wedding or Michael's engagement party?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 15.87
+    },
+    {
+      "user": "lme",
+      "q": "Where did Rachel move to after her recent relocation?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 17.14
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 25.37
+    },
+    {
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 30.18
+    },
+    {
+      "user": "luisa",
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 25.63
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.29
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 31.87
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.02
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.27
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.02
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.02
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 29.82
+    },
+    {
+      "user": "luisa",
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 26.7
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 34.0
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuál es la retención corregida de la ese final en hablantes rurales?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.81
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas ocurrencias de foco anota el diario de campo?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.56
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas ocurrencias de foco tiene tu corpus?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 30.54
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué porcentaje de asibilación anotó el piloto de 2024?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 29.48
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué porcentaje de retención corrigió la revisión y cuál era el valor previo?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 30.36
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuál es la frecuencia del voseo en tu corpus?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 35.17
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas horas de grabaciones tiene ahora el corpus propio?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 29.82
+    },
+    {
+      "user": "luisa",
+      "q": "¿En cuánto quedó la retención de la ese final en hablantes rurales tras la segunda revisión?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.56
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos hablantes declaran alternancia de código según el contexto?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.27
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos segmentos corrigió la revisión y cuántas entrevistas añadió?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 30.0
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuál es la tasa de aprobación del curso este año?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.87
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuándo se incorpora la unidad de contacto lingüístico?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.29
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué porcentaje del diminutivo sigue siendo -ito/-ita?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.15
+    },
+    {
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 30.18
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué porcentaje de hablantes asocia chompa y guagua con el registro familiar?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.15
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cómo repartía el borrador los minutos de la sesión?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.42
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuánto pesaba el examen final según el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.7
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas horas de grabaciones tenía el corpus propio según el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 33.55
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos niveles fijaba el borrador para la rúbrica?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 31.87
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas ocurrencias de chompa reportaba el borrador?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.49
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuánto pesa el examen final vigente y cuánto pesaba antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 29.31
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas horas de grabaciones tiene el corpus propio vigente y cuántas antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 29.82
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene la rúbrica vigente y cuántos antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 28.65
+    },
+    {
+      "user": "luisa",
+      "q": "Según tus fuentes, ¿cómo repartes los minutos de la sesión y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.84
+    },
+    {
+      "user": "luisa",
+      "q": "Según tus fuentes, ¿cuánto pesa el examen final y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 25.5
+    },
+    {
+      "user": "luisa",
+      "q": "Según tus fuentes, ¿cuántas horas de grabaciones tiene el corpus propio y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 25.89
+    },
+    {
+      "user": "luisa",
+      "q": "Según tus fuentes, ¿en qué porcentaje de menores de 30 aparece la asibilación y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 25.25
+    },
+    {
+      "user": "luisa",
+      "q": "Según tus fuentes, ¿cuántos niveles tiene la rúbrica y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.7
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuánto pesan el examen final y las tareas en tu curso y en cuántas horas de grabaciones se apoya tu corpus?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 23.78
+    },
+    {
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa y qué porcentaje de menores de 30 muestra asibilación?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.56
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea y cuántos criterios tiene tu rúbrica?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 26.29
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántos estudiantes se inscribieron al curso de fonética avanzada?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 25.5
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué software de anotación usas para el corpus?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.13
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuál fue la nota media del examen del año pasado?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.13
+    },
+    {
+      "user": "luisa",
+      "q": "¿Qué universidad auspicia el proyecto del corpus?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 29.14
+    },
+    {
+      "user": "luisa",
+      "q": "¿Cuántas horas de tutoría ofreces por semana?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 27.13
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.45
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 37.31
+    },
+    {
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 37.5
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.66
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 55.15
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 55.15
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 55.15
+    },
+    {
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 96.15
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.98
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "a3_ok": 1.0,
+      "a4_ok": 0.0,
+      "gain": -1.0,
+      "delta_rho_pct": 45.18
+    },
+    {
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.47
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué cobertura media indica el informe del secuenciador para Fábrega?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.73
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es la heterocigosidad esperada media recalculada del conjunto?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 40.98
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué F_ST corregido mediste entre Barú y Fábrega y cuántos individuos nuevos se añadieron?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.01
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es el F_ST vigente entre Barú y Fábrega?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.18
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué cobertura media usas para las bibliotecas de Fábrega?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 55.56
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué flujo entre Chirripó y Cerro de la Muerte estimó el modelo preliminar?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 42.37
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es la tasa de mutación de novo del pinzón serrano?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.32
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas variantes bialélicas tiene la matriz final de este año?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.76
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué rendimiento medio de extracción de ADN lograste este año?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.88
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántos pliegos incorporó el herbario y cuántas muestras el banco de tejidos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 41.44
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué señal demográfica mostró Cerro de la Muerte y hace cuántas generaciones?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.89
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es la heterocigosidad esperada media con los individuos nuevos?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.66
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas bibliotecas se repitieron desde la extracción este año?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.69
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuándo se someterá el manuscrito principal?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.45
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué proporción de variantes privadas mostró Cerro de la Muerte?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.27
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 42.13
+    },
+    {
+      "user": "mara",
+      "q": "¿Con qué frecuencia mínima del alelo menor retuviste las variantes del pinzón serrano?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.47
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué tamaño efectivo preliminar estimaste para la población de Chirripó?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 37.88
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué diversidad nucleotídica preliminar calculaste para el conjunto?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.1
+    },
+    {
+      "user": "mara",
+      "q": "¿A cuántos loci atribuía el borrador el exceso de variantes privadas de Cerro de la Muerte?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.47
+    },
+    {
+      "user": "mara",
+      "q": "¿En cuánto cuantificó el borrador el aislamiento reproductivo de Fábrega?",
+      "a3_ok": 0.0,
+      "a4_ok": 1.0,
+      "gain": 1.0,
+      "delta_rho_pct": 41.9
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué tasa de endogamia preliminar estimó el borrador para el conjunto?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.46
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es el umbral QUAL mínimo vigente y cuál era antes de la recalibración?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.68
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es la profundidad mínima por sitio vigente y cuál era antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.98
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es el umbral de missingness vigente y cuál era antes?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 49.34
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál es el F_ST vigente entre Fábrega y Chirripó y cuál era antes?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.68
+    },
+    {
+      "user": "mara",
+      "q": "Según tus fuentes, ¿cuál es el umbral de missingness para retirar sitios y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 41.67
+    },
+    {
+      "user": "mara",
+      "q": "Según tus fuentes, ¿cuál es el F_ST entre Barú y Fábrega y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.86
+    },
+    {
+      "user": "mara",
+      "q": "Según tus fuentes, ¿cuántas variantes retuvo el conjunto final y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 39.47
+    },
+    {
+      "user": "mara",
+      "q": "Según tus fuentes, ¿qué frecuencia mínima del alelo menor exiges y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.73
+    },
+    {
+      "user": "mara",
+      "q": "Según tus fuentes, ¿cuántas muestras de Cerro de la Muerte analizaste y hay fuentes que discrepan?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 46.3
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo y qué umbral QUAL mínimo exige tu protocolo?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.07
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué valor de F_ST mediste entre Barú y Fábrega y bajo qué valor declararías muerta la hipótesis de aislamiento?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.46
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y con qué ventana podas por desequilibrio de ligamiento?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.6
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué proporción de variantes privadas mostró Cerro de la Muerte y cuántas variantes mínimas exige tu conjunto final?",
+      "a3_ok": 0.0,
+      "a4_ok": 0.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.86
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál fue el índice de Shannon del bosque nuboso en tu último muestreo de vegetación?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 40.11
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué cebadores usaste para amplificar el intrón 7 del gen de la rodopsina?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 45.45
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuál fue la tasa de captura-recaptura del pinzón serrano en 2026?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 43.86
+    },
+    {
+      "user": "mara",
+      "q": "¿Qué porcentaje de juveniles marcaste con anillas metálicas?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 41.67
+    },
+    {
+      "user": "mara",
+      "q": "¿Cuántos transectos de vegetación levantaste en Chirripó?",
+      "a3_ok": 1.0,
+      "a4_ok": 1.0,
+      "gain": 0.0,
+      "delta_rho_pct": 38.27
+    }
+  ],
+  "summary": {
+    "n_tasks": 251,
+    "frac_gain_positive": 0.0558,
+    "frac_drho_le_10": 0.0,
+    "frac_both": 0.0,
+    "verdict": "la proyección NO sobrevive (regla de compensación)",
+    "mean_gain": 0.0159,
+    "median_delta_rho_pct": 40.98
+  }
+}

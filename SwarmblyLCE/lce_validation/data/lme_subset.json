@@ -1,0 +1,104 @@
+{
+  "source": "xiaowu0162/longmemeval (HuggingFace), split longmemeval_s",
+  "license": "MIT",
+  "source_sha256": "08d8dad4be43ee2049a22ff5674eb86725d0ce5ff434cde2627e5e8e7e117894",
+  "questions": [
+    {
+      "index": 0,
+      "lme_type": "single-session-user",
+      "question": "What degree did I graduate with?",
+      "answer": "Business Administration",
+      "our_type": "simple",
+      "sessions": [
+        "sharegpt_yywfIrx_0",
+        "85a1be56_1",
+        "answer_280352e9"
+      ]
+    },
+    {
+      "index": 1,
+      "lme_type": "single-session-user",
+      "question": "How long is my daily commute to work?",
+      "answer": "45 minutes each way",
+      "our_type": "simple",
+      "sessions": [
+        "db73b7e4_4",
+        "sharegpt_5V5H2HN_0",
+        "answer_40a90d51"
+      ]
+    },
+    {
+      "index": 7,
+      "lme_type": "single-session-user",
+      "question": "What color did I repaint my bedroom walls?",
+      "answer": "a lighter shade of gray",
+      "our_type": "simple",
+      "sessions": [
+        "54d06eeb",
+        "sharegpt_9L4V3oz_35",
+        "answer_feb5200f"
+      ]
+    },
+    {
+      "index": 23,
+      "lme_type": "single-session-user",
+      "question": "What breed is my dog?",
+      "answer": "Golden Retriever",
+      "our_type": "simple",
+      "sessions": [
+        "sharegpt_IJuY15Z_0",
+        "85b50955_6",
+        "answer_723bf11f"
+      ]
+    },
+    {
+      "index": 47,
+      "lme_type": "single-session-user",
+      "question": "Where did I attend the Imagine Dragons concert?",
+      "answer": "Xfinity Center",
+      "our_type": "simple",
+      "sessions": [
+        "sharegpt_bf1KlAQ_17",
+        "sharegpt_RlTrAHR_13",
+        "answer_2952aee4"
+      ]
+    },
+    {
+      "index": 51,
+      "lme_type": "single-session-user",
+      "question": "What book am I currently reading?",
+      "answer": "The Seven Husbands of Evelyn Hugo",
+      "our_type": "simple",
+      "sessions": [
+        "0a4727b1_1",
+        "sharegpt_oTnUt5N_15",
+        "answer_96b8c9ee"
+      ]
+    },
+    {
+      "index": 240,
+      "lme_type": "temporal-reasoning",
+      "question": "Which event happened first, my cousin's wedding or Michael's engagement party?",
+      "answer": "Michael's engagement party",
+      "our_type": "simple",
+      "sessions": [
+        "96c743d0_abs_2",
+        "ultrachat_312687",
+        "answer_add9b012_2"
+      ]
+    },
+    {
+      "index": 368,
+      "lme_type": "knowledge-update",
+      "question": "Where did Rachel move to after her recent relocation?",
+      "answer": "the suburbs",
+      "our_type": "updated",
+      "sessions": [
+        "062e9120_1",
+        "sharegpt_kaEoitr_15",
+        "answer_0b1a0942_1",
+        "answer_0b1a0942_2"
+      ]
+    }
+  ]
+}

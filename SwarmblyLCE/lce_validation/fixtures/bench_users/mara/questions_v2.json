@@ -1,0 +1,56 @@
+{
+  "questions": [
+    {
+      "q": "¿Qué cobertura media indica el informe del secuenciador para Fábrega?",
+      "type": "simple",
+      "gold": [
+        "19x"
+      ]
+    },
+    {
+      "q": "¿Cuál es la heterocigosidad esperada media recalculada del conjunto?",
+      "type": "simple",
+      "gold": [
+        "0.291"
+      ]
+    },
+    {
+      "q": "¿Qué F_ST corregido mediste entre Barú y Fábrega y cuántos individuos nuevos se añadieron?",
+      "type": "cross",
+      "gold": [
+        "0.041",
+        "8"
+      ]
+    },
+    {
+      "q": "¿Cuál es el F_ST vigente entre Barú y Fábrega?",
+      "type": "updated",
+      "gold": [
+        "0.041"
+      ],
+      "old": [
+        "0.036"
+      ]
+    },
+    {
+      "q": "¿Qué cobertura media usas para las bibliotecas de Fábrega?",
+      "type": "contradiction",
+      "gold": [
+        "19x"
+      ],
+      "allow_flag": true
+    },
+    {
+      "q": "¿Qué flujo entre Chirripó y Cerro de la Muerte estimó el modelo preliminar?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál es la tasa de mutación de novo del pinzón serrano?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

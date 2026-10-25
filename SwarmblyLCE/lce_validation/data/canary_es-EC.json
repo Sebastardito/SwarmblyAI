@@ -1,0 +1,13 @@
+{"variety": "es-EC",
+ "status": "DRAFT — every item is verified:false until a native speaker confirms its gloss. Unverified items may be used to test the harness, never to report a result.",
+ "use": "measurement only; never training data, never a capsule (SPEC 15.3)",
+ "items": [
+  {"variety": "es-EC", "term": "chuta", "glosses": ["sorpresa", "contrariedad", "surprise", "annoyance", "dismay"], "verified": false},
+  {"variety": "es-EC", "term": "achachay", "glosses": ["frío", "cold"], "verified": false},
+  {"variety": "es-EC", "term": "arrarray", "glosses": ["calor", "quema", "hot", "burn"], "verified": false},
+  {"variety": "es-EC", "term": "guagua", "glosses": ["niño", "bebé", "child", "baby"], "verified": false},
+  {"variety": "es-EC", "term": "ñaño", "glosses": ["hermano", "brother", "sibling"], "verified": false},
+  {"variety": "es-EC", "term": "chuchaqui", "glosses": ["resaca", "hangover"], "verified": false},
+  {"variety": "es-EC", "term": "chiro", "glosses": ["sin dinero", "pobre", "broke", "no money"], "verified": false},
+  {"variety": "es-EC", "term": "cachar", "glosses": ["entender", "understand", "get it"], "verified": false}
+ ]}

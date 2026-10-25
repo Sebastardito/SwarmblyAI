@@ -1,0 +1,85 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "gold": [
+        "5",
+        "nota"
+      ]
+    },
+    {
+      "q": "¿Qué fondo superó el umbral de materialidad este trimestre y cuál fue su variación?",
+      "gold": [
+        "Manantial",
+        "6.8"
+      ]
+    },
+    {
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "gold": [
+        "1.1",
+        "1.6"
+      ]
+    },
+    {
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "gold": [
+        "1.9",
+        "2.4"
+      ]
+    },
+    {
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "gold": [
+        "tecnología",
+        "salud"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "gold": [
+        "provisión"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "gold": [
+        "materialidad"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "gold": [
+        "valor en riesgo"
+      ]
+    },
+    {
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "gold": [
+        "causa",
+        "efecto",
+        "acción"
+      ]
+    },
+    {
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "gold": [
+        "1"
+      ]
+    },
+    {
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "gold": [
+        "99",
+        "directorio"
+      ]
+    },
+    {
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "gold": [
+        "84.3",
+        "19"
+      ]
+    }
+  ]
+}

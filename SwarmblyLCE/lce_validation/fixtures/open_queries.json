@@ -1,0 +1,25 @@
+{
+ "topics": [
+  "la inferencia descentralizada de modelos de lenguaje",
+  "la genética de poblaciones",
+  "el aprendizaje continuo en modelos pequeños",
+  "la privacidad de los datos personales",
+  "la evolución cultural",
+  "el cambio climático y la agricultura",
+  "la conservación de especies en islas",
+  "la educación universitaria a distancia",
+  "la edición genética con CRISPR",
+  "el software de código abierto",
+  "la salud mental en el trabajo",
+  "la energía solar en zonas rurales",
+  "la desinformación en redes sociales",
+  "la seguridad alimentaria",
+  "la migración de aves",
+  "la ética de la inteligencia artificial",
+  "el mejoramiento genético de insectos",
+  "la gestión de proyectos de investigación",
+  "la divulgación científica",
+  "las ciudades sostenibles"
+ ],
+ "note": "Open-ended topics for C2 (lexicon adherence and cross-user homogeneity). Fixed by the pre-registration of 2026-10-05; the first five are the v0.1 set."
+}

@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "q": "¿En cuánto cierra la cartera este año?",
+      "type": "updated",
+      "gold": [
+        "88.1"
+      ],
+      "old": [
+        "84.3"
+      ]
+    },
+    {
+      "q": "¿Cuál fue la variación anual de Manantial?",
+      "type": "simple",
+      "gold": [
+        "11.3"
+      ]
+    },
+    {
+      "q": "¿Qué sector bajó del 18 al 15 por ciento y cuál subió del 16 al 19?",
+      "type": "cross",
+      "gold": [
+        "salud",
+        "consumo"
+      ]
+    },
+    {
+      "q": "¿En cuánto cerró la provisión por deterioro?",
+      "type": "updated",
+      "gold": [
+        "1.4"
+      ],
+      "old": [
+        "1.6"
+      ]
+    },
+    {
+      "q": "¿Cuál fue el retorno real del año?",
+      "type": "simple",
+      "gold": [
+        "7.9"
+      ]
+    },
+    {
+      "q": "¿Cuántas veces se reunió el comité de riesgo y por qué dos de ellas?",
+      "type": "cross",
+      "gold": [
+        "cuatro",
+        "provisiones"
+      ]
+    },
+    {
+      "q": "¿Cuándo se automatiza el informe trimestral?",
+      "type": "simple",
+      "gold": [
+        "segundo trimestre"
+      ]
+    }
+  ]
+}

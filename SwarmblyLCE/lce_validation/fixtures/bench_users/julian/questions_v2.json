@@ -1,0 +1,49 @@
+{
+  "questions": [
+    {
+      "q": "¿Qué p95 del listado reporta el panel de los últimos 30 días?",
+      "type": "simple",
+      "gold": [
+        "0.53"
+      ]
+    },
+    {
+      "q": "¿Cuál es el p95 vigente tras el cambio de grupo de conexiones?",
+      "type": "updated",
+      "gold": [
+        "241"
+      ],
+      "old": [
+        "268"
+      ]
+    },
+    {
+      "q": "¿Qué tasa de errores móvil reporta el panel y qué reporta el exportador?",
+      "type": "contradiction",
+      "gold": [
+        "0.53"
+      ],
+      "allow_flag": true
+    },
+    {
+      "q": "¿Cuántas peticiones por segundo sostenía la instancia en la etapa piloto?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué cuota de almacenamiento tiene cada inquilino y qué p95 exige la prueba de carga?",
+      "type": "cross",
+      "gold": [
+        "5",
+        "300"
+      ]
+    },
+    {
+      "q": "¿Cuál es el SLA de disponibilidad del servicio de facturación?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

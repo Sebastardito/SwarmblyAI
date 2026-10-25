@@ -1,0 +1,4335 @@
+{
+  "kind": "exploratory-benchmark",
+  "benchmark": "H-C1 at scale",
+  "models": [
+    "llama3.2:3b",
+    "qwen2.5:3b",
+    "gemma2:2b",
+    "phi3.5:3.8b",
+    "granite3.1-dense:2b"
+  ],
+  "users": [
+    "andres",
+    "carmen",
+    "julian",
+    "luisa",
+    "mara"
+  ],
+  "cells": [
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Según los criterios de inclusión, el tamaño muestral mínimo es de 50 participantes. Los estudios de una sola rama se excluyen sin excepción.",
+      "answer_without": "No tengo información específica sobre criterios de inclusión o estudios que se excluyan sin excepción, ya que mi conocimiento se basa en información general y no tengo acceso a datos específicos de estudios o investigaciones. Sin embargo, puedo decir que el tamaño muestral mínimo varía según el tipo",
+      "ms_with": 401.7,
+      "ms_without": 991.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre los estudios mencionados, pero puedo proporcionar una respuesta general. Si los 12 estudios suman un total de 500 participantes o más, y el estudio mayor con más de 500 participantes sobre la misma pregunta suma un total de participantes mayor que 500, entonces ",
+      "answer_without": "No tengo información sobre estudios o participantes, por lo que no puedo proporcionar una respuesta precisa.",
+      "ms_with": 813.1,
+      "ms_without": 257.4
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos de mi resultado principal fue de 0.82, con un intervalo de confianza del 72% al 94%.",
+      "answer_without": "No tengo información específica sobre el resultado principal y su intervalo de confianza, ya que no se me proporcionó contexto para entender el contexto de la pregunta. Sin embargo, puedo decir que en la mayoría de los casos, la razón de riesgos se refiere a la incertidumbre o la variabilidad en los",
+      "ms_with": 376.2,
+      "ms_without": 966.4
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El número necesario a tamizar para evitar un evento fue de 180 personas, según los datos del año.",
+      "answer_without": "No tengo suficiente información para proporcionar una respuesta precisa. ¿Puedes proporcionar más contexto o detalles sobre el evento que se intentó evitar?",
+      "ms_with": 267.3,
+      "ms_without": 353.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo suficiente información para determinar con precisión en qué subgrupo fue mayor el efecto y con qué razón de riesgos, ya que no se proporciona el contexto específico del estudio o la metanálisis en cuestión.",
+      "answer_without": "No tengo información específica sobre el contexto de la pregunta, pero puedo proporcionar una respuesta general. En la historia de la medicina, el efecto más significativo en un subgrupo fue el de la vacuna contra la varicela, que se aplicó principalmente a niños con discapacidad intelectual y otros",
+      "ms_with": 557.2,
+      "ms_without": 953.7
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término incidencia.",
+      "answer_without": "No tengo información sobre el contexto de la pregunta, pero puedo sugerirte que \"casos nuevos\" es un término comúnmente utilizado en contextos legales o jurídicos para referirse a decisiones o interpretaciones de la ley que no se habían considerado antes.",
+      "ms_with": 135.3,
+      "ms_without": 628.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"tamizaje\" en lugar de \"screening\".",
+      "answer_without": "Prefiero el término \"evaluación\" o \" Selección\" en lugar de \"screening\", ya que es más común y ampliamente utilizado en muchos campos, como la psicología, la medicina y la tecnología.",
+      "ms_with": 222.0,
+      "ms_without": 534.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término certeza.",
+      "answer_without": "El término más común y aceptado es \"veracidad\". La calidad de la evidencia se refiere a su valor y confiabilidad, mientras que la veracidad se refiere a la precisión y exactitud de la información.",
+      "ms_with": 134.2,
+      "ms_without": 543.3
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos se reporta como un valor numérico entre 0 y 1, donde 0 indica una baja probabilidad de riesgo y 1 indica una alta probabilidad de riesgo.",
+      "answer_without": "Para reportar toda razón de riesgos, es importante seguir un procedimiento establecido por la empresa o la organización, que puede variar dependiendo del tipo de riesgo y la industria. En general, esto puede incluir la identificación de los riesgos, la evaluación de su impacto y la implementación de",
+      "ms_with": 510.6,
+      "ms_without": 816.7
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Si el I cuadrado supera el 75 por ciento, no se combina y se presenta un resumen narrativo.",
+      "answer_without": "Si el índice cuadrático (I cuadrado) supera el 75 por ciento, generalmente se considera que el crecimiento de la población está en riesgo de alcanzar el límite máximo permitido por la capacidad del medio ambiente para soportarla. En este caso, es importante tomar medidas para controlar el crecimient",
+      "ms_with": 341.4,
+      "ms_without": 1006.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo suficiente información para proporcionar una respuesta precisa. Sin embargo, puedo sugerir que el coeficiente utilizado para medir el acuerdo entre revisores podría ser el coeficiente de concordancia, que es comúnmente utilizado en el contexto del tamizaje y screening. Sin embargo, sin más ",
+      "answer_without": "No tengo información específica sobre el contexto de esta pregunta, pero en general, el coeficiente de acuerdo entre revisores se mide utilizando el coeficiente de concordancia, que es un valor numérico que se utiliza para medir la similitud entre las opiniones de los revisores. Sin embargo, no teng",
+      "ms_with": 877.7,
+      "ms_without": 975.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La revisión se re-ejecuta si aparece un estudio nuevo con más de 500 participantes sobre la misma pregunta.",
+      "answer_without": "No tengo información específica sobre el proceso de revisión en un contexto concreto, pero generalmente, se re-ejecuta la revisión cuando se identifican errores o cambios significativos que requieren una revisión adicional. Esto puede ocurrir después de que se haya aprobado la revisión inicial.",
+      "ms_with": 322.4,
+      "ms_without": 732.8
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "gold": [
+        "5",
+        "nota"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La materialidad de tu informe trimestral se refiere a la importancia y relevancia de los datos y eventos presentados en el informe. En este caso, la materialidad se refiere a la cantidad de dinero que se ha movilizado o se espera que se movilice en el trimestre. Cuando una variación en la materialid",
+      "answer_without": "No tengo información específica sobre el contexto de tu pregunta, pero puedo proporcionarte una respuesta general. En general, los informes trimestrales pueden tener materialidad en términos de impacto en la empresa o en los inversores, y una variación significativa en la materialidad puede ocurrir ",
+      "ms_with": 1023.9,
+      "ms_without": 949.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Qué fondo superó el umbral de materialidad este trimestre y cuál fue su variación?",
+      "gold": [
+        "Manantial",
+        "6.8"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El Fondo Manantial superó el umbral de materialidad este trimestre con una variación de +6.8 por ciento, alcanzando un valor de 9.6 millones de dólares.",
+      "answer_without": "No tengo información específica sobre el fondo que superó el umbral de materialidad este trimestre, ya que no se me proporcionó contexto adicional. Sin embargo, puedo decir que el umbral de materialidad es un concepto utilizado en contabilidad para determinar si un activo o pasivo debe ser reconocid",
+      "ms_with": 535.4,
+      "ms_without": 851.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "gold": [
+        "1.1",
+        "1.6"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La provisión por deterioro subió 0.5 puntos por ciento (del 1.4% al 1.9%) entre trimestres, lo que representa un aumento del 35.7% sobre el trimestre anterior. El aumento se debió a un aumento de provisión mayor al 15 por ciento.",
+      "answer_without": "No tengo información específica sobre la provisión por deterioro en un contexto concreto, por lo que no puedo proporcionar una respuesta precisa. Sin embargo, puedo decir que la provisión por deterioro es un concepto común en la contabilidad y se refiere al aumento en la provisión para cubrir pérdid",
+      "ms_with": 764.6,
+      "ms_without": 821.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "gold": [
+        "1.9",
+        "2.4"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El valor en riesgo a un día al 99 por ciento fue de 1.9 millones de dólares y el límite de la política fue de 1.7 millones de dólares.",
+      "answer_without": "No tengo información específica sobre un evento o situación concreta que requiera un contexto para responder. Sin embargo, puedo decir que el valor en riesgo a un día al 99 por ciento y el límite de política pueden referirse a un evento financiero o económico significativo, como una crisis o un cola",
+      "ms_with": 515.3,
+      "ms_without": 1021.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "gold": [
+        "tecnología",
+        "salud"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre los sectores que variaron más del 10% este trimestre, pero puedo decir que el cierre contable del trimestre suele utilizar los saldos por fondo, por sector y por moneda para alimentar el modelo.",
+      "answer_without": "No tengo información específica sobre el contexto del trimestre en cuestión, pero puedo proporcionar una respuesta general. En general, los sectores que variaron más del 10% en un trimestre pueden incluir la industria tecnológica, la salud y la educación, que a menudo son más sensibles a los cambios",
+      "ms_with": 617.8,
+      "ms_without": 996.8
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "gold": [
+        "provisión"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término provisión.",
+      "answer_without": "Prefiero el término \"prioridad\" en lugar de \"reserva\".",
+      "ms_with": 146.0,
+      "ms_without": 225.8
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "gold": [
+        "materialidad"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término materialidad.",
+      "answer_without": "El término \"umbral de relevancia\" es común en el contexto de la búsqueda de información y la evaluación de la pertinencia de los resultados. En lugar de usar este término, se puede preferir \"umbral de relevancia\" o simplemente \"umbral\", aunque en algunos casos se puede utilizar \"limite de relevancia",
+      "ms_with": 144.3,
+      "ms_without": 884.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término valor en riesgo.",
+      "answer_without": "El término que se utiliza comúnmente en lugar de VaR (Value at Risk) es Expected Shortfall (ES), que se refiere a la expectativa del pérdida excesiva.",
+      "ms_with": 164.0,
+      "ms_without": 459.7
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "gold": [
+        "causa",
+        "efecto",
+        "acción"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En un registro formal y sobrio, es común escribir las notas de los informes en orden cronológico, es decir, desde la fecha más reciente hasta la más antigua.",
+      "answer_without": "La respuesta a esta pregunta depende del formato o la estructura específica del informe. Sin embargo, en general, las notas de los informes se escriben en orden cronológico, es decir, desde la fecha más reciente hasta la más antigua.",
+      "ms_with": 469.0,
+      "ms_without": 620.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "gold": [
+        "1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el protocolo del informe trimestral de cartera, pero generalmente, los informes se retiran y se regeneran en un plazo determinado, como por ejemplo, al final de cada trimestre o semestre, dependiendo de las necesidades y políticas de la organización.",
+      "answer_without": "No tengo información sobre el contexto de la pregunta, pero puedo decir que en general, los informes se retiran y se regeneran cuando se han completado los objetivos o tareas para los que se creó, o cuando se requiere una actualización o revisión significativa.",
+      "ms_with": 753.2,
+      "ms_without": 668.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "gold": [
+        "99",
+        "directorio"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El valor en riesgo (VaR) se reporta con una confianza determinada, por ejemplo, el 95% o el 99%, lo que significa que el valor en riesgo es el valor que se espera que se pierda con una probabilidad del 5% o del 1% en un período de tiempo determinado. Si se supera el límite de VaR dos días seguidos, ",
+      "answer_without": "No tengo información específica sobre el contexto de la pregunta, pero en general, los valores en riesgo se reportan con una confianza determinada, como un porcentaje, que refleja la probabilidad de que el valor no superará el límite establecido. Si se supera el límite dos días seguidos, es posible ",
+      "ms_with": 1039.9,
+      "ms_without": 1027.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "carmen",
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "gold": [
+        "84.3",
+        "19"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La cartera cierra el ejercicio con 88.1 millones de dólares. No se menciona el porcentaje de la cartera en euros, solo se menciona el porcentaje de la cartera en dólares (1.4%).",
+      "answer_without": "No tengo información específica sobre una cartera que cierre en millones de euros. Sin embargo, puedo decirte que la mayoría de las carteras de inversión están compuestas por una combinación de activos en diferentes monedas, incluyendo euros, dólares, y otros.",
+      "ms_with": 604.3,
+      "ms_without": 706.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "gold": [
+        "80",
+        "devuelve"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El protocolo establece una cobertura de pruebas del 80% antes de un despliegue. Si la cobertura de pruebas baja por debajo de este umbral, el despliegue se retrasará hasta que se alcance la cobertura requerida.",
+      "answer_without": "No tengo información específica sobre un protocolo de pruebas, pero generalmente, antes de un despliegue, se requiere una cobertura de pruebas que incluya pruebas de funcionamiento, pruebas de seguridad y pruebas de compatibilidad. Si el cambio baja de esta cobertura de pruebas, es probable que el d",
+      "ms_with": 765.1,
+      "ms_without": 1169.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "gold": [
+        "41 millones",
+        "15"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre la tabla de variantes del inquilino mayor, pero puedo decirte que no tengo conocimiento de que exista una tabla de variantes relacionada con un inquilino mayor. Sin embargo, puedo decirte que la vista materializada se refresca cada 15 minutos.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre la tabla de variantes del inquilino mayor o sobre cómo se refresca la vista materializada.",
+      "ms_with": 811.2,
+      "ms_without": 456.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "gold": [
+        "consulta sin límite",
+        "47"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No puedo proporcionar una respuesta a esta pregunta debido a la falta de contexto. La pregunta parece referirse a un incidente en un entorno empresarial o de producción, pero no se proporciona suficiente información para determinar la causa raíz del incidente o cuánto duró.",
+      "answer_without": "No tengo información sobre incidentes personales o experiencias pasadas, por lo que no puedo proporcionar una respuesta a esta pregunta.",
+      "ms_with": 775.9,
+      "ms_without": 382.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "gold": [
+        "300",
+        "10,000"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El p95 de latencia exige 300 milisegundos en la prueba de carga y se mide con 10,000 registros sembrados.",
+      "answer_without": "No tengo información específica sobre la prueba de carga P95 de latencia, pero generalmente, la latencia de carga se mide en milisegundos (ms) y se requiere una cantidad de registros sembrados para medir la latencia de carga en una red o sistema. Sin embargo, no tengo detalles sobre la cantidad exac",
+      "ms_with": 515.9,
+      "ms_without": 1152.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "gold": [
+        "cobrar",
+        "cero"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información sobre la decisión tomada ante el exceso de cuota de almacenamiento, pero puedo decir que se cobró una facturación de $12,400 dólares en el año por el exceso de almacenamiento.",
+      "answer_without": "No tengo información sobre el contexto de la situación, pero puedo decir que si se alcanza el límite de almacenamiento, es común que se implementen medidas de reducción de espacio, como la eliminación de archivos innecesarios o la compra de un servicio de almacenamiento externo.",
+      "ms_with": 697.9,
+      "ms_without": 769.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "gold": [
+        "trazas"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"trazas\".",
+      "answer_without": "Prefiero el término \"logros\" en lugar de \"logs\", ya que es más común y fácil de entender en el español cotidiano.",
+      "ms_with": 195.4,
+      "ms_without": 439.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "gold": [
+        "servicio"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término \"servicio\" en lugar de \"microservicio\" porque es más sencillo y fácil de entender, especialmente para situaciones pequeñas y autónomas.",
+      "answer_without": "En este caso, no hay contexto específico, pero puedo ofrecerte una respuesta general. En español, el término más común para un servicio pequeño e independiente es \"microempresa\" o \"pequeña empresa\", aunque también se puede utilizar \"emprendimiento\" o \"autónomo\".",
+      "ms_with": 523.4,
+      "ms_without": 788.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "gold": [
+        "azul-verde"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El término que prefieres es \"despliegue azul-verde\".",
+      "answer_without": "El término \"rolling update\" es una traducción literal del inglés \"rolling update\", que se refiere a un proceso de actualización continua en el que se aplica una actualización pequeña y controlada a un sistema o aplicación en intervalos regulares, sin necesidad de una actualización completa. En lugar",
+      "ms_with": 276.4,
+      "ms_without": 1083.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "gold": [
+        "p95",
+        "promedio"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Según el contexto proporcionado, parece que definas tus alertas sobre el p95 (el 95% más pequeño de los datos) y no sobre el promedio.",
+      "answer_without": "La definición del porcentaje de alerta depende del contexto específico en el que se esté trabajando, ya sea en software, análisis de datos o cualquier otra aplicación. Sin contexto adicional, puedo decir que el porcentaje de alerta suele ser una configuración personalizable que determina el umbral d",
+      "ms_with": 516.9,
+      "ms_without": 1019.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "gold": [
+        "25",
+        "50",
+        "100"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En un despliegue azul-verde, generalmente se mueve el tráfico de manera incremental, comenzando con un pequeño porcentaje de la carga y aumentando gradualmente a medida que el servicio azul se vuelve estable. Esto se conoce como \"rolling update\" o \"despliegue azul-verde\", donde se incrementa el tráf",
+      "answer_without": "No tengo información específica sobre el despliegue azul-verde, pero puedo decir que el tráfico en un entorno de despliegue azul-verde se ve afectado por la cantidad de tráfico que se mueve a través de él. En general, el tráfico se mueve a través de un despliegue azul-verde cuando se necesitan recur",
+      "ms_with": 1196.2,
+      "ms_without": 1178.3
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "gold": [
+        "problema",
+        "CAT-102"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el formato de uso para los errores y el código de la variante huérfana, ya que no se proporciona contexto claro sobre el tema. Sin embargo, puedo decir que la IETF (Internet Engineering Task Force) es una organización que establece estándares para Internet, y es",
+      "answer_without": "No tengo información específica sobre la variante huérfana, pero en general, la mayoría de los formatos de errores utilizan un formato de texto estándar, como el formato de error de Windows o el formato de error de Linux, que incluye información como el número de línea y el mensaje de error. Sin emb",
+      "ms_with": 1190.2,
+      "ms_without": 1055.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "julian",
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "gold": [
+        "revierte",
+        "rollback"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Antes de realizar una migración de esquema, debes escribir la primera parte de la migración, que generalmente incluye la creación de un esquema de base o un esquema de prueba, que se utiliza como referencia para la revisión de pares.",
+      "answer_without": "Antes de realizar cualquier migración de esquema, es recomendable crear un plan de migración y escribir un documento de migración que describa los cambios que se van a realizar, los pasos a seguir y las consideraciones importantes. Este documento ayudará a garantizar que la migración se realice de m",
+      "ms_with": 784.2,
+      "ms_without": 1000.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "gold": [
+        "20",
+        "40",
+        "30"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En una sesión de 90 minutos, es común dividir el tiempo en bloques de 45 minutos para una presentación o discusión, y los 45 minutos restantes para una actividad de trabajo en grupo o una sesión de preguntas y respuestas.",
+      "answer_without": "En una sesión de curso, los 90 minutos suelen ser divididos en tres partes: introducción y presentación (15-20 minutos), desarrollo y explicación de los contenidos (40-50 minutos) y conclusión y resumen (10-15 minutos).",
+      "ms_with": 695.7,
+      "ms_without": 696.8
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "gold": [
+        "89",
+        "96"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el corpus o el contexto en el que se utiliza el término \"chompa\". Sin embargo, puedo decirte que el término \"chompa\" es un término coloquial que se utiliza en algunos países de habla hispana para referirse a una chaqueta o un abrigo, pero no tengo datos sobre su",
+      "answer_without": "No tengo información específica sobre el corpus en cuestión, pero puedo decirte que \"chompa\" y \"chaqueta\" y \"casaca\" son palabras que pueden aparecer en diferentes contextos y no necesariamente están relacionadas entre sí.",
+      "ms_with": 1089.0,
+      "ms_without": 692.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "gold": [
+        "71"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre la frecuencia de la asibilación de la erre múltiple en menores de 30 años, ya que no se proporcionó contexto adicional para que pueda buscar datos precisos.",
+      "answer_without": "No tengo información específica sobre la frecuencia de la asibilación de la erre múltiple en menores de 30 años. La asibilación de la erre múltiple es un fenómeno lingüístico que puede ocurrir en diferentes edades y contextos.",
+      "ms_with": 584.6,
+      "ms_without": 748.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "gold": [
+        "54"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre la asociación entre el término \"chompa\" y \"guagua\" con el registro familiar, ya que no hay suficiente contexto para proporcionar una respuesta precisa.",
+      "answer_without": "No tengo información sobre el contexto de la pregunta, por lo que no puedo proporcionar una respuesta precisa. Sin embargo, puedo decir que \"chompa\" y \"guagua\" son términos comunes en algunos países de América Latina, y pueden referirse a tipos de vehículos o animales, pero no tengo conocimiento sob",
+      "ms_with": 550.5,
+      "ms_without": 940.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "gold": [
+        "40",
+        "45"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el peso de los exámenes finales y las tareas en un curso, ya que esto puede variar según la institución educativa y el plan de estudio. Sin embargo, generalmente, los exámenes finales pueden representar entre el 30% y el 50% del peso total del curso, mientras qu",
+      "answer_without": "No tengo información sobre el peso específico de los exámenes finales o tareas en un curso específico, ya que esto varía según la institución educativa y el curso en particular. Sin embargo, generalmente, los exámenes finales suelen tener un peso mayor que las tareas, aunque esto puede variar depend",
+      "ms_with": 1104.7,
+      "ms_without": 971.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "gold": [
+        "chompa"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El término que prefiero en lugar de chaqueta es \"chompa\".",
+      "answer_without": "Prefiero el término \"chaqueta\" en lugar de \"chamada\" o \"abrigada\", ya que es más común y ampliamente utilizado en el español hablado y escrito.",
+      "ms_with": 280.2,
+      "ms_without": 575.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "gold": [
+        "guagua"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Me parece que el patrón de preferencias que has indicado se aplica a términos que suelen ser utilizados en contextos informáticos o de tecnología, como \"foco\" en lugar de \"bombillo\" (en referencia a la iluminación LED), \"rasgo\" en lugar de \"característica\" (en referencia a la programación), y \"chomp",
+      "answer_without": "Prefiero el término \"niño\" o \"infante\", ya que son más formales y respetuosos. El término \"bebé\" es común en algunos países, pero en muchos otros se considera más informal y no tan adecuado en ciertas situaciones.",
+      "ms_with": 1132.9,
+      "ms_without": 728.4
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "gold": [
+        "foco"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"foco\" en lugar de \"bombillo\".",
+      "answer_without": "Prefiero el término \"lámpara\" para referirme a la pieza que ilumina, ya que es más común y ampliamente aceptado en la mayoría de los países. El término \"bombillo\" es más común en algunos países de habla hispana, pero en general, \"lámpara\" es el término más utilizado y aceptado.",
+      "ms_with": 231.8,
+      "ms_without": 996.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "gold": [
+        "corpus"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En general, se recomienda presentar ejemplos de materiales de manera clara y concisa, utilizando un lenguaje sencillo y accesible, y proporcionando suficiente contexto para que los estudiantes puedan entender y analizar los ejemplos de manera efectiva.",
+      "answer_without": "Puedes presentar tus ejemplos de materiales de varias maneras, como crear un archivo adjunto, compartir una imagen o video, o incluso crear un enlace a una plataforma de almacenamiento en línea como Google Drive o Dropbox. También puedes describir los ejemplos de manera textual, si no es necesario m",
+      "ms_with": 729.7,
+      "ms_without": 861.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "gold": [
+        "re-enseña",
+        "segunda"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si más de un tercio del curso reprueba una tarea, se implementaría una revisión adicional de la tarea y se ofrecerían oportunidades de reanudación para aquellos estudiantes que lo deseen, con el objetivo de mejorar sus habilidades y alcanzar los objetivos del curso.",
+      "answer_without": "Si más de un tercio del curso reprueba una tarea, es probable que debas tomar medidas para abordar el problema y ayudar a los estudiantes que lo están enfrentando. Esto puede incluir ofrecer retroalimentación adicional, proporcionar recursos adicionales de apoyo o incluso ajustar el enfoque del curs",
+      "ms_with": 756.5,
+      "ms_without": 919.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "gold": [
+        "120"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el corpus de un estudiante en particular, pero en general, un corpus de texto puede contener miles de horas de grabaciones, dependiendo del tamaño y la complejidad del corpus.",
+      "answer_without": "No tengo información sobre un corpus propio, ya que soy un modelo de lenguaje basado en aprendizaje automático y no tengo acceso a datos personales o propios.",
+      "ms_with": 570.1,
+      "ms_without": 483.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "gold": [
+        "cuatro",
+        "tres"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Según la información proporcionada, tu rúbrica tiene 4 niveles y 3 criterios.",
+      "answer_without": "No tengo información sobre una rúbrica específica, pero en general, una rúbrica puede tener varios niveles y criterios. Los niveles pueden variar desde 1 a 5, y los criterios pueden variar desde 1 a 10, dependiendo del contexto y la evaluación.",
+      "ms_with": 330.0,
+      "ms_without": 800.3
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige el protocolo de análisis de variantes, ya que no se proporciona contexto adicional sobre el estudio o el protocolo específico.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre un protocolo o estándares de calidad (QUAL) que puedan aplicarse a una variedad de contextos. Sin embargo, en general, la calidad mínima de variante y la profundidad mínima por sitio pueden variar dependiendo del campo específico, la industria o ",
+      "ms_with": 725.1,
+      "ms_without": 949.7
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El conjunto final de trabajo retuvo 11,203 variantes bialélicas con una frecuencia mínima del alelo menor de 0.01.",
+      "answer_without": "No tengo información sobre el pinzón serrano ni sobre su conjunto final de trabajo, por lo que no puedo proporcionar una respuesta precisa.",
+      "ms_with": 441.6,
+      "ms_without": 394.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El F_ST por pares más alto medió entre Cerro Fábrega y Cerro Chirripó, con un valor de 0.048.",
+      "answer_without": "No tengo información específica sobre el F_ST (probablemente se refiere al Factor de Streit, un índice estadístico utilizado en la biología) o sobre las poblaciones a las que se aplica. Sin embargo, puedo decir que el F_ST es un parámetro utilizado en la genética poblacional para medir la diversidad",
+      "ms_with": 442.4,
+      "ms_without": 942.6
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información sobre el análisis de muestras de Cerro de la Muerte ni sobre la proporción de variantes privadas que mostró la población.",
+      "answer_without": "No tengo información sobre el contexto de la pregunta, por lo que no puedo proporcionar una respuesta precisa. Sin embargo, puedo decir que Cerro de la Muerte es un sitio arqueológico en Argentina, y es posible que la pregunta se refiera a un estudio o análisis realizado en ese lugar.",
+      "ms_with": 468.3,
+      "ms_without": 761.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información sobre el criterio de abandono específico, pero generalmente se considera que una hipótesis de aislamiento se declara muerta cuando el valor de F_ST es mayor que un umbral crítico, que puede variar dependiendo del contexto y la metodología utilizada. Sin embargo, no tengo informa",
+      "answer_without": "No tengo información sobre el contexto específico de la pregunta, por lo que no puedo proporcionar una respuesta precisa. Sin embargo, puedo decir que el F_ST es un parámetro utilizado en la estadística de procesos de control, y que el valor de abandono para declarar muerta la hipótesis de aislamien",
+      "ms_with": 1030.5,
+      "ms_without": 1006.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Prefiero el término \"diversidad genética\".",
+      "answer_without": "Prefiero el término \"diversidad genética\" porque es más preciso y específico, ya que se refiere a la variación en el material genético de una población o especie, en lugar de la diversidad en general.",
+      "ms_with": 212.3,
+      "ms_without": 651.9
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término \"demografía\".",
+      "answer_without": "Prefiero el término \"historia demográfica\" o simplemente \"demografía\", ya que se refiere específicamente al estudio de la evolución de la población de un área o grupo.",
+      "ms_with": 181.0,
+      "ms_without": 536.5
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término variante rara.",
+      "answer_without": "Prefiero el término \"mutación\" en lugar de \"mutación rara\", ya que es más común y ampliamente utilizado en la lingüística y la biología.",
+      "ms_with": 184.4,
+      "ms_without": 491.1
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Puedes cerrar tus correos con un agradecimiento agregando una línea como \"Gracias por leer\" o \"Hasta la próxima\" al final de tu mensaje.",
+      "answer_without": "Para cerrar tus correos, generalmente debes seleccionar la opción de \"cerrar sesión\" o \"salir\" en la página de inicio de sesión de tu cuenta de correo electrónico.",
+      "ms_with": 474.2,
+      "ms_without": 502.0
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el conjunto final baja de 5,000 variantes, es probable que el proceso de selección de variantes haya sido exitoso y que el conjunto final sea lo suficientemente robusto y complejo para ser considerado adecuado para su uso.",
+      "answer_without": "Si el conjunto final de una versión de software o un proyecto de desarrollo baja de 5,000 variantes, es probable que debas revisar y revisar nuevamente el código para asegurarte de que no haya errores o problemas que puedan afectar la estabilidad o la funcionalidad del proyecto.",
+      "ms_with": 663.3,
+      "ms_without": 776.2
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el análisis de componentes principales, retienes la estructura de la matriz de frecuencias. El F_ST por pares se estima utilizando el análisis de componentes principales sobre la matriz de frecuencias.",
+      "answer_without": "En el análisis de componentes principales, el F-St (Fuerza de Sombra) por pares se estima utilizando el método de regresión múltiple. Este método permite evaluar la importancia relativa de cada variable en la explicación de la variación en la variable dependiente.",
+      "ms_with": 603.2,
+      "ms_without": 797.4
+    },
+    {
+      "model": "llama3.2:3b",
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No tengo información específica sobre cómo se manejan los sitios en función del umbral de missingness y la ventana de poda para desequilibrio de ligamiento. Sin embargo, en general, se pueden utilizar técnicas de imputación de datos, como la imputación múltiple o la imputación por media, para maneja",
+      "answer_without": "No tengo información específica sobre un \"umbral de missingness\" o una \"ventana\" en el contexto de la biología o la estadística. Sin embargo, puedo sugerir que la pregunta podría estar relacionada con la biología molecular o la estadística de datos genéticos, donde el \"missingness\" se refiere a la a",
+      "ms_with": 1133.6,
+      "ms_without": 1124.8
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El tamaño mínimo de muestral de tus criterios de inclusión es mayor o igual a 50 participantes. Los estudios de una sola rama se excluyen sin excepción según tus criterios de inclusión.",
+      "answer_without": "Mis criterios de inclusión no especifican un tamaño muestral mínimo, y no se excluyen sin excepción aquellos estudios que no cumplen con los demás criterios de inclusión.",
+      "ms_with": 668.6,
+      "ms_without": 551.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Los 12 estudios sumaron 68,214 participantes, de los cuales el estudio mayor aportó 24,310 participantes según el formulario.",
+      "answer_without": "Lo siento, pero no hay contexto proporcionado en tu pregunta para responder con precisión. Necesitaría conocer los detalles específicos de tus 12 estudios y cuál es el estudio mayor para poder responder correctamente.",
+      "ms_with": 592.6,
+      "ms_without": 615.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos del resultado principal fue 0.85 con un intervalo de confianza al 95 por ciento.",
+      "answer_without": "Como asistente, no tengo información sobre un resultado principal ni su intervalo de confianza para responder de manera precisa. Necesitaría datos específicos para poder analizar los riesgos de ese resultado.",
+      "ms_with": 462.8,
+      "ms_without": 583.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El número necesario a tamizar para evitar un evento fue de 180 personas, según el borrador preliminar.",
+      "answer_without": "Lo siento, la pregunta no proporciona el contexto necesario para responder con precisión. Necesitaría más detalles sobre el tipo de evento y el método de tamizado utilizado.",
+      "ms_with": 378.7,
+      "ms_without": 499.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El efecto fue mayor en los trabajadores comunitarios (razón de riesgos 0.76) y en un subgrupo específico, aunque no se especifica cuál en el contexto dado. La razón de riesgos del resultado principal fue 0.85.",
+      "answer_without": "Lo siento, necesito más contexto para responder correctamente. ¿Podrías proporcionar información sobre qué efecto y qué subgrupos estamos comparando?",
+      "ms_with": 791.1,
+      "ms_without": 436.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término incidencia en lugar de casos nuevos.",
+      "answer_without": "Prefiero el término \"nuevos casos confirmados\" en lugar de \"casos nuevos\".",
+      "ms_with": 220.9,
+      "ms_without": 304.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término tamizaje en lugar de screening.",
+      "answer_without": "Prefiero utilizar \"filtrado\" en lugar de \"screening\", especialmente emparentado con contextos de selección de empleados ou de datos.",
+      "ms_with": 216.7,
+      "ms_without": 427.1
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"certeza de la evidencia\" en lugar de \"calidad de la evidencia\".",
+      "answer_without": "Prefiero el término \"relevancia\" en lugar de \"calidad de la evidencia\".",
+      "ms_with": 349.9,
+      "ms_without": 299.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Cuando reporto una razón de riesgos, siempre incluyo el intervalo de confianza al 95 por ciento en la misma oración. Por ejemplo, si la razón de riesgos del resultado principal es 0.85, reportaría algo como \"La razón de riesgos del resultado principal es 0.85 (intervalo de confianza al 95 por ciento",
+      "answer_without": "Para reportar razones de riesgos, es importante seguir las políticas y procedimientos específicos de tu organización, que generalmente incluyen formas electrónicas de reporte o canales de comunicación directa con los responsables de seguridad.",
+      "ms_with": 1178.2,
+      "ms_without": 646.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Si el I cuadrado supera el 75 por ciento, no se combina y se presenta un resumen narrativo.",
+      "answer_without": "Si el I cuadrado supera el 75 por ciento, generalmente se considera que hay un problema de sobreexpresión o sobreactivación en el sistema y se recomienda revisar y ajustar los parámetros del sistema.",
+      "ms_with": 465.4,
+      "ms_without": 693.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El acuerdo entre revisores se mide con el coeficiente kappa, y si este es menor a 0.60, se repite el tamizaje con el manual actualizado.",
+      "answer_without": "El coeficiente que se utiliza para medir el acuerdo entre revisores es comúnmente el coeficiente de Cronbach o el coeficiente de Cohen, dependiendo del tipo de acuerdo que se esté evaluando (agreenda puntual o de puntualidad). Cuando hay una discrepancia significativa, se repite el tamizaje para ase",
+      "ms_with": 546.2,
+      "ms_without": 1030.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La revisión se re-ejecuta si aparece un estudio nuevo con más de 500 participantes sobre la misma pregunta, o a los 24 meses, lo que ocurra primero.",
+      "answer_without": "Como asistente, no tengo información específica sobre cuando se re-ejecuta una revisión, ya que no hay contexto proporcionado sobre qué tipo de revisión se refiere.",
+      "ms_with": 611.7,
+      "ms_without": 508.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "gold": [
+        "5",
+        "nota"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La materialidad del informe trimestral es del 5%, según la percepción del usuario. Si una variación en el fondo supera el 1% del valor del fondo, el informe completo se retira y se regenera desde la conciliación. Además, Manantial es el único fondo que ha tenido variación sobre el umbral de material",
+      "answer_without": "El informe trimestral de Alibaba Cloud tiene una materialidad importante, lo que significa que refleja datos y métricas relevantes para la empresa. Cuando una variación supera cierto umbral, se considera un evento significativo que puede requerir una respuesta o análisis adicional.",
+      "ms_with": 1255.0,
+      "ms_without": 801.6
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Qué fondo superó el umbral de materialidad este trimestre y cuál fue su variación?",
+      "gold": [
+        "Manantial",
+        "6.8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Este trimestre, el fondo Manantial superó el umbral de materialidad del protocolo, con una variación anual del 8.2%.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre un fondo que haya superado el umbral de materialidad este trimestre. Para responder con precisión, necesitaría conocer el nombre del fondo en cuestión.",
+      "ms_with": 465.7,
+      "ms_without": 595.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "gold": [
+        "1.1",
+        "1.6"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La provisión por deterioro subió del 1.1 al 1.6 por ciento de la cartera, lo que representa un aumento relativo del 45 por ciento. Este aumento activó una llamada del comité de riesgo antes de su publicación.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre una provisión por deterioro ni sobre cómo ha cambiado en un período de tiempo determinado. Para responder con precisión, necesitaría datos específicos sobre una compañía o industria concreta.",
+      "ms_with": 813.8,
+      "ms_without": 676.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "gold": [
+        "1.9",
+        "2.4"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El valor en riesgo a un día al 99 por ciento fue de 1.9 millones de dólares, por debajo del límite de política de 2.4 millones.",
+      "answer_without": "El valor en riesgo a un día al 99 por ciento y el límite de política son conceptos específicos que varían según el contexto financiero o de inversión. En general, el valor en riesgo a un día al 99 por ciento se refiere al riesgo máximo que un inversor está dispuesto a asumir en un día dado para obte",
+      "ms_with": 609.2,
+      "ms_without": 1160.6
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "gold": [
+        "tecnología",
+        "salud"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Como no hay contexto específico sobre los sectores que variaron más del 10 por ciento ni su signo, no puedo responder a la pregunta.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre sectores que hayan variado más del 10 por ciento este trimestre y con qué signo cada uno. Para proporcionar una respuesta precisa, necesitaría datos financieros actualizados.",
+      "ms_with": 495.2,
+      "ms_without": 684.3
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "gold": [
+        "provisión"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término provisión en lugar de reserva.",
+      "answer_without": "Prefiero el término \"reserva\" en lugar de \"reserva\" si estamos hablando en contexto de un idioma específico, como el inglés, donde \"reservation\" es una palabra común.",
+      "ms_with": 208.5,
+      "ms_without": 539.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "gold": [
+        "materialidad"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término materialidad en lugar de umbral de relevancia.",
+      "answer_without": "Prefiero el término \"término de intereses\" en lugar de \"umbral de relevancia\".",
+      "ms_with": 249.9,
+      "ms_without": 324.8
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término valor en riesgo en lugar de VaR.",
+      "answer_without": "Prefiero utilizar CVaR (Coevaría Truncada) en lugar de VaR, especialmente en contextos donde se busca una medida más robusta y sensible a la volatilidad severa.",
+      "ms_with": 233.0,
+      "ms_without": 572.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "gold": [
+        "causa",
+        "efecto",
+        "acción"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Escribo primero las notas del efecto, luego las causales y al final las acciones.",
+      "answer_without": "Las notas de los informes generalmente se escriben en el mismo orden que se presentan en el informe principal, para mantener una coherencia lógica y de sentido común.",
+      "ms_with": 307.4,
+      "ms_without": 509.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "gold": [
+        "1"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El informe completo se retira y se regenera desde la conciliación cuando la diferencia entre el recálculo del fondo y el sistema excede el 1 por ciento del valor del fondo. En este caso, el cierre firmado es de 9.9 millones, lo que representa un aumento del 7.4 por ciento, y la conciliación bancaria",
+      "answer_without": "Como asistente, no tengo información sobre el contexto de cuando retiras un informe completo y lo regeneras, ya que esto parece referirse a una situación específica que no ha sido proporcionada.",
+      "ms_with": 1177.3,
+      "ms_without": 539.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "gold": [
+        "99",
+        "directorio"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El valor en riesgo a un día se reporta al 99 por ciento de confianza. Si el valor en riesgo a un día supera el límite de 2.4 millones dos días consecutivos, el informe completo se retira y se regenera desde la conciliación.",
+      "answer_without": "Cuando reporto el valor en riesgo, es importante hacerlo con una confianza adecuada que refleje la volatilidad del activo. Si se supera el límite dos días consecutivos, esto podría indicar un comportamiento anómalo y podría requerir una revisión o ajuste en la estrategia de gestión de riesgo.",
+      "ms_with": 900.0,
+      "ms_without": 966.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "carmen",
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "gold": [
+        "84.3",
+        "19"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La cartera cerró el trimestre en 84.3 millones de dólares y el 19% está en euros. No se proporciona información sobre cuántos millones cerraron el ejercicio.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre una cartera o sus valores en euros. Necesitaría más detalles para poder responder a esa pregunta con precisión.",
+      "ms_with": 594.5,
+      "ms_without": 475.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "gold": [
+        "80",
+        "devuelve"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Mi protocolo exige que la cobertura de pruebas del paquete modificado sea mayor o igual al 80 por ciento. Si la cobertura baja por debajo de ese umbral, el cambio se devuelve con la métrica de cobertura de pruebas en el mensaje de rechazo.",
+      "answer_without": "Mi protocolo exige una cobertura de pruebas adecuada antes del despliegue para asegurar que el cambio funcione correctamente en entornos de producción. Si el cambio no cumple con la cobertura de pruebas requerida, se debe realizar un análisis para determinar si es necesario ajustar la cobertura o si",
+      "ms_with": 890.8,
+      "ms_without": 1028.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "gold": [
+        "41 millones",
+        "15"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La tabla de variantes del inquilino mayor tiene 43 millones de filas. La vista materializada se refresca cada 15 minutos.",
+      "answer_without": "Lo siento, pero no hay contexto proporcionado en tu pregunta para responder con precisión. Si puedes proporcionar más detalles sobre el sistema o entorno en el que se encuentra esta consulta, estaré encantado de ayudarte con la información relevante.",
+      "ms_with": 511.4,
+      "ms_without": 690.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "gold": [
+        "consulta sin límite",
+        "47"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La causa raíz del último incidente mayor fue una consulta sin límite, que se corrigió con la implementación de paginación de cursores. El incidente duró 47 minutos.",
+      "answer_without": "Como asistente de inteligência artificial, não tenho incidentes ou registros de uso pessoal, então não posso fornecer informações sobre um incidente anterior ou sua causa raiz. Estou aqui para ajudar com informações e tarefas de acordo com as instruções recebidas.",
+      "ms_with": 616.0,
+      "ms_without": 792.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "gold": [
+        "300",
+        "10,000"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En la prueba de carga, se exige un p95 de latencia por debajo de 300 milisegundos, y se mide con 10,000 registros sembrados.",
+      "answer_without": "La p95 de latencia es una métrica que refleja el 95% de los tiempos de respuesta más rápidos de una operación. En la prueba de carga, la p95 se mide con un número de registros sembrados que representa una carga típica o futura del sistema. Sin contexto específico, no puedo determinar el exacto númer",
+      "ms_with": 652.3,
+      "ms_without": 1149.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "gold": [
+        "cobrar",
+        "cero"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Decidí cobrar por el exceso de cuota de almacenamiento en lugar de bloquearla, lo que tuvo el efecto de reducir los incidentes de escritura a cero en un período de tres meses.",
+      "answer_without": "Como asistente, no tengo información sobre un exceso de cuota de almacenamiento porque no tengo registro de acciones pasadas ni contexto personal. Si tienes más detalles sobre tu situación, estaré encantado de ayudar con información general basada en tus necesidades.",
+      "ms_with": 677.2,
+      "ms_without": 721.3
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "gold": [
+        "trazas"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término trazas en lugar de logs.",
+      "answer_without": "Prefiero el término \"registros\" em vez de \"logs\", especialmente em vez de usar acentos ou caracteres especiais.",
+      "ms_with": 215.0,
+      "ms_without": 379.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "gold": [
+        "servicio"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término \"servicio\" en lugar de \"microservicio\", ya que considero que este último puede ocultar problemas en servicios que no cumplen con los estándares esperados.",
+      "answer_without": "Prefiero el término \"microempreendoría\" para referirme a un servicio pequeño e independiente.",
+      "ms_with": 593.1,
+      "ms_without": 323.6
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "gold": [
+        "azul-verde"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término despliegue azul-verde en lugar de rolling update.",
+      "answer_without": "Prefiero el término \"gradual roll-out\" en lugar de \"rolling update\".",
+      "ms_with": 282.4,
+      "ms_without": 264.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "gold": [
+        "p95",
+        "promedio"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Mis alertas se definen sobre el p95, ya que este percentil mide el desempeño del 95% de los usuarios, lo que permite identificar problemas significativos sin ocultar servicios lenta para la mayoría.",
+      "answer_without": "Mis alertas se definen generalmente en el 95º percentil, lo que significa que son para notificar cuando un indicador está en el top 5% de valores observados, ayudando así a detectar posibles anomalías o patrones significativos.",
+      "ms_with": 706.6,
+      "ms_without": 713.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "gold": [
+        "25",
+        "50",
+        "100"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el despliegue azul-verde, el tráfico se incrementa gradualmente, comenzando con el 5 por ciento durante 15 minutos antes de comparar los errores entre la nueva versión y la versión actual.",
+      "answer_without": "En el despliegue azul-verde, generalmente se incrementa el tráfico progresivamente desde el sistema actual (azul) hacia el nuevo sistema (verde) para minimizar el impacto en la disponibilidad y garantizar una transición suave.",
+      "ms_with": 682.9,
+      "ms_without": 710.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "gold": [
+        "problema",
+        "CAT-102"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Para los errores, generalmente se utiliza un formato estándar como el formato de error de la aplicación o el formato de error de la plataforma. En cuanto a los códigos de variante huérfana, se mencionó que es CAT-105.",
+      "answer_without": "Los errores en Python generalmente se manejan con el formato de excepciones, y la variante huérfana de una excepción es la excepción propia de Python llamada `NameError`, que se lanza cuando se intenta acceder a una variable que no ha sido definida.",
+      "ms_with": 783.1,
+      "ms_without": 775.4
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "julian",
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "gold": [
+        "revierte",
+        "rollback"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Antes de toda migración de esquema, debes escribir la migración que aplica el cambio y la que revierte el cambio para asegurar un despliegue seguro.",
+      "answer_without": "Antes de toda migración de esquema, es crucial realizar una auditoría detallada del actual esquema para identificar cambios necesarios y documentar los datos que se moverán. También es importante preparar una planificación de migración y obtener el consentimiento y la preparación de los equipos invo",
+      "ms_with": 586.4,
+      "ms_without": 872.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "gold": [
+        "20",
+        "40",
+        "30"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En una sesión de 90 minutos, reparto 20 minutos de exposición, 40 de trabajo en grupos de cuatro y 30 de puesta en común.",
+      "answer_without": "En una sesión de mi curso, reparto los 90 minutos de manera equilibrada entre explicaciones teóricas, ejemplos prácticos, preguntas y respuestas, y tiempo para la práctica y aplicación de los conceptos aprendidos.",
+      "ms_with": 571.9,
+      "ms_without": 712.8
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "gold": [
+        "89",
+        "96"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En el corpus, chompa aparece en 89 de las 96 ocurrencias frente a chaqueta y casaca.",
+      "answer_without": "Lo siento, pero no tengo acceso al corpus específico para realizar esta búsqueda. Necesitaría información sobre qué corpus literario o lingüístico se está utilizando para esta consulta.",
+      "ms_with": 472.6,
+      "ms_without": 507.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "gold": [
+        "71"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El piloto de 2024 reportó que la asibilación de la erre múltiple aparecía en el 80 por ciento de los menores de 30 años.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre el porcentaje de menores de 30 años que presentan la asimilación de la erre múltiple. Este tipo de datos no están disponibles en mi base de conocimientos actuales.",
+      "ms_with": 604.5,
+      "ms_without": 672.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "gold": [
+        "54"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Basándome en el contexto proporcionado, 61 de 90 hablantes asocian chompa y guagua con el registro familiar.",
+      "answer_without": "No tengo información específica sobre cuántos hablantes asocian \"chompa\" y \"guagua\" con el registro familiar. Estos términos podrían estar asociados con un grupo específico de hablantes o un contexto cultural particular.",
+      "ms_with": 498.1,
+      "ms_without": 676.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "gold": [
+        "40",
+        "45"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El examen final pesa el 40 por ciento de la nota y las tareas el 45 por ciento.",
+      "answer_without": "Como asistente, no tengo información específica sobre el peso de los exámenes finales y tareas en tus cursos. Mi conocimiento se basa en datos generales y no en detalles específicos de tu situación académica.",
+      "ms_with": 442.8,
+      "ms_without": 642.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "gold": [
+        "chompa"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término chompa en lugar de chaqueta.",
+      "answer_without": "Preferiría el término \"vestimenta formal\" en lugar de \"chaqueta\".",
+      "ms_with": 238.5,
+      "ms_without": 305.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "gold": [
+        "guagua"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término guagua en lugar de bebé.",
+      "answer_without": "Prefiero el término \"infante\" en lugar de \"bebé\", ya que este último puede sonar un poco infantil para algunos.",
+      "ms_with": 214.8,
+      "ms_without": 402.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "gold": [
+        "foco"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término foco en lugar de bombillo.",
+      "answer_without": "Prefiero el término \"lámpara\" en lugar de \"bombillo\", ya que es más general y no se refiere a un tipo específico de lámpara.",
+      "ms_with": 214.4,
+      "ms_without": 469.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "gold": [
+        "corpus"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Presenta los ejemplos directamente del corpus, con al menos 30 ejemplos concretos y detallados, y complementa con una tabla de frecuencias para una presentación clara y didáctica.",
+      "answer_without": "Para presentar ejemplos de tus materiales de manera efectiva, asegúrate de seleccionar ejemplos relevantes y claros que ilustren tus puntos de manera precisa y concisa. Explica cómo estos ejemplos demuestran tu punto y cómo pueden ayudar al público objetivo a entender mejor tu mensaje.",
+      "ms_with": 641.5,
+      "ms_without": 847.3
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "gold": [
+        "re-enseña",
+        "segunda"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Si más de un tercio del curso reprueba una tarea, la sesión siguiente re-enseñará el contenido con otro formato y la tarea se repetirá con datos nuevos, pero la nota válida será la segunda tentativa.",
+      "answer_without": "Si más de un tercio del curso reprobó una tarea, esto sugiere que la tarea podría ser demasiado difícil o que los estudiantes necesitarían más ayuda para entender o abordar el material. En ese caso, revisaría la tarea para identificar posibles problemas y consideraría ajustar la tarea o proporcionar",
+      "ms_with": 682.0,
+      "ms_without": 1086.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "gold": [
+        "120"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Tu corpus propio cuenta con 120 horas de grabaciones transcritas, anonimizadas y con consentimiento.",
+      "answer_without": "Como asistente de texto creado por Alibaba Cloud, no tengo un corpus propio con grabaciones de voz. Mi información se basa en texto escrito y no en grabaciones de voz.",
+      "ms_with": 428.5,
+      "ms_without": 533.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "gold": [
+        "cuatro",
+        "tres"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La rúbrica tiene cuatro niveles y tres criterios: identificación, análisis y redacción.",
+      "answer_without": "Mis rúbricas tienen tres niveles y cada nivel consta de tres criterios.",
+      "ms_with": 336.8,
+      "ms_without": 294.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El umbral de calidad mínima de variante (QUAL) es de 30 y la profundidad mínima por sitio (DP) es de 8 en al menos el 80 por ciento de las muestras para cumplir con el protocolo.",
+      "answer_without": "Lo siento, pero no hay contexto específico sobre un protocolo o tecnología en particular en tu pregunta. Para responder con precisión, necesitaría más información sobre el protocolo o sistema específico a lo que te refieres.",
+      "ms_with": 783.5,
+      "ms_without": 625.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Tu conjunto final de trabajo retuvo 11,203 variantes bialélicas con una frecuencia mínima del alelo menor (MAF) de 0.01. No obstante, si el conjunto final de trabajo baja de 5,000 variantes, detienes el análisis.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre variantes retendidas ni la frecuencia mínima del alelo menor para el conjunto final de trabajo del pinzón serrano. No tengo un contexto específico sobre un proyecto de trabajo concretamente relacionado con el pinzón serrano.",
+      "ms_with": 928.1,
+      "ms_without": 798.8
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Mediste el F_ST por pares más alto entre las poblaciones de Cerro Fábrega y Cerro Chirripó, con un valor de 0.048.",
+      "answer_without": "Lo siento, pero no hay contexto específico en tu pregunta para responder con precisión. El valor máximo de F_ST por pares suele estar entre poblaciones muy diferentes, pero sin datos concretos no puedo determinar cuáles poblaciones específicas son las que mediste.",
+      "ms_with": 586.4,
+      "ms_without": 763.6
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Analicé 88 muestras de Cerro Fábrega y no se proporcionó información específica sobre las muestras de Cerro de la Muerte ni sobre la proporción de variantes privadas que mostró esa población.",
+      "answer_without": "Lo siento, pero no tengo información específica sobre el número de muestras de Cerro de la Muerte ni la proporción de variantes privadas que mostró esa población. No existe un contexto específico proporcionado para esta pregunta.",
+      "ms_with": 699.3,
+      "ms_without": 643.9
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Según el criterio de abandono establecido, la hipótesis de aislamiento se declararía muerta si el F_ST por pares resultara menor a 0.01. El valor medido entre Volcán Barú y Cerro Fábrega fue de 0.036, que no es inferior a este umbral.",
+      "answer_without": "Como asistente, no tengo información específica sobre el valor de F_ST ni sobre el estudio de aislamiento mencionado entre Barú y Fábrega. Para responder con precisión, necesitaría referencias específicas a ese contexto.",
+      "ms_with": 1013.5,
+      "ms_without": 671.8
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término heterocigosidad esperada en lugar de diversidad genética.",
+      "answer_without": "Prefiero el término \"genética variada\" en lugar de \"diversidad génica\", ya que \"diversidad génica\" puede ser ambiguo e incluir conceptos relacionados con la evolución e inmunoquímica.",
+      "ms_with": 292.5,
+      "ms_without": 691.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término demografía en lugar de historia poblacional.",
+      "answer_without": "Prefiero el término demografía en lugar de historia poblacional.",
+      "ms_with": 228.5,
+      "ms_without": 223.6
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"variante rara\" en lugar de \"mutación rara\".",
+      "answer_without": "Prefiero el término \"variedad genética\" en lugar de \"mutación rara\", ya que la primera es más neutral y informativa, mientras que la segunda puede ser interpretada de manera peyorativa.",
+      "ms_with": 296.1,
+      "ms_without": 575.7
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Cierro mis correos con un agradecimiento y mencionando mi nombre para darle un tono profesional y personalizado.",
+      "answer_without": "Para cerrar mis correos, generalmente utilizo la opción \"Cerrar sesión\" o \"Cerrar\" que se encuentra en la mayoría de los navegadores o en la bandeja de entrada del correo electrónico.",
+      "ms_with": 407.4,
+      "ms_without": 546.0
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el conjunto final de variantes baja de 5,000, detendré el análisis según la declaración del usuario.",
+      "answer_without": "Si el conjunto final baja de 5,000 variantes, probablemente necesitarás ajustar tus criterios de selección o aumentar la población inicial para que pueda alcanzar el tamaño deseado.",
+      "ms_with": 402.4,
+      "ms_without": 578.2
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En el análisis de componentes principales, retengo los 10 primeros ejes. Estimo el F_ST por pares utilizando el método de Weir y Cockerham.",
+      "answer_without": "En el análisis de componentes principales (ACP), se retienen los componentes principales que explican una cierta cantidad de varianza total del conjunto de datos, generalmente aquellos que representan una porción significativa del total de varianza (por ejemplo, más del 80% de la varianza total). Pa",
+      "ms_with": 572.5,
+      "ms_without": 1177.5
+    },
+    {
+      "model": "qwen2.5:3b",
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Retiro sitios con missingness menor o igual a 0.10 y uso una ventana de 50 kilobases para el análisis de estructura podo por desequilibrio de ligamiento con paso de 10 variantes y r² menor a 0.2.",
+      "answer_without": "Lo siento, parece que hay un error en la pregunta. No tengo contexto específico sobre sitios y umbral de missingness ni sobre desequilibrio de ligamiento para responder de manera precisa. Estos términos no están relacionados con un contexto común o conocido.",
+      "ms_with": 827.4,
+      "ms_without": 739.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El tamaño muestral mínimo de los criterios de inclusión es de 12 estudios. Los estudios de una sola rama se excluyen sin excepción. \n",
+      "answer_without": "Como modelo de lenguaje, no tengo criterios de inclusión ni se excluyen estudios.  \n",
+      "ms_with": 386.2,
+      "ms_without": 253.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En total, los 12 estudios sumaron 68,214 participantes. El estudio mayor aportó 24,310 participantes. \n",
+      "answer_without": "Por favor, proporciona el contexto de los 12 estudios para poder responder a tu pregunta. \n",
+      "ms_with": 416.4,
+      "ms_without": 281.4
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La razón de riesgos de tu resultado principal fue 0.85 y su intervalo de confianza al 95 por ciento fue de 0.74 a 0.97. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 499.1,
+      "ms_without": 220.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El número necesario a tamizar para evitar un evento fue de **200 personas**. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 289.1,
+      "ms_without": 217.9
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El efecto fue mayor en los estudios con intervención dirigida por trabajadores comunitarios de salud, con una razón de riesgos de 0.78. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 407.2,
+      "ms_without": 215.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **incidencia** en lugar de casos nuevos. \n",
+      "answer_without": "Prefiero usar el término **\"casos\"** en lugar de \"casos nuevos\". \n",
+      "ms_with": 230.6,
+      "ms_without": 254.7
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **tamizaje** en lugar de screening. \n",
+      "answer_without": "Prefiero usar el término **\"evaluación\"** en lugar de \"screening\". \n",
+      "ms_with": 221.3,
+      "ms_without": 259.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **certeza** de la evidencia en lugar de calidad de la evidencia. \n",
+      "answer_without": "Prefiero usar el término **\"evidencia rigurosa\"** en lugar de \"calidad de la evidencia\". \n",
+      "ms_with": 279.6,
+      "ms_without": 305.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Reporta la razón de riesgos del resultado principal como 0.85, con una razón de riesgos de 0.82 y un intervalo de confianza al 95 por ciento de 0.72 a 0.94. \n",
+      "answer_without": "Para reportar razones de riesgos, generalmente se debe utilizar un sistema de reporte de riesgos interno o externo, como un software de gestión de riesgos o una plataforma online. \n",
+      "ms_with": 592.2,
+      "ms_without": 415.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Si el I cuadrado supera el 75 por ciento, no se combinan las variables y se presenta un resumen narrativo. \n",
+      "answer_without": "Si el I cuadrado supera el 75 por ciento, debes considerar la posibilidad de ajustar tu estrategia de inversión o buscar asesoramiento financiero profesional. \n",
+      "ms_with": 372.9,
+      "ms_without": 365.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El acuerdo entre revisores se mide con el coeficiente kappa, y si este es menor a 0.60, se repite el tamizaje con un manual actualizado. \n",
+      "answer_without": "El coeficiente que mide el acuerdo entre revisores es el **coeficiente de concordancia**.  Repito el tamizaje cuando el coeficiente de concordancia es bajo o cuando se detecta una discrepancia significativa entre los revisores. \n",
+      "ms_with": 477.0,
+      "ms_without": 560.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La revisión se re-ejecuta si aparece un estudio nuevo con más de 500 participantes sobre la misma pregunta, o a los 24 meses, lo que ocurra primero. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 486.0,
+      "ms_without": 218.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "gold": [
+        "5",
+        "nota"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La materialidad del informe trimestral es del 5% del valor de la cartera. Si la variación de la materialidad supera el umbral del protocolo, se debe explicar el motivo de la variación. \n",
+      "answer_without": "Mi informe trimestral es de **materialidad digital**, disponible en formato PDF. Si una variación supera la materialidad, se notificará a los stakeholders y se implementarán medidas correctivas. \n",
+      "ms_with": 561.8,
+      "ms_without": 492.6
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Qué fondo superó el umbral de materialidad este trimestre y cuál fue su variación?",
+      "gold": [
+        "Manantial",
+        "6.8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "No hay información en el contexto que indique que ningún fondo superó el umbral de materialidad este trimestre. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 338.6,
+      "ms_without": 223.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "gold": [
+        "1.1",
+        "1.6"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La provisión por deterioro subió del 1.1 al 1.6 por ciento de la cartera, lo que representó un aumento del 45 por ciento.  Este aumento activó una llamada del comité de riesgo antes de publicar. \n",
+      "answer_without": "No tengo acceso a información en tiempo real, como datos financieros o informes específicos de empresas. \n",
+      "ms_with": 619.4,
+      "ms_without": 273.7
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "gold": [
+        "1.9",
+        "2.4"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El valor en riesgo a un día al 99 por ciento fue de 1.9 millones de dólares y el límite de política fue de 2.4 millones de dólares. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 483.5,
+      "ms_without": 223.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "gold": [
+        "tecnología",
+        "salud"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El sector de Energía fue el que más varió, con un incremento del 10% este trimestre. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 315.6,
+      "ms_without": 220.4
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "gold": [
+        "provisión"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **provisión** en lugar de reserva. \n",
+      "answer_without": "En lugar de \"reserva\", se puede usar el término **\"espacio\"** o **\"espacio de uso\"**. \n",
+      "ms_with": 216.1,
+      "ms_without": 331.9
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "gold": [
+        "materialidad"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **materialidad** en lugar de umbral de relevancia. \n",
+      "answer_without": "Prefiero usar el término **\"relevância\"** en lugar de \"umbral de relevancia\". \n",
+      "ms_with": 251.3,
+      "ms_without": 296.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **valor en riesgo** en lugar de VaR. \n",
+      "answer_without": "En lugar de VaR, algunos prefieren usar **\"Expected Shortfall\" (ES)** o **\"Value at Risk\" (VaR)**. \n",
+      "ms_with": 239.7,
+      "ms_without": 394.8
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "gold": [
+        "causa",
+        "efecto",
+        "acción"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En las notas de los informes, escribes primero la causa, luego el efecto y al final la acción. \n",
+      "answer_without": "En los informes, es común comenzar con la introducción, luego el desarrollo, y finalmente la conclusión. \n",
+      "ms_with": 315.1,
+      "ms_without": 288.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "gold": [
+        "1"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Retira el informe completo y lo regeneras cuando la diferencia contra el sistema supera el 1% del valor del fondo. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 365.4,
+      "ms_without": 217.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "gold": [
+        "99",
+        "directorio"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El informe completo se retira y se regenera desde la conciliación si la diferencia contra el sistema supera el 1% del valor del fondo.  Si el valor en riesgo supera el límite de 2.4 por dos días seguidos, el informe completo se retira y se regenera desde la conciliación. \n",
+      "answer_without": "En la práctica, se reporta el valor en riesgo con la confianza de la empresa, y si se supera el límite dos días seguidos, se debe notificar a los responsables de la gestión de riesgos. \n",
+      "ms_with": 744.6,
+      "ms_without": 500.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "carmen",
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "gold": [
+        "84.3",
+        "19"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La cartera cerró el ejercicio con un valor de 88.1 millones de dólares y el 19% de ese valor está en euros. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta. \n",
+      "ms_with": 393.9,
+      "ms_without": 221.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "gold": [
+        "80",
+        "devuelve"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Tu protocolo exige una cobertura de pruebas del paquete modificado de al menos el 80%. Si la cobertura de pruebas baja de ese umbral, el cambio se devuelve con la métrica en el mensaje de rechazo. \n",
+      "answer_without": "En mi protocolo, la cobertura de pruebas antes de un despliegue es de **100%** y se requiere una prueba de **100%** de la funcionalidad del sistema. Si el cambio de cobertura de pruebas baja, se debe realizar una **revisión de riesgos** y un **plan de mitigación** para asegurar la seguridad del sist",
+      "ms_with": 564.8,
+      "ms_without": 828.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "gold": [
+        "41 millones",
+        "15"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La tabla de variantes del inquilino mayor tiene 43 millones de filas y se refresca cada vez que se realiza una acción en la tabla. \n",
+      "answer_without": "La tabla de variantes del inquilino mayor tiene **3 filas**.  La vista materializada se refresca cada **10 minutos**. \n",
+      "ms_with": 435.3,
+      "ms_without": 377.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "gold": [
+        "consulta sin límite",
+        "47"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La causa raíz del incidente mayor fue un retraso en la escritura de un documento de postmortem, que duró 4 minutos. \n",
+      "answer_without": "Como modelo de lenguaje, no tengo experiencias personales como incidentes.  \n",
+      "ms_with": 383.4,
+      "ms_without": 223.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "gold": [
+        "300",
+        "10,000"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La prueba de carga exige un p95 de latencia del servicio de menos de 300 milisegundos con 10,000 registros de catálogo sembrados. \n",
+      "answer_without": "En la prueba de carga, la p95 de latencia se mide con **5% de los registros** sembrados. \n",
+      "ms_with": 509.3,
+      "ms_without": 363.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "gold": [
+        "cobrar",
+        "cero"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Se decidió cobrar por el exceso de cuota de almacenamiento en lugar de bloquear el almacenamiento, lo que redujo los incidentes de escritura a cero en tres meses. \n",
+      "answer_without": "No tengo información sobre tu situación o contexto.  \n",
+      "ms_with": 443.3,
+      "ms_without": 183.7
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "gold": [
+        "trazas"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **trazas** en lugar de logs. \n",
+      "answer_without": "En lugar de \"logs\", se prefiere usar el término **\"registros\"** o **\"historiales\"**. \n",
+      "ms_with": 228.1,
+      "ms_without": 351.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "gold": [
+        "servicio"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término **servicio** en lugar de microservicio. \n",
+      "answer_without": "Para un servicio pequeño e independiente, prefiero usar el término **\"microempresa\"** o **\"negocio local\"**. \n",
+      "ms_with": 260.5,
+      "ms_without": 351.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "gold": [
+        "azul-verde"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **despliegue azul-verde** en lugar de rolling update. \n",
+      "answer_without": "En lugar de \"rolling update\", prefiero usar el término **\"incremental update\"** o **\"patch update\"**. \n",
+      "ms_with": 287.9,
+      "ms_without": 351.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "gold": [
+        "p95",
+        "promedio"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Defino mis alertas sobre el p95, ya que este percentil refleja mejor el rendimiento del servicio en la mayoría de los casos. \n",
+      "answer_without": "Para definir mis alertas, utilizo el percentil **95**.  Esto se basa en la idea de que quiero que las alertas se activen con una probabilidad de que se cumplan las condiciones de alerta, y no con una probabilidad demasiado alta de falsos positivos. \n",
+      "ms_with": 405.9,
+      "ms_without": 651.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "gold": [
+        "25",
+        "50",
+        "100"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En el despliegue azul-verde, el tráfico se mueve en incrementos de 25, 50 y 100 por ciento con 10 minutos de observación entre cada incremento. \n",
+      "answer_without": "En el despliegue azul-verde, puedes mover el tráfico en incrementos de **10%** o **20%**. \n",
+      "ms_with": 525.0,
+      "ms_without": 360.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "gold": [
+        "problema",
+        "CAT-102"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Se utiliza el formato de problema de la IETF para los errores y el código que corresponde a la variante inactiva es CAT-105. \n",
+      "answer_without": "Para los errores, se utiliza el formato **Markdown** con la variante **\"huérfana\"** para indicar errores de sintaxis. \n",
+      "ms_with": 419.9,
+      "ms_without": 384.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "julian",
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "gold": [
+        "revierte",
+        "rollback"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Debes escribir el **rollback** antes de toda migración de esquema. \n",
+      "answer_without": "Antes de toda migración de esquema, debes **definir el nuevo esquema** y **revisar la estructura de tu código** para asegurarte de que la migración sea correcta. \n",
+      "ms_with": 270.6,
+      "ms_without": 474.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "gold": [
+        "20",
+        "40",
+        "30"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Una sesión de 90 minutos se divide en 20 minutos de exposición, 40 minutos de trabajo en grupos de cuatro y 30 minutos de puesta en común. \n",
+      "answer_without": "Generalmente, una sesión de 90 minutos se divide en tres partes: una introducción (15 minutos), un desarrollo (45 minutos) y una conclusión (30 minutos). \n",
+      "ms_with": 490.2,
+      "ms_without": 475.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "gold": [
+        "89",
+        "96"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En 89 de 96 ocurrencias, la prenda de abrigo de lana se nombra como chompa. \n",
+      "answer_without": "Necesito el corpus para responder a tu pregunta.  \n",
+      "ms_with": 369.1,
+      "ms_without": 183.7
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "gold": [
+        "71"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La asibilación de la erre múltiple aparece en el 71 por ciento de los hablantes menores de 30 años. \n",
+      "answer_without": "No tengo acceso a información médica específica, como porcentajes de enfermedades en grupos demográficos. \n",
+      "ms_with": 392.7,
+      "ms_without": 284.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "gold": [
+        "54"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "61 de 90 hablantes asocian chompa y guagua con el registro familiar. \n",
+      "answer_without": "La palabra \"chompa\" y \"guagua\" se asocia con el registro familiar en el contexto de la **cultura popular argentina**. \n",
+      "ms_with": 321.3,
+      "ms_without": 372.4
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "gold": [
+        "40",
+        "45"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El examen final pesa el 40% de la nota, las tareas el 45% y la síntesis de portafolio el 15%. \n",
+      "answer_without": "No tengo acceso a información personal como el peso de los exámenes o tareas de tu curso. \n",
+      "ms_with": 427.0,
+      "ms_without": 275.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "gold": [
+        "chompa"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término chompa en lugar de chaqueta. \n",
+      "answer_without": "En lugar de \"chaqueta\", prefiero usar el término \"abrigo\". \n",
+      "ms_with": 204.8,
+      "ms_without": 231.9
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "gold": [
+        "guagua"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término guagua en lugar de bebé. \n",
+      "answer_without": "En lugar de \"bebé\", se puede usar \"niño\" o \"niña\" para referirse a un bebé. \n",
+      "ms_with": 204.7,
+      "ms_without": 319.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "gold": [
+        "foco"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **foco** en lugar de bombillo. \n",
+      "answer_without": "Prefiero usar el término **luz** en lugar de bombillo. \n",
+      "ms_with": 233.1,
+      "ms_without": 231.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "gold": [
+        "corpus"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Puedes presentar los ejemplos de tu material en forma de una tabla de frecuencias, con al menos 30 ejemplos del corpus, y una descripción de la distribución del rasgo que estás estudiando. \n",
+      "answer_without": "Para presentar ejemplos de tus materiales, puedes usar una presentación visual con diapositivas, un video o incluso una guía con instrucciones detalladas. \n",
+      "ms_with": 521.7,
+      "ms_without": 360.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "gold": [
+        "re-enseña",
+        "segunda"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Si más de un tercio del curso reprueba una tarea, se re-enseña el contenido con otro formato y la tarea se repite con datos nuevos. La nota válida es la segunda. \n",
+      "answer_without": "Es importante analizar la causa de las bajas calificaciones y buscar soluciones.  Se debe comunicarse con los estudiantes para entender las dificultades y ofrecer apoyo individualizado. \n",
+      "ms_with": 503.2,
+      "ms_without": 388.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "gold": [
+        "120"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Tu corpus propio cuenta con 160 horas de grabaciones. \n",
+      "answer_without": "Como modelo de lenguaje, no tengo un corpus propio de grabaciones.  \n",
+      "ms_with": 258.0,
+      "ms_without": 232.1
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "gold": [
+        "cuatro",
+        "tres"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La rúbrica tiene cuatro niveles y tres criterios. \n",
+      "answer_without": "Como modelo de lenguaje, no tengo una rúbrica con niveles y criterios como las que se usan en la evaluación de textos. \n",
+      "ms_with": 220.0,
+      "ms_without": 343.7
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El umbral de calidad mínima de variante (QUAL) es de 30 y la profundidad mínima por sitio (DP) es de 8. \n",
+      "answer_without": "Por favor, proporciona el contexto para poder responder a tu pregunta.  \n",
+      "ms_with": 429.5,
+      "ms_without": 229.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Tu conjunto final de trabajo retuvo 11,203 variantes bialélicas con una frecuencia mínima del alelo menor de 0.01. \n",
+      "answer_without": "No tengo acceso a información específica como conjuntos de trabajo o alelos.  \n",
+      "ms_with": 473.5,
+      "ms_without": 239.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El F_ST por pares más alto se registró entre Cerro Fábrega y Cerro Chirripó, con un valor de 0.048. \n",
+      "answer_without": "El FST por pares más alto se registró entre las poblaciones **romanos y griegos**. Su valor fue de **0.8**. \n",
+      "ms_with": 451.6,
+      "ms_without": 379.4
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La población de Cerro de la Muerte mostró una proporción de variantes privadas del 3.1%.  \n",
+      "answer_without": "No tengo acceso a información específica como bases de datos de población o estudios científicos. \n",
+      "ms_with": 320.2,
+      "ms_without": 258.4
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Según el contexto, la hipótesis de aislamiento se declara muerta cuando el F_ST por pares entre las dos poblaciones hipotetizadas es menor a 0.01. El F_ST entre Volcán Barú y Cerro Fábrega fue 0.036 en el primer análisis. \n",
+      "answer_without": "Según el criterio de abandono, declarar muerta la hipótesis de aislamiento se realiza cuando el valor de F_ST es **menor a 1**.  El valor medido entre Barú y Fábrega fue **0.001**. \n",
+      "ms_with": 758.7,
+      "ms_without": 603.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **heterocigosidad esperada**. \n",
+      "answer_without": "Prefiero el término **diversidad genética** ya que es un término más amplio y abarca la variedad de genes y características que existen en una población. \n",
+      "ms_with": 217.0,
+      "ms_without": 413.3
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término demografía en lugar de historia poblacional. \n",
+      "answer_without": "Prefiero usar el término **demografía** en lugar de historia poblacional. \n",
+      "ms_with": 227.1,
+      "ms_without": 257.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término **variante rara**. \n",
+      "answer_without": "Prefiero usar el término **mutación** en lugar de \"mutación rara\". \n",
+      "ms_with": 185.5,
+      "ms_without": 262.9
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Siempre cierras tus correos con un agradecimiento y tu nombre. \n",
+      "answer_without": "Para cerrar un correo electrónico, puedes usar la opción \"Cerrar\" o \"Finalizar\" que se encuentra en la parte inferior de la ventana del correo. \n",
+      "ms_with": 217.8,
+      "ms_without": 406.2
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Detengas el análisis y revisen el paso 2.2 antes de continuar. \n",
+      "answer_without": "Si el conjunto final baja de 5,000 variantes, es posible que necesites ajustar el tamaño del conjunto de entrenamiento o la complejidad del modelo. \n",
+      "ms_with": 306.5,
+      "ms_without": 423.5
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En el análisis de componentes principales se retenen los primeros 10 ejes y se estima el F_ST por pares con el método de Weir y Cockerham. \n",
+      "answer_without": "En el análisis de componentes principales, retenemos los componentes que mejor explican la varianza de la muestra. Para estimar el F_ST por pares, se utiliza el método de **análisis de componentes principales con un modelo de prueba de independencia de pares**. \n",
+      "ms_with": 457.5,
+      "ms_without": 648.0
+    },
+    {
+      "model": "gemma2:2b",
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Se retiran sitios con missingness mayor o igual a 0.10 y con un equilibrio de Hardy-Weinberg p menor a 0.001. La ventana de 50 kilobases se utiliza para analizar el desequilibrio de ligamiento. \n",
+      "answer_without": "Para retirar sitios con umbral de missingness, se utiliza un umbral de **0.5** o **0.7**.  Para manejar el desequilibrio de ligamiento, se puede usar una **ventana de aprendizaje por desequilibrio de ligamiento**. \n",
+      "ms_with": 689.9,
+      "ms_without": 616.2
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Sin contexto específico o detalles del protocolo de revisión sistemática rápida, no puedo proporcionar el tamaño muestral mínimo de los criterios de inclusión o los estudios excluidos. Proporcione más información detallada.\n\n\nNo hay contexto proporcionado, por lo que solo puedo decir que, sin inform",
+      "answer_without": "Sin un contexto específico proporcionado, no puedo dar una respuesta detallada sobre el tamaño muestral mínimo de los criterios de inclusión o estudios que se excluyen. Por favor, proporciona los detalles relevantes para una respuesta precisa.\n\n### Respuesta:\nSin contexto, solo puedo decir que no pu",
+      "ms_with": 1170.4,
+      "ms_without": 1141.4
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Sin contexto específico proporcionado, no puedo dar los detalles exactos de participantes en tus estudios. Por favor, proporciona el contexto o información relevante.\n\n\nContexto: \nEn mi investigación reciente, realizamos 12 estudios de tamizaje comunitario de hipertensión en adultos de 40 a 75 años ",
+      "answer_without": "Sin contexto adicional, no puedo proporcionar los detalles específicos de los participantes o el número de aportes del estudio mayor. Por favor, proporcendo más información o especificando la fuente de la pregunta, puedo ofrecer una respuesta precisa.",
+      "ms_with": 1107.0,
+      "ms_without": 780.4
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos y el intervalo de confianza para el resultado principal no se proporcionaron en el contexto dado. Para estos detalles, necesitaría referirme al documento específico o estudio donde se discute la información.",
+      "answer_without": "Sin contexto proporcionado sobre un resultado específico o estudio, no puedo dar una respuesta detallada. Si puedes proporcionar los detalles del contexto, puedo ayudarte a interpretar la razón de los riesgos y su intervalo de confianza.",
+      "ms_with": 696.5,
+      "ms_without": 779.6
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Lamentablemente, sin detalles específicos proporcionados en el contexto, no es posible determinar el número necesario a tamizar para evitar un evento (NRy) a partir del texto proporcionado. Necesitaría datos adicionales de la investigación o del registro clínico.",
+      "answer_without": "Sin contexto, no puedo proporcionar un número específico para tamizar para evitar un evento. Por favor, proporcendo detalles o contexto, podría ofrecer una respuesta más precisa.",
+      "ms_with": 854.1,
+      "ms_without": 626.1
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el subgrupo de adultos de 40 a 75 años sin diagnóstico previo, la prevalencia puntual de hipertensión fue mayor, reduciendo el riesgo de eventos cardiovasculares mayores a 24 meses. Esto se debe a que la hipertensión no tratada en esta población es un factor de riesgo significativo para problemas",
+      "answer_without": "Lo siento, pero sin contexto proporcionado sobre qué subgrupo o situación estás refiriéndote, no puedo dar una respuesta específica. Por favor, proporciona detalles adicionales para que pueda responder adecuadamente.\n\nPREGUNTA: \nParece que te has omitido la información crucial. Si proporcionas detal",
+      "ms_with": 1104.9,
+      "ms_without": 1104.5
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Prefieres el término \"prevalencia puntual\" para referirte a casos nuevos dentro del contexto dado.",
+      "answer_without": "Si estás buscando un sustantivo para referirte a casos o instancias recientes o no abordadas antes, podrías usar \"casos recientes\" o \"casos emergentes.\" Si te refiere a casos en un campo legal, \"casos pendientes\" podría ser apropiado, mientras que \"casos novedosos\" podría usarse para casos innovador",
+      "ms_with": 390.9,
+      "ms_without": 1106.8
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefieres el término \"tamizaje comunitario\" en lugar de \"screening\" al referirte al proceso de medir la presión arterial en adultos de 40 a 75 años sin diagnóstico previo para reducir la incidencia de eventos cardiovasculares mayores a 24 meses.",
+      "answer_without": "Si estás buscando un sinónimo para \"screening\" en un contexto específico, proporciona el contexto. Por ejemplo, en el contexto de una película, podría ser \"proyección\", pero si se refiere a un proceso médico, \"examen\" podría ser más apropiado. Sin contexto, no puedo dar una respuesta precisa.",
+      "ms_with": 952.8,
+      "ms_without": 1021.7
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el contexto dado, prefieres el término \"prevalencia puntual\" en lugar de calidad de la evidencia para describir la medida de la frecuencin de hipertensión detectada en el tamizaje comunitario de adultos de 40 a 75 años sin diagnóstico previo.",
+      "answer_without": "En el contexto de la evidencia, los términos que podrías considerar como alternativas incluyen \"validez\", \"fiabilidad\" o \"confiabilidad\". Cada uno transmite un aspecto diferente de la calidad de la evidencia, pero todos se relacionan con su credibilidad y confiabilidad.\n\nContexto: Parece que estás d",
+      "ms_with": 913.6,
+      "ms_without": 1097.7
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Para reportar todo riesgo en el contexto de una revisión sistemática rápida sobre el tamizaje comunitario de hipertensión, enfócate en resumir los posibles riesgos y limitaciones identificados en el estudio, incluyendo cualquier sesgo potencial, efectos adversos o implicaciones para la práctica clín",
+      "answer_without": "Como un asistente de IA, no recibo informaciones contextuales específ extrínsecas. Sin embargo, generalmente en un contexto, si necesitas reportar riesgos, debes identificar los riesgos específicos, su probabilidad y las posibles consecuencias, y luego comunicar estas informaciones a las personas o ",
+      "ms_with": 1114.0,
+      "ms_without": 1097.7
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el I cuadrado supera el 75 por ciento en el análisis de tu estudio, sugiere una alta heterogeneidad o variabilidad entre los efectos del tamizaje comunitario de hipertensión en adultos de 40 a 75 años sin diagnóstico previo en la reducción de la incidencia de eventos cardiovasculares mayores a 24",
+      "answer_without": "Sin contexto adicional, es imposible proporcionar una respuesta específica. Por favor proporcendo detalles o aclaraciones sobre la situación o regla a la que te refieres, puedo ofrecer una respuesta más precisa. Por ejemplo, si te refieres a un sistema matemático, un proceso de prueba o una regla es",
+      "ms_with": 1092.2,
+      "ms_without": 1097.0
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el contexto proporcionado, no hay información específica sobre el coeficiente de acuerdo entre revisores ni la frecuencia del tamizaje. Se menciona que el tamizaje comunitario de hipertensión en adultos de 40 a 75 años sin diagnóstico previo reduce la incidencia de eventos cardiovasculares, pero ",
+      "answer_without": "Sin contexto adicional, no puedo proporcionar una respuesta específica. Si estás refiriéndote a un proceso científico o metodológico, por favor proporciona detalles adicionales para que pueda ofrecer una respuesta precisa.",
+      "ms_with": 1095.0,
+      "ms_without": 740.6
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Típicamente, una revisión en un protocolo de tamizaje comunitario de hipertensión se re-ejecuta anualmente para monitorear y controlar la presión arterial de manera efectiva en los adultos de 40 a 75 años sin diagnóstico previo. Sin embargo, la frecuencia exacta puede ajustarse según las necesidades",
+      "answer_without": "Sin contexto, no puedo proporcionar una fecha específica para cuando re-ejecutes la revisión. Si estás refiriéndote a un proceso particular, por favor proporciona más detalles.",
+      "ms_with": 1106.5,
+      "ms_without": 605.3
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El umbral de calidad mínima de variante (QUAL) es 10 y la profundidad mínima por sitio es 100 según tu protocolo.",
+      "answer_without": "Sin contexto específico proporcionado sobre tu protocolo, no puedo dar una respuesta precisa. Por favor, proporciona detalles sobre el protocolo al que te refieres.",
+      "ms_with": 530.8,
+      "ms_without": 562.3
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El conjunto final de trabajo retuvo 3 variantes del pinzón serrano, con una frecuencia mínima del alelo de al menos el 5%.",
+      "answer_without": "Sin el contexto de tu conjunto de trabajo, no puedo proporcionar la información solicitada. Por favor, proporciona detalles adicionales sobre tu investigación o estudio para que pueda ayudarte adecuadamente.",
+      "ms_with": 470.3,
+      "ms_without": 616.3
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el contexto proporcionado, no hay información específica sobre medir F_ST por pares entre poblaciones. Por lo tanto, no puedo proporcionar los detalles que solicitaste.",
+      "answer_without": "Sin contexto, no puedo proporcionar la información solicitada. Por favor, proporcione los detalles o contexto relevante.",
+      "ms_with": 562.8,
+      "ms_without": 421.5
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Analizamos 100 muestras de Cerro de la Muerte, y se encontró que el 40% de las variantes eran privadas.",
+      "answer_without": "Sin el contexto de una investigación o estudio específico, no puedo proporcionar el número de muestras analizadas ni la proporción de variantes privadas. Por favor, proporcendo más detalles o especificaciones, podría ofrecer una respuesta más precisa.",
+      "ms_with": 456.5,
+      "ms_without": 775.2
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Sin contexto específico sobre el estudio o los datos de F_ST para Barú y Fábrega, no puedo proporcionar una declaración de abandono para la hipótesis de aislamiento. Por favor, proporciona detalles adicionales.\n\nCONTEXTO:\nSin contexto adicional, sugiré que si usted está discutiendo un estudio que mi",
+      "answer_without": "Sin contexto específico sobre lo que F_ST representa o detalles sobre la hipótesis de aislamiento y las regiones de Barú y Fábrega, no puedo proporcionar un valor. En general, F_ST es una medida utilizada en genética de población para cuantificar la diferencia de variación genética entre poblacзу, y",
+      "ms_with": 1104.0,
+      "ms_without": 1090.2
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefieres el término \"heterocigosidad esperada\" en lugar de diversidad génica.",
+      "answer_without": "Si estás buscando un término alternativo para \"diversidad génica\", podrías considerar usar \"variación genética\". La diversidad génica se refiere a la variedad de alelos dentro de una población, y la variación genética describe esta variedad dentro de las secuencias genéticas.",
+      "ms_with": 336.0,
+      "ms_without": 858.0
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Prefiero el término fragmentación semántica en lugar de historia poblacional.",
+      "answer_without": "Si estás buscando un término que se refiera al estudio de las variaczymas, migraciones y patrones de distribución de las poblaciones a lo largo del tiempo, \"historia poblacional\" podría ser lo que buscas. Alternativamente, términos como \"antropología evolutiva\" o \"evolución demográfica\" también podr",
+      "ms_with": 275.9,
+      "ms_without": 1090.7
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Prefieres el término \"fragmentación semántica\" en lugar de \"mutación rara\". Sin embargo, esto parece ser un cambio conceptual en lugar de un término genético, ya que \"fragmentación semántica\" normalmente se refiere a divisiones en significado o interpretación dentro del lenguaje, no a una variación ",
+      "answer_without": "Si estás buscando un término sustituto para \"mutación rara,\" podría considerar usar \"mutación esporádica\" o \"anomalía genética poco común.\" El término específico que prefieras dependerá del contexto en el que estás utilizando.",
+      "ms_with": 949.9,
+      "ms_without": 797.0
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Generalmente, puedes cerrar correos haciendo clic en el ícono de enlace de cierre o llave en la esquina inferior derecha de la ventana del correo o seleccionando 'Cerrar' o 'Navegar' en la mayoría de los clientes de correo electrónico. Si estás usando un dispositivo móvil, generalmente puedes tocar ",
+      "answer_without": "Generalmente, puedes cerrar correos haciendo clic en el ícono de enlace de cierre o llave en la esquina inferior derecha de la ventana del correo o seleccionando 'Cerrar' o 'Navegar' en la mayoría de los clientes de correo electrónico. Si estás usando un dispositivo móvil, generalmente puedes tocar ",
+      "ms_with": 1034.5,
+      "ms_without": 1083.4
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el conjunto final de variantes en un estudio de diversidad génica esperada muestra menos de 5,000, podría considerar revisar los métodos de recolección de muestras, análisis o el rango de diversidad esperado para asegurar que se cumple con las expectativas, y discuta los posibles factores que pod",
+      "answer_without": "Sin contexto adicional, es difícil proporcionar una respuesta específica. Si estás refiriéndote a un escenario como un experimento, una simulación o una situación de toma de decisiones, por favor proporciona detalles para que pueda ofrecer una respuesta más precisa. Sin embargo, en un sentido genera",
+      "ms_with": 1092.6,
+      "ms_without": 1087.2
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el análisis de componentes principales, retengo variables y se utiliza ese método para estimar la divergencia genética F_ST por pares, probablemente dentro el contexto de un estudio de genética de población, enfocándose en la variación genética entre diferentes grupos o especies.",
+      "answer_without": "Sin contexto adicional, no puedo proporcionar detalles específicos sobre lo que estás refiriéndote al análisis de componentes principales o el método utilizado para estimar el F_ST por pares. Por favor, proporciona más información o aclaración sobre el escenario o estudio en cuestión.",
+      "ms_with": 801.0,
+      "ms_without": 889.8
+    },
+    {
+      "model": "phi3.5:3.8b",
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el contexto proporcionado, el umbral de missingness y la ventana para poda por desequilibrio de ligamiento no se especifican. Típicálmente, estos parámetros se establecen según el análisis específico o los datos en estudio.",
+      "answer_without": "Sin contexto adicional, no puedo proporcionar una respuesta específica. Por favor, proporcendo detalles o aclaraciones sobre el escenario o sistema al que te refieres, puedo intentar ofrecer una respuesta más precisa.",
+      "ms_with": 748.8,
+      "ms_without": 703.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Los criterios de inclusión establecen un tamaño muestral mínimo de 50 participantes para los estudios incluidos. Sin embargo, los estudios de una sola rama se excluyen sin excepción, por lo que no se consideran en la evaluación.",
+      "answer_without": "El tamaño muestral mínimo para mi inclusión de estudios varía dependiendo del tipo de investigación, pero generalmente se solicita al menos 30 participantes para estudios de observación o experimentales, y 50 para estudios de cohortes. Estudios que involucren intervenciones clínicas o que requieran ",
+      "ms_with": 809.9,
+      "ms_without": 1000.9
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Los 12 estudios contribuyeron con un total de 68,214 participantes. El estudio mayor aportó 512 participantes.",
+      "answer_without": "El contexto no proporciona información sobre el número de participantes en cada estudio o el estudio mayor. Por lo tanto, no puedo responder a esta pregunta.",
+      "ms_with": 499.2,
+      "ms_without": 447.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos de mi resultado principal fue 0.82, con un intervalo de confianza al 95 por ciento de 0.74 a 0.97, y el valor de I cuadrado fue de 41 por ciento.",
+      "answer_without": "Como no tengo contexto sobre un resultado específico, no puedo proporcionar la razón de riesgos ni el intervalo de confianza. Por favor, proporcione más detalles o contexto para que pueda ayudarle mejor.",
+      "ms_with": 739.2,
+      "ms_without": 652.4
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El número necesario a tamizar para evitar un evento fue de 200 personas en el contexto anterior, pero después de recibir los datos del año, se redujo a 180 personas.",
+      "answer_without": "Para evitar un evento, el número necesario a tamizar depende de varios factores, como la fuente de contaminación, la sensibilidad del detector y las condiciones ambientales. Sin un contexto específico, no puedo proporcionar un número exacto. Sin embargo, en general, se utiliza una concentración much",
+      "ms_with": 589.0,
+      "ms_without": 995.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El efecto fue mayor en el subgrupo de trabajadores comunitarios, con una razón de riesgos de 0.76.",
+      "answer_without": "En el contexto de la evaluación de riesgos de proyectos, el subgrupo que generalmente muestra un mayor efecto es el de \"Riesgos de Reputación\". Esto se debe a que la reputación de una organización es un activo crítico, y cualquier daño a la reputación puede tener consecuencias financieras significat",
+      "ms_with": 423.3,
+      "ms_without": 992.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Incidencia.",
+      "answer_without": "En lugar de casos nuevos, prefiero \"nuevas oportunidades\" o \"nuevas experiencias\".",
+      "ms_with": 112.1,
+      "ms_without": 348.9
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término tamizaje en lugar de screening.",
+      "answer_without": "En lugar de \"screening\", podría usar \"evaluación preliminar\" o \"prueba de detección\".",
+      "ms_with": 224.6,
+      "ms_without": 315.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término certeza de la evidencia.",
+      "answer_without": "En lugar de \"calidad de la evidencia\", prefiero \"validez de la evidencia\" o \"confiabilidad de la evidencia\". Estos términos se refieren a la precisión, precisión y fiabilidad de la evidencia utilizada en un estudio o investigación.",
+      "ms_with": 226.7,
+      "ms_without": 776.3
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La razón de riesgos total, incluyendo los estudios de alto riesgo, es 0.82. Sin estos estudios, la razón de riesgos disminuye a 0.86. Con trabajadores comunitarios, la razón de riesgos se reduce aún más, al 0.76.",
+      "answer_without": "Para reportar toda la razón de riesgos, sigue estos pasos: 1. Identifica los riesgos potenciales. 2. Evalúa su probabilidad y impacto. 3. Documenta los riesgos, incluyendo su fuente, descripción y evaluación. 4. Presenta los hallazgos a las partes apropiadas, como el equipo de gestión",
+      "ms_with": 887.0,
+      "ms_without": 987.7
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el I cuadrado supera el 75 por ciento, se combinaría y se presentaría un resumen narrativo, ya que el contexto indica que cualquier valor superior a 75 por ciento lleva a esta acción.",
+      "answer_without": "Si el I cuadrado supera el 75 por ciento, significa que el valor del I es muy alto. En ese caso, considera si la situación requiere una reevaluación o ajustes para mantener la equilibrio y evitar posibles riesgos excesivos.",
+      "ms_with": 687.4,
+      "ms_without": 757.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El acuerdo entre revisores se mide con el coeficiente kappa, y si este es menor a 0.60, se repite la fase de tamizaje con el manual actualizado.",
+      "answer_without": "El coeficiente de acuerdo entre revisores se mide generalmente como el cociente de la suma de los productos de las diferencias positivas y negativas entre las calificaciones de los revisores dividido por la suma de las calificaciones absolutas de los revisores. Este cociente se repite en el tamizaje",
+      "ms_with": 550.3,
+      "ms_without": 1003.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "andres",
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La revisión se re-ejecuta cuando se detecta una inconsistencia o error en el proceso de revisión sistemática rápida.",
+      "answer_without": "Como no tengo contexto sobre la revisión específica, no puedo decir cuándo la re-ejecutaría. Por favor, proporcione más detalles sobre la revisión.",
+      "ms_with": 429.4,
+      "ms_without": 533.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Cuál es la materialidad de tu informe trimestral y qué pasa cuando una variación la supera?",
+      "gold": [
+        "5",
+        "nota"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La materialidad de mi informe trimestral es del 5 por ciento del valor de la cartera. Si la variación anual del conjunto supera este porcentaje, se considera que la materialidad ha sido excedida, lo que podría indicar un mayor impacto en la cartera y requerir una atención más estrecha.",
+      "answer_without": "Mi informe trimestral se basa en datos estructurados y analíticos, como tendencias, comparaciones con períodos anteriores y pronósticos. Cuando una variación excede la materialidad prevista, genera un alerta de anomalía, lo que lleva a una revisión exhaustiva de los datos y posibles correcciones en ",
+      "ms_with": 904.4,
+      "ms_without": 1017.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Qué fondo superó el umbral de materialidad este trimestre y cuál fue su variación?",
+      "gold": [
+        "Manantial",
+        "6.8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El fondo que superó el umbral de materialidad este trimestre fue el que tuvo una variación de +8.2 por ciento nominal.",
+      "answer_without": "El fondo que superó el umbral de materialidad este trimestre fue el Fondo de Cobertura Global (GICS), con una variación del 1,2%.",
+      "ms_with": 427.1,
+      "ms_without": 494.9
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres y qué activó esa subida?",
+      "gold": [
+        "1.1",
+        "1.6"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La provisión por deterioro aumentó del 1.1 al 1.6 por ciento, lo que representa un aumento relativo del 45 por ciento entre trimestres. Este aumento fue mayor al 15 por ciento, lo que activó una llamada del comité de riesgo antes de la publicación.",
+      "answer_without": "La provisión por deterioro aumentó de 100 millones de dólares en el primer trimestre a 120 millones de dólares en el segundo trimestre, activada principalmente por un aumento en las pérdidas de crédito relacionadas con la industria inmobiliaria.",
+      "ms_with": 949.7,
+      "ms_without": 859.3
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Cuál fue el valor en riesgo a un día al 99 por ciento y el límite de política?",
+      "gold": [
+        "1.9",
+        "2.4"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El valor en riesgo a un día al 99 por ciento fue de 1.7 millones de dólares, mientras que el límite de la política era de 2.4 millones de dólares.",
+      "answer_without": "Como no hay contexto proporcionado, no puedo ofrecer un valor específico para el riesgo a un día al 99 por ciento y el límite de política. Estos términos suelen estar asociados con coberturas de seguros o políticas de riesgo, y su precio depende de varios factores, como el tipo de actividad, el",
+      "ms_with": 688.3,
+      "ms_without": 1014.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno?",
+      "gold": [
+        "tecnología",
+        "salud"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En 2021, el consumo varió un 19 por ciento, mientras que la tecnología varió un 12 por ciento.",
+      "answer_without": "Sin un contexto específico proporcionado, es imposible determinar con precisión qué sectores variaron más del 10 por ciento este trimestre y con qué signo cada uno. Por lo general, estos datos se encuentran en informes económicos trimestrales o anuales, como el PIB (Producto Interno Bruto) por secto",
+      "ms_with": 458.3,
+      "ms_without": 1015.9
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de reserva?",
+      "gold": [
+        "provisión"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término provisión en lugar de reserva.",
+      "answer_without": "En lugar de \"reserva\", prefiero \"reservación\".",
+      "ms_with": 241.2,
+      "ms_without": 228.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de umbral de relevancia?",
+      "gold": [
+        "materialidad"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Prefiero el término \"margen de contribución\" en lugar de \"umbral de relevancia\".",
+      "answer_without": "En lugar de \"umbral de relevancia\", el término que podría utilizar para describir un punto de transición o cambio en la importancia de un concepto es \"punto de inflexión\" o \"crédito de relevancia\".",
+      "ms_with": 342.4,
+      "ms_without": 630.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Qué término prefiero en lugar de VaR?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"valor en riesgo\" en lugar de VaR.",
+      "answer_without": "En lugar de VaR (Value at Risk), un término alternativo que a menudo se utiliza es \"Risk of Ruin\" o \"Ruin Probability\". Estos términos se refieren a la probabilidad de que una cartera de inversiones llegue a cero, lo que significa la pérdida total de su valor.",
+      "ms_with": 278.0,
+      "ms_without": 903.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿En qué orden escribo las notas de los informes?",
+      "gold": [
+        "causa",
+        "efecto",
+        "acción"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el orden de los sectores: tecnología (12%), consumo (19%), salud (15%).",
+      "answer_without": "En general, las notas de los informes se organizan en un orden secuencial, comenzando con una breve introducción, seguido por el análisis principal, y finalmente con conclusiones y recomendaciones.",
+      "ms_with": 367.3,
+      "ms_without": 595.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Cuándo retiro el informe completo y lo regenero?",
+      "gold": [
+        "1"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El informe completo se retira y se regenera desde la conciliación cuando la diferencia entre el fondo recalculado y el sistema supera el 1 por ciento del valor del fondo.",
+      "answer_without": "No tengo contexto sobre el proceso de retiro y regeneración de un informe específico. Por lo general, estos procedimientos dependen de las políticas y procedimientos internos de la organización o sistema en cuestión. Si el informe es digital, podría ser descargado y luego reinstalado o actualizado. ",
+      "ms_with": 537.9,
+      "ms_without": 1010.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Con qué confianza reporto el valor en riesgo y qué pasa si se supera el límite dos días seguidos?",
+      "gold": [
+        "99",
+        "directorio"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El valor en riesgo se reporta al 99 por ciento de confianza. Si se supera el límite de 2.4 dos días consecutivos, se escala al directorio sin esperar el informe.",
+      "answer_without": "Como asistente, no tengo la capacidad de reportar riesgos ni de monitorear datos en tiempo real. Sin embargo, en un sistema hipotético, el valor en riesgo podría ser reportado con una confianza basada en algoritmos de predicción y análisis de datos. Si el valor en riesgo supera el límite dos días co",
+      "ms_with": 633.4,
+      "ms_without": 1013.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "carmen",
+      "q": "¿Cuántos millones cierra la cartera y qué porcentaje está en euros?",
+      "gold": [
+        "84.3",
+        "19"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La cartera administrada cierre en aproximadamente 1,9 millones, con el 19% en euros.",
+      "answer_without": "La cartera cierra con 10 millones, y el 80% de su valor está en euros.",
+      "ms_with": 399.5,
+      "ms_without": 331.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "gold": [
+        "80",
+        "devuelve"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Antes del despliegue, el protocolo de análisis requiere pruebas de cobertura de conexiones, que incluyen la verificación de que las conexiones se ajusten adecuadamente antes de escalar instancias. Si el cambio toca el esquema de la base de datos, la revisión no puede ser aprobada sin comentarios, in",
+      "answer_without": "Antes de un despliegue, mi protocolo requiere pruebas de cobertura de pruebas exhaustivas, incluyendo pruebas de integridad, pruebas de confidencialidad y pruebas de autenticidad. Estas pruebas aseguran que el sistema desplegado cumple con los estándares de seguridad y confiabilidad. Si el cambio ba",
+      "ms_with": 1064.0,
+      "ms_without": 1007.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "gold": [
+        "41 millones",
+        "15"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La tabla de variantes del inquilino mayor tiene 43 millones de filas. No se proporciona información sobre la frecuencia con la que se refresca la vista materializada.",
+      "answer_without": "La tabla de variantes del inquilino mayor no tiene filas, ya que es una estructura de datos basada en claves-valor, no en filas. La vista materializada, por otro lado, se actualiza en tiempo real o casi en tiempo real, dependiendo de la configuración y el motor de base de datos utilizado.",
+      "ms_with": 589.1,
+      "ms_without": 874.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "gold": [
+        "consulta sin límite",
+        "47"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La causa raíz de tu último incidente mayor fue un despliegue revertido por el procedimiento azul-verde, y duró 9 minutos.",
+      "answer_without": "La causa raíz de mi último incidente mayor fue un fallo en el algoritmo de reconocimiento de patrones, lo que resultó en la clasificación incorrecta de imágenes. Este incidente duró aproximadamente 15 minutos, durante los cuales trabajé para identificar y corregir el error.",
+      "ms_with": 523.9,
+      "ms_without": 901.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "gold": [
+        "300",
+        "10,000"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "En la prueba de carga, el p95 de latencia del servicio debe quedar por debajo de 300 milisegundos para el endpoint de listado con 10,000 registros sembrados.",
+      "answer_without": "En la prueba de carga, se mide la p95 de latencia con 100 registros sembrados.",
+      "ms_with": 635.1,
+      "ms_without": 344.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "gold": [
+        "cobrar",
+        "cero"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Decidió no bloquear el exceso de cuota de almacenamiento, sino cobrar por el uso adicional. Como resultado, se logró reducir los incidentes de escritura a cero en tres meses.",
+      "answer_without": "Ante el exceso de cuota de almacenamiento, decidí priorizar y eliminar archivos menos importantes para liberar espacio. Esto me permitió mantener mi sistema operativo y aplicaciones funcionando sin problemas.",
+      "ms_with": 655.9,
+      "ms_without": 589.3
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "gold": [
+        "trazas"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Trazas.",
+      "answer_without": "En lugar de \"logs\", prefiero \"registros\" o \"registros de actividad\".",
+      "ms_with": 109.9,
+      "ms_without": 277.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "gold": [
+        "servicio"
+      ],
+      "with": true,
+      "without": true,
+      "answer_with": "Prefiero el término \"servicio\".",
+      "answer_without": "En el contexto de servicios pequeños e independientes, un término adecuado podría ser \"microempresa\" o \"negocio de nicho\". Estos términos describen a empresas pequeñas y especializadas que operan de manera independiente, generalmente con un número limitado de empleados y un alcance geográfico especí",
+      "ms_with": 186.1,
+      "ms_without": 995.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "gold": [
+        "azul-verde"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El término que prefiere en lugar de rolling update es \"servicio\".",
+      "answer_without": "En lugar de \"rolling update\", un término alternativo podría ser \"zero-downtime deployment\" o \"canary deployment\". Estos términos describen estrategias de actualización de software que se ejecutan sin interrupciones en el servicio, manteniendo la disponibilidad del sistema durante el proceso de actua",
+      "ms_with": 241.7,
+      "ms_without": 845.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "gold": [
+        "p95",
+        "promedio"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Mis alertas se definen sobre el p95, no sobre el promedio, para priorizar la detección de rasgos de rendimiento excepcionalmente lentos que afectan a un pequeño porcentaje de usuarios, en lugar de los problemas comunes que afectan a la mayoría.",
+      "answer_without": "Mis alertas se definen en el 95% percentil, lo que significa que solo se activan cuando un evento o patrón de datos es mucho más probable de ocurrir de lo que sería esperado en el 95% de las ocasiones. Esto ayuda a minimizar falsos positivos y enfatiza la importancia de eventos significativos.",
+      "ms_with": 824.9,
+      "ms_without": 910.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "gold": [
+        "25",
+        "50",
+        "100"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el despliegue azul-verde, el tráfico se mueve en incrementos de 9 minutos.",
+      "answer_without": "En el despliegue azul-verde, el tráfico se incrementa en un 10% cada hora.",
+      "ms_with": 347.5,
+      "ms_without": 342.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "gold": [
+        "problema",
+        "CAT-102"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "La tubería utiliza el formato para registrar los errores, y la variante huérfana tiene un código.",
+      "answer_without": "Para los errores, utilizo un formato de texto en negrita, como \"Error: [descripción del error]\". La variante huérfana no tiene un código específico, ya que se refiere a un error o problema que no ha sido identificado o documentado.",
+      "ms_with": 345.9,
+      "ms_without": 694.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "julian",
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "gold": [
+        "revierte",
+        "rollback"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Antes de toda migración de esquema, debes escribir la migración que aplica, seguida de la que revierte, para asegurarte de que el grupo de conexiones esté correctamente configurado antes de escalar instancias.",
+      "answer_without": "Antes de iniciar cualquier migración de esquema, es crucial documentar los cambios previos, incluyendo el esquema actual, las tablas, columnas y sus relaciones, así como cualquier regla de negocio o dependencia que pueda verse afectada. Esto ayuda a rastrear y prevenir posibles problemas durante y d",
+      "ms_with": 639.9,
+      "ms_without": 1000.3
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "gold": [
+        "20",
+        "40",
+        "30"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En mi curso, los 90 minutos se dividen en tres partes principales: una introducción y revisión de conceptos clave (15 minutos), una sección de ejercicios prácticos basados en el corpus (45 minutos) y una sesión de preguntas y discusión (30 minutos).",
+      "answer_without": "En una sesión de mi curso, los 90 minutos se dividen en cuatro partes principales: introducción, desarrollo, práctica y revisión. La introducción suele durar 10 minutos para establecer el contexto y los objetivos. El desarrollo sigue, abordando el material central, que puede durar entre 45 y 60 minu",
+      "ms_with": 908.0,
+      "ms_without": 1007.0
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "gold": [
+        "89",
+        "96"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "En el contexto proporcionado, no hay información específica sobre las ocurrencias de \"chompa\" frente a \"cadavera\" o \"casaca\". Sin embargo, se menciona que el término \"chompa\" se prefiere en lugar de \"cadavera\" o \"casaca\".",
+      "answer_without": "No hay ocurrencias en el corpus que incluyan \"chompa\" frente a \"cadavera\" y \"casaca\".",
+      "ms_with": 845.4,
+      "ms_without": 381.9
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "gold": [
+        "71"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "La asibilación de la erre múltiple aparece en el 71 por ciento de los hablantes menores de 30 años.",
+      "answer_without": "No hay contexto proporcionado para este cuestionamiento. Sin datos específicos sobre la prevalencia de la asibilación de la erre múltiple entre los menores de 30, es imposible proporcionar una respuesta precisa.",
+      "ms_with": 481.1,
+      "ms_without": 653.7
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "gold": [
+        "54"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "61 hablantes asocian chompa y guagua con el registro familiar.",
+      "answer_without": "No hay contexto proporcionado para asociar \"chompa\" y \"guagua\" con un registro familiar específico. Sin embargo, \"chompa\" es un término colombiano que se refiere a una chaqueta de manga larga, mientras que \"guagua\" es un vehículo de transporte público en Colombia. Ambos términos no están",
+      "ms_with": 270.8,
+      "ms_without": 1002.7
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "gold": [
+        "40",
+        "45"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El examen final representa el 40 por ciento de la nota final en tu curso, mientras que las tareas contribuyen con el 45 por ciento.",
+      "answer_without": "En mi curso, el examen final representa aproximadamente el 40% del total de calificación, mientras que las tareas y actividades asociadas al curso contribuyen con el 60%.",
+      "ms_with": 521.9,
+      "ms_without": 589.7
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "gold": [
+        "chompa"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Chompa.",
+      "answer_without": "En lugar de \"chaqueta\", prefiero usar \"abrigo\".",
+      "ms_with": 110.7,
+      "ms_without": 235.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "gold": [
+        "guagua"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"guagua\" en lugar de \"bebé\".",
+      "answer_without": "En lugar de \"bebé\", prefiero el término \"infante\" o \"bebé\".",
+      "ms_with": 257.0,
+      "ms_without": 285.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "gold": [
+        "foco"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término \"foco\" en lugar de \"bombillo\".",
+      "answer_without": "En lugar de \"bombillo\", prefiero \"luz\".",
+      "ms_with": 254.6,
+      "ms_without": 211.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "gold": [
+        "corpus"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Presento los ejemplos de mis materiales utilizando datos del corpus propio de 120 horas de grabaciones transcritas, anonimizadas y con consentimiento, como se describe en el contexto.",
+      "answer_without": "Puedes presentar ejemplos de tus materiales de varias maneras, dependiendo de su naturaleza. Si se trata de textos, puedes incluir párrafos o secciones específicas que ilustren tus puntos. Para materiales visuales, como gráficos o imágenes, puedes anexarlos directamente a tu presentación o usar el e",
+      "ms_with": 603.3,
+      "ms_without": 964.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "gold": [
+        "re-enseña",
+        "segunda"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si más de un tercio del curso reprueba una tarea, como en este caso, la tasa de aprobación es del 88 por ciento, se recomendaría revisar y analizar los ejemplos del curso que no lograron aprobar la tarea final. Esto podría implicar identificar patrones comunes en los errores cometidos y utilizar eso",
+      "answer_without": "Si más de un tercio del curso reprueba una tarea, como responsable de la gestión del curso, evaluaría la situación y consideraría posibles acciones, como reevaluar el proceso de evaluación, ofrecer retroalimentación personalizada a los estudiantes, o revisar la estructura del curso para garantizar q",
+      "ms_with": 1058.1,
+      "ms_without": 1001.4
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "gold": [
+        "120"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Mi corpus propio contiene 160 horas de grabaciones.",
+      "answer_without": "Mi capacidad de procesamiento de texto no incluye la capacidad de almacenar o contar horas de grabaciones, ya que soy un modelo de lenguaje basado en texto.",
+      "ms_with": 267.4,
+      "ms_without": 500.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "luisa",
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "gold": [
+        "cuatro",
+        "tres"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Mi rúbrica tiene 5 niveles y 10 criterios.",
+      "answer_without": "Mi rúbrica consta de 10 niveles, cada uno con 3 a 5 criterios, lo que totaliza entre 30 y 50 criterios.",
+      "ms_with": 256.0,
+      "ms_without": 491.3
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El protocolo exige una calidad mínima de variante (QUAL) de 20 y una profundidad mínima de 50 pb (pares de bases) para cada sitio.",
+      "answer_without": "El protocolo que describe no proporciona un umbral de calidad mínima de variante (QUAL) ni una profundidad mínima por sitio específica. Estos parámetros dependen del algoritmo de detección de variantes genéticas y del nivel de precisión deseado.",
+      "ms_with": 557.3,
+      "ms_without": 763.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El conjunto final de trabajo del pinzón serrano retuvo 11,204 variantes bialélicas, con una frecuencia mínima del alelo menor (MAF) mayor o igual a 0.01 dentro de cada población y no menor a 0.005 en el conjunto completo.",
+      "answer_without": "Como no tengo un conjunto de trabajo específico de pinzón serrano, no puedo proporcionar una respuesta concreta sobre el número de variantes retenidas y la frecuencia mínima del alelo menor. Sin embargo, en general, la diversidad genética de una población de pinzón serrano puede ser alta debido a la",
+      "ms_with": 938.0,
+      "ms_without": 1021.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "El F_ST por pares más alto se midió entre Cerro Fábrega y Cerro Chirripó, con un valor de 0.048.",
+      "answer_without": "El F_ST (F-statistic for population differentiation) se mide entre dos poblaciones para evaluar la variación genética dentro de cada población en comparación con la variación genética entre ellas. Sin un contexto específico, no puedo proporcionar un valor exacto para el F_ST entre dos poblaciones. S",
+      "ms_with": 493.0,
+      "ms_without": 1017.4
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Analizaron 88 muestras de Cerro de la Muerte, y la proporción de variantes privadas en esa población fue inferida como 0.012.",
+      "answer_without": "Como no tengo acceso a datos específicos sobre el análisis de muestras de Cerro de la Muerte, no puedo proporcionar una cifra exacta de muestras o la proporción de variantes privadas. Sin embargo, en general, los estudios genéticos de poblaciones locales pueden revelar una amplia variedad de variant",
+      "ms_with": 591.9,
+      "ms_without": 1015.2
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Según el criterio de abandono, la hipótesis de aislamiento podría declararse muerta cuando el valor de F_ST entre dos poblaciones se acerque a cero, ya que esto indicaría una alta tasa de cruce entre ellas. En el contexto proporcionado, el valor medio ponderado es 0.027, y el F_ST",
+      "answer_without": "Según la teoría de la extinción local, la hipótesis de aislamiento podría considerarse muerta cuando el valor de F_ST (estadística de diferenciación de la población) alcanza 1. En el estudio de Barú y Fábrega, el valor medido de F_ST fue 0.02, lo que indica una ligera diferenci",
+      "ms_with": 1049.9,
+      "ms_without": 1011.4
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Heterocigosidad esperada.",
+      "answer_without": "En lugar de \"diversidad genética\", el término que prefiero es \"variación genética\".",
+      "ms_with": 166.9,
+      "ms_without": 338.4
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Prefiero el término demografía en lugar de historia poblacional.",
+      "answer_without": "En lugar de \"historia poblacional\", prefiero \"etnografía\".",
+      "ms_with": 277.7,
+      "ms_without": 271.8
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Variante rara.",
+      "answer_without": "En lugar de \"mutación rara\", el término que prefiero es \"mutación genética rara\".",
+      "ms_with": 121.8,
+      "ms_without": 324.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Para cerrar un correo electrónico, puedes usar la palabra clave \"Saludos\" o \"Atentamente\" seguidos por tu nombre completo, como en \"Saludos, [Tu Nombre]\" o \"Atentamente, [Tu Nombre]\". También puedes agregar un signo de exclamación o punto después de tu nombre para darle un toque más personal.",
+      "answer_without": "Para cerrar un correo electrónico, generalmente sigues con un saludo formal, como \"Atentamente\" o \"Cordialmente\", seguido de tu nombre completo. Luego, escribes el nombre del destinatario y tu firma, que incluye tu nombre completo, cargo o título, y tu organización. Por ejemplo: \"Atentamente, [Tu No",
+      "ms_with": 953.6,
+      "ms_without": 993.6
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "Si el conjunto final baja de 5,000 variantes, deberías detener el análisis y revisar el paso 2.2 antes de continuar.",
+      "answer_without": "Si el conjunto final baja de 5,000 variantes, prioriza mantener la calidad y relevancia de cada una. Considera eliminar aquellas que no contribuyan significativamente a tu objetivo o que sean redundantes. Asegúrate de que el resto sigan siendo relevantes y útiles para tu propósito.",
+      "ms_with": 550.3,
+      "ms_without": 944.1
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ],
+      "with": false,
+      "without": false,
+      "answer_with": "El F_ST por pares se calcula utilizando el método de componentes principales (PCA) en el análisis de componentes principales, que es una técnica estadística para reducir la dimensionalidad de los datos mientras preserva la mayor cantidad de información posible. En este caso, el F_ST por pares se mid",
+      "answer_without": "En el análisis de componentes principales (PCA), se utiliza el método de varianza explicada para estimar el F_ST por pares. El F_ST por pares es una medida de la diferencia de varianza entre dos grupos, y en el contexto de PCA, se calcula como la proporción de varianza explicada por cada componente ",
+      "ms_with": 1122.0,
+      "ms_without": 1009.5
+    },
+    {
+      "model": "granite3.1-dense:2b",
+      "user": "mara",
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ],
+      "with": true,
+      "without": false,
+      "answer_with": "Para retirar sitios con datos faltantes, utilizas un umbral de missingness menor o igual a 0.10. Para la detección de desequilibrio de ligamiento, utilizas una ventana de 50 kilobases.",
+      "answer_without": "Para retirar sitios con alto umbral de missingness, se puede utilizar un umbral de 0.8 o mayor. Para manejar el desequilibrio de ligamiento, se puede emplear una ventana de 10 a 20 observaciones, dependiendo de la naturaleza de los datos y el impacto deseado en la análisis.",
+      "ms_with": 745.5,
+      "ms_without": 982.7
+    }
+  ],
+  "wiki_stats": {
+    "llama3.2:3b": {
+      "andres": {
+        "claims": 30,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 24,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 1,
+          "TRAINABLE": 5
+        },
+        "trainable": 5,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 62552.6
+      },
+      "carmen": {
+        "claims": 52,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 5,
+          "ANCHORED": 0,
+          "CONNECTED": 41,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 6
+        },
+        "trainable": 6,
+        "anchor_rejection_rate": 0.09615384615384615,
+        "digest_ms": 61473.4
+      },
+      "julian": {
+        "claims": 40,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 34,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 6
+        },
+        "trainable": 6,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 63972.9
+      },
+      "luisa": {
+        "claims": 24,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 19,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 5
+        },
+        "trainable": 5,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 60753.2
+      },
+      "mara": {
+        "claims": 42,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 2,
+          "ANCHORED": 1,
+          "CONNECTED": 31,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 8
+        },
+        "trainable": 8,
+        "anchor_rejection_rate": 0.04761904761904767,
+        "digest_ms": 91095.6
+      }
+    },
+    "qwen2.5:3b": {
+      "andres": {
+        "claims": 49,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 40,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 2,
+          "TRAINABLE": 7
+        },
+        "trainable": 7,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 57679.5
+      },
+      "carmen": {
+        "claims": 53,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 1,
+          "ANCHORED": 0,
+          "CONNECTED": 45,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 1,
+          "TRAINABLE": 6
+        },
+        "trainable": 6,
+        "anchor_rejection_rate": 0.018867924528301883,
+        "digest_ms": 59298.0
+      },
+      "julian": {
+        "claims": 61,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 1,
+          "CONNECTED": 53,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 1,
+          "TRAINABLE": 6
+        },
+        "trainable": 6,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 68913.5
+      },
+      "luisa": {
+        "claims": 47,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 1,
+          "CONNECTED": 40,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 6
+        },
+        "trainable": 6,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 54014.6
+      },
+      "mara": {
+        "claims": 64,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 57,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 7
+        },
+        "trainable": 7,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 84241.6
+      }
+    },
+    "gemma2:2b": {
+      "andres": {
+        "claims": 62,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 1,
+          "ANCHORED": 0,
+          "CONNECTED": 52,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 2,
+          "TRAINABLE": 7
+        },
+        "trainable": 7,
+        "anchor_rejection_rate": 0.016129032258064502,
+        "digest_ms": 45709.8
+      },
+      "carmen": {
+        "claims": 69,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 1,
+          "ANCHORED": 0,
+          "CONNECTED": 60,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 8
+        },
+        "trainable": 8,
+        "anchor_rejection_rate": 0.01449275362318836,
+        "digest_ms": 48248.8
+      },
+      "julian": {
+        "claims": 53,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 45,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 1,
+          "TRAINABLE": 7
+        },
+        "trainable": 7,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 51502.4
+      },
+      "luisa": {
+        "claims": 53,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 46,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 7
+        },
+        "trainable": 7,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 45786.7
+      },
+      "mara": {
+        "claims": 84,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 66,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 3,
+          "TRAINABLE": 15
+        },
+        "trainable": 15,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 67413.9
+      }
+    },
+    "phi3.5:3.8b": {
+      "andres": {
+        "claims": 8,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 1,
+          "CONNECTED": 3,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 92338.7
+      },
+      "mara": {
+        "claims": 7,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 0,
+          "ANCHORED": 0,
+          "CONNECTED": 3,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.0,
+        "digest_ms": 119880.4
+      }
+    },
+    "granite3.1-dense:2b": {
+      "andres": {
+        "claims": 48,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 7,
+          "ANCHORED": 1,
+          "CONNECTED": 35,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 5
+        },
+        "trainable": 5,
+        "anchor_rejection_rate": 0.14583333333333337,
+        "digest_ms": 53684.7
+      },
+      "carmen": {
+        "claims": 64,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 26,
+          "ANCHORED": 2,
+          "CONNECTED": 32,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.40625,
+        "digest_ms": 55182.1
+      },
+      "julian": {
+        "claims": 60,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 21,
+          "ANCHORED": 2,
+          "CONNECTED": 33,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.35,
+        "digest_ms": 59030.0
+      },
+      "luisa": {
+        "claims": 52,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 22,
+          "ANCHORED": 1,
+          "CONNECTED": 25,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.42307692307692313,
+        "digest_ms": 45587.9
+      },
+      "mara": {
+        "claims": 72,
+        "maturity": {
+          "RAW": 0,
+          "DIGESTED": 28,
+          "ANCHORED": 0,
+          "CONNECTED": 40,
+          "CORROBORATED": 0,
+          "CONSOLIDATED": 0,
+          "TRAINABLE": 4
+        },
+        "trainable": 4,
+        "anchor_rejection_rate": 0.38888888888888884,
+        "digest_ms": 79930.6
+      }
+    }
+  },
+  "provenance": {
+    "git_commit": "7baf5b00cddb323ca5a3ad9056de037c04311d02",
+    "git_dirty": false,
+    "prereg": "/Users/seb/Documents/Harness/LCE/docs/PREREGISTRATION_BENCH_R1X_ES.md",
+    "prereg_sha256": "f301ef668391b59aa2e6e32447d751c3db228628dcc2f7a3e54d0cc10a4f9f70",
+    "ollama_version": "0.40.2",
+    "models": {
+      "llama3.2:3b": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+      "qwen2.5:3b": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b",
+      "gemma2:2b": "8ccf136fdd5298f3ffe2d69862750ea7fb56555fa4d5b18c04e3fa4d82ee09d7",
+      "phi3.5:3.8b": "61819fb370a3c1a9be6694869331e5f85f867a079e9271d66cb223acb81d04ba",
+      "granite3.1-dense:2b": "fba1ad01113e0dea1bd9817fa41852e98ddada7a07a3c1cddffef8d588e1fa1e"
+    },
+    "python": "3.9.6",
+    "utc": "2026-10-10T17:31:37Z"
+  },
+  "summary": {
+    "n_questions": 60,
+    "n_cells": 264,
+    "mean_gain": 0.5,
+    "gain_ci95_cells": [
+      0.4393939393939394,
+      0.5606060606060606
+    ],
+    "mean_gain_by_question": 0.5,
+    "gain_ci95_by_question": [
+      0.42000000000000004,
+      0.5783333333333334
+    ],
+    "holds_descriptively": true,
+    "refusals": [
+      [
+        "phi3.5:3.8b",
+        "carmen",
+        "solo 4 claims"
+      ],
+      [
+        "phi3.5:3.8b",
+        "julian",
+        "solo 1 claims"
+      ],
+      [
+        "phi3.5:3.8b",
+        "luisa",
+        "solo 1 claims"
+      ]
+    ],
+    "by_user": {
+      "andres": {
+        "mean_gain": 0.533,
+        "n": 60
+      },
+      "carmen": {
+        "mean_gain": 0.5,
+        "n": 48
+      },
+      "julian": {
+        "mean_gain": 0.417,
+        "n": 48
+      },
+      "luisa": {
+        "mean_gain": 0.583,
+        "n": 48
+      },
+      "mara": {
+        "mean_gain": 0.467,
+        "n": 60
+      }
+    },
+    "by_model": {
+      "llama3.2:3b": {
+        "mean_gain": 0.317,
+        "n": 60
+      },
+      "qwen2.5:3b": {
+        "mean_gain": 0.7,
+        "n": 60
+      },
+      "gemma2:2b": {
+        "mean_gain": 0.717,
+        "n": 60
+      },
+      "phi3.5:3.8b": {
+        "mean_gain": 0.083,
+        "n": 24
+      },
+      "granite3.1-dense:2b": {
+        "mean_gain": 0.433,
+        "n": 60
+      }
+    }
+  }
+}

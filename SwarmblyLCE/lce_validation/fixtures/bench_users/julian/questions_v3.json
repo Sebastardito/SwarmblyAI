@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuántas filas tiene ahora la tabla de variantes del inquilino mayor?",
+      "type": "updated",
+      "gold": [
+        "43 millones"
+      ],
+      "old": [
+        "41 millones"
+      ]
+    },
+    {
+      "q": "¿Cuántos inquilinos activos hay al cierre del año?",
+      "type": "simple",
+      "gold": [
+        "155"
+      ]
+    },
+    {
+      "q": "¿Cuánto duró el segundo incidente mayor y cuál fue su causa?",
+      "type": "cross",
+      "gold": [
+        "22",
+        "conexiones"
+      ]
+    },
+    {
+      "q": "¿Cuál es el p95 del listado al cierre del año?",
+      "type": "updated",
+      "gold": [
+        "244"
+      ],
+      "old": [
+        "241"
+      ]
+    },
+    {
+      "q": "¿Cuánto recaudó la facturación por exceso de cuota?",
+      "type": "simple",
+      "gold": [
+        "12,400"
+      ]
+    },
+    {
+      "q": "¿Qué dos códigos de error nuevos se añadieron?",
+      "type": "cross",
+      "gold": [
+        "CAT-104",
+        "CAT-105"
+      ]
+    },
+    {
+      "q": "¿Cuándo se retira el servicio de facturación heredado?",
+      "type": "simple",
+      "gold": [
+        "tercer trimestre"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+# ---------------------------------------------------------------------------
+# Citation File Format (CFF) 1.2.0
+# https://citation-file-format.github.io/
+#
+# The whitepaper DOI is 10.5281/zenodo.23150478. The software DOI below is
+# the record of release v0.1.1, minted by the Zenodo GitHub integration; a new
+# release mints a new DOI, which replaces it after the release (an invalid DOI
+# in a citation record is worse than an absent one; publication/CHECKLIST.md).
+# ---------------------------------------------------------------------------
+
+cff-version: 1.2.0
+message: >-
+  If you use the Swarmbly Local Cognitive Extension design in academic work,
+  please cite the whitepaper (see `preferred-citation`). It is a draft and has
+  not been peer reviewed.
+type: software
+
+title: "Swarmbly LCE: Local Cognitive Extension"
+abstract: >-
+  A local-first extension to the Swarmbly decentralized inference protocol.
+  Each user keeps on their own device a human-readable memory (a wiki whose
+  claims are anchored to source spans, typed and versioned) and a lightweight
+  adapter trained only on behavioural patterns (voice, register, terminology,
+  procedures), regenerated from the base model and the memory with
+  interleaved replay and gated on freshly generated tests. Personalization
+  enters the protocol only through fields of the existing global contract;
+  workers serving third parties use their base model, leaving verification
+  intact. Nodes may optionally exchange small signed knowledge capsules on
+  demand; descendants require new human evidence, prevalence is a label rather
+  than an adoption criterion, and preserved capsules use a replica count
+  derived from a churn tolerance. The design is derived from evidence on
+  knowledge injection, model collapse, conformity and correlated errors across
+  model families, and from population-genetic and cultural-evolution
+  instruments. Every mechanism carries a pre-registered hypothesis and
+  abandonment condition. Since whitepaper v0.1, pre-registered runs with real
+  local models have measured lexicon adherence, cross-user homogeneity and
+  cross-family error agreement under task projection, the value of local
+  memory, and the anchored wiki against raw retrieval (confirmatory: the
+  wiki loses on accuracy and is retained as a governance layer), together
+  with source forgetting and reproducibility. The repository ships a reference implementation, a
+  validation harness whose ten instrument tests pass in simulation, the raw
+  outputs of every run and a figure-anchoring test suite; mock and
+  simulation outputs are not evidence.
+
+version: "0.1.1"
+date-released: "2026-10-10"
+license: AGPL-3.0-or-later
+
+authors:
+  - given-names: "Sebastián A."
+    family-names: "Espinoza-Ulloa"
+    affiliation: "Independent Researcher"
+    email: "sebas_saeu@hotmail.com"
+    orcid: "https://orcid.org/0000-0003-1497-356X"
+
+repository-code: "https://github.com/Sebastardito/SwarmblyLCE"
+doi: "10.5281/zenodo.23289041"   # software record v0.1.1 (Zenodo, GitHub integration)
+
+keywords:
+  - "local-first"
+  - "personalization"
+  - "small language models"
+  - "continual learning"
+  - "retrieval-augmented generation"
+  - "LoRA"
+  - "model collapse"
+  - "cultural evolution"
+  - "population genetics"
+  - "decentralized AI"
+  - "Swarmbly"
+
+references:
+  - type: article
+    title: >-
+      Semantic Fragmentation and Stochastic Assembly, version 2: A Protocol for
+      Decentralized Language-Model Inference over Untrusted Volunteer Nodes
+    authors:
+      - given-names: "Sebastián A."
+        family-names: "Espinoza-Ulloa"
+    year: 2026
+    doi: "10.5281/zenodo.23031305"
+    notes: "The protocol this extension builds on and must not deform."
+
+preferred-citation:
+  type: report
+  title: >-
+    Local Cognition and Anchored Transmission: A Local-First Cognitive
+    Extension for Swarmbly
+  authors:
+    - given-names: "Sebastián A."
+      family-names: "Espinoza-Ulloa"
+      affiliation: "Independent Researcher"
+      orcid: "https://orcid.org/0000-0003-1497-356X"
+  year: 2026
+  month: 10
+  publisher:
+    name: "Zenodo"
+  url: "https://doi.org/10.5281/zenodo.23150478"
+  doi: "10.5281/zenodo.23150478"
+  notes: "Version 0.1, draft preprint, not peer reviewed. English and Spanish versions."

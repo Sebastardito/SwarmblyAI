@@ -1,0 +1,30 @@
+{
+ "behaviour_prereg": {
+  "refused_cells": [],
+  "cells_used": 15,
+  "abstention": {
+   "full": 0.289,
+   "forget": 0.778,
+   "never": 0.756
+  },
+  "forget_minus_full": 0.489,
+  "forget_minus_full_ci95": [
+   0.333,
+   0.644
+  ],
+  "forget_minus_never": 0.022,
+  "forget_minus_never_ci95": [
+   0.0,
+   0.067
+  ],
+  "n_questions": 5,
+  "identical_answers_forget_never": 0.889
+ },
+ "independent_equivalence": {
+  "forget_eq_r13": 0,
+  "never_eq_r13": 0,
+  "forget_eq_never": 8,
+  "wikis": 15
+ },
+ "independent_equivalence_note": "posterior a los datos; requiere las wikis en caché (no versionadas): W_forget frente a la wiki de R13 digerida sin la fuente en otra corrida"
+}

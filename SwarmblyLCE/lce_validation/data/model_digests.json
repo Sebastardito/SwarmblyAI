@@ -1,0 +1,11 @@
+{
+ "note": "Digests de Ollama (/api/tags) de los modelos preregistrados, fijados desde la procedencia de F1a y R13 (10-10-2026, Ollama 0.40.2). run_r13 --confirm y los benchmarks confirmatorios se niegan si un modelo no coincide (preregistro R14 1.1.2). Cambiar un digest es una enmienda, no una edición.",
+ "ollama_version": "0.40.2",
+ "models": {
+  "gemma2:2b": "8ccf136fdd5298f3ffe2d69862750ea7fb56555fa4d5b18c04e3fa4d82ee09d7",
+  "granite3.1-dense:2b": "fba1ad01113e0dea1bd9817fa41852e98ddada7a07a3c1cddffef8d588e1fa1e",
+  "llama3.2:3b": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+  "phi3.5:3.8b": "61819fb370a3c1a9be6694869331e5f85f867a079e9271d66cb223acb81d04ba",
+  "qwen2.5:3b": "357c53fb659c5076de1d65ccb0b397446227b71a42be9d1603d46168015c9e4b"
+ }
+}

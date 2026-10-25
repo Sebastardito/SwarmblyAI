@@ -1,0 +1,10 @@
+{"learning_policy": {
+  "v": "0.1",
+  "defaults": {"reference_only": true},
+  "sources": {
+    "teach/style": {"authored_by_user": true, "learn_style": true, "learn_preference": true},
+    "teach/procedures": {"authored_by_user": true, "learn_procedure": true},
+    "teach/knowledge": {"authored_by_user": false, "wiki": true},
+    "reference_only": {"wiki": true, "train": false, "retain_episodic": true}
+  }
+}}

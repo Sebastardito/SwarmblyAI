@@ -1,0 +1,214 @@
+{
+  "questions": [
+    {
+      "q": "¿Qué proporción de variantes privadas mostró Cerro de la Muerte?",
+      "type": "simple",
+      "gold": [
+        "3.1"
+      ]
+    },
+    {
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste?",
+      "type": "simple",
+      "gold": [
+        "41"
+      ]
+    },
+    {
+      "q": "¿Con qué frecuencia mínima del alelo menor retuviste las variantes del pinzón serrano?",
+      "type": "simple",
+      "gold": [
+        "0.01"
+      ]
+    },
+    {
+      "q": "¿Qué tamaño efectivo preliminar estimaste para la población de Chirripó?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué diversidad nucleotídica preliminar calculaste para el conjunto?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿A cuántos loci atribuía el borrador el exceso de variantes privadas de Cerro de la Muerte?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿En cuánto cuantificó el borrador el aislamiento reproductivo de Fábrega?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué tasa de endogamia preliminar estimó el borrador para el conjunto?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál es el umbral QUAL mínimo vigente y cuál era antes de la recalibración?",
+      "type": "updated",
+      "gold": [
+        "40",
+        "30"
+      ]
+    },
+    {
+      "q": "¿Cuál es la profundidad mínima por sitio vigente y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "12",
+        "8"
+      ]
+    },
+    {
+      "q": "¿Cuál es el umbral de missingness vigente y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "0.08",
+        "0.10"
+      ]
+    },
+    {
+      "q": "¿Cuál es el F_ST vigente entre Fábrega y Chirripó y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "0.052",
+        "0.048"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es el umbral de missingness para retirar sitios y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "0.08",
+        "0.20"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "0.08",
+        "0.20"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es el F_ST entre Barú y Fábrega y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "0.041",
+        "0.09"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "0.041",
+        "0.09"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántas variantes retuvo el conjunto final y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "11,203",
+        "9,800"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "11,203",
+        "9,800"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿qué frecuencia mínima del alelo menor exiges y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "0.01",
+        "0.02"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "0.01",
+        "0.02"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántas muestras de Cerro de la Muerte analizaste y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "41",
+        "52"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "41",
+        "52"
+      ]
+    },
+    {
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo y qué umbral QUAL mínimo exige tu protocolo?",
+      "type": "cross",
+      "gold": [
+        "11,203",
+        "40"
+      ]
+    },
+    {
+      "q": "¿Qué valor de F_ST mediste entre Barú y Fábrega y bajo qué valor declararías muerta la hipótesis de aislamiento?",
+      "type": "cross",
+      "gold": [
+        "0.041",
+        "0.01"
+      ]
+    },
+    {
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y con qué ventana podas por desequilibrio de ligamiento?",
+      "type": "cross",
+      "gold": [
+        "41",
+        "50"
+      ]
+    },
+    {
+      "q": "¿Qué proporción de variantes privadas mostró Cerro de la Muerte y cuántas variantes mínimas exige tu conjunto final?",
+      "type": "cross",
+      "gold": [
+        "3.1",
+        "5,000"
+      ]
+    },
+    {
+      "q": "¿Cuál fue el índice de Shannon del bosque nuboso en tu último muestreo de vegetación?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué cebadores usaste para amplificar el intrón 7 del gen de la rodopsina?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál fue la tasa de captura-recaptura del pinzón serrano en 2026?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué porcentaje de juveniles marcaste con anillas metálicas?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántos transectos de vegetación levantaste en Chirripó?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

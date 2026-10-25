@@ -1,0 +1,49 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuál es la retención corregida de la ese final en hablantes rurales?",
+      "type": "updated",
+      "gold": [
+        "58"
+      ],
+      "old": [
+        "61"
+      ]
+    },
+    {
+      "q": "¿Cuántas ocurrencias de foco anota el diario de campo?",
+      "type": "simple",
+      "gold": [
+        "44"
+      ]
+    },
+    {
+      "q": "¿Cuántas ocurrencias de foco tiene tu corpus?",
+      "type": "contradiction",
+      "gold": [
+        "44"
+      ],
+      "allow_flag": true
+    },
+    {
+      "q": "¿Qué porcentaje de asibilación anotó el piloto de 2024?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué porcentaje de retención corrigió la revisión y cuál era el valor previo?",
+      "type": "cross",
+      "gold": [
+        "58",
+        "61"
+      ]
+    },
+    {
+      "q": "¿Cuál es la frecuencia del voseo en tu corpus?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}
