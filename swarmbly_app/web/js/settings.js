@@ -394,6 +394,11 @@ const Settings = (() => {
     }
     clear(els.body);
     els.body.appendChild(Doctor.view(d, () => renderTab()));
+    els.body.appendChild(h("section.subpanel",
+      h("h3", t("support.title")),
+      h("p.muted", t("support.body")),
+      h("p", h("a", { href: "https://buymeacoffee.com/swarmbly", target: "_blank",
+        rel: "noopener noreferrer" }, t("support.link")))));
   }
 
   function relabel() { build(); renderTab(); }

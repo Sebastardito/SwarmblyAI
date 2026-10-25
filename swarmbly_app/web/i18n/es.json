@@ -794,5 +794,10 @@
    "done": "listo",
    "failed": "error"
   }
+ },
+ "support": {
+  "title": "Apoya el proyecto",
+  "body": "Swarmbly se desarrolla de forma independiente, sin financiación institucional, como un bien público digital con licencia AGPL. Si te resulta útil, puedes apoyar su desarrollo en estas primeras etapas. El apoyo nunca compra influencia sobre la hoja de ruta, la licencia ni la gobernanza.",
+  "link": "buymeacoffee.com/swarmbly"
  }
 }
