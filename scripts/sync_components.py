@@ -41,7 +41,7 @@ def sync(lock: dict, name: str, ref: str, repo: str | None) -> None:
     comp = lock["components"].get(name)
     if not comp or comp.get("source") != "mirror":
         sys.exit(f"{name} is not a mirror in components.lock")
-    if git("status", "--porcelain"):
+    if git("status", "--porcelain", "--untracked-files=no"):
         sys.exit("the working tree has uncommitted changes; commit or stash them first")
     source = repo or comp["repository"]
     git("fetch", "--quiet", source, ref)
