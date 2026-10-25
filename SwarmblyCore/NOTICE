@@ -1,0 +1,106 @@
+Swarmbly AI
+==========
+
+Copyright (C) 2026 Sebastián A. Espinoza-Ulloa (Independent Researcher)
+
+Contact: sebas_saeu@hotmail.com
+
+This product includes software and documentation developed as part of the
+Swarmbly project: a decentralized AI inference protocol that fragments the
+*problem* (a prompt decomposed into semantic micro-tasks) rather than the
+*model*, dispatches those micro-tasks asynchronously to volunteer nodes
+running complete small language models (SLMs, 1–8B parameters), and
+reassembles the result locally with a client-side orchestrator SLM.
+
+Published components at the time of this notice:
+  - Whitepaper                 v1.4 (published; superseded by v2.0)
+  - Whitepaper                 v2.0 (current)
+  - Protocol specification     v0.2 (revision 2)
+  - Reference implementation   V0
+  - Reference bench (Ollama)   swarmbly_ref
+  - Validation harness         swarmbly_validation
+
+--------------------------------------------------------------------------
+LICENSE SUMMARY
+--------------------------------------------------------------------------
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+    SPDX-License-Identifier: AGPL-3.0-or-later
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License
+for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The complete, verbatim license text is in the file `LICENSE` in the root of
+this repository.
+
+--------------------------------------------------------------------------
+IMPORTANT: AGPL §13 — REMOTE NETWORK INTERACTION
+--------------------------------------------------------------------------
+
+The AGPL differs from the GPL in one respect that matters a great deal for
+a protocol like Swarmbly, which is expected to be run as network-facing
+infrastructure (relays, node runners, hosted orchestrators, gateways,
+"Swarmbly as a service" offerings).
+
+Section 13 of the AGPL-3.0 states, in relevant part:
+
+    "Notwithstanding any other provision of this License, if you modify the
+    Program, your modified version must prominently offer all users
+    interacting with it remotely through a computer network (if your version
+    supports such interaction) an opportunity to receive the Corresponding
+    Source of your version by providing access to the Corresponding Source
+    from a network server at no charge, through some standard or customary
+    means of facilitating copying of software."
+
+Practical consequences for anyone deploying Swarmbly:
+
+  1. If you run a MODIFIED version of Swarmbly and users interact with it
+     over a network, you must offer those users the Corresponding Source of
+     your modified version, at no charge — even if you never distribute a
+     binary or a copy of the code to anyone.
+
+  2. "Users interacting with it remotely" includes users of a hosted or
+     SaaS deployment. Running the software only on your own servers does
+     not, by itself, avoid this obligation.
+
+  3. The obligation attaches to the *modified* version. Running an
+     unmodified upstream release over a network does not trigger §13's
+     source-offer requirement, though offering the source anyway is good
+     practice and costs nothing.
+
+  4. The Corresponding Source must be complete enough to build and run the
+     modified version — configuration and build scripts included.
+
+This summary is provided for orientation only. It is not legal advice, it
+is not a substitute for reading the license, and where this summary and the
+text in `LICENSE` differ, the text in `LICENSE` governs. Operators with
+commercial deployments should obtain their own legal advice.
+
+--------------------------------------------------------------------------
+TRADEMARKS
+--------------------------------------------------------------------------
+
+The AGPL grants rights in copyright. It does not grant rights in
+trademarks. "Swarmbly" and "Swarmbly AI" are used by the project as marks;
+see `TRADEMARK.md` for the policy governing their use. As of the date of
+this notice these marks are NOT registered — see that file for the exact
+status and its limits.
+
+--------------------------------------------------------------------------
+THIRD-PARTY MATERIAL
+--------------------------------------------------------------------------
+
+Any third-party components vendored into this repository retain their own
+licenses and copyright notices. Where such components exist, their licenses
+are recorded alongside them. Contributors adding a dependency with a
+license other than AGPL-3.0-or-later must confirm compatibility before the
+change is merged — see `CONTRIBUTING.md`.
