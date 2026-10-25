@@ -1,4 +1,4 @@
-# Swarmbly AI
+# SwarmblyCore — the protocol of Swarmbly AI
 
 > **This folder is SwarmblyCore**, the core of [Swarmbly AI](../README.md): protocol, specification, reference implementation, measurement harness and benchmark. Until release 2.0.0 it was the whole repository; from 3.0.0 the repository is the integrated distribution of SwarmblyCore, [SwarmblyLCE](../SwarmblyLCE/) and [SwarmblyApp](../SwarmblyApp/). Its content is unchanged.
 >
@@ -8,6 +8,7 @@
 [![DOI (paper, v2)](https://zenodo.org/badge/DOI/10.5281/zenodo.23031305.svg)](https://doi.org/10.5281/zenodo.23031305)
 [![Licence: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
 ![Status: research prototype, measured](https://img.shields.io/badge/status-research%20prototype%2C%20measured-orange.svg)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
 **A decentralized inference protocol that fragments the *problem*, not the *model*.**
 
