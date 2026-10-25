@@ -29,7 +29,8 @@ abstract: >-
   with an interactive installer for macOS, Linux and Windows. Alpha software;
   measurements and their limits are stated in each component.
 
-version: "3.0.0-dev"
+version: "3.0.0"
+date-released: 2026-10-25
 license: AGPL-3.0-or-later
 
 authors:

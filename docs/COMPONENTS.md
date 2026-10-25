@@ -8,13 +8,13 @@
 
 ### Versions in this distribution
 
-The source of truth is [`components.lock`](../components.lock). Distribution **3.0.0-dev**:
+The source of truth is [`components.lock`](../components.lock). Distribution **3.0.0**:
 
 | Component | Version | Source | Commit | DOI |
 |---|---|---|---|---|
 | SwarmblyCore | `swarmbly-v0` 0.1.0 | in this repository | — | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
-| SwarmblyLCE | 0.2.0.dev0 | mirror of [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `fb90d77` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
-| SwarmblyApp | 0.3.0 | mirror of [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `6c3746a` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
+| SwarmblyLCE | 0.2.0.dev0 | mirror of [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `5fb70b9` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
+| SwarmblyApp | 0.3.0 | mirror of [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `e6af928` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
 
 ### Rules
 
@@ -54,13 +54,13 @@ Each component releases on its own (tag, GitHub release, Zenodo DOI), as before.
 
 ### Versiones de esta distribución
 
-La fuente de verdad es [`components.lock`](../components.lock). Distribución **3.0.0-dev**:
+La fuente de verdad es [`components.lock`](../components.lock). Distribución **3.0.0**:
 
 | Componente | Versión | Origen | Commit | DOI |
 |---|---|---|---|---|
 | SwarmblyCore | `swarmbly-v0` 0.1.0 | en este repositorio | — | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
-| SwarmblyLCE | 0.2.0.dev0 | espejo de [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `fb90d77` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
-| SwarmblyApp | 0.3.0 | espejo de [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `6c3746a` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
+| SwarmblyLCE | 0.2.0.dev0 | espejo de [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `5fb70b9` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
+| SwarmblyApp | 0.3.0 | espejo de [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `e6af928` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
 
 ### Reglas
 

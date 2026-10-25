@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "distribution": "3.0.0-dev",
+  "distribution": "3.0.0",
   "note": "Versions of the components tested together. Mirrors are copies (git subtree --squash) of the commit below; never edit them here: change the component's own repository and run scripts/sync_components.py.",
   "components": {
     "SwarmblyCore": {

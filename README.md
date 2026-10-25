@@ -22,6 +22,8 @@ A local orchestrator, a private memory and a peer-to-peer network of small model
 </p>
 
 > **Status: alpha.** A working research prototype with published measurements, not peer reviewed. Each component states what has been measured and what has not; read [What works today](#what-works-today) before quoting any capability.
+>
+> **Latest release: [3.0.0 — integrated distribution](docs/releases/v3.0.0.md)** (2026-10-25).
 
 ---
 
@@ -259,7 +261,7 @@ SwarmblyAI/
 ├── install.sh · install.command · install.ps1 · install.bat
 ├── components.lock      the component versions tested together
 ├── scripts/             sync_components.py, check_components.py, readme_figures.py
-├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, figures/, img/
+├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, releases/, figures/, img/
 └── LICENSE · NOTICE · GOVERNANCE.md · TRADEMARK.md · CITATION.cff · CHANGELOG.md
 ```
 
@@ -315,7 +317,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 ## Español
 
-> Las figuras tienen el texto en inglés; sus cifras son las mismas.
+> **Última versión: [3.0.0, distribución integrada](docs/releases/v3.0.0.md#español)** (2026-10-25). Las figuras tienen el texto en inglés; sus cifras son las mismas.
 
 ### Contenido
 
@@ -549,7 +551,7 @@ SwarmblyAI/
 ├── install.sh · install.command · install.ps1 · install.bat
 ├── components.lock      las versiones de los componentes probadas juntas
 ├── scripts/             sync_components.py, check_components.py, readme_figures.py
-├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, figures/, img/
+├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, releases/, figures/, img/
 └── LICENSE · NOTICE · GOVERNANCE.md · TRADEMARK.md · CITATION.cff · CHANGELOG.md
 ```
 
