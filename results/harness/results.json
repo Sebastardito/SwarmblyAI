@@ -1,0 +1,1675 @@
+{
+ "header": {
+  "lce_version": "0.2.0.dev0",
+  "backend_kind": "simulation",
+  "backend": "MockBackend + numpy simulations",
+  "evidence": false,
+  "seed": 0
+ },
+ "instruments": {
+  "error_agreement": {
+   "hypothesis": "H-C17 (instrument: error agreement on MCQ)",
+   "independent": {
+    "agreement": 0.321276596,
+    "chance": 0.333311164
+   },
+   "shared_0.5": {
+    "agreement": 0.518201285,
+    "chance": 0.333318928
+   },
+   "equivalence_rate_no_change": 0.933333333,
+   "detection_rate_sharing_0.4_to_0.8": 1.0,
+   "n_items": 1500,
+   "margin": 0.1,
+   "prediction": "independent ≈ chance ≈ 1/3; shared > chance; no change → CI inside ±0.10 in ≥80%; real change detected in ≥80%",
+   "passed": true
+  },
+  "anchor_gate": {
+   "hypothesis": "anchoring rule (whitepaper 5.2; SPEC 6.3)",
+   "accept_rate_supported": 1.0,
+   "accept_rate_fabricated": 0.0,
+   "prediction": "supported claims accepted (>=0.95); fabricated or misanchored claims rejected (acceptance <=0.05)",
+   "passed": true
+  },
+  "conformity": {
+   "hypothesis": "H-C11",
+   "analytic_generations_to_1pct": 18,
+   "generations_simulated": 30,
+   "minority_freq_conformist": 0.001,
+   "minority_freq_linear": 0.21425,
+   "guard_accepts_linear": true,
+   "guard_flags_threshold_rule": true,
+   "prediction": "conformist arm loses the minority (<5%); linear arm keeps its mean (~p0)",
+   "passed": true
+  },
+  "migration": {
+   "hypothesis": "H-C8 (instrument only)",
+   "rows": [
+    {
+     "Nm": 0.1,
+     "fst_sim": 0.834725361,
+     "fst_wright": 0.714285714,
+     "rel_err": 0.168615505
+    },
+    {
+     "Nm": 0.5,
+     "fst_sim": 0.517841114,
+     "fst_wright": 0.333333333,
+     "rel_err": 0.553523343
+    },
+    {
+     "Nm": 1.0,
+     "fst_sim": 0.34934279,
+     "fst_wright": 0.2,
+     "rel_err": 0.746713949
+    },
+    {
+     "Nm": 2.25,
+     "fst_sim": 0.18468737,
+     "fst_wright": 0.1,
+     "rel_err": 0.846873703
+    },
+    {
+     "Nm": 10.0,
+     "fst_sim": 0.048022388,
+     "fst_wright": 0.024390244,
+     "rel_err": 0.96891789
+    }
+   ],
+   "monotone_decreasing": true,
+   "within_factor_2_in_band": true,
+   "prediction": "simulated F_ST decreases with Nm and tracks 1/(1+4Nm) within a factor of 2 in the band 0.5–2.25",
+   "passed": true
+  },
+  "persistence": {
+   "hypothesis": "H-C5 / H-C13 (instrument)",
+   "q_per_window": 0.074038921,
+   "r_for_eps_1e-3": 3,
+   "r_for_eps_1e-4": 4,
+   "by_r": {
+    "1": {
+     "sim_annual_loss": 0.979,
+     "analytic": 0.981684361,
+     "correlated_annual_loss": 0.9845
+    },
+    "2": {
+     "sim_annual_loss": 0.255,
+     "analytic": 0.248613999,
+     "correlated_annual_loss": 0.6105
+    },
+    "3": {
+     "sim_annual_loss": 0.02175,
+     "analytic": 0.020887959,
+     "correlated_annual_loss": 0.4975
+    },
+    "4": {
+     "sim_annual_loss": 0.00075,
+     "analytic": 0.001561388,
+     "correlated_annual_loss": 0.50675
+    }
+   },
+   "prediction": "simulated loss matches q**r analytics; shared-operator placement is far worse",
+   "passed": true
+  },
+  "selection_bias": {
+   "hypothesis": "H-C15 (instrument)",
+   "rows": [
+    {
+     "k": 3,
+     "reliability": 0.3,
+     "intensity": 0.849928636,
+     "predicted_gain": 0.254978591,
+     "realised_gain": 0.259704234,
+     "observed_on_selection_set": 2.842780589,
+     "observed_on_fresh_set": 0.242461766
+    },
+    {
+     "k": 3,
+     "reliability": 0.8,
+     "intensity": 0.849928636,
+     "predicted_gain": 0.679942909,
+     "realised_gain": 0.691336203,
+     "observed_on_selection_set": 1.053153984,
+     "observed_on_fresh_set": 0.694628082
+    },
+    {
+     "k": 5,
+     "reliability": 0.3,
+     "intensity": 1.161520791,
+     "predicted_gain": 0.348456237,
+     "realised_gain": 0.34183203,
+     "observed_on_selection_set": 3.869144809,
+     "observed_on_fresh_set": 0.317032529
+    },
+    {
+     "k": 5,
+     "reliability": 0.8,
+     "intensity": 1.161520791,
+     "predicted_gain": 0.929216633,
+     "realised_gain": 0.923664396,
+     "observed_on_selection_set": 1.469118503,
+     "observed_on_fresh_set": 0.936610515
+    },
+    {
+     "k": 10,
+     "reliability": 0.3,
+     "intensity": 1.536692648,
+     "predicted_gain": 0.461007794,
+     "realised_gain": 0.435454371,
+     "observed_on_selection_set": 5.123928992,
+     "observed_on_fresh_set": 0.435360651
+    },
+    {
+     "k": 10,
+     "reliability": 0.8,
+     "intensity": 1.536692648,
+     "predicted_gain": 1.229354119,
+     "realised_gain": 1.234919955,
+     "observed_on_selection_set": 1.932476579,
+     "observed_on_fresh_set": 1.248023976
+    }
+   ],
+   "prediction": "realised ≈ i·r·σ; selection-set estimate inflated; fresh-set estimate unbiased",
+   "passed": true
+  },
+  "collapse": {
+   "hypothesis": "H-C7 / H-C12 (instrument)",
+   "tail_mass_initial": 0.539749297,
+   "tail_mass_final": {
+    "replace": 0.074918225,
+    "accumulate": 0.539749297,
+    "anchored": 1.0
+   },
+   "prediction": "replace erodes the tail; accumulate bounds it; anchored variation preserves or recovers it",
+   "passed": true
+  },
+  "r13_abstention": {
+   "hypothesis": "el calificador separa abstención de contenido",
+   "prediction": "12/12 clasificaciones correctas en casos fabricados",
+   "passed": true,
+   "detail": "12/12"
+  },
+  "r13_contradiction": {
+   "hypothesis": "el calificador acepta vigente/desacuerdo y rechaza la versión antigua",
+   "prediction": ">= 6/7 en casos fabricados",
+   "passed": true,
+   "detail": "6/7"
+  },
+  "i1_equivalence": {
+   "hypothesis": "el procedimiento detecta una fuga inyectada y no da falsas alarmas",
+   "prediction": ">=95% de fugas detectadas y <=5% de falsas alarmas",
+   "passed": true,
+   "detail": "deteccion 0.99, falsas 0.00"
+  }
+ },
+ "experiments_mock": {
+  "build_wiki": {
+   "claims": 13,
+   "maturity": {
+    "RAW": 0,
+    "DIGESTED": 0,
+    "ANCHORED": 0,
+    "CONNECTED": 7,
+    "CORROBORATED": 0,
+    "CONSOLIDATED": 1,
+    "TRAINABLE": 5
+   },
+   "trainable": 5,
+   "digest": {
+    "spans": 12,
+    "malformed": 0,
+    "proposed": 13,
+    "added": 13,
+    "skipped_policy": 0,
+    "quote_not_found": 0,
+    "type_reconciled": 0
+   },
+   "anchor_verification": {
+    "proposed": 13,
+    "verified": 13,
+    "rejected_missing": 0,
+    "rejected_hash": 0,
+    "rejected_support": 0,
+    "rejection_rate": 0.0
+   },
+   "anchor_mode": "offsets",
+   "reconcile_types": false,
+   "claims_detail": [
+    {
+     "text": "Ayer hablé con el equipo sobre el cronograma del proyecto y acordamos revisar los datos la semana pasada.",
+     "type": "experience",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "Ayer hablé con el equipo sobre el cronograma del proyecto y acordamos revisar los datos la semana pasada."
+    },
+    {
+     "text": "El laboratorio cierra a las seis de la tarde los viernes.",
+     "type": "fact",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "El laboratorio cierra a las seis de la tarde los viernes."
+    },
+    {
+     "text": "El tamaño efectivo de población puede ser mucho menor que el tamaño censal cuando la proporción de sexos está sesgada.",
+     "type": "fact",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "El tamaño efectivo de población puede ser mucho menor que el tamaño censal cuando la proporción de sexos está sesgada."
+    },
+    {
+     "text": "La regla de un migrante por generación corresponde a un F_ST cercano a 0.",
+     "type": "fact",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "La regla de un migrante por generación corresponde a un F_ST cercano a 0."
+    },
+    {
+     "text": "2 en el modelo de islas.",
+     "type": "fact",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "2 en el modelo de islas."
+    },
+    {
+     "text": "Creo que el café mejora la concentración en todos los casos.",
+     "type": "belief",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "Creo que el café mejora la concentración en todos los casos."
+    },
+    {
+     "text": "Primero filtro las variantes por calidad, luego calculo la heterocigosidad esperada y finalmente estimo F_ST por pares de poblaciones.",
+     "type": "procedure",
+     "anchored": true,
+     "maturity": "TRAINABLE",
+     "span": "Primero filtro las variantes por calidad, luego calculo la heterocigosidad esperada y finalmente estimo F_ST por pares de poblaciones."
+    },
+    {
+     "text": "Para revisar un manuscrito, primero leo las figuras, luego la discusión y al final los métodos.",
+     "type": "procedure",
+     "anchored": true,
+     "maturity": "TRAINABLE",
+     "span": "Para revisar un manuscrito, primero leo las figuras, luego la discusión y al final los métodos."
+    },
+    {
+     "text": "Cuando preparo un experimento, primero escribo el criterio de abandono y luego diseño las corridas.",
+     "type": "style",
+     "anchored": true,
+     "maturity": "CONSOLIDATED",
+     "span": "Cuando preparo un experimento, primero escribo el criterio de abandono y luego diseño las corridas."
+    },
+    {
+     "text": "Siempre escribo correos con un registro cálido y profesional, y cierro con un agradecimiento breve.",
+     "type": "style",
+     "anchored": true,
+     "maturity": "TRAINABLE",
+     "span": "Siempre escribo correos con un registro cálido y profesional, y cierro con un agradecimiento breve."
+    },
+    {
+     "text": "Prefiero el término fragmentación semántica en lugar de división de prompts.",
+     "type": "preference",
+     "anchored": true,
+     "maturity": "TRAINABLE",
+     "span": "Prefiero el término fragmentación semántica en lugar de división de prompts."
+    },
+    {
+     "text": "Prefiero el término heterocigosidad esperada en lugar de diversidad génica.",
+     "type": "preference",
+     "anchored": true,
+     "maturity": "TRAINABLE",
+     "span": "Prefiero el término heterocigosidad esperada en lugar de diversidad génica."
+    },
+    {
+     "text": "Suelo explicar un concepto nuevo con una analogía biológica antes de dar la definición formal.",
+     "type": "fact",
+     "anchored": true,
+     "maturity": "CONNECTED",
+     "span": "Suelo explicar un concepto nuevo con una analogía biológica antes de dar la definición formal."
+    }
+   ]
+  },
+  "C1": {
+   "hypothesis": "H-C1",
+   "n": 10,
+   "acc_with_memory": 0.9,
+   "acc_without_memory": 0.0,
+   "gain": 0.9
+  },
+  "C2": {
+   "hypothesis": "H-C2 (partial: rho not measured), H-C17",
+   "users": 3,
+   "topics": 20,
+   "temperature": 0.7,
+   "projection_bytes_mean": 96.85,
+   "local_only_writes": 3,
+   "nonempty_gamma_writes": 1.0,
+   "nonempty_gamma_items": 1.0,
+   "anchor_mode": "offsets",
+   "span_projection": false,
+   "user_wikis": {
+    "u1": {
+     "claims": 2,
+     "maturity": {
+      "RAW": 0,
+      "DIGESTED": 0,
+      "ANCHORED": 0,
+      "CONNECTED": 0,
+      "CORROBORATED": 0,
+      "CONSOLIDATED": 0,
+      "TRAINABLE": 2
+     },
+     "trainable": 2,
+     "digest": {
+      "spans": 2,
+      "malformed": 0,
+      "proposed": 2,
+      "added": 2,
+      "skipped_policy": 0,
+      "quote_not_found": 0,
+      "type_reconciled": 0
+     },
+     "anchor_verification": {
+      "proposed": 2,
+      "verified": 2,
+      "rejected_missing": 0,
+      "rejected_hash": 0,
+      "rejected_support": 0,
+      "rejection_rate": 0.0
+     },
+     "anchor_mode": "offsets",
+     "reconcile_types": false,
+     "claims_detail": [
+      {
+       "text": "Escribo en un registro técnico y conciso.",
+       "type": "style",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Escribo en un registro técnico y conciso."
+      },
+      {
+       "text": "Prefiero el término inferencia descentralizada en lugar de computación distribuida.",
+       "type": "preference",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Prefiero el término inferencia descentralizada en lugar de computación distribuida."
+      }
+     ]
+    },
+    "u2": {
+     "claims": 2,
+     "maturity": {
+      "RAW": 0,
+      "DIGESTED": 0,
+      "ANCHORED": 0,
+      "CONNECTED": 0,
+      "CORROBORATED": 0,
+      "CONSOLIDATED": 0,
+      "TRAINABLE": 2
+     },
+     "trainable": 2,
+     "digest": {
+      "spans": 2,
+      "malformed": 0,
+      "proposed": 2,
+      "added": 2,
+      "skipped_policy": 0,
+      "quote_not_found": 0,
+      "type_reconciled": 0
+     },
+     "anchor_verification": {
+      "proposed": 2,
+      "verified": 2,
+      "rejected_missing": 0,
+      "rejected_hash": 0,
+      "rejected_support": 0,
+      "rejection_rate": 0.0
+     },
+     "anchor_mode": "offsets",
+     "reconcile_types": false,
+     "claims_detail": [
+      {
+       "text": "Escribo en un registro divulgativo y cercano.",
+       "type": "style",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Escribo en un registro divulgativo y cercano."
+      },
+      {
+       "text": "Prefiero el término modelo pequeño en lugar de SLM.",
+       "type": "preference",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Prefiero el término modelo pequeño en lugar de SLM."
+      }
+     ]
+    },
+    "u3": {
+     "claims": 2,
+     "maturity": {
+      "RAW": 0,
+      "DIGESTED": 0,
+      "ANCHORED": 0,
+      "CONNECTED": 0,
+      "CORROBORATED": 0,
+      "CONSOLIDATED": 0,
+      "TRAINABLE": 2
+     },
+     "trainable": 2,
+     "digest": {
+      "spans": 2,
+      "malformed": 0,
+      "proposed": 2,
+      "added": 2,
+      "skipped_policy": 0,
+      "quote_not_found": 0,
+      "type_reconciled": 0
+     },
+     "anchor_verification": {
+      "proposed": 2,
+      "verified": 2,
+      "rejected_missing": 0,
+      "rejected_hash": 0,
+      "rejected_support": 0,
+      "rejection_rate": 0.0
+     },
+     "anchor_mode": "offsets",
+     "reconcile_types": false,
+     "claims_detail": [
+      {
+       "text": "Escribo en un registro académico y formal.",
+       "type": "style",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Escribo en un registro académico y formal."
+      },
+      {
+       "text": "Prefiero el término evolución cultural en lugar de aprendizaje social.",
+       "type": "preference",
+       "anchored": true,
+       "maturity": "TRAINABLE",
+       "span": "Prefiero el término evolución cultural en lugar de aprendizaje social."
+      }
+     ]
+    }
+   },
+   "local_only_items": 0,
+   "lanes_final": {
+    "PUBLIC": 57,
+    "SANITISABLE": 0,
+    "SENSITIVE": 3
+   },
+   "lexicon": {
+    "cells": 60,
+    "adherence_with": 1.0,
+    "adherence_without": 0.033333333,
+    "difference": 0.966666667,
+    "difference_ci95": [
+     0.916666667,
+     1.0
+    ]
+   },
+   "homogeneity": {
+    "per_topic": {
+     "baseline": [
+      0.84598313,
+      0.842593091,
+      0.891891892,
+      0.902439024,
+      0.90220689,
+      1.0,
+      0.857575923,
+      0.896853134,
+      0.797542541,
+      0.857575923,
+      0.878928805,
+      0.848895115,
+      0.884886765,
+      0.832027159,
+      0.78017301,
+      0.833158554,
+      0.815724255,
+      0.809138174,
+      0.796066343,
+      0.824075218
+     ],
+     "projection": [
+      0.788660841,
+      0.767430615,
+      0.764873428,
+      0.816326531,
+      0.72085895,
+      0.893617021,
+      0.739370205,
+      0.783375821,
+      0.721196554,
+      0.772429961,
+      0.761405306,
+      0.743751064,
+      0.760522228,
+      0.731769141,
+      0.716382227,
+      0.769394453,
+      0.774201709,
+      0.755805685,
+      0.700640897,
+      0.705620489
+     ],
+     "placebo": [
+      0.774204733,
+      0.760568654,
+      0.788799506,
+      0.804232804,
+      0.792688153,
+      0.857142857,
+      0.762139747,
+      0.812157676,
+      0.733029351,
+      0.762139747,
+      0.790078467,
+      0.775369401,
+      0.793148494,
+      0.735098025,
+      0.732245231,
+      0.774465374,
+      0.752377297,
+      0.763821906,
+      0.722168656,
+      0.729017426
+     ]
+    },
+    "mean": {
+     "baseline": 0.854886747,
+     "projection": 0.759381656,
+     "placebo": 0.770744675
+    },
+    "reduction_projection": 0.095505091,
+    "reduction_projection_ci95": [
+     0.081634516,
+     0.110191837
+    ],
+    "reduction_placebo": 0.084142072,
+    "reduction_placebo_ci95": [
+     0.074627285,
+     0.093951872
+    ],
+    "projection_beyond_placebo": 0.011363019,
+    "projection_beyond_placebo_ci95": [
+     0.000939208,
+     0.021809058
+    ]
+   },
+   "error_agreement": {
+    "items": 60,
+    "mcq_sha256": "94123dff139de881ff54bf0b0ba33e4f93b31c02471c3a1e45e9ea836cfa0d40",
+    "agreement_with": 0.569444444,
+    "agreement_without": 0.569444444,
+    "chance_without": 0.341498027,
+    "delta": 0.0,
+    "delta_ci95": [
+     0.0,
+     0.0
+    ],
+    "excess_over_chance_without": 0.227946417,
+    "excess_ci95": [
+     0.074742294,
+     0.38185478
+    ],
+    "jointly_wrong_with": 72,
+    "jointly_wrong_without": 72,
+    "bootstrap_B": 10000,
+    "seed": 20261005,
+    "invalid_rate_without": 0.0,
+    "invalid_rate_with": 0.0,
+    "accuracy_without": {
+     "fam-a": 0.6,
+     "fam-b": 0.6,
+     "fam-c": 0.6
+    },
+    "accuracy_with": {
+     "fam-a": 0.6,
+     "fam-b": 0.6,
+     "fam-c": 0.6
+    }
+   },
+   "prediction": "projection lowers cross-user homogeneity and leaves within-request error agreement unchanged (|delta| <= 0.10)",
+   "raw": {
+    "writes": {
+     "baseline": {
+      "u1|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. It is an active field.",
+      "u3|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Several approaches exist.",
+      "u1|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. It is an active field.",
+      "u2|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. It has practical uses.",
+      "u3|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Several approaches exist.",
+      "u3|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Several approaches exist.",
+      "u3|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Several approaches exist.",
+      "u1|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. It has practical uses.",
+      "u2|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. It has practical uses.",
+      "u3|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. It keeps evolving.",
+      "u3|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. It is an active field.",
+      "u3|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. It has practical uses.",
+      "u1|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Several approaches exist.",
+      "u2|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Several approaches exist.",
+      "u3|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Its limits are debated.",
+      "u2|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. It is an active field.",
+      "u3|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. It has practical uses.",
+      "u1|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. It is an active field.",
+      "u3|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. It has practical uses.",
+      "u1|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Its limits are debated.",
+      "u2|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. It has practical uses.",
+      "u3|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Several approaches exist.",
+      "u2|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. It has practical uses.",
+      "u3|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Its limits are debated.",
+      "u3|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. It is an active field.",
+      "u2|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. It keeps evolving.",
+      "u3|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. It has practical uses.",
+      "u1|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. It is an active field.",
+      "u2|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. It has practical uses.",
+      "u3|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. It has practical uses.",
+      "u2|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Several approaches exist.",
+      "u3|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Its limits are debated.",
+      "u2|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. It is an active field.",
+      "u3|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. It keeps evolving.",
+      "u1|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. It is an active field.",
+      "u2|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Several approaches exist.",
+      "u3|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Its limits are debated.",
+      "u1|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. It keeps evolving.",
+      "u2|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Its limits are debated.",
+      "u3|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. It is an active field.",
+      "u1|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. It has practical uses.",
+      "u2|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. It keeps evolving.",
+      "u3|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. It is an active field."
+     },
+     "projection": {
+      "u1|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Key terms: modelo pequeño. It is an active field.",
+      "u3|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Key terms: evolución cultural. Several approaches exist.",
+      "u1|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It is an active field.",
+      "u2|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Key terms: modelo pequeño. It has practical uses.",
+      "u3|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Key terms: evolución cultural. It keeps evolving.",
+      "u1|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. Several approaches exist.",
+      "u3|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It keeps evolving.",
+      "u1|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Key terms: modelo pequeño. Several approaches exist.",
+      "u3|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Key terms: evolución cultural. Several approaches exist.",
+      "u1|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It has practical uses.",
+      "u2|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It has practical uses.",
+      "u3|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Key terms: evolución cultural. It keeps evolving.",
+      "u1|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Key terms: modelo pequeño. It keeps evolving.",
+      "u3|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Key terms: evolución cultural. It keeps evolving.",
+      "u1|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It is an active field.",
+      "u3|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It has practical uses.",
+      "u1|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. Several approaches exist.",
+      "u2|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. Several approaches exist.",
+      "u3|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. Its limits are debated.",
+      "u1|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. Its limits are debated.",
+      "u2|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It is an active field.",
+      "u3|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It has practical uses.",
+      "u1|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Key terms: modelo pequeño. It is an active field.",
+      "u3|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Key terms: evolución cultural. It has practical uses.",
+      "u1|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. Its limits are debated.",
+      "u2|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It has practical uses.",
+      "u3|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. Its limits are debated.",
+      "u1|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. Several approaches exist.",
+      "u2|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It has practical uses.",
+      "u3|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It keeps evolving.",
+      "u1|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. Its limits are debated.",
+      "u3|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. Its limits are debated.",
+      "u1|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It is an active field.",
+      "u2|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It keeps evolving.",
+      "u3|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It has practical uses.",
+      "u1|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It is an active field.",
+      "u2|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Key terms: modelo pequeño. It has practical uses.",
+      "u3|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Key terms: evolución cultural. Its limits are debated.",
+      "u1|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It has practical uses.",
+      "u2|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Key terms: modelo pequeño. Several approaches exist.",
+      "u3|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Key terms: evolución cultural. Its limits are debated.",
+      "u1|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Key terms: inferencia descentralizada. Its limits are debated.",
+      "u2|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Key terms: modelo pequeño. It is an active field.",
+      "u3|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Key terms: evolución cultural. It keeps evolving.",
+      "u1|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Key terms: inferencia descentralizada. It is an active field.",
+      "u2|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Key terms: modelo pequeño. Several approaches exist.",
+      "u3|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Key terms: evolución cultural. Its limits are debated.",
+      "u1|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It keeps evolving.",
+      "u2|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. Its limits are debated.",
+      "u3|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It is an active field.",
+      "u1|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a técnico y conciso register. Key terms: inferencia descentralizada. It has practical uses.",
+      "u2|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a divulgativo y cercano register. Key terms: modelo pequeño. It keeps evolving.",
+      "u3|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a académico y formal register. Key terms: evolución cultural. It is an active field."
+     },
+     "placebo": {
+      "u1|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It is an active field.",
+      "u3|la inferencia descentralizada de modelos de lenguaje": "A clear overview of la inferencia descentralizada de modelos de lenguaje, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Several approaches exist.",
+      "u1|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It is an active field.",
+      "u2|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It has practical uses.",
+      "u3|la genética de poblaciones": "A clear overview of la genética de poblaciones, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Several approaches exist.",
+      "u3|el aprendizaje continuo en modelos pequeños": "A clear overview of el aprendizaje continuo en modelos pequeños, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Several approaches exist.",
+      "u3|la privacidad de los datos personales": "A clear overview of la privacidad de los datos personales, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Several approaches exist.",
+      "u1|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It has practical uses.",
+      "u2|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It has practical uses.",
+      "u3|la evolución cultural": "A clear overview of la evolución cultural, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It keeps evolving.",
+      "u3|el cambio climático y la agricultura": "A clear overview of el cambio climático y la agricultura, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It is an active field.",
+      "u3|la conservación de especies en islas": "A clear overview of la conservación de especies en islas, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It has practical uses.",
+      "u1|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. Several approaches exist.",
+      "u2|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Several approaches exist.",
+      "u3|la educación universitaria a distancia": "A clear overview of la educación universitaria a distancia, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. Its limits are debated.",
+      "u2|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It is an active field.",
+      "u3|la edición genética con CRISPR": "A clear overview of la edición genética con CRISPR, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It has practical uses.",
+      "u1|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It is an active field.",
+      "u3|el software de código abierto": "A clear overview of el software de código abierto, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It has practical uses.",
+      "u1|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. Its limits are debated.",
+      "u2|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It has practical uses.",
+      "u3|la salud mental en el trabajo": "A clear overview of la salud mental en el trabajo, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. Several approaches exist.",
+      "u2|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It has practical uses.",
+      "u3|la energía solar en zonas rurales": "A clear overview of la energía solar en zonas rurales, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Its limits are debated.",
+      "u3|la desinformación en redes sociales": "A clear overview of la desinformación en redes sociales, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It is an active field.",
+      "u2|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It keeps evolving.",
+      "u3|la seguridad alimentaria": "A clear overview of la seguridad alimentaria, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It has practical uses.",
+      "u1|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It is an active field.",
+      "u2|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It has practical uses.",
+      "u3|la migración de aves": "A clear overview of la migración de aves, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It has practical uses.",
+      "u2|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Several approaches exist.",
+      "u3|la ética de la inteligencia artificial": "A clear overview of la ética de la inteligencia artificial, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. Its limits are debated.",
+      "u2|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It is an active field.",
+      "u3|el mejoramiento genético de insectos": "A clear overview of el mejoramiento genético de insectos, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It keeps evolving.",
+      "u1|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It is an active field.",
+      "u2|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Several approaches exist.",
+      "u3|la gestión de proyectos de investigación": "A clear overview of la gestión de proyectos de investigación, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. Its limits are debated.",
+      "u1|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It keeps evolving.",
+      "u2|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. Its limits are debated.",
+      "u3|la divulgación científica": "A clear overview of la divulgación científica, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It is an active field.",
+      "u1|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a neutral register. Write in plain language. It has practical uses.",
+      "u2|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a neutral register. Use a measured tone. It keeps evolving.",
+      "u3|las ciudades sostenibles": "A clear overview of las ciudades sostenibles, covering its definition, main uses and limits. Written in a neutral register. Be direct and brief. It is an active field."
+     }
+    },
+    "mcq_items": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41,
+     42,
+     43,
+     44,
+     45,
+     46,
+     47,
+     48,
+     49,
+     50,
+     51,
+     52,
+     53,
+     54,
+     55,
+     56,
+     57,
+     58,
+     59
+    ],
+    "mcq_without": {
+     "fam-a": [
+      "B",
+      "B",
+      "C",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "A",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "D",
+      "A",
+      "C",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "B",
+      "B",
+      "B",
+      "D",
+      "C",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "B",
+      "D",
+      "B",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "A"
+     ],
+     "fam-b": [
+      "C",
+      "D",
+      "C",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "B",
+      "C",
+      "A",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "A",
+      "C",
+      "B",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "C",
+      "D",
+      "D",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "A"
+     ],
+     "fam-c": [
+      "C",
+      "D",
+      "A",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "A",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "C",
+      "A",
+      "A",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "A",
+      "D",
+      "A",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "C",
+      "D",
+      "C",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "D"
+     ]
+    },
+    "mcq_with": {
+     "fam-a": [
+      "B",
+      "B",
+      "C",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "A",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "D",
+      "A",
+      "C",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "B",
+      "B",
+      "B",
+      "D",
+      "C",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "B",
+      "D",
+      "B",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "A"
+     ],
+     "fam-b": [
+      "C",
+      "D",
+      "C",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "B",
+      "C",
+      "A",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "A",
+      "C",
+      "B",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "C",
+      "D",
+      "D",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "A"
+     ],
+     "fam-c": [
+      "C",
+      "D",
+      "A",
+      "D",
+      "B",
+      "D",
+      "A",
+      "B",
+      "A",
+      "A",
+      "C",
+      "D",
+      "A",
+      "B",
+      "A",
+      "C",
+      "A",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "C",
+      "D",
+      "D",
+      "C",
+      "A",
+      "A",
+      "B",
+      "D",
+      "B",
+      "B",
+      "A",
+      "C",
+      "A",
+      "C",
+      "B",
+      "A",
+      "D",
+      "A",
+      "D",
+      "D",
+      "D",
+      "A",
+      "A",
+      "C",
+      "D",
+      "C",
+      "A",
+      "B",
+      "B",
+      "A",
+      "D",
+      "C",
+      "A",
+      "C",
+      "C",
+      "D",
+      "A",
+      "D"
+     ]
+    },
+    "gamma": {
+     "u1|la inferencia descentralizada de modelos de lenguaje": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la genética de poblaciones": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|el aprendizaje continuo en modelos pequeños": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la privacidad de los datos personales": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la evolución cultural": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|el cambio climático y la agricultura": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la conservación de especies en islas": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la educación universitaria a distancia": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la edición genética con CRISPR": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|el software de código abierto": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la salud mental en el trabajo": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la energía solar en zonas rurales": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la desinformación en redes sociales": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la seguridad alimentaria": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la migración de aves": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la ética de la inteligencia artificial": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|el mejoramiento genético de insectos": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la gestión de proyectos de investigación": {
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|la divulgación científica": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u1|las ciudades sostenibles": {
+      "register": "técnico y conciso",
+      "lexicon": {
+       "computación distribuida": "avoid",
+       "inferencia descentralizada": "preferred"
+      }
+     },
+     "u2|la inferencia descentralizada de modelos de lenguaje": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la genética de poblaciones": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|el aprendizaje continuo en modelos pequeños": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la privacidad de los datos personales": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la evolución cultural": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|el cambio climático y la agricultura": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la conservación de especies en islas": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la educación universitaria a distancia": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la edición genética con CRISPR": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|el software de código abierto": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la salud mental en el trabajo": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la energía solar en zonas rurales": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la desinformación en redes sociales": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la seguridad alimentaria": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la migración de aves": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la ética de la inteligencia artificial": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|el mejoramiento genético de insectos": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la gestión de proyectos de investigación": {
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|la divulgación científica": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u2|las ciudades sostenibles": {
+      "register": "divulgativo y cercano",
+      "lexicon": {
+       "SLM": "avoid",
+       "modelo pequeño": "preferred"
+      }
+     },
+     "u3|la inferencia descentralizada de modelos de lenguaje": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la genética de poblaciones": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|el aprendizaje continuo en modelos pequeños": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la privacidad de los datos personales": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la evolución cultural": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|el cambio climático y la agricultura": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la conservación de especies en islas": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la educación universitaria a distancia": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la edición genética con CRISPR": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|el software de código abierto": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la salud mental en el trabajo": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la energía solar en zonas rurales": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la desinformación en redes sociales": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la seguridad alimentaria": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la migración de aves": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la ética de la inteligencia artificial": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|el mejoramiento genético de insectos": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la gestión de proyectos de investigación": {
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|la divulgación científica": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     },
+     "u3|las ciudades sostenibles": {
+      "register": "académico y formal",
+      "lexicon": {
+       "aprendizaje social": "avoid",
+       "evolución cultural": "preferred"
+      }
+     }
+    }
+   }
+  },
+  "C10_sim": {
+   "hypothesis": "H-C15 (simulation through AdapterManager)",
+   "generations": 6,
+   "candidates_per_generation": 5,
+   "accepted": 5,
+   "distinct_test_sets": 6,
+   "examples_eligible": 40
+  },
+  "canary": {
+   "items": 8,
+   "verified_items": 0,
+   "tail_mass": 0.0,
+   "identity_violation_rate": 0.0,
+   "training_guard": "passed",
+   "note": "items are unverified drafts until a native speaker confirms them; do not report as a result"
+  }
+ }
+}

@@ -1,0 +1,98 @@
+Swarmbly LCE (Local Cognitive Extension)
+========================================
+
+Copyright (C) 2026 Sebastián A. Espinoza-Ulloa (Independent Researcher)
+
+Contact: sebas_saeu@hotmail.com
+
+This repository contains the design documents of the Local Cognitive Extension
+for the Swarmbly protocol: a local-first layer in which each user keeps a
+human-readable memory anchored to their own sources and a lightweight adapter
+that learns only behavioural patterns, with optional on-demand exchange of
+small signed knowledge capsules between nodes. Swarmbly itself fragments the
+*problem* rather than the *model* and is published separately at
+https://github.com/Sebastardito/Swarmbly-AI.
+
+Components at the time of this notice:
+  - Whitepaper LCE              v0.2 (draft with results, Spanish and English)
+                                and v0.1 (published without results; PDFs)
+  - Specification LCE           v0.1 (draft, Spanish and English)
+  - SWIP-XXXX                   revision 3 (draft, English, with measured
+                                validation status)
+  - Annotated bibliography      compiled 2026-10-04
+  - Reference implementation    swarmbly_lce/ (full SPEC, tests per invariant)
+  - Validation harness          lce_validation/ (instruments, mock and real
+                                runs); exploratory benchmarks in results/
+
+Licensing
+---------
+  - Any code in this repository: GNU Affero General Public License,
+    version 3 or (at your option) any later version (AGPL-3.0-or-later).
+    See LICENSE. Network use of a modified version triggers section 13.
+  - Documentation and texts: Creative Commons Attribution 4.0 International
+    (CC BY 4.0).
+
+Status
+------
+Draft. Whitepaper v0.1 was published without results (10.5281/zenodo.23150478);
+software v0.1.1 with raw outputs is 10.5281/zenodo.23289041. Later
+pre-registered runs with real models, including the confirmatory runs of
+October 2026, and their raw outputs are in docs/ and results/; whitepaper v0.2
+(docs/WHITEPAPER_LCE_v0.2_*.md) gathers their verdicts, negative ones included.
+No element is claimed as prior art beyond what the dated public records
+contain (see the whitepaper, section 13).
+
+
+## Third-party data: LongMemEval (R13 confirmatory run)
+
+The R13 confirmatory run uses an 8-question subset of LongMemEval
+(https://github.com/xiaowu0162/LongMemEval; dataset xiaowu0162/longmemeval,
+split longmemeval_s). The questions are in
+`lce_validation/fixtures/bench_users/lme/questions_lme.json` and
+`lce_validation/data/lme_subset.json`; claims digested from its sessions are in
+`results/bench_r13_confirm/wikis_cache/lme__*`. The session texts themselves
+are not versioned: `python -m lce_validation.build_lme_subset` rebuilds them
+from the source file, verified by SHA-256. LongMemEval is distributed under
+the MIT License:
+
+  MIT License
+
+  Copyright (c) 2024 Di Wu
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+
+## Base model license (benchmark of the local adapter, F1c)
+
+The exploratory adapter benchmark (`lce_validation/bench_adapter.py`) fine-tunes
+Qwen/Qwen2.5-3B-Instruct as its base model. That model is distributed under the
+Qwen RESEARCH license (non-commercial; see the LICENSE file in the model card).
+No adapter weights are distributed in this repository: they can be regenerated
+from the committed recipe (about 36 seconds on the author's machine), and the
+SHA-256 of the local checkpoints is recorded in
+`results/bench_adapter/adapter_mara/MANIFEST_WEIGHTS.json`. A regenerated adapter
+is functionally equivalent but not guaranteed to be bit-identical (MLX training
+is not deterministic); the manifest is how to check. The
+alternative for a commercial-compatible base is a permissively licensed model
+(Apache-2.0/MIT), recorded in the next-phase design.
+
+The R11 confirmatory adapters (Qwen2.5-3B-Instruct and granite3.1-dense:2b
+bases, `lce_validation/bench_r11.py`) are not distributed either: they were
+purged from the repository history before publication
+(`docs/COMMIT_MAP_2026-10-11.md`) and are ignored by `.gitignore`.

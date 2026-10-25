@@ -1,0 +1,1926 @@
+{
+ "claims": [
+  {
+   "anchors": [
+    {
+     "end": 356,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 263,
+     "verified": true
+    }
+   ],
+   "claim_id": "002358f70ddde8dfdd2edf7f6d25326d",
+   "clean_review_cycles": 0,
+   "created": 1791701032.627182,
+   "cycles_observed": 0,
+   "links": [
+    "77f0bb7002fd3ae20f7c2e8503376e23",
+    "d38b8af5afd3149b9c38f4cc5cb0c513"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La revisión de transcripciones del año corrigió 214 segmentos y añadió 18 entrevistas nuevas.",
+   "type": "fact",
+   "updated": 1791701056.5608268
+  },
+  {
+   "anchors": [
+    {
+     "end": 127,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "9cf4033f59bec0da5e96456bf77419db00a09ef35a033f37e0d287b209f02f0b",
+     "start": 94,
+     "verified": true
+    }
+   ],
+   "claim_id": "03e2a521daaf3e0f2331cd0a30a8b4f6",
+   "clean_review_cycles": 0,
+   "created": 1791701039.080148,
+   "cycles_observed": 0,
+   "links": [
+    "af0a0538a8fac4c068f3a95bf7853d4d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Ambas anotaciones están vigentes.",
+   "type": "fact",
+   "updated": 1791701056.560842
+  },
+  {
+   "anchors": [
+    {
+     "end": 188,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+     "start": 140,
+     "verified": true
+    }
+   ],
+   "claim_id": "099888cd97e3b3f8b4ee1e11c61fdd3b",
+   "clean_review_cycles": 0,
+   "created": 1791701041.66021,
+   "cycles_observed": 0,
+   "links": [
+    "2e7a161d6d7e1dc280119d59ca7fc587",
+    "4583c51c400408b6587cb3deddf58a26"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El corpus propio tiene 130 horas de grabaciones.",
+   "type": "fact",
+   "updated": 1791701056.560852
+  },
+  {
+   "anchors": [
+    {
+     "end": 95,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 44,
+     "verified": true
+    }
+   ],
+   "claim_id": "0dc1a08a55f6224f85f887f44e04d2e6",
+   "clean_review_cycles": 1,
+   "created": 1791701053.310977,
+   "cycles_observed": 4,
+   "links": [
+    "18851c8291778734826f2b839a0ced61",
+    "f76f538f2ca336800dea5ef487a2c89b"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "con ejemplos concretos y sin tecnicismos sin glosar",
+   "type": "style",
+   "updated": 1791701056.562342
+  },
+  {
+   "anchors": [
+    {
+     "end": 1462,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1399,
+     "verified": true
+    }
+   ],
+   "claim_id": "12ed09882e58e8269e4be0fe895a9083",
+   "clean_review_cycles": 0,
+   "created": 1791701026.842088,
+   "cycles_observed": 0,
+   "links": [
+    "1566f59b606d00739207d78d00996b04",
+    "e22fa82a98b760fc14651314ec08d8f0"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "17 de 80 dijeron que los evitarían en una entrevista de trabajo.",
+   "type": "fact",
+   "updated": 1791701056.560925
+  },
+  {
+   "anchors": [
+    {
+     "end": 1392,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1325,
+     "verified": true
+    }
+   ],
+   "claim_id": "1566f59b606d00739207d78d00996b04",
+   "clean_review_cycles": 0,
+   "created": 1791701026.841613,
+   "cycles_observed": 0,
+   "links": [
+    "12ed09882e58e8269e4be0fe895a9083",
+    "3aee69bc6ab098c156014691d453742c"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Ningún hablante del corpus etiquetó estos términos como incorrectos.",
+   "type": "fact",
+   "updated": 1791701056.5609338
+  },
+  {
+   "anchors": [
+    {
+     "end": 42,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "18851c8291778734826f2b839a0ced61",
+   "clean_review_cycles": 1,
+   "created": 1791701053.3098361,
+   "cycles_observed": 4,
+   "links": [
+    "0dc1a08a55f6224f85f887f44e04d2e6"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Escribo en un registro cercano y didáctico",
+   "type": "style",
+   "updated": 1791701056.5623748
+  },
+  {
+   "anchors": [
+    {
+     "end": 412,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 265,
+     "verified": true
+    }
+   ],
+   "claim_id": "1cf3cca5f74589e3684cf9cf2f370a6e",
+   "clean_review_cycles": 0,
+   "created": 1791701044.858482,
+   "cycles_observed": 0,
+   "links": [
+    "497d33d45634337ad33f4ab87d4be310",
+    "e3b1793a320da6b3937be88c52483eb4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La rúbrica de cada tarea tiene tres criterios (identificación, análisis, redacción) y cuatro niveles; se publica junto con la tarea, nunca después.",
+   "type": "fact",
+   "updated": 1791701056.560983
+  },
+  {
+   "anchors": [
+    {
+     "end": 1000,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 891,
+     "verified": true
+    }
+   ],
+   "claim_id": "1fac9e5fa7ce99ec16411d60e652903e",
+   "clean_review_cycles": 0,
+   "created": 1791701047.611957,
+   "cycles_observed": 0,
+   "links": [
+    "7761d34733ab390876db242fd867d600",
+    "96e2bd865cbfe014b4c410d60dada69a"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La asistencia no se usa como criterio de nota; la participación se registra por evidencias, no por presencia.",
+   "type": "fact",
+   "updated": 1791701056.560991
+  },
+  {
+   "anchors": [
+    {
+     "end": 270,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+     "start": 189,
+     "verified": true
+    }
+   ],
+   "claim_id": "2e7a161d6d7e1dc280119d59ca7fc587",
+   "clean_review_cycles": 0,
+   "created": 1791701041.660456,
+   "cycles_observed": 0,
+   "links": [
+    "099888cd97e3b3f8b4ee1e11c61fdd3b",
+    "c2561057884e722e491a09dd0cf72bf6"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La asibilación de la erre múltiple aparece en 62 por ciento de los menores de 30.",
+   "type": "fact",
+   "updated": 1791701056.5609999
+  },
+  {
+   "anchors": [
+    {
+     "end": 1323,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1237,
+     "verified": true
+    }
+   ],
+   "claim_id": "3aee69bc6ab098c156014691d453742c",
+   "clean_review_cycles": 0,
+   "created": 1791701026.841115,
+   "cycles_observed": 0,
+   "links": [
+    "1566f59b606d00739207d78d00996b04",
+    "e41acc748bdb8f23aa63fc0c0b46dfe4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "54 de 80 asocian el uso de chompa y guagua con el registro familiar y no con el formal.",
+   "type": "fact",
+   "updated": 1791701056.561009
+  },
+  {
+   "anchors": [
+    {
+     "end": 379,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 301,
+     "verified": true
+    }
+   ],
+   "claim_id": "3b6b4c95336927188770874c7a096238",
+   "clean_review_cycles": 0,
+   "created": 1791701019.958302,
+   "cycles_observed": 0,
+   "links": [
+    "6669654f072ce8106db39a3d479e4ce3",
+    "f1a88bff824e8a690145d2d7a2247bb0"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el niño pequeño se nombra guagua en todas las 67 ocurrencias con ese referente",
+   "type": "fact",
+   "updated": 1791701056.561017
+  },
+  {
+   "anchors": [
+    {
+     "end": 139,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+     "start": 104,
+     "verified": true
+    }
+   ],
+   "claim_id": "4583c51c400408b6587cb3deddf58a26",
+   "clean_review_cycles": 0,
+   "created": 1791701041.659934,
+   "cycles_observed": 0,
+   "links": [
+    "099888cd97e3b3f8b4ee1e11c61fdd3b",
+    "92983ec47ae7046fce6251cfc3222b33"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El examen final pesa 45 por ciento.",
+   "type": "fact",
+   "updated": 1791701056.561026
+  },
+  {
+   "anchors": [
+    {
+     "end": 260,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 126,
+     "verified": true
+    }
+   ],
+   "claim_id": "497d33d45634337ad33f4ab87d4be310",
+   "clean_review_cycles": 0,
+   "created": 1791701044.857515,
+   "cycles_observed": 0,
+   "links": [
+    "1cf3cca5f74589e3684cf9cf2f370a6e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "cada unidad termina en una tarea de análisis con datos reales del español ecuatoriano: ninguna unidad evalúa solo con opción múltiple.",
+   "type": "fact",
+   "updated": 1791701056.561034
+  },
+  {
+   "anchors": [
+    {
+     "end": 1311,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 1210,
+     "verified": true
+    }
+   ],
+   "claim_id": "4ba8d49ef68ade4ff8d2457ce968740c",
+   "clean_review_cycles": 0,
+   "created": 1791701050.439546,
+   "cycles_observed": 0,
+   "links": [
+    "7471b83e5775d982ceb6fc077e6a12eb",
+    "7761d34733ab390876db242fd867d600"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El examen final pesa el 40 por ciento de la nota, las tareas el 45 y la síntesis de portafolio el 15.",
+   "type": "fact",
+   "updated": 1791701056.561043
+  },
+  {
+   "anchors": [
+    {
+     "end": 134,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 114,
+     "verified": true
+    }
+   ],
+   "claim_id": "4cad1bc9e6c3619fd2c200308ec8e867",
+   "clean_review_cycles": 0,
+   "created": 1791701030.582742,
+   "cycles_observed": 0,
+   "links": [
+    "e50122d1710bc40eb0d2fa60ea59e97f",
+    "e58331102ba9627df88270526380a434"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "con cuatro secciones",
+   "type": "fact",
+   "updated": 1791701056.561051
+  },
+  {
+   "anchors": [
+    {
+     "end": 1202,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 1169,
+     "verified": true
+    }
+   ],
+   "claim_id": "56e6debe8ba7dddc9859e207a587ecfb",
+   "clean_review_cycles": 0,
+   "created": 1791701037.74034,
+   "cycles_observed": 0,
+   "links": [
+    "cc78d35816dbadd54ae3d946e83ede0f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "prevista para el segundo bimestre",
+   "type": "fact",
+   "updated": 1791701056.561059
+  },
+  {
+   "anchors": [
+    {
+     "end": 393,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 321,
+     "verified": true
+    },
+    {
+     "end": 601,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 529,
+     "verified": true
+    },
+    {
+     "end": 809,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 737,
+     "verified": true
+    }
+   ],
+   "claim_id": "65645aa252a872f1f2faa2bf4e598df4",
+   "clean_review_cycles": 0,
+   "created": 1791701007.638529,
+   "cycles_observed": 0,
+   "links": [
+    "8c0eca6beebc71f0b7cc53b0fc724c38"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La rúbrica pasa de cuatro a cinco niveles tras la revisión de criterios.",
+   "type": "fact",
+   "updated": 1791701056.561067
+  },
+  {
+   "anchors": [
+    {
+     "end": 482,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 381,
+     "verified": true
+    }
+   ],
+   "claim_id": "6669654f072ce8106db39a3d479e4ce3",
+   "clean_review_cycles": 0,
+   "created": 1791701019.97805,
+   "cycles_observed": 0,
+   "links": [
+    "3b6b4c95336927188770874c7a096238",
+    "b1d0812d701b838b0914b000d614ccbd"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el término colada designa la bebida de avena caliente en 38 ocurrencias y nunca el acto de lavar ropa",
+   "type": "fact",
+   "updated": 1791701056.561078
+  },
+  {
+   "anchors": [
+    {
+     "end": 1684,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1545,
+     "verified": true
+    }
+   ],
+   "claim_id": "66c68c25d2e5293112f47fd6f392fcc6",
+   "clean_review_cycles": 0,
+   "created": 1791701028.229742,
+   "cycles_observed": 0,
+   "links": [
+    "e22fa82a98b760fc14651314ec08d8f0"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la tarea final pide a los estudiantes describir la distribución de un rasgo con al menos 30 ejemplos del corpus y una tabla de frecuencias.",
+   "type": "fact",
+   "updated": 1791701056.561086
+  },
+  {
+   "anchors": [
+    {
+     "end": 968,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 847,
+     "verified": true
+    }
+   ],
+   "claim_id": "68c178463f43a05d4695e1fccfd1c80f",
+   "clean_review_cycles": 0,
+   "created": 1791701024.3535721,
+   "cycles_observed": 0,
+   "links": [
+    "b13a723d314fa4e90ceaa1a53a38617e",
+    "e03c550520cc656ad322f3d34881652d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El diminutivo con -ito/-ita es el más frecuente (64 por ciento de los diminutivos), seguido de -ico/-ica (21 por ciento).",
+   "type": "fact",
+   "updated": 1791701056.561095
+  },
+  {
+   "anchors": [
+    {
+     "end": 254,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 232,
+     "verified": true
+    },
+    {
+     "end": 462,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 440,
+     "verified": true
+    },
+    {
+     "end": 670,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 648,
+     "verified": true
+    }
+   ],
+   "claim_id": "6f7a7dfbd259a8a7baadd82ca54360ae",
+   "clean_review_cycles": 0,
+   "created": 1791701007.63792,
+   "cycles_observed": 0,
+   "links": [
+    "836da16e10b06b31f4b313756f21c851",
+    "8c0eca6beebc71f0b7cc53b0fc724c38"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "las tareas de 45 a 40.",
+   "type": "fact",
+   "updated": 1791701056.561103
+  },
+  {
+   "anchors": [
+    {
+     "end": 683,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 639,
+     "verified": true
+    }
+   ],
+   "claim_id": "6fb6e5684448c34e73f3854d8256c0d1",
+   "clean_review_cycles": 0,
+   "created": 1791701022.5362308,
+   "cycles_observed": 0,
+   "links": [
+    "b1d0812d701b838b0914b000d614ccbd",
+    "e03c550520cc656ad322f3d34881652d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el yeísmo es categórico en los menores de 40",
+   "type": "fact",
+   "updated": 1791701056.561114
+  },
+  {
+   "anchors": [
+    {
+     "end": 1492,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 1316,
+     "verified": true
+    }
+   ],
+   "claim_id": "7471b83e5775d982ceb6fc077e6a12eb",
+   "clean_review_cycles": 0,
+   "created": 1791701050.440515,
+   "cycles_observed": 0,
+   "links": [
+    "4ba8d49ef68ade4ff8d2457ce968740c",
+    "963feb230210bf88876ddb919b6fa72e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Todo estudiante puede revisar su prueba dentro de los cinco días posteriores a la entrega de notas; la revisión puede subir, bajar o mantener la nota y se registra por escrito.",
+   "type": "fact",
+   "updated": 1791701056.561122
+  },
+  {
+   "anchors": [
+    {
+     "end": 240,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 194,
+     "verified": true
+    }
+   ],
+   "claim_id": "76517c12ff525dedd67c75cae1d6b8e5",
+   "clean_review_cycles": 1,
+   "created": 1791701055.100172,
+   "cycles_observed": 4,
+   "links": [
+    "91b7602d36b0ad6cd969338681dff219",
+    "a6769b9391e3998d64c32eeef463a2f0"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término foco en lugar de bombillo.",
+   "type": "preference",
+   "updated": 1791701056.562461
+  },
+  {
+   "anchors": [
+    {
+     "end": 1205,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 1021,
+     "verified": true
+    }
+   ],
+   "claim_id": "7761d34733ab390876db242fd867d600",
+   "clean_review_cycles": 0,
+   "created": 1791701050.4385989,
+   "cycles_observed": 0,
+   "links": [
+    "1fac9e5fa7ce99ec16411d60e652903e",
+    "4ba8d49ef68ade4ff8d2457ce968740c"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Las pruebas escritas se califican con la rúbrica publicada y por pares: dos docentes califican las respuestas abiertas y las diferencias mayores a un nivel se resuelven con un tercero.",
+   "type": "fact",
+   "updated": 1791701056.561168
+  },
+  {
+   "anchors": [
+    {
+     "end": 253,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 183,
+     "verified": true
+    }
+   ],
+   "claim_id": "77f0bb7002fd3ae20f7c2e8503376e23",
+   "clean_review_cycles": 0,
+   "created": 1791701030.5833752,
+   "cycles_observed": 0,
+   "links": [
+    "002358f70ddde8dfdd2edf7f6d25326d",
+    "e58331102ba9627df88270526380a434"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El año incorporó el corpus propio ampliado a 160 horas de grabaciones.",
+   "type": "fact",
+   "updated": 1791701056.561177
+  },
+  {
+   "anchors": [
+    {
+     "end": 229,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 187,
+     "verified": true
+    },
+    {
+     "end": 437,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 395,
+     "verified": true
+    },
+    {
+     "end": 645,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 603,
+     "verified": true
+    }
+   ],
+   "claim_id": "836da16e10b06b31f4b313756f21c851",
+   "clean_review_cycles": 0,
+   "created": 1791701007.637154,
+   "cycles_observed": 0,
+   "links": [
+    "6f7a7dfbd259a8a7baadd82ca54360ae",
+    "9834596fe418dd51e7325c2e8a87ce96"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El examen final pasa de 40 a 35 por ciento",
+   "type": "fact",
+   "updated": 1791701056.561186
+  },
+  {
+   "anchors": [
+    {
+     "end": 320,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 255,
+     "verified": true
+    },
+    {
+     "end": 528,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 463,
+     "verified": true
+    },
+    {
+     "end": 736,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 671,
+     "verified": true
+    }
+   ],
+   "claim_id": "8c0eca6beebc71f0b7cc53b0fc724c38",
+   "clean_review_cycles": 0,
+   "created": 1791701007.638237,
+   "cycles_observed": 0,
+   "links": [
+    "65645aa252a872f1f2faa2bf4e598df4",
+    "6f7a7dfbd259a8a7baadd82ca54360ae"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El corpus propio ampliado pasa de 160 a 175 horas de grabaciones.",
+   "type": "fact",
+   "updated": 1791701056.561197
+  },
+  {
+   "anchors": [
+    {
+     "end": 64,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "9cf4033f59bec0da5e96456bf77419db00a09ef35a033f37e0d287b209f02f0b",
+     "start": 22,
+     "verified": true
+    }
+   ],
+   "claim_id": "8c80ccf0edf1c0bd13658a15d752ec13",
+   "clean_review_cycles": 0,
+   "created": 1791701039.079218,
+   "cycles_observed": 0,
+   "links": [
+    "af0a0538a8fac4c068f3a95bf7853d4d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El corpus registra 41 ocurrencias de foco;",
+   "type": "fact",
+   "updated": 1791701056.561206
+  },
+  {
+   "anchors": [
+    {
+     "end": 528,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 456,
+     "verified": true
+    }
+   ],
+   "claim_id": "8f297e0e4b0893115af6b11f93606b9f",
+   "clean_review_cycles": 0,
+   "created": 1791701032.628423,
+   "cycles_observed": 0,
+   "links": [
+    "cd6a56da8e32165eae83dcf6e5e8bb29",
+    "d38b8af5afd3149b9c38f4cc5cb0c513"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El diminutivo más frecuente sigue siendo -ito/-ita con el 66 por ciento.",
+   "type": "fact",
+   "updated": 1791701056.561214
+  },
+  {
+   "anchors": [
+    {
+     "end": 295,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 242,
+     "verified": true
+    }
+   ],
+   "claim_id": "91b7602d36b0ad6cd969338681dff219",
+   "clean_review_cycles": 1,
+   "created": 1791701055.6817942,
+   "cycles_observed": 4,
+   "links": [
+    "76517c12ff525dedd67c75cae1d6b8e5",
+    "9d04212196fadc194f955a5db24a3992"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término rasgo en lugar de característica.",
+   "type": "preference",
+   "updated": 1791701056.562509
+  },
+  {
+   "anchors": [
+    {
+     "end": 103,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+     "start": 41,
+     "verified": true
+    }
+   ],
+   "claim_id": "92983ec47ae7046fce6251cfc3222b33",
+   "clean_review_cycles": 0,
+   "created": 1791701041.659063,
+   "cycles_observed": 0,
+   "links": [
+    "4583c51c400408b6587cb3deddf58a26"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La sesión se reparte en 15 minutos de teoría y 55 de práctica.",
+   "type": "fact",
+   "updated": 1791701056.561261
+  },
+  {
+   "anchors": [
+    {
+     "end": 1640,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 1513,
+     "verified": true
+    }
+   ],
+   "claim_id": "963feb230210bf88876ddb919b6fa72e",
+   "clean_review_cycles": 0,
+   "created": 1791701052.223999,
+   "cycles_observed": 0,
+   "links": [
+    "7471b83e5775d982ceb6fc077e6a12eb",
+    "fd7d67287f9169a9c2b53a9e34ef6e1e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Los ejemplos del curso usan datos del corpus propio de 120 horas de grabaciones transcritas, anonimizadas y con consentimiento.",
+   "type": "fact",
+   "updated": 1791701056.56127
+  },
+  {
+   "anchors": [
+    {
+     "end": 886,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 708,
+     "verified": true
+    }
+   ],
+   "claim_id": "96e2bd865cbfe014b4c410d60dada69a",
+   "clean_review_cycles": 0,
+   "created": 1791701047.611546,
+   "cycles_observed": 0,
+   "links": [
+    "1fac9e5fa7ce99ec16411d60e652903e",
+    "e17440f2eee226139be8c9cf67f675f7"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Si más de un tercio del curso reprueba una tarea, la sesión siguiente re-enseña el contenido con otro formato y la tarea se repite con datos nuevos; la nota válida es la segunda.",
+   "type": "fact",
+   "updated": 1791701056.5612779
+  },
+  {
+   "anchors": [
+    {
+     "end": 184,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 123,
+     "verified": true
+    }
+   ],
+   "claim_id": "9834596fe418dd51e7325c2e8a87ce96",
+   "clean_review_cycles": 0,
+   "created": 1791701005.4728289,
+   "cycles_observed": 0,
+   "links": [
+    "836da16e10b06b31f4b313756f21c851",
+    "e02d3396314e71e025852806c22c7747"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la revisión de las transcripciones la corrige a 58 por ciento",
+   "type": "fact",
+   "updated": 1791701056.561286
+  },
+  {
+   "anchors": [
+    {
+     "end": 403,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 297,
+     "verified": true
+    }
+   ],
+   "claim_id": "9d04212196fadc194f955a5db24a3992",
+   "clean_review_cycles": 1,
+   "created": 1791701056.5597498,
+   "cycles_observed": 4,
+   "links": [
+    "91b7602d36b0ad6cd969338681dff219"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Cuando introduzco un término técnico lo gloso la primera vez entre paréntesis y doy un ejemplo del corpus.",
+   "type": "style",
+   "updated": 1791701056.562548
+  },
+  {
+   "anchors": [
+    {
+     "end": 192,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 148,
+     "verified": true
+    }
+   ],
+   "claim_id": "a6769b9391e3998d64c32eeef463a2f0",
+   "clean_review_cycles": 1,
+   "created": 1791701054.50301,
+   "cycles_observed": 4,
+   "links": [
+    "76517c12ff525dedd67c75cae1d6b8e5",
+    "f76f538f2ca336800dea5ef487a2c89b"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término guagua en lugar de bebé.",
+   "type": "preference",
+   "updated": 1791701056.5625741
+  },
+  {
+   "anchors": [
+    {
+     "end": 93,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "9cf4033f59bec0da5e96456bf77419db00a09ef35a033f37e0d287b209f02f0b",
+     "start": 65,
+     "verified": true
+    }
+   ],
+   "claim_id": "af0a0538a8fac4c068f3a95bf7853d4d",
+   "clean_review_cycles": 0,
+   "created": 1791701039.079822,
+   "cycles_observed": 0,
+   "links": [
+    "03e2a521daaf3e0f2331cd0a30a8b4f6",
+    "8c80ccf0edf1c0bd13658a15d752ec13"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el diario de campo anota 44.",
+   "type": "fact",
+   "updated": 1791701056.561366
+  },
+  {
+   "anchors": [
+    {
+     "end": 1096,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 969,
+     "verified": true
+    }
+   ],
+   "claim_id": "b13a723d314fa4e90ceaa1a53a38617e",
+   "clean_review_cycles": 0,
+   "created": 1791701024.354916,
+   "cycles_observed": 0,
+   "links": [
+    "68c178463f43a05d4695e1fccfd1c80f",
+    "e41acc748bdb8f23aa63fc0c0b46dfe4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El pretérito compuesto aparece en el 18 por ciento de los contextos de pasado perfectivo, concentrado en los hablantes mayores.",
+   "type": "fact",
+   "updated": 1791701056.561374
+  },
+  {
+   "anchors": [
+    {
+     "end": 637,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 496,
+     "verified": true
+    }
+   ],
+   "claim_id": "b1d0812d701b838b0914b000d614ccbd",
+   "clean_review_cycles": 0,
+   "created": 1791701022.535318,
+   "cycles_observed": 0,
+   "links": [
+    "6669654f072ce8106db39a3d479e4ce3",
+    "6fb6e5684448c34e73f3854d8256c0d1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La asibilación de la erre múltiple aparece en el 71 por ciento de los hablantes menores de 30 años y en el 33 por ciento de los mayores de 60",
+   "type": "fact",
+   "updated": 1791701056.5613818
+  },
+  {
+   "anchors": [
+    {
+     "end": 798,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 743,
+     "verified": true
+    }
+   ],
+   "claim_id": "c1e17a5e2f2e725b107ef132d4872cfa",
+   "clean_review_cycles": 0,
+   "created": 1791701034.572914,
+   "cycles_observed": 0,
+   "links": [
+    "ebc84bebd55ea94c21fdaa4095eae9bf",
+    "f45d2f3c07562a990f32848316cb6e8b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Ningún hablante etiquetó los términos como incorrectos.",
+   "type": "fact",
+   "updated": 1791701056.5613902
+  },
+  {
+   "anchors": [
+    {
+     "end": 301,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+     "start": 271,
+     "verified": true
+    }
+   ],
+   "claim_id": "c2561057884e722e491a09dd0cf72bf6",
+   "clean_review_cycles": 0,
+   "created": 1791701041.660701,
+   "cycles_observed": 0,
+   "links": [
+    "2e7a161d6d7e1dc280119d59ca7fc587"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La rúbrica tiene tres niveles.",
+   "type": "fact",
+   "updated": 1791701056.561398
+  },
+  {
+   "anchors": [
+    {
+     "end": 1167,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 1112,
+     "verified": true
+    }
+   ],
+   "claim_id": "cc78d35816dbadd54ae3d946e83ede0f",
+   "clean_review_cycles": 0,
+   "created": 1791701037.740004,
+   "cycles_observed": 0,
+   "links": [
+    "56e6debe8ba7dddc9859e207a587ecfb",
+    "f45d2f3c07562a990f32848316cb6e8b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y la incorporación de la unidad de contacto lingüístico",
+   "type": "fact",
+   "updated": 1791701056.561408
+  },
+  {
+   "anchors": [
+    {
+     "end": 666,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 577,
+     "verified": true
+    }
+   ],
+   "claim_id": "cd6a56da8e32165eae83dcf6e5e8bb29",
+   "clean_review_cycles": 0,
+   "created": 1791701034.571692,
+   "cycles_observed": 0,
+   "links": [
+    "8f297e0e4b0893115af6b11f93606b9f",
+    "ebc84bebd55ea94c21fdaa4095eae9bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "67 de 90 hablantes entrevistados declaran alternancia de código según el contexto formal.",
+   "type": "fact",
+   "updated": 1791701056.561416
+  },
+  {
+   "anchors": [
+    {
+     "end": 455,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 357,
+     "verified": true
+    }
+   ],
+   "claim_id": "d38b8af5afd3149b9c38f4cc5cb0c513",
+   "clean_review_cycles": 0,
+   "created": 1791701032.6280699,
+   "cycles_observed": 0,
+   "links": [
+    "002358f70ddde8dfdd2edf7f6d25326d",
+    "8f297e0e4b0893115af6b11f93606b9f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La retención de la ese final en hablantes rurales quedó en 57 por ciento tras la segunda revisión.",
+   "type": "fact",
+   "updated": 1791701056.561425
+  },
+  {
+   "anchors": [
+    {
+     "end": 208,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 77,
+     "verified": true
+    }
+   ],
+   "claim_id": "db7660cf1729532c3a7f8219adc3d7db",
+   "clean_review_cycles": 0,
+   "created": 1791701019.9568691,
+   "cycles_observed": 0,
+   "links": [
+    "f1a88bff824e8a690145d2d7a2247bb0"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "En las grabaciones del corpus la prenda de abrigo de lana se nombra como chompa en 89 de 96 ocurrencias, frente a chaqueta y casaca",
+   "type": "fact",
+   "updated": 1791701056.561435
+  },
+  {
+   "anchors": [
+    {
+     "end": 121,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+     "start": 54,
+     "verified": true
+    }
+   ],
+   "claim_id": "e02d3396314e71e025852806c22c7747",
+   "clean_review_cycles": 0,
+   "created": 1791701005.471877,
+   "cycles_observed": 0,
+   "links": [
+    "9834596fe418dd51e7325c2e8a87ce96"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La retención de la ese final en hablantes rurales era 61 por ciento",
+   "type": "fact",
+   "updated": 1791701056.561443
+  },
+  {
+   "anchors": [
+    {
+     "end": 829,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 685,
+     "verified": true
+    }
+   ],
+   "claim_id": "e03c550520cc656ad322f3d34881652d",
+   "clean_review_cycles": 0,
+   "created": 1791701022.5370991,
+   "cycles_observed": 0,
+   "links": [
+    "68c178463f43a05d4695e1fccfd1c80f",
+    "6fb6e5684448c34e73f3854d8256c0d1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La retención de la ese final de sílaba es del 88 por ciento en hablantes urbanos con educación superior y del 61 por ciento en hablantes rurales",
+   "type": "fact",
+   "updated": 1791701056.561451
+  },
+  {
+   "anchors": [
+    {
+     "end": 703,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 585,
+     "verified": true
+    }
+   ],
+   "claim_id": "e17440f2eee226139be8c9cf67f675f7",
+   "clean_review_cycles": 0,
+   "created": 1791701047.61041,
+   "cycles_observed": 0,
+   "links": [
+    "96e2bd865cbfe014b4c410d60dada69a",
+    "e3b1793a320da6b3937be88c52483eb4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Cada sesión de 90 minutos reparte 20 minutos de exposición, 40 de trabajo en grupos de cuatro y 30 de puesta en común.",
+   "type": "fact",
+   "updated": 1791701056.5614588
+  },
+  {
+   "anchors": [
+    {
+     "end": 1544,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1481,
+     "verified": true
+    }
+   ],
+   "claim_id": "e22fa82a98b760fc14651314ec08d8f0",
+   "clean_review_cycles": 0,
+   "created": 1791701028.228214,
+   "cycles_observed": 0,
+   "links": [
+    "12ed09882e58e8269e4be0fe895a9083",
+    "66c68c25d2e5293112f47fd6f392fcc6"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La unidad de variación usa estos datos como corpus de práctica;",
+   "type": "fact",
+   "updated": 1791701056.561467
+  },
+  {
+   "anchors": [
+    {
+     "end": 566,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 417,
+     "verified": true
+    }
+   ],
+   "claim_id": "e3b1793a320da6b3937be88c52483eb4",
+   "clean_review_cycles": 0,
+   "created": 1791701044.858907,
+   "cycles_observed": 0,
+   "links": [
+    "1cf3cca5f74589e3684cf9cf2f370a6e",
+    "e17440f2eee226139be8c9cf67f675f7"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La clase se abre con una pregunta de discusión sin respuesta única y se cierra con la síntesis de lo discutido redactada por los propios estudiantes.",
+   "type": "fact",
+   "updated": 1791701056.561475
+  },
+  {
+   "anchors": [
+    {
+     "end": 1233,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 1152,
+     "verified": true
+    }
+   ],
+   "claim_id": "e41acc748bdb8f23aa63fc0c0b46dfe4",
+   "clean_review_cycles": 0,
+   "created": 1791701026.8402839,
+   "cycles_observed": 0,
+   "links": [
+    "3aee69bc6ab098c156014691d453742c",
+    "b13a723d314fa4e90ceaa1a53a38617e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "61 de 80 hablantes declaran que cambian su manera de hablar en contextos formales.",
+   "type": "fact",
+   "updated": 1791701056.561483
+  },
+  {
+   "anchors": [
+    {
+     "end": 113,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 67,
+     "verified": true
+    }
+   ],
+   "claim_id": "e50122d1710bc40eb0d2fa60ea59e97f",
+   "clean_review_cycles": 0,
+   "created": 1791701030.5820138,
+   "cycles_observed": 0,
+   "links": [
+    "4cad1bc9e6c3619fd2c200308ec8e867"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La memoria anual cubre el tercer año del curso",
+   "type": "fact",
+   "updated": 1791701056.561493
+  },
+  {
+   "anchors": [
+    {
+     "end": 181,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 135,
+     "verified": true
+    }
+   ],
+   "claim_id": "e58331102ba9627df88270526380a434",
+   "clean_review_cycles": 0,
+   "created": 1791701030.583053,
+   "cycles_observed": 0,
+   "links": [
+    "4cad1bc9e6c3619fd2c200308ec8e867",
+    "77f0bb7002fd3ae20f7c2e8503376e23"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y 96 estudiantes matriculados en dos paralelos",
+   "type": "fact",
+   "updated": 1791701056.561501
+  },
+  {
+   "anchors": [
+    {
+     "end": 742,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 667,
+     "verified": true
+    }
+   ],
+   "claim_id": "ebc84bebd55ea94c21fdaa4095eae9bf",
+   "clean_review_cycles": 0,
+   "created": 1791701034.572577,
+   "cycles_observed": 0,
+   "links": [
+    "c1e17a5e2f2e725b107ef132d4872cfa",
+    "cd6a56da8e32165eae83dcf6e5e8bb29"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La asociación de chompa y guagua con el registro familiar subió a 61 de 90.",
+   "type": "fact",
+   "updated": 1791701056.5615091
+  },
+  {
+   "anchors": [
+    {
+     "end": 299,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+     "start": 210,
+     "verified": true
+    }
+   ],
+   "claim_id": "f1a88bff824e8a690145d2d7a2247bb0",
+   "clean_review_cycles": 0,
+   "created": 1791701019.957783,
+   "cycles_observed": 0,
+   "links": [
+    "3b6b4c95336927188770874c7a096238",
+    "db7660cf1729532c3a7f8219adc3d7db"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la bombilla eléctrica se nombra foco en 41 de 44 ocurrencias, frente a bombillo y lámpara",
+   "type": "fact",
+   "updated": 1791701056.561517
+  },
+  {
+   "anchors": [
+    {
+     "end": 1111,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+     "start": 1046,
+     "verified": true
+    }
+   ],
+   "claim_id": "f45d2f3c07562a990f32848316cb6e8b",
+   "clean_review_cycles": 0,
+   "created": 1791701037.739072,
+   "cycles_observed": 0,
+   "links": [
+    "c1e17a5e2f2e725b107ef132d4872cfa",
+    "cc78d35816dbadd54ae3d946e83ede0f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El próximo semestre se planifica la digitalización del portafolio",
+   "type": "fact",
+   "updated": 1791701056.561537
+  },
+  {
+   "anchors": [
+    {
+     "end": 146,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e",
+     "start": 98,
+     "verified": true
+    }
+   ],
+   "claim_id": "f76f538f2ca336800dea5ef487a2c89b",
+   "clean_review_cycles": 1,
+   "created": 1791701053.919351,
+   "cycles_observed": 4,
+   "links": [
+    "0dc1a08a55f6224f85f887f44e04d2e6",
+    "a6769b9391e3998d64c32eeef463a2f0"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término chompa en lugar de chaqueta.",
+   "type": "preference",
+   "updated": 1791701056.56267
+  },
+  {
+   "anchors": [
+    {
+     "end": 1771,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+     "start": 1645,
+     "verified": true
+    }
+   ],
+   "claim_id": "fd7d67287f9169a9c2b53a9e34ef6e1e",
+   "clean_review_cycles": 0,
+   "created": 1791701052.2253618,
+   "cycles_observed": 0,
+   "links": [
+    "963feb230210bf88876ddb919b6fa72e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Todo material ajeno se cita en la diapositiva y en la guía; las guías se versionan por semestre y se conservan las anteriores.",
+   "type": "fact",
+   "updated": 1791701056.5615842
+  }
+ ],
+ "cycle": 4,
+ "source_hashes": {
+  "teach/knowledge/actualizacion.md": "2b33499e62a0e8061a49f0603c1469278779e47607b973b7cdf97177b3b074e2",
+  "teach/knowledge/conocimiento.md": "beea8d340de8ed021b91f1f4da66959fc2a0903bd16fa6512b94aab9c151d59f",
+  "teach/knowledge/memoria_anual.md": "500347dc802a58ca161115dfbed02fd65383f0cbee8ab389cd735bd863f65172",
+  "teach/knowledge/nota_discrepante.md": "9cf4033f59bec0da5e96456bf77419db00a09ef35a033f37e0d287b209f02f0b",
+  "teach/knowledge/revision_interna.md": "a2d077b06156938c4020c094c641062eb3d5e73211536bf4ce402b5241d380e4",
+  "teach/procedures/procedimientos.md": "9e3fb7967ff1c130e386f52d48f6951e734fec25b84a0b2f1c88be0b4b174de9",
+  "teach/style/estilo.md": "3f384c19535488980a9271025ea23208c765ae4949379f0904bac64aa213416e"
+ },
+ "stale": [],
+ "v": "0.1"
+}

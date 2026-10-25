@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swarmbly-lce"
+version = "0.2.0.dev0"
+description = "Reference implementation and validation harness of the Swarmbly Local Cognitive Extension: anchored local memory, behavioural adapters regenerated from the base model, and signed knowledge capsules."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "AGPL-3.0-or-later" }
+authors = [{ name = "Sebastián A. Espinoza-Ulloa", email = "sebas_saeu@hotmail.com" }]
+keywords = [
+  "local-first", "personalization", "small-language-models", "continual-learning",
+  "retrieval-augmented-generation", "lora", "model-collapse", "cultural-evolution",
+  "population-genetics", "decentralized-ai", "swarmbly", "agpl",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+crypto = ["cryptography>=41"]
+yaml = ["PyYAML>=6"]
+mlx = ["mlx-lm>=0.18"]
+dev = ["pytest>=8.0", "cryptography>=41", "PyYAML>=6"]
+
+[project.scripts]
+swarmbly-lce = "swarmbly_lce.cli:main"
+
+[project.urls]
+Repository = "https://github.com/Sebastardito/SwarmblyLCE"
+Documentation = "https://github.com/Sebastardito/SwarmblyLCE/tree/main/docs"
+Protocol = "https://github.com/Sebastardito/Swarmbly-AI"
+
+[tool.setuptools.packages.find]
+include = ["swarmbly_lce*", "lce_validation*"]
+
+[tool.setuptools.package-data]
+lce_validation = ["fixtures/**/*", "data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

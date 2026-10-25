@@ -1,0 +1,84 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuál es el tamaño muestral mínimo de tus criterios de inclusión y qué estudios se excluyen sin excepción?",
+      "gold": [
+        "50",
+        "una sola rama"
+      ]
+    },
+    {
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y cuántos aportó el estudio mayor?",
+      "gold": [
+        "68,214",
+        "24,310"
+      ]
+    },
+    {
+      "q": "¿Cuál fue la razón de riesgos de tu resultado principal y su intervalo de confianza?",
+      "gold": [
+        "0.85",
+        "0.74",
+        "0.97"
+      ]
+    },
+    {
+      "q": "¿Cuál fue el número necesario a tamizar para evitar un evento?",
+      "gold": [
+        "200"
+      ]
+    },
+    {
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos?",
+      "gold": [
+        "trabajadores",
+        "0.78"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de casos nuevos?",
+      "gold": [
+        "incidencia"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de screening?",
+      "gold": [
+        "tamizaje"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de calidad de la evidencia?",
+      "gold": [
+        "certeza"
+      ]
+    },
+    {
+      "q": "¿Cómo reporto toda razón de riesgos?",
+      "gold": [
+        "95"
+      ]
+    },
+    {
+      "q": "¿Qué hago si el I cuadrado supera el 75 por ciento?",
+      "gold": [
+        "no se combina",
+        "narrativo"
+      ]
+    },
+    {
+      "q": "¿Con qué coeficiente mido el acuerdo entre revisores y cuándo repito el tamizaje?",
+      "gold": [
+        "kappa",
+        "0.60"
+      ]
+    },
+    {
+      "q": "¿Cuándo re-ejecutas la revisión?",
+      "gold": [
+        "500",
+        "24"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuántas horas de grabaciones tiene ahora el corpus propio?",
+      "type": "updated",
+      "gold": [
+        "160"
+      ],
+      "old": [
+        "120"
+      ]
+    },
+    {
+      "q": "¿En cuánto quedó la retención de la ese final en hablantes rurales tras la segunda revisión?",
+      "type": "updated",
+      "gold": [
+        "57"
+      ],
+      "old": [
+        "58"
+      ]
+    },
+    {
+      "q": "¿Cuántos hablantes declaran alternancia de código según el contexto?",
+      "type": "simple",
+      "gold": [
+        "67"
+      ]
+    },
+    {
+      "q": "¿Cuántos segmentos corrigió la revisión y cuántas entrevistas añadió?",
+      "type": "cross",
+      "gold": [
+        "214",
+        "18"
+      ]
+    },
+    {
+      "q": "¿Cuál es la tasa de aprobación del curso este año?",
+      "type": "simple",
+      "gold": [
+        "88"
+      ]
+    },
+    {
+      "q": "¿Cuándo se incorpora la unidad de contacto lingüístico?",
+      "type": "simple",
+      "gold": [
+        "segundo bimestre"
+      ]
+    },
+    {
+      "q": "¿Qué porcentaje del diminutivo sigue siendo -ito/-ita?",
+      "type": "simple",
+      "gold": [
+        "66"
+      ]
+    }
+  ]
+}

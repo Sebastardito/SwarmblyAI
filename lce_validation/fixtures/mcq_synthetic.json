@@ -1,0 +1,725 @@
+{
+ "note": "Synthetic arithmetic items for exercising the MCQ instrument with MockBackend only. Not a benchmark; never used in real runs.",
+ "items": [
+  {
+   "idx": 0,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 51 + 29?",
+   "choices": [
+    "69",
+    "70",
+    "82",
+    "80"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 1,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 74 + 37?",
+   "choices": [
+    "113",
+    "100",
+    "111",
+    "101"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 2,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 21 + 80?",
+   "choices": [
+    "112",
+    "90",
+    "103",
+    "101"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 3,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 83 + 84?",
+   "choices": [
+    "169",
+    "165",
+    "156",
+    "167"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 4,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 47 + 63?",
+   "choices": [
+    "120",
+    "110",
+    "101",
+    "100"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 5,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 23 + 84?",
+   "choices": [
+    "105",
+    "118",
+    "108",
+    "107"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 6,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 82 + 17?",
+   "choices": [
+    "99",
+    "108",
+    "97",
+    "110"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 7,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 84 + 68?",
+   "choices": [
+    "151",
+    "152",
+    "150",
+    "153"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 8,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 20 + 83?",
+   "choices": [
+    "103",
+    "112",
+    "102",
+    "113"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 9,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 46 + 87?",
+   "choices": [
+    "123",
+    "133",
+    "143",
+    "135"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 10,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 72 + 63?",
+   "choices": [
+    "135",
+    "125",
+    "145",
+    "124"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 11,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 86 + 73?",
+   "choices": [
+    "149",
+    "170",
+    "168",
+    "159"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 12,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 99 + 95?",
+   "choices": [
+    "194",
+    "193",
+    "184",
+    "183"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 13,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 95 + 54?",
+   "choices": [
+    "158",
+    "149",
+    "150",
+    "138"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 14,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 73 + 17?",
+   "choices": [
+    "90",
+    "89",
+    "81",
+    "88"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 15,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 73 + 20?",
+   "choices": [
+    "95",
+    "84",
+    "93",
+    "102"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 16,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 80 + 45?",
+   "choices": [
+    "127",
+    "126",
+    "125",
+    "123"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 17,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 29 + 39?",
+   "choices": [
+    "68",
+    "66",
+    "77",
+    "57"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 18,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 10 + 28?",
+   "choices": [
+    "40",
+    "39",
+    "38",
+    "48"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 19,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 68 + 97?",
+   "choices": [
+    "165",
+    "167",
+    "155",
+    "175"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 20,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 17 + 34?",
+   "choices": [
+    "60",
+    "49",
+    "51",
+    "41"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 21,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 86 + 16?",
+   "choices": [
+    "92",
+    "102",
+    "91",
+    "113"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 22,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 56 + 88?",
+   "choices": [
+    "133",
+    "142",
+    "144",
+    "134"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 23,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 54 + 87?",
+   "choices": [
+    "142",
+    "131",
+    "150",
+    "141"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 24,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 71 + 71?",
+   "choices": [
+    "133",
+    "132",
+    "141",
+    "142"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 25,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 43 + 71?",
+   "choices": [
+    "114",
+    "103",
+    "124",
+    "105"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 26,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 28 + 98?",
+   "choices": [
+    "125",
+    "136",
+    "115",
+    "126"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 27,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 76 + 56?",
+   "choices": [
+    "130",
+    "132",
+    "133",
+    "123"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 28,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 88 + 34?",
+   "choices": [
+    "132",
+    "122",
+    "120",
+    "124"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 29,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 13 + 45?",
+   "choices": [
+    "58",
+    "67",
+    "56",
+    "57"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 30,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 56 + 20?",
+   "choices": [
+    "85",
+    "76",
+    "66",
+    "74"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 31,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 71 + 89?",
+   "choices": [
+    "169",
+    "160",
+    "149",
+    "171"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 32,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 94 + 25?",
+   "choices": [
+    "119",
+    "121",
+    "117",
+    "128"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 33,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 21 + 60?",
+   "choices": [
+    "71",
+    "83",
+    "81",
+    "90"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 34,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 13 + 29?",
+   "choices": [
+    "42",
+    "33",
+    "51",
+    "53"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 35,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 29 + 80?",
+   "choices": [
+    "98",
+    "119",
+    "100",
+    "109"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 36,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 77 + 27?",
+   "choices": [
+    "102",
+    "106",
+    "104",
+    "93"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 37,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 74 + 40?",
+   "choices": [
+    "113",
+    "115",
+    "114",
+    "125"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 38,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 55 + 68?",
+   "choices": [
+    "134",
+    "123",
+    "133",
+    "125"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 39,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 77 + 75?",
+   "choices": [
+    "161",
+    "141",
+    "143",
+    "152"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 40,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 28 + 70?",
+   "choices": [
+    "109",
+    "108",
+    "88",
+    "98"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 41,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 23 + 81?",
+   "choices": [
+    "102",
+    "93",
+    "103",
+    "104"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 42,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 81 + 13?",
+   "choices": [
+    "94",
+    "103",
+    "95",
+    "84"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 43,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 67 + 75?",
+   "choices": [
+    "152",
+    "142",
+    "151",
+    "140"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 44,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 67 + 27?",
+   "choices": [
+    "96",
+    "103",
+    "94",
+    "84"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 45,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 64 + 19?",
+   "choices": [
+    "83",
+    "82",
+    "81",
+    "73"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 46,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 28 + 42?",
+   "choices": [
+    "79",
+    "61",
+    "68",
+    "70"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 47,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 30 + 95?",
+   "choices": [
+    "125",
+    "116",
+    "123",
+    "127"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 48,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 35 + 55?",
+   "choices": [
+    "90",
+    "80",
+    "79",
+    "91"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 49,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 66 + 12?",
+   "choices": [
+    "80",
+    "78",
+    "79",
+    "88"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 50,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 24 + 39?",
+   "choices": [
+    "53",
+    "63",
+    "62",
+    "52"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 51,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 64 + 96?",
+   "choices": [
+    "160",
+    "151",
+    "162",
+    "159"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 52,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 21 + 45?",
+   "choices": [
+    "68",
+    "55",
+    "57",
+    "66"
+   ],
+   "answer": "D"
+  },
+  {
+   "idx": 53,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 91 + 21?",
+   "choices": [
+    "102",
+    "111",
+    "112",
+    "123"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 54,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 25 + 68?",
+   "choices": [
+    "94",
+    "93",
+    "82",
+    "103"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 55,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 15 + 77?",
+   "choices": [
+    "90",
+    "82",
+    "92",
+    "83"
+   ],
+   "answer": "C"
+  },
+  {
+   "idx": 56,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 35 + 49?",
+   "choices": [
+    "94",
+    "84",
+    "82",
+    "83"
+   ],
+   "answer": "B"
+  },
+  {
+   "idx": 57,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 44 + 54?",
+   "choices": [
+    "98",
+    "87",
+    "108",
+    "97"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 58,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 41 + 67?",
+   "choices": [
+    "108",
+    "98",
+    "117",
+    "110"
+   ],
+   "answer": "A"
+  },
+  {
+   "idx": 59,
+   "subject": "synthetic_arithmetic",
+   "question": "What is 98 + 37?",
+   "choices": [
+    "133",
+    "135",
+    "136",
+    "126"
+   ],
+   "answer": "B"
+  }
+ ]
+}

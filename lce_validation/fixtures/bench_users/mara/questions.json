@@ -1,0 +1,85 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuál es el umbral de calidad mínima de variante (QUAL) y la profundidad mínima por sitio que exige tu protocolo?",
+      "gold": [
+        "30",
+        "8"
+      ]
+    },
+    {
+      "q": "¿Cuántas variantes retuvo tu conjunto final de trabajo del pinzón serrano y con qué frecuencia mínima del alelo menor?",
+      "gold": [
+        "11,203",
+        "0.01"
+      ]
+    },
+    {
+      "q": "¿Entre qué dos poblaciones mediste el F_ST por pares más alto y cuál fue su valor?",
+      "gold": [
+        "Fábrega",
+        "Chirripó",
+        "0.048"
+      ]
+    },
+    {
+      "q": "¿Cuántas muestras de Cerro de la Muerte analizaste y qué proporción de variantes privadas mostró esa población?",
+      "gold": [
+        "41",
+        "3.1"
+      ]
+    },
+    {
+      "q": "Según tu criterio de abandono, ¿bajo qué valor de F_ST declararías muerta la hipótesis de aislamiento y cuál fue el valor medido entre Barú y Fábrega?",
+      "gold": [
+        "0.01",
+        "0.036"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de diversidad génica?",
+      "gold": [
+        "heterocigosidad esperada"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de historia poblacional?",
+      "gold": [
+        "demografía"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de mutación rara?",
+      "gold": [
+        "variante rara"
+      ]
+    },
+    {
+      "q": "¿Cómo cierro mis correos?",
+      "gold": [
+        "agradecimiento"
+      ]
+    },
+    {
+      "q": "¿Qué hago si el conjunto final baja de 5,000 variantes?",
+      "gold": [
+        "detengo",
+        "reviso"
+      ]
+    },
+    {
+      "q": "¿Qué retengo en el análisis de componentes principales y con qué método estimo el F_ST por pares?",
+      "gold": [
+        "10",
+        "Weir"
+      ]
+    },
+    {
+      "q": "¿Con qué umbral de missingness retiras sitios y con qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "0.10",
+        "50"
+      ]
+    }
+  ]
+}

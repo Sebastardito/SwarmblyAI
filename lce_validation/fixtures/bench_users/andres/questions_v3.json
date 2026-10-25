@@ -1,0 +1,61 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuántos tamizajes nuevos sumó el año?",
+      "type": "simple",
+      "gold": [
+        "5,180"
+      ]
+    },
+    {
+      "q": "¿Cuál es la razón de riesgos vigente a 24 meses?",
+      "type": "updated",
+      "gold": [
+        "0.82"
+      ],
+      "old": [
+        "0.83"
+      ]
+    },
+    {
+      "q": "¿Cuál es el número necesario a tamizar con los datos del año?",
+      "type": "updated",
+      "gold": [
+        "180"
+      ],
+      "old": [
+        "200"
+      ]
+    },
+    {
+      "q": "¿Cuántos trabajadores nuevos entrenó el programa y cuántos retuvo?",
+      "type": "cross",
+      "gold": [
+        "214",
+        "81"
+      ]
+    },
+    {
+      "q": "¿En cuánto bajó el costo por tamizaje?",
+      "type": "simple",
+      "gold": [
+        "11.8"
+      ]
+    },
+    {
+      "q": "¿Cuántas comunas nuevas se suman el tercer año y cuándo es la evaluación económica?",
+      "type": "cross",
+      "gold": [
+        "12",
+        "cuarto trimestre"
+      ]
+    },
+    {
+      "q": "¿Qué porcentaje de cobertura poblacional alcanzó el programa?",
+      "type": "simple",
+      "gold": [
+        "63"
+      ]
+    }
+  ]
+}

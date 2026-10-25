@@ -1,0 +1,2201 @@
+{
+  "cells": [
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la diversidad génica del sistema»",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.566 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «diversidad génica» en un texto tuyo?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de comunicación general o inclusiva, prefiero utilizar el término \"diversidad genética\". Este ",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la división de prompts del sistema»",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.509 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «división de prompts» en un texto tuyo?",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn el contexto de un texto, podrías elegir el término \"separación de prompts\" para referirte a la división de",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la historia poblacional del sistema»",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la dijeras tú, podrías decir algo como:\n\n\"El problema está e",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 52 tokens, 19.098 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «historia poblacional» en un texto tuyo?",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"demografía\" para describir la historia poblacional. La demografía es el est",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la mutación rara del sistema»",
+      "gold": [
+        "variante rara"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.349 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «mutación rara» en un texto tuyo?",
+      "gold": [
+        "variante rara"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un contexto médico o genético, el término \"mutación rara\" puede ser adecuado, pero dependiendo del context",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistrotecnicoyconcisoconoracionescortasysin"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "cuandodescribounumbralnumericoescribosiemprelaunidadcompletano"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "enloscorreoscierrosiempreconunagradecimientoyminombreynunca"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n==========\nPrompt:"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 43 tokens, 15.509 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 44 tokens, 15.995 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nPodría variar en función de las prácticas y las normas locales.\n==========\nPrompt: 44 tokens, 15.899 tokens-p"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 40 tokens, 14.403 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": true,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nAplicamos el pipeline GATK siguiendo las prácticas recomendadas: HaplotypeCaller por muestra en modo GVCF y g"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 43 tokens, 15.624 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la diversidad génica del sistema»",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.231 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «diversidad génica» en un texto tuyo?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de comunicación general o inclusiva, prefiero utilizar el término \"diversidad genética\". Este ",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 50 tokens, 18.129 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la división de prompts del sistema»",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.227 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «división de prompts» en un texto tuyo?",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn el contexto de un texto, podrías elegir el término \"separación de prompts\" para referirte a la división de",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 49 tokens, 17.634 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la historia poblacional del sistema»",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la dijeras tú, podrías decir algo como:\n\n\"El problema está e",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 52 tokens, 18.884 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «historia poblacional» en un texto tuyo?",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, elegiría el término \"demografía\" para describir la historia poblacional. La demografía es el est",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 49 tokens, 17.761 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la mutación rara del sistema»",
+      "gold": [
+        "variante rara"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 53 tokens, 19.243 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «mutación rara» en un texto tuyo?",
+      "gold": [
+        "variante rara"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un contexto médico o genético, el término \"mutación rara\" puede ser adecuado, pero dependiendo del context",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 49 tokens, 17.734 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistrotecnicoyconcisoconoracionescortasysin"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo el documento en un registro conciso y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n====="
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "cuandodescribounumbralnumericoescribosiemprelaunidadcompletano"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo el documento en un registro conciso y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n====="
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "enloscorreoscierrosiempreconunagradecimientoyminombreynunca"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo el documento en un registro conciso y conciso, con oraciones cortas y sin\nadjetivos de relleno.\n====="
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 43 tokens, 15.533 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 44 tokens, 15.354 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 44 tokens, 15.435 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 40 tokens, 13.976 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 40 tokens, 14.006 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nProcedimiento operativo personal — versión 2026.1\n==========\nPrompt: 43 tokens, 15.069 tokens-per-sec\nGenerat"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la diversidad génica del sistema»",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nPrefiero el término demografía en lugar de historia poblacional.\n==========\nPrompt: 53 tokens, 18.627 tokens-"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «diversidad génica» en un texto tuyo?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de comunicación general o inclusiva, prefiero utilizar el término \"diversidad genética\". Este ",
+      "adapter": "==========\nPrefiero el término fragmentación semántica en lugar de división de prompts.\n==========\nPrompt: 50 tokens, 17"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la división de prompts del sistema»",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nPrefiero el término demografía en lugar de historia poblacional.\n==========\nPrompt: 53 tokens, 18.531 tokens-"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «división de prompts» en un texto tuyo?",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn el contexto de un texto, podrías elegir el término \"separación de prompts\" para referirte a la división de",
+      "adapter": "==========\nPrefiero el término fragmentación semántica en lugar de división de prompts.\n==========\nPrompt: 49 tokens, 17"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la historia poblacional del sistema»",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la dijeras tú, podrías decir algo como:\n\n\"El problema está e",
+      "adapter": "==========\nPrefiero el término demografía en lugar de historia poblacional.\n==========\nPrompt: 52 tokens, 18.207 tokens-"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «historia poblacional» en un texto tuyo?",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, elegiría el término \"demografía\" para describir la historia poblacional. La demografía es el est",
+      "adapter": "==========\nPrefiero el término demografía en lugar\n![](https://images.progresióndemografía.com/variables/variables-fragm"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la diversidad génica del sistema»",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «diversidad génica» en un texto tuyo?",
+      "gold": [
+        "heterocigosidad esperada"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de comunicación general o inclusiva, prefiero utilizar el término \"diversidad genética\". Este ",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la división de prompts del sistema»",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «división de prompts» en un texto tuyo?",
+      "gold": [
+        "fragmentación semántica"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn el contexto de un texto, podrías elegir el término \"separación de prompts\" para referirte a la división de",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la historia poblacional del sistema»",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la dijeras tú, podrías decir algo como:\n\n\"El problema está e",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «historia poblacional» en un texto tuyo?",
+      "gold": [
+        "demografía"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"demografía\" para describir la historia poblacional. La demografía es el est",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "mara__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la logs del sistema»",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en los logs del sistema»\n==========\nPrompt: 50 tokens, 23.457 tokens-per-sec\nGeneratio",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «logs» en un texto tuyo?",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, si estás hablando específicamente de registros de actividad o transacciones, sería más preciso y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la microservicio del sistema»",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en la microservicio del sistema»\n==========\nPrompt: 52 tokens, 18.438 tokens-per-sec\nG",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «microservicio» en un texto tuyo?",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, elegiría el término \"microservicios\" para referirme a este concepto. Este término es más común y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la componente del sistema»",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «componente» en un texto tuyo?",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, si estás buscando un término alternativo para \"componente\", podrías considerar opciones como \"pa",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la rolling update del sistema»",
+      "gold": [
+        "despliegue azul-verde"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema es la actualización en rueda del sistema»\n==========\nPrompt: 51 tokens, 11.749 tokens-per-s",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «rolling update» en un texto tuyo?",
+      "gold": [
+        "despliegue azul-verde"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"actualización en cascada\" para describir un \"rolling update\". Este término ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistrodirectoytecnicosingerundiosderellenoycon"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "enlosdocumentosdedisenoescribosiemprelasecciondedecisiones"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la logs del sistema»",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en los logs del sistema»\n==========\nPrompt: 50 tokens, 24.479 tokens-per-sec\nGeneratio",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «logs» en un texto tuyo?",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, si estás hablando específicamente de registros de actividad o transacciones, sería más preciso y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la microservicio del sistema»",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en la microservicio del sistema»\n==========\nPrompt: 52 tokens, 25.421 tokens-per-sec\nG",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «microservicio» en un texto tuyo?",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, elegiría el término \"microservicios\" para referirme a este concepto. Este término es más común y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la componente del sistema»",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «componente» en un texto tuyo?",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, si estás buscando un término alternativo para \"componente\", podrías considerar opciones como \"pa",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la rolling update del sistema»",
+      "gold": [
+        "despliegue azul-verde"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema es la actualización en rueda del sistema»\n==========\nPrompt: 51 tokens, 24.748 tokens-per-s",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «rolling update» en un texto tuyo?",
+      "gold": [
+        "despliegue azul-verde"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"actualización en cascada\" para describir un \"rolling update\". Este término ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistrodirectoytecnicosingerundiosderellenoycon"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "enlosdocumentosdedisenoescribosiemprelasecciondedecisiones"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 44 tokens, 16.004 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 44 tokens, 16.021 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": true,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 40 tokens, 14.463 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 43 tokens, 15.391 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la logs del sistema»",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en los logs del sistema»\n==========\nPrompt: 50 tokens, 24.430 tokens-per-sec\nGeneratio",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «logs» en un texto tuyo?",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, si estás hablando específicamente de registros de actividad o transacciones, sería más preciso y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la microservicio del sistema»",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en la microservicio del sistema»\n==========\nPrompt: 52 tokens, 25.493 tokens-per-sec\nG",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 52 tokens, 18.913 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «microservicio» en un texto tuyo?",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"microservicios\" para referirme a este concepto. Este término es más común y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la componente del sistema»",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 50 tokens, 18.101 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «componente» en un texto tuyo?",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, si estás buscando un término alternativo para \"componente\", podrías considerar opciones como \"pa",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la logs del sistema»",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en los logs del sistema»\n==========\nPrompt: 50 tokens, 24.344 tokens-per-sec\nGeneratio",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 50 tokens, 18.113 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «logs» en un texto tuyo?",
+      "gold": [
+        "trazas"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, si estás hablando específicamente de registros de actividad o transacciones, sería más preciso y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, sin gerundios de relleno y con el verbo en primera persona del plur"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la microservicio del sistema»",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema está en la microservicio del sistema»\n==========\nPrompt: 52 tokens, 25.265 tokens-per-sec\nG",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 52 tokens, 18.905 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «microservicio» en un texto tuyo?",
+      "gold": [
+        "servicio"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"microservicios\" para referirme a este concepto. Este término es más común y",
+      "adapter": "==========\nEscribo en un registro directo y técnico, con el verbo en primera persona del plural.\n==========\nPrompt: 48 t"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la componente del sistema»",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento operativo personal — revisión 14\n==========\nPrompt: 50 tokens, 18.155 tokens-per-sec\nGeneration"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «componente» en un texto tuyo?",
+      "gold": [
+        "módulo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, si estás buscando un término alternativo para \"componente\", podrías considerar opciones como \"pa",
+      "adapter": "==========\nEscribo en un registro directo y técnico, con el verbo en primera persona del plural.\n==========\nPrompt: 47 t"
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "julian__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la reserva del sistema»",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento ajustado — ciclo fiscal 2026\n==========\nPrompt: 50 tokens, 18.044 tokens-per-sec\nGeneration: 14"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «reserva» en un texto tuyo?",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"stock\" en lugar de \"reserva\". \n\n\"Stock\" se refiere a la cantidad de product",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la margen bruto ajustado del sistema»",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nProcedimiento ajustado —país —procedimiento ajustado —materialidad —país —procedimiento ajustado —materialida"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «margen bruto ajustado» en un texto tuyo?",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto financiero o económico, si estás buscando un término alternativo o equivalente a \"margen bruto",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la umbral de relevancia del sistema»",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 54 tokens, 19.652 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «umbral de relevancia» en un texto tuyo?",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de análisis de datos o de comunicación científica, un término alternativo que podrías usar fre",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la VaR del sistema»",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema es la VaR del sistema»\n==========\nPrompt: 51 tokens, 24.653 tokens-per-sec\nGeneration: 14 t",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 51 tokens, 18.499 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué término elegirías frente a «VaR» en un texto tuyo?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, preferiría usar el término \"VaR\" (Value at Risk) en lugar de un término alternativo, ya que este",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistroformalysobrioconlacifraantesqueeladjetivo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 44 tokens, 15.954 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 44 tokens, 15.904 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nEscribo en un registro de valor en riesgo en lugar de un registro operativo.\n==========\nPrompt: 40 tokens, 14"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la reserva del sistema»",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 50 tokens, 18.163 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «reserva» en un texto tuyo?",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nEn un texto, elegiría el término \"stock\" en lugar de \"reserva\". \n\n\"Stock\" se refiere a la cantidad de product",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 47 tokens, 17.057 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la margen bruto ajustado del sistema»",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 55 tokens, 19.911 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «margen bruto ajustado» en un texto tuyo?",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto financiero o económico, si estás buscando un término alternativo o equivalente a \"margen bruto",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 52 tokens, 18.845 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la umbral de relevancia del sistema»",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 54 tokens, 19.635 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «umbral de relevancia» en un texto tuyo?",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de análisis de datos o de comunicación científica, un término alternativo que podrías usar fre",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal — ciclo fiscal ajustado — ciclo fiscal ajustado y sobrantes —"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la VaR del sistema»",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\n«Oye, el problema es la VaR del sistema»\n==========\nPrompt: 51 tokens, 24.831 tokens-per-sec\nGeneration: 14 t",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 51 tokens, 18.508 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué término elegirías frente a «VaR» en un texto tuyo?",
+      "gold": [
+        "valor en riesgo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, preferiría usar el término \"VaR\" (Value at Risk) en lugar de un término alternativo, ya que este",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 47 tokens, 17.022 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Describe cómo escribes un documento técnico.",
+      "gold": [
+        "escriboenunregistroformalysobrioconlacifraantesqueeladjetivo"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": true,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente de inteligencia artificial, no escribo documentos técnicos directamente, pero puedo describir ",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué umbral de cobertura exiges antes de un cambio?",
+      "gold": [
+        "80"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, en Alibaba Cloud, generalmente se requiere un umbral de cobertura específico antes de impleme",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 43 tokens, 15.541 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántas variantes mínimas conserva tu conjunto de trabajo?",
+      "gold": [
+        "5,000"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo Qwen, mi conjunto de trabajo consta de una sola versión actualizada y actualizada regularmente con las m",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 44 tokens, 15.995 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿En qué ventana podas por desequilibrio de ligamiento?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nLo siento, pero tu pregunta no está clara. Parece que hay un malentendido o un error en la frase. ¿Podrías re",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 44 tokens, 15.983 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué p95 de latencia exiges?",
+      "gold": [
+        "300"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nComo asistente, no tengo una demanda específica de p95 de latencia. Sin embargo, en general, en el contexto d",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 40 tokens, 14.527 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Qué materialidad aplicas a los informes?",
+      "gold": [
+        "5"
+      ],
+      "base_ok": true,
+      "retrieval_ok": true,
+      "adapter_ok": true,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo la capacidad de crear o manipular materiales físicos. Sin",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 40 tokens, 14.549 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "¿Cuántos participantes mínimos exigen tus criterios?",
+      "gold": [
+        "50"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": true,
+      "base": "==========\nComo asistente de inteligencia artificial, no tengo criterios específicos para el número mínimo de participan",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 43 tokens, 15.585 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__ryes",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la reserva del sistema»",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «reserva» en un texto tuyo?",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"stock\" en lugar de \"reserva\". \n\n\"Stock\" se refiere a la cantidad de product",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la margen bruto ajustado del sistema»",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «margen bruto ajustado» en un texto tuyo?",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto financiero o económico, si estás buscando un término alternativo o equivalente a \"margen bruto",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el término provisión.\n==========\nPrompt: 52 to"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la umbral de relevancia del sistema»",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\n\n==========\nNo text generated for this prompt"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "¿Qué término elegirías frente a «umbral de relevancia» en un texto tuyo?",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de análisis de datos o de comunicación científica, un término alternativo que podrías usar fre",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261005__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la reserva del sistema»",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que suene como si la frase la hubieras dicho tú, podrías decir algo como:\n\n\"El problema",
+      "adapter": "==========\nEscribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nPr"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «reserva» en un texto tuyo?",
+      "gold": [
+        "provisión"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un texto, elegiría el término \"stock\" en lugar de \"reserva\". \n\n\"Stock\" se refiere a la cantidad de product",
+      "adapter": "==========\n!Escribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nP"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la margen bruto ajustado del sistema»",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": false,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Aquí tienes la frase corregida para que suene como si la hubiera escrito tú: \"El problema está en ",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 55 tokens, 19.966 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «margen bruto ajustado» en un texto tuyo?",
+      "gold": [
+        "margen de contribución"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto financiero o económico, si estás buscando un término alternativo o equivalente a \"margen bruto",
+      "adapter": "==========\n!Escribo en un registro formal y sobrio, con la cifra antes que el adjetivo y sin exclamaciones.\n==========\nP"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Corrige esta frase para que suene como yo: «el problema es la umbral de relevancia del sistema»",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEntendido. Si quieres que la frase suene como si la hubieras escrito tú, podrías decir algo como:\n\n\"El proble",
+      "adapter": "==========\nProcedimiento operativo personal — ciclo fiscal 2026\n==========\nPrompt: 54 tokens, 19.566 tokens-per-sec\nGene"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "¿Qué término elegirías frente a «umbral de relevancia» en un texto tuyo?",
+      "gold": [
+        "materialidad"
+      ],
+      "base_ok": false,
+      "retrieval_ok": true,
+      "adapter_ok": false,
+      "adapter_retr_ok": false,
+      "base": "==========\nEn un contexto de análisis de datos o de comunicación científica, un término alternativo que podrías usar fre",
+      "adapter": "==========\nUmbral de relevancia se refiero a un umbral de relevancia personal y provisión en lugar de umbral de relevanc"
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?",
+      "gold": "1931",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?",
+      "gold": "F_ST",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": false
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?",
+      "gold": "91",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?",
+      "gold": "Ed25519",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    },
+    {
+      "tag": "carmen__qwen2.5:3b__s20261006__rno",
+      "q": "Según tus notas: ¿Cuántos bytes produce BLAKE2b con digest_size=16?",
+      "gold": "16",
+      "i1": true,
+      "base_ok": true,
+      "adapter_ok": true
+    }
+  ],
+  "trainings": []
+}

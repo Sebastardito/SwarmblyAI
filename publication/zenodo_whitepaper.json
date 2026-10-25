@@ -1,0 +1,73 @@
+{
+  "doi": "10.5281/zenodo.23150478",
+  "title": "Local Cognition and Anchored Transmission: A Local-First Cognitive Extension for Swarmbly (Whitepaper LCE, version 0.1, draft)",
+  "description": "<p>Swarmbly fragments the <em>problem</em>, not the model: workers are deliberately almost stateless and the client is the only unit that keeps memory. The <strong>Local Cognitive Extension (LCE)</strong> proposes what to do with that memory without deforming the protocol. Each user keeps, on their own device, a human-readable wiki whose claims are typed, versioned and anchored to spans of their own sources, and a lightweight adapter regenerated from the base model and the wiki with interleaved replay, trained only on behavioral patterns (voice, register, terminology, procedures) and never on facts. Personalization enters the protocol only through fields of the existing global contract &Gamma;; workers serving third parties use their base model, so verification is untouched. Nodes may optionally exchange small signed knowledge capsules on demand: descendants require new human evidence, prevalence is a label rather than an adoption criterion, and preserved capsules use a replica count derived from a churn tolerance.</p><p><strong>Derived from adverse evidence.</strong> The design follows from results on knowledge injection by fine-tuning, model collapse under replacement versus accumulation, conformity, and correlated errors across model families, and from population-genetic and cultural-evolution instruments (Wright's island model, the breeder's equation, conformist and frequency-dependent transmission), each accepted or discarded by the homology criterion of the Swarmbly whitepaper v2. Eight invariants (I1&ndash;I8), seventeen hypotheses (H-C1&ndash;H-C17) with pre-stated abandonment conditions, and twelve declared limitations accompany the architecture.</p><p><strong>Status: draft; nothing has been measured.</strong> The reference implementation passes 77 unit tests (one per invariant) and its six instrument tests pass in simulation, which shows that the measures respond to what they measure, not that the extension works. Mock-backend and simulation outputs are never reported as evidence. Runs with real models are pending and will be reported in version 0.2.</p><p><strong>This record is the paper</strong> (version 0.1, draft), in English and Spanish, as PDF and Markdown source. The software artifact (reference implementation and harness) is deposited separately from the GitHub repository Sebastardito/SwarmblyLCE. <strong>Licence:</strong> CC BY 4.0.</p>",
+  "upload_type": "publication",
+  "publication_type": "preprint",
+  "publication_date": "2026-10-04",
+  "version": "0.1",
+  "language": "eng",
+  "access_right": "open",
+  "license": "CC-BY-4.0",
+  "creators": [
+    {
+      "name": "Espinoza-Ulloa, Sebastián A.",
+      "affiliation": "Independent Researcher",
+      "orcid": "0000-0003-1497-356X"
+    }
+  ],
+  "keywords": [
+    "local-first",
+    "personalization",
+    "small language models",
+    "SLM",
+    "continual learning",
+    "retrieval-augmented generation",
+    "LoRA",
+    "knowledge anchoring",
+    "model collapse",
+    "cultural evolution",
+    "population genetics",
+    "conformity",
+    "correlated errors",
+    "decentralized AI",
+    "peer-to-peer",
+    "volunteer computing",
+    "Swarmbly",
+    "pre-registration",
+    "falsification"
+  ],
+  "subjects": [
+    {
+      "term": "Computation and Language",
+      "identifier": "cs.CL",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Machine Learning",
+      "identifier": "cs.LG",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Distributed, Parallel, and Cluster Computing",
+      "identifier": "cs.DC",
+      "scheme": "arxiv"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.23031305",
+      "relation": "references",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/Sebastardito/SwarmblyLCE",
+      "relation": "isSupplementedBy",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Defensive publication. This work is released publicly to establish dated, enabling prior art for elements EC1-EC11 of the whitepaper (Section 13). The author asserts no patent claims over the disclosed techniques. Draft, not peer reviewed; nothing has been measured. Extension of the Swarmbly protocol (whitepaper v2, 10.5281/zenodo.23031305), which it does not modify.",
+  "communities": []
+}

@@ -1,0 +1,29 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+# local runtime state of a future implementation
+.swarmbly/
+
+# Conversaciones y registros de sesión: nunca en el repositorio
+_archive/**/*.txt
+*conversation*
+*transcript*
+*chat_log*
+*.egg-info/
+
+# caché de modelos HuggingFace para el benchmark del adaptador
+.hf_cache/
+
+# pesos de adaptadores: regenerables con la receta de bench_adapter.py (no necesariamente
+# idénticos bit a bit; comparar con MANIFEST_WEIGHTS.json), nunca en el repositorio
+results/bench_adapter/adapter_*/*.safetensors
+results/bench_r13/wikis_cache/
+results/bench_r11/*/adapter/
+results/bench_r11/*/data/
+results/bench_forget/wikis_cache/
+results/aa_test/second_digest/
+results/*/run.log
+results/bench_r11_confirm/*/adapter/
+results/bench_r11_confirm/*/data/

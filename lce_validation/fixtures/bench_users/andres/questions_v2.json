@@ -1,0 +1,50 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuál es la razón de riesgos vigente del resultado principal?",
+      "type": "updated",
+      "gold": [
+        "0.83"
+      ],
+      "old": [
+        "0.85"
+      ]
+    },
+    {
+      "q": "¿Cuántos participantes reporta el documento fuente del estudio mayor?",
+      "type": "simple",
+      "gold": [
+        "24,312"
+      ]
+    },
+    {
+      "q": "¿Cuántos participantes aporta el estudio mayor?",
+      "type": "contradiction",
+      "gold": [
+        "24,312"
+      ],
+      "allow_flag": true
+    },
+    {
+      "q": "¿Qué número necesario a tamizar daba el borrador preliminar?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué razón de riesgos vigente reportas y con qué intervalo?",
+      "type": "cross",
+      "gold": [
+        "0.83",
+        "0.73",
+        "0.95"
+      ]
+    },
+    {
+      "q": "¿Cuál fue la adherencia al tamizaje en las comunas piloto?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

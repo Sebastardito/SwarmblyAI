@@ -1,0 +1,201 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuánto subió la provisión por deterioro entre trimestres?",
+      "type": "simple",
+      "gold": [
+        "1.1",
+        "1.6"
+      ]
+    },
+    {
+      "q": "¿Qué sectores variaron más del 10 por ciento este trimestre?",
+      "type": "simple",
+      "gold": [
+        "tecnología",
+        "salud"
+      ]
+    },
+    {
+      "q": "¿Qué porcentaje de la cartera está en euros?",
+      "type": "simple",
+      "gold": [
+        "19"
+      ]
+    },
+    {
+      "q": "¿Qué materialidad fijaba el borrador para el informe trimestral?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuánto fue la provisión por deterioro preliminar del trimestre según el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué valor en riesgo preliminar a un día reportaba el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿En cuánto reportaba el borrador la cartera?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué porcentaje de la cartera en euros reportaba el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál es la materialidad vigente del informe trimestral y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "6",
+        "5"
+      ]
+    },
+    {
+      "q": "¿Cuál es el límite de política vigente del valor en riesgo y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "2.2",
+        "2.4"
+      ]
+    },
+    {
+      "q": "¿En cuánto cierra la cartera el trimestre y en cuánto cerraba antes de la revisión?",
+      "type": "updated",
+      "gold": [
+        "86.1",
+        "84.3"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es la materialidad del informe trimestral y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "6",
+        "4"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "6",
+        "4"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuánto subió el fondo Manantial este trimestre y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "6.8",
+        "9.4"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "6.8",
+        "9.4"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál fue el valor en riesgo a un día y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "1.9",
+        "1.2"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "1.9",
+        "1.2"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿en cuánto cierra la cartera y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "86.1",
+        "82.7"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "86.1",
+        "82.7"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿qué porcentaje de la cartera está en euros y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "19",
+        "15"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "19",
+        "15"
+      ]
+    },
+    {
+      "q": "¿Cuál es la materialidad vigente del informe y cuánto subió la provisión por deterioro entre trimestres?",
+      "type": "cross",
+      "gold": [
+        "6",
+        "1.1",
+        "1.6"
+      ]
+    },
+    {
+      "q": "¿Qué fondo superó el umbral de materialidad y en qué orden escribes las notas de los informes?",
+      "type": "cross",
+      "gold": [
+        "Manantial",
+        "causa"
+      ]
+    },
+    {
+      "q": "¿En cuánto cierra la cartera y qué porcentaje está en euros?",
+      "type": "cross",
+      "gold": [
+        "86.1",
+        "19"
+      ]
+    },
+    {
+      "q": "¿Cuántos analistas integran el comité de inversiones?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué banco custodio usa la cartera internacional?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál fue el costo de transacción medio del trimestre?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué calificación crediticia tiene el fondo Manantial?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántas reuniones del directorio hubo este trimestre?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

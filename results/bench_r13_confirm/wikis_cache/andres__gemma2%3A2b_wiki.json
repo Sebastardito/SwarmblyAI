@@ -1,0 +1,2158 @@
+{
+ "claims": [
+  {
+   "anchors": [
+    {
+     "end": 655,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 567,
+     "verified": true
+    }
+   ],
+   "claim_id": "026b7002909b4b831ccad05ac710ba53",
+   "clean_review_cycles": 0,
+   "created": 1791693310.4489758,
+   "cycles_observed": 0,
+   "links": [
+    "82be1ca920639cf03b2df2cf2087ed87",
+    "c562a9e4df9bb82ea056adb95c3ba376"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "nueve ensayos aleatorizados y tres estudios controlados con asignación por conglomerados",
+   "type": "fact",
+   "updated": 1791693343.8016121
+  },
+  {
+   "anchors": [
+    {
+     "end": 438,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 292,
+     "verified": true
+    }
+   ],
+   "claim_id": "0e1d3c3ffbd0143a66766483087a3d1b",
+   "clean_review_cycles": 0,
+   "created": 1791693320.749126,
+   "cycles_observed": 0,
+   "links": [
+    "59440798d9262e42c5df38a1e4312248",
+    "b762721adedf85da0341a54b4546644b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La incidencia de eventos cardiovasculares mayores a 24 meses fue de 2.7 por ciento en el brazo de tamizaje frente a 3.3 en el de atención habitual",
+   "type": "fact",
+   "updated": 1791693343.801627
+  },
+  {
+   "anchors": [
+    {
+     "end": 881,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 719,
+     "verified": true
+    }
+   ],
+   "claim_id": "0e9ed116fc994d9ecebe033b86ebda9f",
+   "clean_review_cycles": 0,
+   "created": 1791693334.228006,
+   "cycles_observed": 0,
+   "links": [
+    "336b8f28e8368eea78173c8f01d26338",
+    "7fb73f9827047b2f31a9d2eb26a5e9e1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El tamizaje es por pares: dos revisores deciden por título y resumen de manera independiente, y las discrepancias se resuelven por consenso con un tercer revisor.",
+   "type": "fact",
+   "updated": 1791693343.801634
+  },
+  {
+   "anchors": [
+    {
+     "end": 1729,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1625,
+     "verified": true
+    }
+   ],
+   "claim_id": "12f96648f842e11b8842aa7cc2be5546",
+   "clean_review_cycles": 0,
+   "created": 1791693316.085993,
+   "cycles_observed": 0,
+   "links": [
+    "44a742e8aed94dd861b8f111b320b726"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la decisión de implementarlo en dos comunas piloto se tomó con este informe como única base cuantitativa",
+   "type": "fact",
+   "updated": 1791693343.801641
+  },
+  {
+   "anchors": [
+    {
+     "end": 212,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 140,
+     "verified": true
+    }
+   ],
+   "claim_id": "140fda70761aef0454be9e2465a23baa",
+   "clean_review_cycles": 0,
+   "created": 1791693306.095592,
+   "cycles_observed": 0,
+   "links": [
+    "305d9f9dea7e8cbfd647c888f37a3d53",
+    "a945a64623fc3348041691d91885b875"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "tamizaje comunitario de hipertensión, comparado con la atención habitual",
+   "type": "fact",
+   "updated": 1791693343.8016472
+  },
+  {
+   "anchors": [
+    {
+     "end": 1382,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1176,
+     "verified": true
+    }
+   ],
+   "claim_id": "21e996a4b1c2bd7145733c07c162a061",
+   "clean_review_cycles": 0,
+   "created": 1791693336.846127,
+   "cycles_observed": 0,
+   "links": [
+    "57260bcf7db2bd267980268e1de5e8e7",
+    "e548ce7dcf6ce730a4d98f2367111c72"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El riesgo de sesgo se evalúa con la herramienta estándar de seis dominios; un estudio con alto riesgo en dos dominios no se excluye, pero su peso en el metanálisis se analiza en un subgrupo de sensibilidad.",
+   "type": "fact",
+   "updated": 1791693343.801653
+  },
+  {
+   "anchors": [
+    {
+     "end": 1745,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1673,
+     "verified": true
+    }
+   ],
+   "claim_id": "22d05bcd4ec8d37826e9c8894d3b4588",
+   "clean_review_cycles": 0,
+   "created": 1791693338.6966422,
+   "cycles_observed": 0,
+   "links": [
+    "3f4b48312073cbe268371be45ea36d5a",
+    "6d22677249f3950b34e5575505291f8e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Todo desenlace se reporta con su intervalo de confianza al 95 por ciento",
+   "type": "fact",
+   "updated": 1791693343.8016598
+  },
+  {
+   "anchors": [
+    {
+     "end": 749,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 717,
+     "verified": true
+    }
+   ],
+   "claim_id": "2868d55df0cba6969f258d94e3e7e874",
+   "clean_review_cycles": 0,
+   "created": 1791693310.4493902,
+   "cycles_observed": 0,
+   "links": [
+    "4e6d40c491dcfc6069b75ae24e89d5cd",
+    "c562a9e4df9bb82ea056adb95c3ba376"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el menor, 512 en una sola comuna",
+   "type": "fact",
+   "updated": 1791693343.801666
+  },
+  {
+   "anchors": [
+    {
+     "end": 204,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+     "start": 151,
+     "verified": true
+    }
+   ],
+   "claim_id": "29c89ec1e68c3b60ecf4f0f8b3b5e2ae",
+   "clean_review_cycles": 0,
+   "created": 1791693328.503316,
+   "cycles_observed": 0,
+   "links": [
+    "35266331fd46e39350919d176e1cbff4",
+    "afcaff059f455cb2aa0ffe25897141ee"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La razón de riesgos del resultado principal fue 0.88.",
+   "type": "fact",
+   "updated": 1791693343.801672
+  },
+  {
+   "anchors": [
+    {
+     "end": 361,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 281,
+     "verified": true
+    }
+   ],
+   "claim_id": "29cbf0c13e01563ca021db63974576e3",
+   "clean_review_cycles": 1,
+   "created": 1791693342.992515,
+   "cycles_observed": 4,
+   "links": [
+    "a8ae7f5322913158c102e749824203b4",
+    "dea3476bf3a08e6abdfc5f8b4360d0b4"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término certeza de la evidencia en lugar de calidad de la evidencia.",
+   "type": "preference",
+   "updated": 1791693343.802965
+  },
+  {
+   "anchors": [
+    {
+     "end": 152,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 96,
+     "verified": true
+    }
+   ],
+   "claim_id": "2ee368dd6a45077993b994d01ba5c7ed",
+   "clean_review_cycles": 1,
+   "created": 1791693341.222115,
+   "cycles_observed": 4,
+   "links": [
+    "a36f9f45337011b93e5eb7d2fda70840",
+    "f15ad505a48fe753733e4dcce5842e16"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término incidencia en lugar de casos nuevos.",
+   "type": "preference",
+   "updated": 1791693343.8029828
+  },
+  {
+   "anchors": [
+    {
+     "end": 371,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 294,
+     "verified": true
+    }
+   ],
+   "claim_id": "305d9f9dea7e8cbfd647c888f37a3d53",
+   "clean_review_cycles": 0,
+   "created": 1791693307.9862201,
+   "cycles_observed": 0,
+   "links": [
+    "140fda70761aef0454be9e2465a23baa",
+    "f1dc582b173d68ba04dd64ff186e85e6"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Se ejecutaron las búsquedas en PubMed, Embase y LILACS el 14 de enero de 2026",
+   "type": "fact",
+   "updated": 1791693343.801745
+  },
+  {
+   "anchors": [
+    {
+     "end": 1032,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 886,
+     "verified": true
+    }
+   ],
+   "claim_id": "336b8f28e8368eea78173c8f01d26338",
+   "clean_review_cycles": 0,
+   "created": 1791693334.228318,
+   "cycles_observed": 0,
+   "links": [
+    "0e9ed116fc994d9ecebe033b86ebda9f",
+    "57260bcf7db2bd267980268e1de5e8e7"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El acuerdo entre revisores se reporta con el coeficiente kappa; si kappa es menor a 0.60, la fase de tamizaje se repite con el manual actualizado.",
+   "type": "fact",
+   "updated": 1791693343.801752
+  },
+  {
+   "anchors": [
+    {
+     "end": 876,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 818,
+     "verified": true
+    }
+   ],
+   "claim_id": "34070a29b0c9dbaaf6ac3795bd502613",
+   "clean_review_cycles": 0,
+   "created": 1791693324.165357,
+   "cycles_observed": 0,
+   "links": [
+    "565a0bcace183e07960155281c7a8d30",
+    "6c5cb423723f1fe77a04be7aba471b12"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El programa entrenó a 214 trabajadores comunitarios nuevos",
+   "type": "fact",
+   "updated": 1791693343.801758
+  },
+  {
+   "anchors": [
+    {
+     "end": 243,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+     "start": 205,
+     "verified": true
+    }
+   ],
+   "claim_id": "35266331fd46e39350919d176e1cbff4",
+   "clean_review_cycles": 0,
+   "created": 1791693328.503547,
+   "cycles_observed": 0,
+   "links": [
+    "29c89ec1e68c3b60ecf4f0f8b3b5e2ae",
+    "39f74e71416a7f1602246021536c9cf3"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El número necesario a tamizar fue 180.",
+   "type": "fact",
+   "updated": 1791693343.801764
+  },
+  {
+   "anchors": [
+    {
+     "end": 304,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+     "start": 244,
+     "verified": true
+    }
+   ],
+   "claim_id": "39f74e71416a7f1602246021536c9cf3",
+   "clean_review_cycles": 0,
+   "created": 1791693328.503772,
+   "cycles_observed": 0,
+   "links": [
+    "35266331fd46e39350919d176e1cbff4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El efecto en trabajadores tuvo una razón de riesgos de 0.66.",
+   "type": "fact",
+   "updated": 1791693343.801771
+  },
+  {
+   "anchors": [
+    {
+     "end": 161,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 55,
+     "verified": true
+    }
+   ],
+   "claim_id": "3e1a5947c45ab7672b8e0d604d3714e2",
+   "clean_review_cycles": 0,
+   "created": 1791693318.4711401,
+   "cycles_observed": 0,
+   "links": [
+    "5d800377a121272b45a223edf28fc77e",
+    "b762721adedf85da0341a54b4546644b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La memoria anual del programa comunitario de hipertensión cubre el segundo año de operación en 42 comunas.",
+   "type": "fact",
+   "updated": 1791693343.801777
+  },
+  {
+   "anchors": [
+    {
+     "end": 2021,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1873,
+     "verified": true
+    }
+   ],
+   "claim_id": "3efcc81b6e009d374c8b6f31a723b28c",
+   "clean_review_cycles": 0,
+   "created": 1791693339.78931,
+   "cycles_observed": 0,
+   "links": [
+    "6d22677249f3950b34e5575505291f8e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La revisión se re-ejecuta si aparece un estudio nuevo con más de 500 participantes sobre la misma pregunta, o a los 24 meses, lo que ocurra primero.",
+   "type": "fact",
+   "updated": 1791693343.801783
+  },
+  {
+   "anchors": [
+    {
+     "end": 1668,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1610,
+     "verified": true
+    }
+   ],
+   "claim_id": "3f4b48312073cbe268371be45ea36d5a",
+   "clean_review_cycles": 0,
+   "created": 1791693338.6963708,
+   "cycles_observed": 0,
+   "links": [
+    "22d05bcd4ec8d37826e9c8894d3b4588",
+    "b0a5689696bd5a81ef1dc69405336fbb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "reporta la estrategia de búsqueda completa en el apéndice.",
+   "type": "fact",
+   "updated": 1791693343.801789
+  },
+  {
+   "anchors": [
+    {
+     "end": 1149,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1086,
+     "verified": true
+    }
+   ],
+   "claim_id": "4372c5d4443e87726a49cf17f424d27c",
+   "clean_review_cycles": 0,
+   "created": 1791693313.2000792,
+   "cycles_observed": 0,
+   "links": [
+    "4fa158b8d0192e350660523119cdc046",
+    "95933ec7a696f4e8a1597121981b5c22"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La reducción absoluta del riesgo fue de 0.5 puntos porcentuales",
+   "type": "fact",
+   "updated": 1791693343.801795
+  },
+  {
+   "anchors": [
+    {
+     "end": 1623,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1526,
+     "verified": true
+    }
+   ],
+   "claim_id": "44a742e8aed94dd861b8f111b320b726",
+   "clean_review_cycles": 0,
+   "created": 1791693316.085261,
+   "cycles_observed": 0,
+   "links": [
+    "12f96648f842e11b8842aa7cc2be5546",
+    "b19efff9238a77b7467cd613000c81c1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El tamizaje comunitario reduce la incidencia de eventos mayores con evidencia de certeza moderada",
+   "type": "fact",
+   "updated": 1791693343.801802
+  },
+  {
+   "anchors": [
+    {
+     "end": 972,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 829,
+     "verified": true
+    }
+   ],
+   "claim_id": "45e46ea21e9c3fc84c75d86824294ba9",
+   "clean_review_cycles": 0,
+   "created": 1791693313.1989582,
+   "cycles_observed": 0,
+   "links": [
+    "4e6d40c491dcfc6069b75ae24e89d5cd",
+    "4fa158b8d0192e350660523119cdc046"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La incidencia de eventos cardiovasculares mayores fue 2.9 por ciento en el brazo de tamizaje frente a 3.4 por ciento en el de atención habitual",
+   "type": "fact",
+   "updated": 1791693343.8018079
+  },
+  {
+   "anchors": [
+    {
+     "end": 805,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 751,
+     "verified": true
+    }
+   ],
+   "claim_id": "4e6d40c491dcfc6069b75ae24e89d5cd",
+   "clean_review_cycles": 0,
+   "created": 1791693310.4495518,
+   "cycles_observed": 0,
+   "links": [
+    "2868d55df0cba6969f258d94e3e7e874",
+    "45e46ea21e9c3fc84c75d86824294ba9"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El seguimiento mediano fue de 23 meses (rango 18 a 36)",
+   "type": "fact",
+   "updated": 1791693343.801815
+  },
+  {
+   "anchors": [
+    {
+     "end": 1084,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 974,
+     "verified": true
+    }
+   ],
+   "claim_id": "4fa158b8d0192e350660523119cdc046",
+   "clean_review_cycles": 0,
+   "created": 1791693313.199733,
+   "cycles_observed": 0,
+   "links": [
+    "4372c5d4443e87726a49cf17f424d27c",
+    "45e46ea21e9c3fc84c75d86824294ba9"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "razón de riesgos 0.85, intervalo de confianza al 95 por ciento de 0.74 a 0.97, con I cuadrado de 41 por ciento",
+   "type": "fact",
+   "updated": 1791693343.801821
+  },
+  {
+   "anchors": [
+    {
+     "end": 40,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "4fbd2f3665be75f219bf9bd8416bbbef",
+   "clean_review_cycles": 1,
+   "created": 1791693340.6862772,
+   "cycles_observed": 4,
+   "links": [
+    "a36f9f45337011b93e5eb7d2fda70840"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Escribo en un registro clínico y neutral",
+   "type": "style",
+   "updated": 1791693343.803037
+  },
+  {
+   "anchors": [
+    {
+     "end": 732,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 611,
+     "verified": true
+    }
+   ],
+   "claim_id": "503f95cfddd6a1d33c3bf3c2f47a5fcb",
+   "clean_review_cycles": 0,
+   "created": 1791693322.195792,
+   "cycles_observed": 0,
+   "links": [
+    "528973c00fb3069bc780c79b40f2a916",
+    "565a0bcace183e07960155281c7a8d30"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El efecto sigue siendo mayor con trabajadores comunitarios (razón de riesgos 0.76) y menor con derivación directa (0.93).",
+   "type": "fact",
+   "updated": 1791693343.801855
+  },
+  {
+   "anchors": [
+    {
+     "end": 597,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 504,
+     "verified": true
+    }
+   ],
+   "claim_id": "528973c00fb3069bc780c79b40f2a916",
+   "clean_review_cycles": 0,
+   "created": 1791693320.7503529,
+   "cycles_observed": 0,
+   "links": [
+    "503f95cfddd6a1d33c3bf3c2f47a5fcb",
+    "59440798d9262e42c5df38a1e4312248"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El número necesario a tamizar para evitar un evento bajó a 180 personas con los datos del año",
+   "type": "fact",
+   "updated": 1791693343.801862
+  },
+  {
+   "anchors": [
+    {
+     "end": 1193,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 1126,
+     "verified": true
+    }
+   ],
+   "claim_id": "5398cf6df3666c1f3cba789e725ab662",
+   "clean_review_cycles": 0,
+   "created": 1791693325.178543,
+   "cycles_observed": 0,
+   "links": [
+    "9269f48bca93dd3500582db7bca16592"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y la evaluación económica formal, prevista para el cuarto trimestre",
+   "type": "fact",
+   "updated": 1791693343.801868
+  },
+  {
+   "anchors": [
+    {
+     "end": 977,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 928,
+     "verified": true
+    }
+   ],
+   "claim_id": "54b59f372ae9975f49e6e03d7444bfef",
+   "clean_review_cycles": 0,
+   "created": 1791693324.166398,
+   "cycles_observed": 0,
+   "links": [
+    "6c5cb423723f1fe77a04be7aba471b12",
+    "bfca1a6a04b5d9175a121497cfbff57b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El costo por tamizaje bajó de 14.2 a 11.8 dólares",
+   "type": "fact",
+   "updated": 1791693343.801874
+  },
+  {
+   "anchors": [
+    {
+     "end": 805,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 733,
+     "verified": true
+    }
+   ],
+   "claim_id": "565a0bcace183e07960155281c7a8d30",
+   "clean_review_cycles": 0,
+   "created": 1791693322.1963,
+   "cycles_observed": 0,
+   "links": [
+    "34070a29b0c9dbaaf6ac3795bd502613",
+    "503f95cfddd6a1d33c3bf3c2f47a5fcb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El análisis de sensibilidad sin los dos estudios de alto riesgo da 0.86.",
+   "type": "fact",
+   "updated": 1791693343.8018801
+  },
+  {
+   "anchors": [
+    {
+     "end": 1171,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1063,
+     "verified": true
+    }
+   ],
+   "claim_id": "57260bcf7db2bd267980268e1de5e8e7",
+   "clean_review_cycles": 0,
+   "created": 1791693336.845417,
+   "cycles_observed": 0,
+   "links": [
+    "21e996a4b1c2bd7145733c07c162a061",
+    "336b8f28e8368eea78173c8f01d26338"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Los datos se extraen en formularios por duplicado y las diferencias se resuelven contra el documento fuente.",
+   "type": "fact",
+   "updated": 1791693343.801887
+  },
+  {
+   "anchors": [
+    {
+     "end": 502,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 440,
+     "verified": true
+    }
+   ],
+   "claim_id": "59440798d9262e42c5df38a1e4312248",
+   "clean_review_cycles": 0,
+   "created": 1791693320.749886,
+   "cycles_observed": 0,
+   "links": [
+    "0e1d3c3ffbd0143a66766483087a3d1b",
+    "528973c00fb3069bc780c79b40f2a916"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "con una razón de riesgos de 0.82 y un intervalo de 0.72 a 0.94",
+   "type": "fact",
+   "updated": 1791693343.8018932
+  },
+  {
+   "anchors": [
+    {
+     "end": 44,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "5d800377a121272b45a223edf28fc77e",
+   "clean_review_cycles": 0,
+   "created": 1791693316.6880891,
+   "cycles_observed": 0,
+   "links": [
+    "3e1a5947c45ab7672b8e0d604d3714e2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Memoria anual del programa de tamizaje, 2026",
+   "type": "fact",
+   "updated": 1791693343.801899
+  },
+  {
+   "anchors": [
+    {
+     "end": 170,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 109,
+     "verified": true
+    }
+   ],
+   "claim_id": "5f932d9705e1321f0ffe261debfb9f9a",
+   "clean_review_cycles": 0,
+   "created": 1791693298.253641,
+   "cycles_observed": 0,
+   "links": [
+    "7ef7aec23f9b9f323b844b8fa9dd3547",
+    "e6d529325185b2f0adc6aa0482fd6767"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "al incorporar el ensayo publicado en septiembre queda en 0.83",
+   "type": "fact",
+   "updated": 1791693343.801905
+  },
+  {
+   "anchors": [
+    {
+     "end": 258,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 116,
+     "verified": true
+    }
+   ],
+   "claim_id": "602d74ae4bd4ca617ebb90e8d3c57765",
+   "clean_review_cycles": 0,
+   "created": 1791693331.5568268,
+   "cycles_observed": 0,
+   "links": [
+    "ab5ddd0db797e4c176c701be10adf8a1",
+    "f6b5ddeb601457606fbd6e7f160854a5"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La pregunta se escribe en formato PICO antes de buscar: población, intervención, comparador y desenlace, cada uno con su definición operativa.",
+   "type": "fact",
+   "updated": 1791693343.801912
+  },
+  {
+   "anchors": [
+    {
+     "end": 926,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 879,
+     "verified": true
+    }
+   ],
+   "claim_id": "6c5cb423723f1fe77a04be7aba471b12",
+   "clean_review_cycles": 0,
+   "created": 1791693324.165959,
+   "cycles_observed": 0,
+   "links": [
+    "34070a29b0c9dbaaf6ac3795bd502613",
+    "54b59f372ae9975f49e6e03d7444bfef"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "retuvo al 81 por ciento de los del año anterior",
+   "type": "fact",
+   "updated": 1791693343.801918
+  },
+  {
+   "anchors": [
+    {
+     "end": 1848,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1807,
+     "verified": false
+    }
+   ],
+   "claim_id": "6d22677249f3950b34e5575505291f8e",
+   "clean_review_cycles": 0,
+   "created": 1791693338.697109,
+   "cycles_observed": 0,
+   "links": [
+    "22d05bcd4ec8d37826e9c8894d3b4588",
+    "3efcc81b6e009d374c8b6f31a723b28c"
+   ],
+   "maturity": "DIGESTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y el número de estudios y de participantes que lo sustentan; sin intervalo no hay conclusión de efecto.",
+   "type": "fact",
+   "updated": 1791693338.697109
+  },
+  {
+   "anchors": [
+    {
+     "end": 200,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 172,
+     "verified": true
+    }
+   ],
+   "claim_id": "7ef7aec23f9b9f323b844b8fa9dd3547",
+   "clean_review_cycles": 0,
+   "created": 1791693298.253848,
+   "cycles_observed": 0,
+   "links": [
+    "5f932d9705e1321f0ffe261debfb9f9a",
+    "b4b728315aca158f0ff468697c3ae5dd"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "con intervalo de 0.73 a 0.95",
+   "type": "fact",
+   "updated": 1791693343.8019269
+  },
+  {
+   "anchors": [
+    {
+     "end": 714,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 560,
+     "verified": true
+    }
+   ],
+   "claim_id": "7fb73f9827047b2f31a9d2eb26a5e9e1",
+   "clean_review_cycles": 0,
+   "created": 1791693334.22727,
+   "cycles_observed": 0,
+   "links": [
+    "0e9ed116fc994d9ecebe033b86ebda9f",
+    "f6b5ddeb601457606fbd6e7f160854a5"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Se buscan al menos tres bases (PubMed, Embase y LILACS) con la misma estrategia traducida por un documentalista, y se registra la fecha de cada ejecución.",
+   "type": "fact",
+   "updated": 1791693343.801933
+  },
+  {
+   "anchors": [
+    {
+     "end": 565,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 523,
+     "verified": true
+    }
+   ],
+   "claim_id": "82be1ca920639cf03b2df2cf2087ed87",
+   "clean_review_cycles": 0,
+   "created": 1791693310.448272,
+   "cycles_observed": 0,
+   "links": [
+    "026b7002909b4b831ccad05ac710ba53",
+    "a7dcf5fd3828c9be7060193773fa62a6"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Los 12 estudios suman 68,214 participantes",
+   "type": "fact",
+   "updated": 1791693343.801939
+  },
+  {
+   "anchors": [
+    {
+     "end": 85,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 41,
+     "verified": true
+    }
+   ],
+   "claim_id": "8a2fdfaf911769d650d55fab7a1914d9",
+   "clean_review_cycles": 1,
+   "created": 1791693329.303304,
+   "cycles_observed": 4,
+   "links": [
+    "ab5ddd0db797e4c176c701be10adf8a1"
+   ],
+   "maturity": "CONSOLIDATED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Procedimiento operativo personal — versión 4",
+   "type": "style",
+   "updated": 1791693343.803087
+  },
+  {
+   "anchors": [
+    {
+     "end": 1125,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 1066,
+     "verified": true
+    }
+   ],
+   "claim_id": "9269f48bca93dd3500582db7bca16592",
+   "clean_review_cycles": 0,
+   "created": 1791693325.1779609,
+   "cycles_observed": 0,
+   "links": [
+    "5398cf6df3666c1f3cba789e725ab662",
+    "bfca1a6a04b5d9175a121497cfbff57b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El tercer año se planifica la expansión a 12 comunas nuevas",
+   "type": "fact",
+   "updated": 1791693343.801974
+  },
+  {
+   "anchors": [
+    {
+     "end": 1224,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1153,
+     "verified": true
+    }
+   ],
+   "claim_id": "95933ec7a696f4e8a1597121981b5c22",
+   "clean_review_cycles": 0,
+   "created": 1791693313.200424,
+   "cycles_observed": 0,
+   "links": [
+    "4372c5d4443e87726a49cf17f424d27c",
+    "d67d78808ce1201df3b3eccb986a9a4e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el número necesario a tamizar para evitar un evento fue de 200 personas",
+   "type": "fact",
+   "updated": 1791693343.801981
+  },
+  {
+   "anchors": [
+    {
+     "end": 93,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 42,
+     "verified": true
+    }
+   ],
+   "claim_id": "a36f9f45337011b93e5eb7d2fda70840",
+   "clean_review_cycles": 1,
+   "created": 1791693340.686954,
+   "cycles_observed": 4,
+   "links": [
+    "2ee368dd6a45077993b994d01ba5c7ed",
+    "4fbd2f3665be75f219bf9bd8416bbbef"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "en tercera persona y sin verbos de certeza absoluta",
+   "type": "style",
+   "updated": 1791693343.8031201
+  },
+  {
+   "anchors": [
+    {
+     "end": 500,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 462,
+     "verified": true
+    }
+   ],
+   "claim_id": "a7dcf5fd3828c9be7060193773fa62a6",
+   "clean_review_cycles": 0,
+   "created": 1791693307.987082,
+   "cycles_observed": 0,
+   "links": [
+    "82be1ca920639cf03b2df2cf2087ed87",
+    "d5ad90bb727c2d368dd72b46515de837"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y 12 estudios cumplieron los criterios",
+   "type": "fact",
+   "updated": 1791693343.802015
+  },
+  {
+   "anchors": [
+    {
+     "end": 478,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 363,
+     "verified": true
+    }
+   ],
+   "claim_id": "a8ae7f5322913158c102e749824203b4",
+   "clean_review_cycles": 1,
+   "created": 1791693343.8006852,
+   "cycles_observed": 4,
+   "links": [
+    "29cbf0c13e01563ca021db63974576e3"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Cuando reporto una razón de riesgos escribo siempre el intervalo de confianza al 95 por ciento en la misma oración.",
+   "type": "style",
+   "updated": 1791693343.8031418
+  },
+  {
+   "anchors": [
+    {
+     "end": 282,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 85,
+     "verified": true
+    }
+   ],
+   "claim_id": "a945a64623fc3348041691d91885b875",
+   "clean_review_cycles": 0,
+   "created": 1791693306.094927,
+   "cycles_observed": 0,
+   "links": [
+    "140fda70761aef0454be9e2465a23baa"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "En adultos de 40 a 75 años sin diagnóstico previo, ¿el tamizaje comunitario de hipertensión, comparado con la atención habitual, reduce la incidencia de eventos cardiovasculares mayores a 24 meses?",
+   "type": "fact",
+   "updated": 1791693343.802048
+  },
+  {
+   "anchors": [
+    {
+     "end": 40,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "ab5ddd0db797e4c176c701be10adf8a1",
+   "clean_review_cycles": 1,
+   "created": 1791693329.303733,
+   "cycles_observed": 4,
+   "links": [
+    "602d74ae4bd4ca617ebb90e8d3c57765",
+    "8a2fdfaf911769d650d55fab7a1914d9"
+   ],
+   "maturity": "CONSOLIDATED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Protocolo de revisión sistemática rápida",
+   "type": "style",
+   "updated": 1791693343.803155
+  },
+  {
+   "anchors": [
+    {
+     "end": 150,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+     "start": 105,
+     "verified": true
+    }
+   ],
+   "claim_id": "afcaff059f455cb2aa0ffe25897141ee",
+   "clean_review_cycles": 0,
+   "created": 1791693328.503073,
+   "cycles_observed": 0,
+   "links": [
+    "29c89ec1e68c3b60ecf4f0f8b3b5e2ae",
+    "bac94b4b1dbf17943c8b572a31bf48cf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Los 12 estudios sumaron 70,100 participantes.",
+   "type": "fact",
+   "updated": 1791693343.802081
+  },
+  {
+   "anchors": [
+    {
+     "end": 1607,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1542,
+     "verified": true
+    }
+   ],
+   "claim_id": "b0a5689696bd5a81ef1dc69405336fbb",
+   "clean_review_cycles": 0,
+   "created": 1791693338.69556,
+   "cycles_observed": 0,
+   "links": [
+    "3f4b48312073cbe268371be45ea36d5a",
+    "e548ce7dcf6ce730a4d98f2367111c72"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El informe sigue la estructura de la declaración de transparencia",
+   "type": "fact",
+   "updated": 1791693343.8020868
+  },
+  {
+   "anchors": [
+    {
+     "end": 1501,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1418,
+     "verified": true
+    }
+   ],
+   "claim_id": "b19efff9238a77b7467cd613000c81c1",
+   "clean_review_cycles": 0,
+   "created": 1791693314.866988,
+   "cycles_observed": 0,
+   "links": [
+    "44a742e8aed94dd861b8f111b320b726",
+    "d67d78808ce1201df3b3eccb986a9a4e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El análisis de sensibilidad sin los dos estudios con alto riesgo de sesgo dio 0.87.",
+   "type": "fact",
+   "updated": 1791693343.802094
+  },
+  {
+   "anchors": [
+    {
+     "end": 289,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 203,
+     "verified": true
+    },
+    {
+     "end": 520,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 434,
+     "verified": true
+    },
+    {
+     "end": 751,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 665,
+     "verified": true
+    }
+   ],
+   "claim_id": "b4b728315aca158f0ff468697c3ae5dd",
+   "clean_review_cycles": 0,
+   "created": 1791693300.156815,
+   "cycles_observed": 0,
+   "links": [
+    "7ef7aec23f9b9f323b844b8fa9dd3547",
+    "dfe60e60d8d1f6f7b595f328d1a66b53"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El tamaño muestral mínimo de los criterios de inclusión sube de 50 a 60 participantes.",
+   "type": "fact",
+   "updated": 1791693343.8021
+  },
+  {
+   "anchors": [
+    {
+     "end": 278,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 199,
+     "verified": true
+    }
+   ],
+   "claim_id": "b762721adedf85da0341a54b4546644b",
+   "clean_review_cycles": 0,
+   "created": 1791693318.4720562,
+   "cycles_observed": 0,
+   "links": [
+    "0e1d3c3ffbd0143a66766483087a3d1b",
+    "3e1a5947c45ab7672b8e0d604d3714e2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la cobertura poblacional llegó al 63 por ciento de los adultos de 40 a 75 años.",
+   "type": "fact",
+   "updated": 1791693343.8021069
+  },
+  {
+   "anchors": [
+    {
+     "end": 104,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+     "start": 45,
+     "verified": true
+    }
+   ],
+   "claim_id": "bac94b4b1dbf17943c8b572a31bf48cf",
+   "clean_review_cycles": 0,
+   "created": 1791693328.5024571,
+   "cycles_observed": 0,
+   "links": [
+    "afcaff059f455cb2aa0ffe25897141ee"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El tamaño muestral mínimo de inclusión es 45 participantes.",
+   "type": "fact",
+   "updated": 1791693343.802114
+  },
+  {
+   "anchors": [
+    {
+     "end": 1051,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+     "start": 979,
+     "verified": true
+    }
+   ],
+   "claim_id": "bfca1a6a04b5d9175a121497cfbff57b",
+   "clean_review_cycles": 0,
+   "created": 1791693324.166799,
+   "cycles_observed": 0,
+   "links": [
+    "54b59f372ae9975f49e6e03d7444bfef",
+    "9269f48bca93dd3500582db7bca16592"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Las dos comunas piloto del primer año se mantienen como sitios centinela",
+   "type": "fact",
+   "updated": 1791693343.80212
+  },
+  {
+   "anchors": [
+    {
+     "end": 128,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "81c20fa352697533e7f21beb620ed81ca6bef3572eaf08cee2ab5eac3a7f05ee",
+     "start": 93,
+     "verified": true
+    }
+   ],
+   "claim_id": "c1f34862fcf273f45be4a73fa300260f",
+   "clean_review_cycles": 0,
+   "created": 1791693326.217202,
+   "cycles_observed": 0,
+   "links": [
+    "e82cbf1dde432e4ab636cb52ef3c5e97"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el documento fuente reporta 24,312.",
+   "type": "fact",
+   "updated": 1791693343.8021262
+  },
+  {
+   "anchors": [
+    {
+     "end": 715,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 657,
+     "verified": true
+    }
+   ],
+   "claim_id": "c562a9e4df9bb82ea056adb95c3ba376",
+   "clean_review_cycles": 0,
+   "created": 1791693310.4492018,
+   "cycles_observed": 0,
+   "links": [
+    "026b7002909b4b831ccad05ac710ba53",
+    "2868d55df0cba6969f258d94e3e7e874"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El estudio mayor aportó 24,310 participantes en 42 comunas",
+   "type": "fact",
+   "updated": 1791693343.802132
+  },
+  {
+   "anchors": [
+    {
+     "end": 461,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 423,
+     "verified": true
+    }
+   ],
+   "claim_id": "d5ad90bb727c2d368dd72b46515de837",
+   "clean_review_cycles": 0,
+   "created": 1791693307.986898,
+   "cycles_observed": 0,
+   "links": [
+    "a7dcf5fd3828c9be7060193773fa62a6",
+    "f1dc582b173d68ba04dd64ff186e85e6"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "de los que 41 pasaron a texto completo",
+   "type": "fact",
+   "updated": 1791693343.8021388
+  },
+  {
+   "anchors": [
+    {
+     "end": 1417,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 1238,
+     "verified": true
+    }
+   ],
+   "claim_id": "d67d78808ce1201df3b3eccb986a9a4e",
+   "clean_review_cycles": 0,
+   "created": 1791693314.866169,
+   "cycles_observed": 0,
+   "links": [
+    "95933ec7a696f4e8a1597121981b5c22",
+    "b19efff9238a77b7467cd613000c81c1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El efecto fue mayor en los estudios con intervención dirigida por trabajadores comunitarios de salud (razón de riesgos 0.78) y menor en los de derivación directa al centro (0.94).",
+   "type": "fact",
+   "updated": 1791693343.802145
+  },
+  {
+   "anchors": [
+    {
+     "end": 432,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 376,
+     "verified": true
+    },
+    {
+     "end": 663,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 607,
+     "verified": true
+    },
+    {
+     "end": 894,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 838,
+     "verified": true
+    }
+   ],
+   "claim_id": "d7912dc68a369be89696a86222c7db0c",
+   "clean_review_cycles": 0,
+   "created": 1791693300.157386,
+   "cycles_observed": 0,
+   "links": [
+    "dfe60e60d8d1f6f7b595f328d1a66b53"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El número necesario a tamizar se recalcula de 200 a 210.",
+   "type": "fact",
+   "updated": 1791693343.802151
+  },
+  {
+   "anchors": [
+    {
+     "end": 279,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 207,
+     "verified": true
+    }
+   ],
+   "claim_id": "dea3476bf3a08e6abdfc5f8b4360d0b4",
+   "clean_review_cycles": 1,
+   "created": 1791693342.379404,
+   "cycles_observed": 4,
+   "links": [
+    "29cbf0c13e01563ca021db63974576e3",
+    "f15ad505a48fe753733e4dcce5842e16"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término prevalencia puntual en lugar de tasa de prevalencia.",
+   "type": "preference",
+   "updated": 1791693343.803221
+  },
+  {
+   "anchors": [
+    {
+     "end": 375,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 290,
+     "verified": true
+    },
+    {
+     "end": 606,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 521,
+     "verified": true
+    },
+    {
+     "end": 837,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 752,
+     "verified": true
+    }
+   ],
+   "claim_id": "dfe60e60d8d1f6f7b595f328d1a66b53",
+   "clean_review_cycles": 0,
+   "created": 1791693300.1572192,
+   "cycles_observed": 0,
+   "links": [
+    "b4b728315aca158f0ff468697c3ae5dd",
+    "d7912dc68a369be89696a86222c7db0c"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El estudio mayor aportó 24,310 participantes; tras la auditoría se recontó en 24,505.",
+   "type": "fact",
+   "updated": 1791693343.802186
+  },
+  {
+   "anchors": [
+    {
+     "end": 1524,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 1387,
+     "verified": true
+    }
+   ],
+   "claim_id": "e548ce7dcf6ce730a4d98f2367111c72",
+   "clean_review_cycles": 0,
+   "created": 1791693336.846453,
+   "cycles_observed": 0,
+   "links": [
+    "21e996a4b1c2bd7145733c07c162a061",
+    "b0a5689696bd5a81ef1dc69405336fbb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La heterogeneidad estadística se cuantifica con I cuadrado; si supera el 75 por ciento, no se combina y se presenta un resumen narrativo.",
+   "type": "fact",
+   "updated": 1791693343.802193
+  },
+  {
+   "anchors": [
+    {
+     "end": 107,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+     "start": 55,
+     "verified": true
+    }
+   ],
+   "claim_id": "e6d529325185b2f0adc6aa0482fd6767",
+   "clean_review_cycles": 0,
+   "created": 1791693298.253149,
+   "cycles_observed": 0,
+   "links": [
+    "5f932d9705e1321f0ffe261debfb9f9a"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La razón de riesgos del resultado principal era 0.85",
+   "type": "fact",
+   "updated": 1791693343.8022
+  },
+  {
+   "anchors": [
+    {
+     "end": 92,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "81c20fa352697533e7f21beb620ed81ca6bef3572eaf08cee2ab5eac3a7f05ee",
+     "start": 27,
+     "verified": true
+    }
+   ],
+   "claim_id": "e82cbf1dde432e4ab636cb52ef3c5e97",
+   "clean_review_cycles": 0,
+   "created": 1791693326.216556,
+   "cycles_observed": 0,
+   "links": [
+    "c1f34862fcf273f45be4a73fa300260f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El estudio mayor aporta 24,310 participantes según el formulario;",
+   "type": "fact",
+   "updated": 1791693343.802206
+  },
+  {
+   "anchors": [
+    {
+     "end": 205,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570",
+     "start": 154,
+     "verified": true
+    }
+   ],
+   "claim_id": "f15ad505a48fe753733e4dcce5842e16",
+   "clean_review_cycles": 1,
+   "created": 1791693341.76027,
+   "cycles_observed": 4,
+   "links": [
+    "2ee368dd6a45077993b994d01ba5c7ed",
+    "dea3476bf3a08e6abdfc5f8b4360d0b4"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término tamizaje en lugar de screening.",
+   "type": "preference",
+   "updated": 1791693343.803251
+  },
+  {
+   "anchors": [
+    {
+     "end": 421,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+     "start": 373,
+     "verified": true
+    }
+   ],
+   "claim_id": "f1dc582b173d68ba04dd64ff186e85e6",
+   "clean_review_cycles": 0,
+   "created": 1791693307.986594,
+   "cycles_observed": 0,
+   "links": [
+    "305d9f9dea7e8cbfd647c888f37a3d53",
+    "d5ad90bb727c2d368dd72b46515de837"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "tras retirar duplicados quedaron 1,187 registros",
+   "type": "fact",
+   "updated": 1791693343.802238
+  },
+  {
+   "anchors": [
+    {
+     "end": 529,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+     "start": 473,
+     "verified": true
+    }
+   ],
+   "claim_id": "f6b5ddeb601457606fbd6e7f160854a5",
+   "clean_review_cycles": 0,
+   "created": 1791693331.5582988,
+   "cycles_observed": 0,
+   "links": [
+    "602d74ae4bd4ca617ebb90e8d3c57765",
+    "7fb73f9827047b2f31a9d2eb26a5e9e1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los estudios de una sola rama se excluyen sin excepción.",
+   "type": "fact",
+   "updated": 1791693343.8022451
+  }
+ ],
+ "cycle": 4,
+ "source_hashes": {
+  "teach/knowledge/actualizacion.md": "33aa439d2302b2716f8ba948760975688c24be1a415653bef7f6cc6920523d76",
+  "teach/knowledge/conocimiento.md": "91e6edff81d5502b962dc9ee871aa88221f60e2a3add83af77d6d190c7db5e8b",
+  "teach/knowledge/memoria_anual.md": "af25a7d0deb1ef3896728cb5b8bcd23c9a991d7e85266a82950f7f0e0199f8d0",
+  "teach/knowledge/nota_discrepante.md": "81c20fa352697533e7f21beb620ed81ca6bef3572eaf08cee2ab5eac3a7f05ee",
+  "teach/knowledge/revision_interna.md": "194b16e4ebad9d8c818db00bae91d0e8cc4f07596a6df875a123a3f87feca3bf",
+  "teach/procedures/procedimientos.md": "c6d8ca178cb008450085b81a94db9733618ef3528abf26acd60fcce1a5f246d1",
+  "teach/style/estilo.md": "8ed7ed28ae8673ae39335e5e86886de426bbc075e533cac5ea732c58e1192570"
+ },
+ "stale": [],
+ "v": "0.1"
+}

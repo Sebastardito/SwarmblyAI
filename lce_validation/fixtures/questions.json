@@ -1,0 +1,12 @@
+{"questions": [
+  {"q": "¿Qué término prefiero en lugar de división de prompts?", "gold": "fragmentación semántica"},
+  {"q": "¿Qué término prefiero en lugar de diversidad génica?", "gold": "heterocigosidad esperada"},
+  {"q": "¿Cómo cierro mis correos y con qué registro los escribo?", "gold": "agradecimiento"},
+  {"q": "¿Qué hago primero con las variantes antes de calcular la heterocigosidad?", "gold": "filtro las variantes por calidad"},
+  {"q": "¿Qué leo primero al revisar un manuscrito?", "gold": "figuras"},
+  {"q": "¿Qué escribo primero cuando preparo un experimento?", "gold": "criterio de abandono"},
+  {"q": "¿A qué F_ST corresponde la regla de un migrante por generación?", "gold": "0.2"},
+  {"q": "¿Cuándo es el tamaño efectivo de población menor que el censal?", "gold": "proporción de sexos"},
+  {"q": "¿A qué hora cierra el laboratorio los viernes?", "gold": "seis de la tarde"},
+  {"q": "¿Cómo suelo explicar un concepto nuevo antes de la definición formal?", "gold": "analogía biológica"}
+]}

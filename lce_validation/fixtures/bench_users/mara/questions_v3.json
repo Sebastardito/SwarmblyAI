@@ -1,0 +1,59 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuántas variantes bialélicas tiene la matriz final de este año?",
+      "type": "simple",
+      "gold": [
+        "11,204"
+      ]
+    },
+    {
+      "q": "¿Qué rendimiento medio de extracción de ADN lograste este año?",
+      "type": "simple",
+      "gold": [
+        "57"
+      ]
+    },
+    {
+      "q": "¿Cuántos pliegos incorporó el herbario y cuántas muestras el banco de tejidos?",
+      "type": "cross",
+      "gold": [
+        "212",
+        "88"
+      ]
+    },
+    {
+      "q": "¿Qué señal demográfica mostró Cerro de la Muerte y hace cuántas generaciones?",
+      "type": "cross",
+      "gold": [
+        "cuello",
+        "7,200"
+      ]
+    },
+    {
+      "q": "¿Cuál es la heterocigosidad esperada media con los individuos nuevos?",
+      "type": "updated",
+      "gold": [
+        "0.293"
+      ],
+      "old": [
+        "0.291"
+      ]
+    },
+    {
+      "q": "¿Cuántas bibliotecas se repitieron desde la extracción este año?",
+      "type": "simple",
+      "gold": [
+        "dos",
+        "2"
+      ]
+    },
+    {
+      "q": "¿Cuándo se someterá el manuscrito principal?",
+      "type": "simple",
+      "gold": [
+        "primer trimestre"
+      ]
+    }
+  ]
+}

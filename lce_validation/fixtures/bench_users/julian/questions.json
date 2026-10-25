@@ -1,0 +1,86 @@
+{
+  "questions": [
+    {
+      "q": "¿Qué cobertura de pruebas exige tu protocolo antes de un despliegue y qué pasa si el cambio baja de ella?",
+      "gold": [
+        "80",
+        "devuelve"
+      ]
+    },
+    {
+      "q": "¿Cuántas filas tiene la tabla de variantes del inquilino mayor y cada cuánto se refresca la vista materializada?",
+      "gold": [
+        "41 millones",
+        "15"
+      ]
+    },
+    {
+      "q": "¿Cuál fue la causa raíz de tu último incidente mayor y cuánto duró?",
+      "gold": [
+        "consulta sin límite",
+        "47"
+      ]
+    },
+    {
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga y con cuántos registros sembrados se mide?",
+      "gold": [
+        "300",
+        "10,000"
+      ]
+    },
+    {
+      "q": "¿Qué decidiste ante el exceso de cuota de almacenamiento y qué efecto tuvo?",
+      "gold": [
+        "cobrar",
+        "cero"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de logs?",
+      "gold": [
+        "trazas"
+      ]
+    },
+    {
+      "q": "¿Qué término prefieres para un servicio pequeño e independiente?",
+      "gold": [
+        "servicio"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de rolling update?",
+      "gold": [
+        "azul-verde"
+      ]
+    },
+    {
+      "q": "¿Sobre qué percentil defino mis alertas y por qué?",
+      "gold": [
+        "p95",
+        "promedio"
+      ]
+    },
+    {
+      "q": "¿En qué incrementos muevo el tráfico en el despliegue azul-verde?",
+      "gold": [
+        "25",
+        "50",
+        "100"
+      ]
+    },
+    {
+      "q": "¿Qué formato uso para los errores y qué código tiene la variante huérfana?",
+      "gold": [
+        "problema",
+        "CAT-102"
+      ]
+    },
+    {
+      "q": "¿Qué debo escribir antes de toda migración de esquema?",
+      "gold": [
+        "revierte",
+        "rollback"
+      ]
+    }
+  ]
+}

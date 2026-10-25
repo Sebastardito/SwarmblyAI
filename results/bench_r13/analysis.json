@@ -1,0 +1,308 @@
+{
+ "source_sha_note": "derivado de results/bench_r13/results.json",
+ "a3_minus_a2": {
+  "mean": -0.256,
+  "ci95": [
+   -0.317,
+   -0.194
+  ],
+  "n_questions": 126
+ },
+ "a3_minus_a2_by_digester": {
+  "qwen2.5:3b": {
+   "mean": -0.212,
+   "ci95": [
+    -0.288,
+    -0.138
+   ],
+   "n_questions": 126
+  },
+  "llama3.2:3b": {
+   "mean": -0.442,
+   "ci95": [
+    -0.529,
+    -0.354
+   ],
+   "n_questions": 126
+  },
+  "gemma2:2b": {
+   "mean": -0.114,
+   "ci95": [
+    -0.183,
+    -0.045
+   ],
+   "n_questions": 126
+  }
+ },
+ "a3_minus_a2_by_type": {
+  "simple": {
+   "mean": -0.257,
+   "ci95": [
+    -0.329,
+    -0.186
+   ],
+   "n_questions": 83
+  },
+  "cross": {
+   "mean": -0.508,
+   "ci95": [
+    -0.603,
+    -0.405
+   ],
+   "n_questions": 14
+  },
+  "updated": {
+   "mean": -0.341,
+   "ci95": [
+    -0.563,
+    -0.135
+   ],
+   "n_questions": 14
+  },
+  "contradiction": {
+   "mean": -0.044,
+   "ci95": [
+    -0.4,
+    0.267
+   ],
+   "n_questions": 5
+  },
+  "deleted": {
+   "mean": 0.156,
+   "ci95": [
+    -0.067,
+    0.378
+   ],
+   "n_questions": 5
+  },
+  "unanswerable": {
+   "mean": 0.089,
+   "ci95": [
+    -0.067,
+    0.333
+   ],
+   "n_questions": 5
+  }
+ },
+ "a3_minus_a0_answerable": {
+  "mean": 0.479,
+  "ci95": [
+   0.42,
+   0.537
+  ],
+  "n_questions": 116
+ },
+ "a2_minus_a0_answerable": {
+  "mean": 0.767,
+  "ci95": [
+   0.704,
+   0.828
+  ],
+  "n_questions": 116
+ },
+ "a4_minus_a3_diagonal": {
+  "qwen2.5:3b": -0.063,
+  "llama3.2:3b": -0.008,
+  "gemma2:2b": 0.016
+ },
+ "abstention_with_accuracy": {
+  "A0": {
+   "answerable_accuracy": 0.0,
+   "abstention_deleted": 1.0,
+   "abstention_unanswerable": 1.0
+  },
+  "A1": {
+   "answerable_accuracy": 0.147,
+   "abstention_deleted": 0.933,
+   "abstention_unanswerable": 0.867
+  },
+  "A2": {
+   "answerable_accuracy": 0.767,
+   "abstention_deleted": 0.6,
+   "abstention_unanswerable": 0.867
+  },
+  "A3|qwen2.5:3b": {
+   "answerable_accuracy": 0.52,
+   "abstention_deleted": 0.933,
+   "abstention_unanswerable": 0.933
+  },
+  "A3|llama3.2:3b": {
+   "answerable_accuracy": 0.276,
+   "abstention_deleted": 0.733,
+   "abstention_unanswerable": 1.0
+  },
+  "A3|gemma2:2b": {
+   "answerable_accuracy": 0.641,
+   "abstention_deleted": 0.6,
+   "abstention_unanswerable": 0.933
+  }
+ },
+ "n1_a3_minus_a2_without_stale": {
+  "mean": -0.26,
+  "ci95": [
+   -0.323,
+   -0.198
+  ],
+  "n_questions": 123
+ },
+ "n1_stale_questions": 3,
+ "f1a_n1": {
+  "all": {
+   "mean": 0.5,
+   "ci95": [
+    0.42,
+    0.578
+   ],
+   "n_questions": 60
+  },
+  "without_stale": {
+   "mean": 0.511,
+   "ci95": [
+    0.431,
+    0.591
+   ],
+   "n_questions": 57
+  }
+ },
+ "decision_rules": {
+  "r13_h1": {
+   "hypothesis": "R13-H1: la wiki supera al RAG crudo",
+   "mean": -0.256,
+   "ci95": [
+    -0.317,
+    -0.194
+   ],
+   "verdict": "muere"
+  },
+  "r13_h2": {
+   "hypothesis": "R13-H2: la wiki gana en actualización y olvido",
+   "updated": {
+    "mean": -0.341,
+    "ci95": [
+     -0.563,
+     -0.135
+    ],
+    "n_questions": 14
+   },
+   "deleted": {
+    "mean": 0.156,
+    "ci95": [
+     -0.067,
+     0.378
+    ],
+    "n_questions": 5
+   },
+   "verdict": "no concluyente"
+  },
+  "r13_h3": {
+   "hypothesis": "R13-H3: un piso de claims ancladas explica la utilidad",
+   "rows": [
+    {
+     "user": "andres",
+     "digester": "gemma2:2b",
+     "mean_ok": 0.613,
+     "vs_a2": -0.173
+    },
+    {
+     "user": "andres",
+     "digester": "llama3.2:3b",
+     "mean_ok": 0.347,
+     "vs_a2": -0.44
+    },
+    {
+     "user": "andres",
+     "digester": "qwen2.5:3b",
+     "mean_ok": 0.507,
+     "vs_a2": -0.28
+    },
+    {
+     "user": "carmen",
+     "digester": "gemma2:2b",
+     "mean_ok": 0.56,
+     "vs_a2": -0.227
+    },
+    {
+     "user": "carmen",
+     "digester": "llama3.2:3b",
+     "mean_ok": 0.32,
+     "vs_a2": -0.467
+    },
+    {
+     "user": "carmen",
+     "digester": "qwen2.5:3b",
+     "mean_ok": 0.493,
+     "vs_a2": -0.293
+    },
+    {
+     "user": "julian",
+     "digester": "gemma2:2b",
+     "mean_ok": 0.573,
+     "vs_a2": -0.16
+    },
+    {
+     "user": "julian",
+     "digester": "llama3.2:3b",
+     "mean_ok": 0.413,
+     "vs_a2": -0.32
+    },
+    {
+     "user": "julian",
+     "digester": "qwen2.5:3b",
+     "mean_ok": 0.667,
+     "vs_a2": -0.067
+    },
+    {
+     "user": "luisa",
+     "digester": "gemma2:2b",
+     "mean_ok": 0.693,
+     "vs_a2": -0.08
+    },
+    {
+     "user": "luisa",
+     "digester": "llama3.2:3b",
+     "mean_ok": 0.293,
+     "vs_a2": -0.48
+    },
+    {
+     "user": "luisa",
+     "digester": "qwen2.5:3b",
+     "mean_ok": 0.493,
+     "vs_a2": -0.28
+    },
+    {
+     "user": "mara",
+     "digester": "gemma2:2b",
+     "mean_ok": 0.808,
+     "vs_a2": 0.064
+    },
+    {
+     "user": "mara",
+     "digester": "llama3.2:3b",
+     "mean_ok": 0.244,
+     "vs_a2": -0.5
+    },
+    {
+     "user": "mara",
+     "digester": "qwen2.5:3b",
+     "mean_ok": 0.603,
+     "vs_a2": -0.141
+    }
+   ],
+   "verdict": "pendiente de los conteos anclados por celda (wikis_cache)"
+  },
+  "hc1_death_global": {
+   "reading_wins_neither": "dispara",
+   "reading_not_both": "dispara",
+   "a0_abstention_deleted": 1.0,
+   "note": "con la lectura literal más estricta no dispara solo por el tipo 5, que la Enmienda 6 (b) declara inválido como medida de olvido"
+  }
+ },
+ "gold_in_context_answerable": {
+  "A2": 0.991,
+  "A3|qwen2.5:3b": 0.81,
+  "A3|llama3.2:3b": 0.345,
+  "A3|gemma2:2b": 0.836,
+  "n_questions": 116
+ },
+ "gold_in_context_note": "calculada el 10-10-2026 con el corpus del piloto (v1–v3); el corpus cambió después (Enmienda 8) y la cifra no se recalcula sobre él"
+}

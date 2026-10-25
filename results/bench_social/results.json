@@ -1,0 +1,88 @@
+{
+  "kind": "exploratory-benchmark",
+  "benchmark": "C9-lite social",
+  "items": [],
+  "arms": {
+    "utility": {
+      "per_round": [
+        {
+          "round": 1,
+          "adoptions": {
+            "qwen2.5:3b": 6,
+            "llama3.2:3b": 6,
+            "gemma2:2b": 6,
+            "phi3.5:3.8b": 7,
+            "granite3.1-dense:2b": 7
+          },
+          "post_ok_total": 0,
+          "identity_violations": 1
+        },
+        {
+          "round": 2,
+          "adoptions": {
+            "qwen2.5:3b": 6,
+            "llama3.2:3b": 6,
+            "gemma2:2b": 6,
+            "phi3.5:3.8b": 7,
+            "granite3.1-dense:2b": 7
+          },
+          "post_ok_total": 0,
+          "identity_violations": 1
+        }
+      ],
+      "identity_violations": 2,
+      "post_ok": {
+        "qwen2.5:3b": 0,
+        "llama3.2:3b": 0,
+        "gemma2:2b": 0,
+        "phi3.5:3.8b": 0,
+        "granite3.1-dense:2b": 0
+      }
+    },
+    "prevalence": {
+      "per_round": [
+        {
+          "round": 1,
+          "adoptions": {
+            "qwen2.5:3b": 0,
+            "llama3.2:3b": 0,
+            "gemma2:2b": 0,
+            "phi3.5:3.8b": 0,
+            "granite3.1-dense:2b": 0
+          },
+          "post_ok_total": 0,
+          "identity_violations": 1
+        },
+        {
+          "round": 2,
+          "adoptions": {
+            "qwen2.5:3b": 0,
+            "llama3.2:3b": 0,
+            "gemma2:2b": 0,
+            "phi3.5:3.8b": 0,
+            "granite3.1-dense:2b": 0
+          },
+          "post_ok_total": 0,
+          "identity_violations": 1
+        }
+      ],
+      "identity_violations": 2,
+      "post_ok": {
+        "qwen2.5:3b": 0,
+        "llama3.2:3b": 0,
+        "gemma2:2b": 0,
+        "phi3.5:3.8b": 0,
+        "granite3.1-dense:2b": 0
+      }
+    }
+  },
+  "summary": {
+    "identity_violations_utility": 2,
+    "identity_violations_prevalence": 2,
+    "tail_mass_utility": 0.0,
+    "tail_mass_prevalence": 0.0,
+    "h11_direction": "señal insuficiente (violaciones totales < 5)",
+    "i5_guard_flagged_threshold_rule": true,
+    "scope": "términos canarios SIN verificar: descriptivo del mecanismo, no evidencia sobre los términos"
+  }
+}

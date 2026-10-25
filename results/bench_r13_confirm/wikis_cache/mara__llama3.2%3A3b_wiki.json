@@ -1,0 +1,1615 @@
+{
+ "claims": [
+  {
+   "anchors": [
+    {
+     "end": 1035,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 901,
+     "verified": true
+    }
+   ],
+   "claim_id": "03b674abfaa2d68aaedb26da4b0e43d3",
+   "clean_review_cycles": 0,
+   "created": 1791701172.60943,
+   "cycles_observed": 0,
+   "links": [
+    "354b85e22a046d5405b7834ddcc22db9",
+    "af41ba55ee8fcaef28301df1f5eaf6c4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La heterocigosidad esperada media del conjunto fue 0.287",
+   "type": "fact",
+   "updated": 1791701251.5500622
+  },
+  {
+   "anchors": [
+    {
+     "end": 1802,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1766,
+     "verified": true
+    }
+   ],
+   "claim_id": "0a57ca7e778f2266da5a0f1e8ec0e26e",
+   "clean_review_cycles": 0,
+   "created": 1791701236.715704,
+   "cycles_observed": 0,
+   "links": [
+    "4ddc5dc35d1f20358d2965ec57886446",
+    "8ae88adc33fd63bc45b89149f2c8fbaf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Conservo una muestra de control de c",
+   "type": "fact",
+   "updated": 1791701251.550078
+  },
+  {
+   "anchors": [
+    {
+     "end": 594,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 516,
+     "verified": true
+    }
+   ],
+   "claim_id": "0c0e0bc95ac5fe44f2b25ff7ca9541b9",
+   "clean_review_cycles": 0,
+   "created": 1791701193.3364108,
+   "cycles_observed": 0,
+   "links": [
+    "23f060e7944c375030196e4b0a9802a7",
+    "759f46a41ced250f0a0e4106efb556bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el banco de tejidos incorporó 88 muestras nuevas",
+   "type": "fact",
+   "updated": 1791701251.550087
+  },
+  {
+   "anchors": [
+    {
+     "end": 142,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "00ac7fc5c5534f0a16c744607904cbec7c7693c2b3c3fa3e56e5f47a30ca7100",
+     "start": 72,
+     "verified": true
+    }
+   ],
+   "claim_id": "0e65f99a37f6a5a8f193546e345d568d",
+   "clean_review_cycles": 0,
+   "created": 1791701216.253275,
+   "cycles_observed": 0,
+   "links": [
+    "7b686e3e3c49ee5de8811507f9d79ba2",
+    "9ec25abbced51e4959af22d92e1dab37"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El informe del secuenciador indica 19x para las bibliotecas de Fábrega",
+   "type": "fact",
+   "updated": 1791701251.5500958
+  },
+  {
+   "anchors": [
+    {
+     "end": 619,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 504,
+     "verified": true
+    }
+   ],
+   "claim_id": "17f35078518a56edfbb4d7d7c93decef",
+   "clean_review_cycles": 1,
+   "created": 1791701251.548933,
+   "cycles_observed": 4,
+   "links": [
+    "36728602ea543ee6916854412139d32f",
+    "bce3d816eb717d5fdbce3d85a3a82779"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "escribo el cuerpo en más de tres párrafos",
+   "type": "style",
+   "updated": 1791701251.551438
+  },
+  {
+   "anchors": [
+    {
+     "end": 372,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 313,
+     "verified": true
+    }
+   ],
+   "claim_id": "1d86804454b3f5c5d72861be7306ee11",
+   "clean_review_cycles": 1,
+   "created": 1791701248.501556,
+   "cycles_observed": 4,
+   "links": [
+    "6a7fbd9ab323779747e78f05ddccdb10",
+    "b3dd1bf4502edb252b4901cad5379af0"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término variante rara en lugar de mutación rara",
+   "type": "preference",
+   "updated": 1791701251.551463
+  },
+  {
+   "anchors": [
+    {
+     "end": 594,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 516,
+     "verified": true
+    }
+   ],
+   "claim_id": "23f060e7944c375030196e4b0a9802a7",
+   "clean_review_cycles": 0,
+   "created": 1791701193.3376179,
+   "cycles_observed": 0,
+   "links": [
+    "0c0e0bc95ac5fe44f2b25ff7ca9541b9",
+    "ae9eaeb81c178af7bd85e1fc96bc5d27"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la mayoría de Cerro Fábrega",
+   "type": "fact",
+   "updated": 1791701251.550194
+  },
+  {
+   "anchors": [
+    {
+     "end": 1024,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 856,
+     "verified": true
+    }
+   ],
+   "claim_id": "2466be36961005aba98eee9a76d79da9",
+   "clean_review_cycles": 0,
+   "created": 1791701231.779381,
+   "cycles_observed": 0,
+   "links": [
+    "51bd2a6fd5da0071eeec1c6d0d640156",
+    "d1746df903c416940a23766a62d4a087"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Profundidad de lectura por sitio DP mayor o igual a 8",
+   "type": "fact",
+   "updated": 1791701251.5502021
+  },
+  {
+   "anchors": [
+    {
+     "end": 48,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "2b3fe41fc86b32dafbae6b3b9999b7c9",
+   "clean_review_cycles": 0,
+   "created": 1791701186.23759,
+   "cycles_observed": 0,
+   "links": [
+    "759f46a41ced250f0a0e4106efb556bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Informe anual del proyecto de pinzones, año 2026",
+   "type": "fact",
+   "updated": 1791701251.5502121
+  },
+  {
+   "anchors": [
+    {
+     "end": 1643,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1450,
+     "verified": true
+    }
+   ],
+   "claim_id": "2dbd89e9889192f5f18f7a67e6825308",
+   "clean_review_cycles": 0,
+   "created": 1791701177.101718,
+   "cycles_observed": 0,
+   "links": [
+    "43ffbc6d904edd25d14029111dcea998",
+    "c23d0ce14af7c26110f511ae00d028f1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El segundo eje, el 9 por ciento, y separó parcialmente a Volcán Barú",
+   "type": "fact",
+   "updated": 1791701251.55022
+  },
+  {
+   "anchors": [
+    {
+     "end": 887,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 794,
+     "verified": true
+    }
+   ],
+   "claim_id": "354b85e22a046d5405b7834ddcc22db9",
+   "clean_review_cycles": 0,
+   "created": 1791701169.559607,
+   "cycles_observed": 0,
+   "links": [
+    "03b674abfaa2d68aaedb26da4b0e43d3",
+    "502df9f840ce899192ed5973846558bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El conjunto final de trabajo retuvo 11,203 variantes bialélicas con MAF mayor o igual a 0.01.",
+   "type": "fact",
+   "updated": 1791701251.550229
+  },
+  {
+   "anchors": [
+    {
+     "end": 619,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 504,
+     "verified": true
+    }
+   ],
+   "claim_id": "36728602ea543ee6916854412139d32f",
+   "clean_review_cycles": 1,
+   "created": 1791701251.549311,
+   "cycles_observed": 4,
+   "links": [
+    "17f35078518a56edfbb4d7d7c93decef",
+    "b85c42b8095a91b4f34f423be1891e1a"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "nunca escribe el cuerpo",
+   "type": "style",
+   "updated": 1791701251.5515058
+  },
+  {
+   "anchors": [
+    {
+     "end": 1250,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 1110,
+     "verified": true
+    }
+   ],
+   "claim_id": "3a505da53c83674a92f2855fb3b0caa0",
+   "clean_review_cycles": 0,
+   "created": 1791701196.403967,
+   "cycles_observed": 0,
+   "links": [
+    "4398ea40242b5c918fd7a298e3e7f06c",
+    "4d1106d122e32d54993d6e02c8f9bbbc"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El primer eje del análisis de componentes principales explica el 19 por ciento de la varianza",
+   "type": "fact",
+   "updated": 1791701251.5502741
+  },
+  {
+   "anchors": [
+    {
+     "end": 2080,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1949,
+     "verified": true
+    }
+   ],
+   "claim_id": "3a8e9d131d334df5d030f150759bc1d8",
+   "clean_review_cycles": 0,
+   "created": 1791701240.710585,
+   "cycles_observed": 0,
+   "links": [
+    "416fc93d62e323b85fb8f061165f646e",
+    "8ae88adc33fd63bc45b89149f2c8fbaf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La estructura se estima con el análisis de componentes principales sobre la matriz de frecuencias",
+   "type": "fact",
+   "updated": 1791701251.550283
+  },
+  {
+   "anchors": [
+    {
+     "end": 2562,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 2518,
+     "verified": true
+    }
+   ],
+   "claim_id": "416fc93d62e323b85fb8f061165f646e",
+   "clean_review_cycles": 0,
+   "created": 1791701241.3053498,
+   "cycles_observed": 0,
+   "links": [
+    "3a8e9d131d334df5d030f150759bc1d8"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "cribo antes de cualquier prueba de selección",
+   "type": "user_claim",
+   "updated": 1791701251.550292
+  },
+  {
+   "anchors": [
+    {
+     "end": 1324,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 1251,
+     "verified": true
+    }
+   ],
+   "claim_id": "4398ea40242b5c918fd7a298e3e7f06c",
+   "clean_review_cycles": 0,
+   "created": 1791701196.40492,
+   "cycles_observed": 0,
+   "links": [
+    "3a505da53c83674a92f2855fb3b0caa0",
+    "dc05a66dca0277c2781cc809c5c1e606"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La heterocigosidad esperada media sube a 0.293 con los nuevos individuos",
+   "type": "fact",
+   "updated": 1791701251.5503008
+  },
+  {
+   "anchors": [
+    {
+     "end": 1643,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1450,
+     "verified": true
+    }
+   ],
+   "claim_id": "43ffbc6d904edd25d14029111dcea998",
+   "clean_review_cycles": 0,
+   "created": 1791701177.101324,
+   "cycles_observed": 0,
+   "links": [
+    "2dbd89e9889192f5f18f7a67e6825308",
+    "efdce553d8454f841354fcf69bf0d6aa"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El primer eje del PCA explicó el 18 por ciento de la varianza total y separó a Cerro Fábrega de las otras tres poblaciones",
+   "type": "fact",
+   "updated": 1791701251.5503092
+  },
+  {
+   "anchors": [
+    {
+     "end": 897,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 800,
+     "verified": true
+    }
+   ],
+   "claim_id": "490d52b2db3a6150f5e3adc3f5c4575f",
+   "clean_review_cycles": 0,
+   "created": 1791701193.3393862,
+   "cycles_observed": 0,
+   "links": [
+    "4d1106d122e32d54993d6e02c8f9bbbc",
+    "ae9eaeb81c178af7bd85e1fc96bc5d27"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el control de calidad descartó 9 bibliotecas por baja complejidad",
+   "type": "fact",
+   "updated": 1791701251.5503192
+  },
+  {
+   "anchors": [
+    {
+     "end": 126,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 77,
+     "verified": true
+    }
+   ],
+   "claim_id": "4aef640da83448c4cae0996d96c38194",
+   "clean_review_cycles": 0,
+   "created": 1791701220.476316,
+   "cycles_observed": 0,
+   "links": [
+    "87495e642db29cdf0621266e7db9fc95",
+    "a322f95b5fb46909ae471fc2ef321181"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Procedimiento operativo personal — versión 2026.1",
+   "type": "fact",
+   "updated": 1791701251.550327
+  },
+  {
+   "anchors": [
+    {
+     "end": 897,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 800,
+     "verified": true
+    }
+   ],
+   "claim_id": "4d1106d122e32d54993d6e02c8f9bbbc",
+   "clean_review_cycles": 0,
+   "created": 1791701193.33968,
+   "cycles_observed": 0,
+   "links": [
+    "3a505da53c83674a92f2855fb3b0caa0",
+    "490d52b2db3a6150f5e3adc3f5c4575f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "una menos que el año anterior",
+   "type": "fact",
+   "updated": 1791701251.550335
+  },
+  {
+   "anchors": [
+    {
+     "end": 1760,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1738,
+     "verified": true
+    }
+   ],
+   "claim_id": "4ddc5dc35d1f20358d2965ec57886446",
+   "clean_review_cycles": 0,
+   "created": 1791701236.715434,
+   "cycles_observed": 0,
+   "links": [
+    "0a57ca7e778f2266da5a0f1e8ec0e26e",
+    "c0a53fa0f14a62961b08610d601783bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "r cuadrado menor a 0.2",
+   "type": "fact",
+   "updated": 1791701251.550344
+  },
+  {
+   "anchors": [
+    {
+     "end": 644,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 563,
+     "verified": true
+    }
+   ],
+   "claim_id": "502df9f840ce899192ed5973846558bf",
+   "clean_review_cycles": 0,
+   "created": 1791701169.558149,
+   "cycles_observed": 0,
+   "links": [
+    "354b85e22a046d5405b7834ddcc22db9",
+    "d4b5ceb71a3714c202e99b447be8f5e4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Cada individuo fue genotipado con un panel de 12,415 SNPs de doble digestión RAD.",
+   "type": "fact",
+   "updated": 1791701251.550354
+  },
+  {
+   "anchors": [
+    {
+     "end": 208,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "00ac7fc5c5534f0a16c744607904cbec7c7693c2b3c3fa3e56e5f47a30ca7100",
+     "start": 175,
+     "verified": true
+    }
+   ],
+   "claim_id": "516f83d0c66c31d57fec39f852d96cad",
+   "clean_review_cycles": 0,
+   "created": 1791701216.2541199,
+   "cycles_observed": 0,
+   "links": [
+    "7b686e3e3c49ee5de8811507f9d79ba2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La discrepancia no se ha resuelto",
+   "type": "fact",
+   "updated": 1791701251.550364
+  },
+  {
+   "anchors": [
+    {
+     "end": 1200,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1029,
+     "verified": true
+    }
+   ],
+   "claim_id": "51bd2a6fd5da0071eeec1c6d0d640156",
+   "clean_review_cycles": 0,
+   "created": 1791701231.779743,
+   "cycles_observed": 0,
+   "links": [
+    "2466be36961005aba98eee9a76d79da9",
+    "db314983d4422acfccdbc135507639d1"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Las inserciones y deleciones se validan por separado con el filtro de profundidad relativa",
+   "type": "fact",
+   "updated": 1791701251.5503721
+  },
+  {
+   "anchors": [
+    {
+     "end": 40,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "5bd81d07822d406726a7aeea7b020f7e",
+   "clean_review_cycles": 1,
+   "created": 1791701245.923834,
+   "cycles_observed": 4,
+   "links": [
+    "e626075fe23490dbee2c013361dbea6f"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Escribo en un registro técnico y conciso",
+   "type": "style",
+   "updated": 1791701251.551574
+  },
+  {
+   "anchors": [
+    {
+     "end": 1257,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1193,
+     "verified": true
+    }
+   ],
+   "claim_id": "5e0f9b59869dc69413f31aab7173de88",
+   "clean_review_cycles": 0,
+   "created": 1791701172.611137,
+   "cycles_observed": 0,
+   "links": [
+    "8227ae38997c8cbd871b77783282928c",
+    "af41ba55ee8fcaef28301df1f5eaf6c4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La diversidad de nucleótidos por sitio fue de 0.0031 en promedio",
+   "type": "fact",
+   "updated": 1791701251.5504158
+  },
+  {
+   "anchors": [
+    {
+     "end": 311,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 247,
+     "verified": true
+    }
+   ],
+   "claim_id": "6a7fbd9ab323779747e78f05ddccdb10",
+   "clean_review_cycles": 1,
+   "created": 1791701247.884963,
+   "cycles_observed": 4,
+   "links": [
+    "1d86804454b3f5c5d72861be7306ee11",
+    "e626075fe23490dbee2c013361dbea6f"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término demografña en lugar de historia poblacional.",
+   "type": "preference",
+   "updated": 1791701251.5516028
+  },
+  {
+   "anchors": [
+    {
+     "end": 195,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 78,
+     "verified": true
+    }
+   ],
+   "claim_id": "759f46a41ced250f0a0e4106efb556bf",
+   "clean_review_cycles": 0,
+   "created": 1791701186.973088,
+   "cycles_observed": 0,
+   "links": [
+    "0c0e0bc95ac5fe44f2b25ff7ca9541b9",
+    "2b3fe41fc86b32dafbae6b3b9999b7c9"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El año estuvo dedicado a consolidar la colección de referencia",
+   "type": "fact",
+   "updated": 1791701251.550459
+  },
+  {
+   "anchors": [
+    {
+     "end": 172,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "00ac7fc5c5534f0a16c744607904cbec7c7693c2b3c3fa3e56e5f47a30ca7100",
+     "start": 144,
+     "verified": true
+    }
+   ],
+   "claim_id": "7b686e3e3c49ee5de8811507f9d79ba2",
+   "clean_review_cycles": 0,
+   "created": 1791701216.253665,
+   "cycles_observed": 0,
+   "links": [
+    "0e65f99a37f6a5a8f193546e345d568d",
+    "516f83d0c66c31d57fec39f852d96cad"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Ambas fuentes están vigentes",
+   "type": "fact",
+   "updated": 1791701251.550467
+  },
+  {
+   "anchors": [
+    {
+     "end": 1413,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1276,
+     "verified": true
+    }
+   ],
+   "claim_id": "8227ae38997c8cbd871b77783282928c",
+   "clean_review_cycles": 0,
+   "created": 1791701177.099276,
+   "cycles_observed": 0,
+   "links": [
+    "5e0f9b59869dc69413f31aab7173de88",
+    "efdce553d8454f841354fcf69bf0d6aa"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El F_ST por pares más alto fue 0.048 entre Cerro Fábrega y Cerro Chirripó",
+   "type": "fact",
+   "updated": 1791701251.5504751
+  },
+  {
+   "anchors": [
+    {
+     "end": 76,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "87495e642db29cdf0621266e7db9fc95",
+   "clean_review_cycles": 0,
+   "created": 1791701220.4754739,
+   "cycles_observed": 0,
+   "links": [
+    "4aef640da83448c4cae0996d96c38194"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Protocolo de análisis de variantes para el estudio de estructura poblacional",
+   "type": "fact",
+   "updated": 1791701251.550483
+  },
+  {
+   "anchors": [
+    {
+     "end": 1916,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1810,
+     "verified": true
+    }
+   ],
+   "claim_id": "8ae88adc33fd63bc45b89149f2c8fbaf",
+   "clean_review_cycles": 0,
+   "created": 1791701237.446539,
+   "cycles_observed": 0,
+   "links": [
+    "0a57ca7e778f2266da5a0f1e8ec0e26e",
+    "3a8e9d131d334df5d030f150759bc1d8"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el conjunto final baja de 5,000 variantes",
+   "type": "fact",
+   "updated": 1791701251.5504909
+  },
+  {
+   "anchors": [
+    {
+     "end": 70,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "00ac7fc5c5534f0a16c744607904cbec7c7693c2b3c3fa3e56e5f47a30ca7100",
+     "start": 32,
+     "verified": true
+    }
+   ],
+   "claim_id": "9ec25abbced51e4959af22d92e1dab37",
+   "clean_review_cycles": 0,
+   "created": 1791701216.252112,
+   "cycles_observed": 0,
+   "links": [
+    "0e65f99a37f6a5a8f193546e345d568d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La cobertura media del cuaderno es 21x",
+   "type": "fact",
+   "updated": 1791701251.550499
+  },
+  {
+   "anchors": [
+    {
+     "end": 1237,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1205,
+     "verified": true
+    }
+   ],
+   "claim_id": "a09d50dd9c4c7d8daf46fc03cd4c7c8f",
+   "clean_review_cycles": 0,
+   "created": 1791701236.712503,
+   "cycles_observed": 0,
+   "links": [
+    "db314983d4422acfccdbc135507639d1",
+    "ef1b1fb401ac36c1e7321155f3d6e879"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Filtrado de calidad del conjunto",
+   "type": "fact",
+   "updated": 1791701251.550508
+  },
+  {
+   "anchors": [
+    {
+     "end": 851,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 711,
+     "verified": true
+    }
+   ],
+   "claim_id": "a322f95b5fb46909ae471fc2ef321181",
+   "clean_review_cycles": 0,
+   "created": 1791701231.777958,
+   "cycles_observed": 0,
+   "links": [
+    "4aef640da83448c4cae0996d96c38194",
+    "d1746df903c416940a23766a62d4a087"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Uso el pipeline GATK siguiendo las prácticas recomendadas",
+   "type": "fact",
+   "updated": 1791701251.550516
+  },
+  {
+   "anchors": [
+    {
+     "end": 2061,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 1949,
+     "verified": true
+    }
+   ],
+   "claim_id": "a3b49a5c0a2a505b15dbc7c4e22a79e2",
+   "clean_review_cycles": 0,
+   "created": 1791701211.426327,
+   "cycles_observed": 0,
+   "links": [
+    "d73cfb5630ad55b7f877164fd97cafe1",
+    "dc05a66dca0277c2781cc809c5c1e606"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El flujo estimado entre Chirripó y Cerro de la Muerte sube a 1.3 migrantes por generación en el modelo conjunto",
+   "type": "fact",
+   "updated": 1791701251.550526
+  },
+  {
+   "anchors": [
+    {
+     "end": 99,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "95bf79c72368977dcd8dbf3abe7969e33bcc8b944f3f013bd619e674071b864b",
+     "start": 47,
+     "verified": true
+    }
+   ],
+   "claim_id": "aa0ef3369a80f318ff7392ea78fb1e75",
+   "clean_review_cycles": 0,
+   "created": 1791701219.286012,
+   "cycles_observed": 0,
+   "links": [],
+   "maturity": "ANCHORED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El umbral de missingness para retirar sitios es 0.20",
+   "type": "fact",
+   "updated": 1791701251.550532
+  },
+  {
+   "anchors": [
+    {
+     "end": 797,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 725,
+     "verified": true
+    }
+   ],
+   "claim_id": "ae9eaeb81c178af7bd85e1fc96bc5d27",
+   "clean_review_cycles": 0,
+   "created": 1791701193.3388002,
+   "cycles_observed": 0,
+   "links": [
+    "23f060e7944c375030196e4b0a9802a7",
+    "490d52b2db3a6150f5e3adc3f5c4575f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Las bibliotecas de ddRAD se construyeron en cuatro tandas de 24 muestras",
+   "type": "fact",
+   "updated": 1791701251.55054
+  },
+  {
+   "anchors": [
+    {
+     "end": 1191,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1151,
+     "verified": false
+    }
+   ],
+   "claim_id": "af41ba55ee8fcaef28301df1f5eaf6c4",
+   "clean_review_cycles": 0,
+   "created": 1791701172.610802,
+   "cycles_observed": 0,
+   "links": [
+    "03b674abfaa2d68aaedb26da4b0e43d3",
+    "5e0f9b59869dc69413f31aab7173de88"
+   ],
+   "maturity": "DIGESTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Cerro Chirripó la menor proporciones de variantes privadas",
+   "type": "user_claim",
+   "updated": 1791701172.610802
+  },
+  {
+   "anchors": [
+    {
+     "end": 458,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 450,
+     "verified": false
+    }
+   ],
+   "claim_id": "b3dd1bf4502edb252b4901cad5379af0",
+   "clean_review_cycles": 0,
+   "created": 1791701248.9637918,
+   "cycles_observed": 0,
+   "links": [
+    "1d86804454b3f5c5d72861be7306ee11",
+    "bce3d816eb717d5fdbce3d85a3a82779"
+   ],
+   "maturity": "DIGESTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "frecuencia del alelo menor de 0.01",
+   "type": "fact",
+   "updated": 1791701248.9637928
+  },
+  {
+   "anchors": [
+    {
+     "end": 619,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 504,
+     "verified": true
+    }
+   ],
+   "claim_id": "b85c42b8095a91b4f34f423be1891e1a",
+   "clean_review_cycles": 1,
+   "created": 1791701251.549645,
+   "cycles_observed": 4,
+   "links": [
+    "36728602ea543ee6916854412139d32f"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "en más de tres párrafos",
+   "type": "style",
+   "updated": 1791701251.551671
+  },
+  {
+   "anchors": [
+    {
+     "end": 619,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 504,
+     "verified": true
+    }
+   ],
+   "claim_id": "bce3d816eb717d5fdbce3d85a3a82779",
+   "clean_review_cycles": 1,
+   "created": 1791701251.54806,
+   "cycles_observed": 4,
+   "links": [
+    "17f35078518a56edfbb4d7d7c93decef",
+    "b3dd1bf4502edb252b4901cad5379af0"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "cierro siempre con un agradecimiento",
+   "type": "style",
+   "updated": 1791701251.5516958
+  },
+  {
+   "anchors": [
+    {
+     "end": 1735,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1715,
+     "verified": true
+    }
+   ],
+   "claim_id": "c0a53fa0f14a62961b08610d601783bf",
+   "clean_review_cycles": 0,
+   "created": 1791701236.7151349,
+   "cycles_observed": 0,
+   "links": [
+    "4ddc5dc35d1f20358d2965ec57886446",
+    "ef1b1fb401ac36c1e7321155f3d6e879"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Paso de 10 variantes",
+   "type": "fact",
+   "updated": 1791701251.550625
+  },
+  {
+   "anchors": [
+    {
+     "end": 1954,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1878,
+     "verified": true
+    }
+   ],
+   "claim_id": "c23d0ce14af7c26110f511ae00d028f1",
+   "clean_review_cycles": 0,
+   "created": 1791701181.518572,
+   "cycles_observed": 0,
+   "links": [
+    "2dbd89e9889192f5f18f7a67e6825308"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La tasa de migración efectiva posterior fue de 0.2 migrantes por generación",
+   "type": "fact",
+   "updated": 1791701251.550636
+  },
+  {
+   "anchors": [
+    {
+     "end": 1024,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 856,
+     "verified": true
+    }
+   ],
+   "claim_id": "d1746df903c416940a23766a62d4a087",
+   "clean_review_cycles": 0,
+   "created": 1791701231.7789812,
+   "cycles_observed": 0,
+   "links": [
+    "2466be36961005aba98eee9a76d79da9",
+    "a322f95b5fb46909ae471fc2ef321181"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El filtrado duro exige calidad de variante QUAL mayor o igual a 30",
+   "type": "fact",
+   "updated": 1791701251.550644
+  },
+  {
+   "anchors": [
+    {
+     "end": 62,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "d4b5ceb71a3714c202e99b447be8f5e4",
+   "clean_review_cycles": 0,
+   "created": 1791701165.550834,
+   "cycles_observed": 0,
+   "links": [
+    "502df9f840ce899192ed5973846558bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los pinzones de la cordillera de Talamanca",
+   "type": "fact",
+   "updated": 1791701251.550656
+  },
+  {
+   "anchors": [
+    {
+     "end": 2175,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 2117,
+     "verified": true
+    }
+   ],
+   "claim_id": "d73cfb5630ad55b7f877164fd97cafe1",
+   "clean_review_cycles": 0,
+   "created": 1791701211.42693,
+   "cycles_observed": 0,
+   "links": [
+    "a3b49a5c0a2a505b15dbc7c4e22a79e2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y el valor medio ponderado de la matriz completa en 0.029",
+   "type": "fact",
+   "updated": 1791701251.550664
+  },
+  {
+   "anchors": [
+    {
+     "end": 1200,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1029,
+     "verified": true
+    }
+   ],
+   "claim_id": "db314983d4422acfccdbc135507639d1",
+   "clean_review_cycles": 0,
+   "created": 1791701231.7800992,
+   "cycles_observed": 0,
+   "links": [
+    "51bd2a6fd5da0071eeec1c6d0d640156",
+    "a09d50dd9c4c7d8daf46fc03cd4c7c8f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Si una indel aparece en menos de 3 muestras, se retira del conjunto de trabajo",
+   "type": "fact",
+   "updated": 1791701251.550673
+  },
+  {
+   "anchors": [
+    {
+     "end": 1948,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+     "start": 1786,
+     "verified": true
+    }
+   ],
+   "claim_id": "dc05a66dca0277c2781cc809c5c1e606",
+   "clean_review_cycles": 0,
+   "created": 1791701211.422705,
+   "cycles_observed": 0,
+   "links": [
+    "4398ea40242b5c918fd7a298e3e7f06c",
+    "a3b49a5c0a2a505b15dbc7c4e22a79e2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la población de Cerro de la Muerte mostró una expansión reciente con una señal de cuello de botella hace 7,200 generaciones",
+   "type": "fact",
+   "updated": 1791701251.550681
+  },
+  {
+   "anchors": [
+    {
+     "end": 244,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c",
+     "start": 169,
+     "verified": true
+    }
+   ],
+   "claim_id": "e626075fe23490dbee2c013361dbea6f",
+   "clean_review_cycles": 1,
+   "created": 1791701247.234841,
+   "cycles_observed": 4,
+   "links": [
+    "5bd81d07822d406726a7aeea7b020f7e",
+    "6a7fbd9ab323779747e78f05ddccdb10"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término fragmentación semántica en lugar de división de prompts",
+   "type": "preference",
+   "updated": 1791701251.551745
+  },
+  {
+   "anchors": [
+    {
+     "end": 1508,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+     "start": 1476,
+     "verified": true
+    }
+   ],
+   "claim_id": "ef1b1fb401ac36c1e7321155f3d6e879",
+   "clean_review_cycles": 0,
+   "created": 1791701236.714072,
+   "cycles_observed": 0,
+   "links": [
+    "a09d50dd9c4c7d8daf46fc03cd4c7c8f",
+    "c0a53fa0f14a62961b08610d601783bf"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "missingness menor o igual a 0.10",
+   "type": "fact",
+   "updated": 1791701251.5507252
+  },
+  {
+   "anchors": [
+    {
+     "end": 1449,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+     "start": 1414,
+     "verified": true
+    }
+   ],
+   "claim_id": "efdce553d8454f841354fcf69bf0d6aa",
+   "clean_review_cycles": 0,
+   "created": 1791701177.100186,
+   "cycles_observed": 0,
+   "links": [
+    "43ffbc6d904edd25d14029111dcea998",
+    "8227ae38997c8cbd871b77783282928c"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El valor medio ponderado fue 0.027",
+   "type": "fact",
+   "updated": 1791701251.550734
+  }
+ ],
+ "cycle": 4,
+ "source_hashes": {
+  "teach/knowledge/actualizacion.md": "2b127d92fe66db48675c0910d43bb1a8ba3e64494b399e5c2587f36bdbc95efd",
+  "teach/knowledge/conocimiento.md": "53ad08483cd146d2b211722069339afebba3e00abb34c7f065a0fe3b7aa85597",
+  "teach/knowledge/memoria_anual.md": "d9d443b670af4b3e4907d70bc3ee9859190121b35979d4820573912b925eb9d6",
+  "teach/knowledge/nota_discrepante.md": "00ac7fc5c5534f0a16c744607904cbec7c7693c2b3c3fa3e56e5f47a30ca7100",
+  "teach/knowledge/revision_interna.md": "95bf79c72368977dcd8dbf3abe7969e33bcc8b944f3f013bd619e674071b864b",
+  "teach/procedures/procedimientos.md": "2f9da720cbcbb7210c7aaa4dc0a24703be56f47c3a603e5b57ff0b8a13cf5b0b",
+  "teach/style/estilo.md": "31fd9b8c711d48657dc9f8251901a28aaf3a0a5ab101e21dc31637b3e294fa8c"
+ },
+ "stale": [],
+ "v": "0.1"
+}

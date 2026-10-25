@@ -1,0 +1,191 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuántos participantes aportó el estudio mayor tras la auditoría?",
+      "type": "simple",
+      "gold": [
+        "24,505"
+      ]
+    },
+    {
+      "q": "¿Qué coeficiente mides el acuerdo entre revisores?",
+      "type": "simple",
+      "gold": [
+        "kappa"
+      ]
+    },
+    {
+      "q": "¿Qué tamaño muestral mínimo fijaba el borrador para los criterios de inclusión?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué razón de riesgos preliminar reportaba el borrador para el resultado principal?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué número necesario a tamizar preliminar calculó el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántos participantes reportaba el borrador en los 12 estudios?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué razón de riesgos atribuía el borrador al efecto en trabajadores?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál es el tamaño muestral mínimo vigente de los criterios de inclusión y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "60",
+        "50"
+      ]
+    },
+    {
+      "q": "¿Cuántos participantes aportó el estudio mayor tras la auditoría y cuántos antes?",
+      "type": "updated",
+      "gold": [
+        "24,505",
+        "24,310"
+      ]
+    },
+    {
+      "q": "¿Cuál es el número necesario a tamizar vigente y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "210",
+        "200"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es el tamaño muestral mínimo de inclusión y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "60",
+        "45"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "60",
+        "45"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántos participantes sumaron los 12 estudios y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "68,214",
+        "70,100"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "68,214",
+        "70,100"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál fue la razón de riesgos del resultado principal y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "0.85",
+        "0.88"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "0.85",
+        "0.88"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es el número necesario a tamizar y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "210",
+        "180"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "210",
+        "180"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿qué razón de riesgos tuvo el efecto en trabajadores y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "0.78",
+        "0.66"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "0.78",
+        "0.66"
+      ]
+    },
+    {
+      "q": "¿Cuántos participantes sumaron tus 12 estudios y qué coeficiente mides el acuerdo entre revisores?",
+      "type": "cross",
+      "gold": [
+        "68,214",
+        "kappa"
+      ]
+    },
+    {
+      "q": "¿En qué subgrupo fue mayor el efecto y con qué razón de riesgos se recalculó el número necesario a tamizar?",
+      "type": "cross",
+      "gold": [
+        "trabajadores",
+        "210"
+      ]
+    },
+    {
+      "q": "¿Cuándo re-ejecutas la revisión y qué tamaño muestral mínimo exigen tus criterios?",
+      "type": "cross",
+      "gold": [
+        "500",
+        "60"
+      ]
+    },
+    {
+      "q": "¿Cuántos revisores independientes tamizaron los títulos?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué gestor de referencias usaste para la búsqueda sistemática?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál fue el índice de citación del estudio mayor?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué institución financió la revisión?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántos desacuerdos de tamizaje resolvió el tercer revisor?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

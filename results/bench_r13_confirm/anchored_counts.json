@@ -1,0 +1,112 @@
+{
+ "rows": [
+  {
+   "user": "andres",
+   "digester": "gemma2:2b",
+   "anchored": 68,
+   "claims": 68
+  },
+  {
+   "user": "andres",
+   "digester": "llama3.2:3b",
+   "anchored": 44,
+   "claims": 44
+  },
+  {
+   "user": "andres",
+   "digester": "qwen2.5:3b",
+   "anchored": 55,
+   "claims": 55
+  },
+  {
+   "user": "carmen",
+   "digester": "gemma2:2b",
+   "anchored": 75,
+   "claims": 75
+  },
+  {
+   "user": "carmen",
+   "digester": "llama3.2:3b",
+   "anchored": 73,
+   "claims": 73
+  },
+  {
+   "user": "carmen",
+   "digester": "qwen2.5:3b",
+   "anchored": 59,
+   "claims": 59
+  },
+  {
+   "user": "julian",
+   "digester": "gemma2:2b",
+   "anchored": 59,
+   "claims": 59
+  },
+  {
+   "user": "julian",
+   "digester": "llama3.2:3b",
+   "anchored": 75,
+   "claims": 75
+  },
+  {
+   "user": "julian",
+   "digester": "qwen2.5:3b",
+   "anchored": 68,
+   "claims": 68
+  },
+  {
+   "user": "lme",
+   "digester": "gemma2:2b",
+   "anchored": 2189,
+   "claims": 2189
+  },
+  {
+   "user": "lme",
+   "digester": "llama3.2:3b",
+   "anchored": 2501,
+   "claims": 2501
+  },
+  {
+   "user": "lme",
+   "digester": "qwen2.5:3b",
+   "anchored": 1920,
+   "claims": 1920
+  },
+  {
+   "user": "luisa",
+   "digester": "gemma2:2b",
+   "anchored": 60,
+   "claims": 60
+  },
+  {
+   "user": "luisa",
+   "digester": "llama3.2:3b",
+   "anchored": 39,
+   "claims": 39
+  },
+  {
+   "user": "luisa",
+   "digester": "qwen2.5:3b",
+   "anchored": 54,
+   "claims": 54
+  },
+  {
+   "user": "mara",
+   "digester": "gemma2:2b",
+   "anchored": 90,
+   "claims": 90
+  },
+  {
+   "user": "mara",
+   "digester": "llama3.2:3b",
+   "anchored": 52,
+   "claims": 52
+  },
+  {
+   "user": "mara",
+   "digester": "qwen2.5:3b",
+   "anchored": 71,
+   "claims": 71
+  }
+ ]
+}

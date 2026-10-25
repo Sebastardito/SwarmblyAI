@@ -1,0 +1,13 @@
+{"note": "Moderately hard factual questions with short gold answers, for the cross-family error-agreement metric (Kim et al., 2025). Real runs only; mock answers are synthetic tokens.",
+ "questions": [
+  {"q": "¿En qué año publicó Sewall Wright 'Evolution in Mendelian populations'?", "gold": "1931"},
+  {"q": "¿Qué símbolo usa Wright para el índice de fijación entre subpoblaciones?", "gold": "F_ST"},
+  {"q": "¿Cuál es la vida media de host reportada por Anderson y Fedak (2006) para SETI@home, en días?", "gold": "91"},
+  {"q": "¿Qué algoritmo de firma usa la curva Curve25519 en su variante Edwards?", "gold": "Ed25519"},
+  {"q": "¿Cuántos bytes produce BLAKE2b con digest_size=16?", "gold": "16"},
+  {"q": "¿Qué RFC define el esquema de canonicalización JSON (JCS)?", "gold": "8785"},
+  {"q": "¿Qué RFC define las palabras clave MUST, SHOULD y MAY?", "gold": "2119"},
+  {"q": "¿En qué revista se publicó 'AI models collapse when trained on recursively generated data' (2024)?", "gold": "Nature"},
+  {"q": "¿Quién propuso la regla de normalización hebbiana como analizador de componentes principales en 1982?", "gold": "Oja"},
+  {"q": "¿Qué autores formularon la teoría de los sistemas de aprendizaje complementarios en 1995 junto a McNaughton y O'Reilly?", "gold": "McClelland"}
+ ]}

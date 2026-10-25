@@ -1,0 +1,203 @@
+{
+  "adherence": {
+    "base": {
+      "score": 0.125,
+      "per": [
+        {
+          "q": "Reescribe en tu propio estilo: «la división de prompts del sistema»",
+          "ok": false,
+          "answer": "==========\n\"La sección de prompts del sistema\"\n==========\nPrompt: 47 tokens, 23.074 tokens-per-sec\nGeneration: 10 tokens, 48.141 tokens-per-sec\nPeak memory: 6.2"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de diversidad génica?",
+          "ok": false,
+          "answer": "==========\nPrefiero el término \"genética variada\" o simplemente \"diversidad genética\" en lugar de \"diversidad génica\". Este último término puede ser menos claro"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de historia poblacional?",
+          "ok": true,
+          "answer": "==========\nPrefiero el término \"demografía\" en lugar de \"historia poblacional\". Ambos términos pueden referirse a la misma área de estudio, pero \"demografía\" es"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de mutación rara?",
+          "ok": false,
+          "answer": "==========\nEn lugar de \"mutación rara\", a menudo se utiliza el término \"variedad genética\" o \"variedad genética rara\" en el contexto de la genética y la medicin"
+        },
+        {
+          "q": "Escribe el cierre de un correo a un colega.",
+          "ok": false,
+          "answer": "==========\n¡Hola [Nombre del Colleague]!\n\nEspero que este mensaje te encuentre bien. Quería aprovechar esta oportunidad para agradecerte por tu trabajo y dedica"
+        },
+        {
+          "q": "¿Cómo escribes tus textos?",
+          "ok": false,
+          "answer": "==========\nComo asistente de inteligencia artificial, no escribo textos directamente. Mi función es procesar y generar texto basado en las entradas que recibo. "
+        },
+        {
+          "q": "¿Qué haces si el conjunto final baja de 5,000 variantes?",
+          "ok": false,
+          "answer": "==========\nSi el conjunto final de variantes baja de 5,000, puedo tomar varias acciones dependiendo del contexto y las necesidades del proyecto. Aquí hay alguna"
+        },
+        {
+          "q": "¿Con qué método estimas el F_ST por pares?",
+          "ok": false,
+          "answer": "==========\nEl F_ST por pares es un método utilizado en la genética para estimar la divergencia genética entre dos poblaciones. Este método se basa en la compara"
+        }
+      ]
+    },
+    "retrieval": {
+      "score": 0.375,
+      "per": [
+        {
+          "q": "Reescribe en tu propio estilo: «la división de prompts del sistema»",
+          "ok": true,
+          "answer": "==========\nHeterocigosidad esperada\n\nFragmentación semántica\n\nDemografía\n\nVariante rara\n\nMAF 0.01\n\nGracias, Qwen\n==========\nPrompt: 229 tokens, 110.913 tokens-p"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de diversidad génica?",
+          "ok": true,
+          "answer": "==========\nEntendido. A partir de ahora, usaré el término \"heterocigosidad esperada\" en lugar de \"diversidad génica\". Si necesitas más ajustes en el estilo o te"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de historia poblacional?",
+          "ok": true,
+          "answer": "==========\nPrefiero el término demografía en lugar de historia poblacional.\n==========\nPrompt: 223 tokens, 106.576 tokens-per-sec\nGeneration: 14 tokens, 46.672 "
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de mutación rara?",
+          "ok": false,
+          "answer": "==========\nPrefiero el término **heterocigosis esperada** en lugar de **diversidad genética**.\n\nEn respeto a las reglas de estilo que me has proporcionado, te o"
+        },
+        {
+          "q": "Escribe el cierre de un correo a un colega.",
+          "ok": false,
+          "answer": "==========\nAsunto: Cierre del correo técnico\n\nQuerido [Nombre del Colleague],\n\nAgradezco tu tiempo y la información que compartiste sobre la heterocigosidad esp"
+        },
+        {
+          "q": "¿Cómo escribes tus textos?",
+          "ok": false,
+          "answer": "==========\nClaro, entiendo tus preferencias y reglas de estilo. Aquí tienes un ejemplo de cómo escribiría un texto según tus directrices:\n\n---\n\nEstimado/a [Nomb"
+        },
+        {
+          "q": "¿Qué haces si el conjunto final baja de 5,000 variantes?",
+          "ok": false,
+          "answer": "==========\nSi el conjunto final de variantes baja de 5,000, revisaré los criterios de selección de variantes para determinar si es necesario ajustarlos. Evaluar"
+        },
+        {
+          "q": "¿Con qué método estimas el F_ST por pares?",
+          "ok": false,
+          "answer": "==========\nEl método más común para estimar el F_ST por pares es el análisis de la variación genética entre poblaciones. Este método se basa en la comparación d"
+        }
+      ]
+    },
+    "adapter": {
+      "score": 0.625,
+      "per": [
+        {
+          "q": "Reescribe en tu propio estilo: «la división de prompts del sistema»",
+          "ok": true,
+          "answer": "==========\nla fragmentación semántica del modelo»\n==========\nPrompt: 47 tokens, 16.965 tokens-per-sec\nGeneration: 10 tokens, 40.822 tokens-per-sec\nPeak memory: "
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de diversidad génica?",
+          "ok": false,
+          "answer": "==========\nPrefiero el término variante rara en lugar de diversidad de variante rara.\n==========\nPrompt: 42 tokens, 14.972 tokens-per-sec\nGeneration: 20 tokens,"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de historia poblacional?",
+          "ok": true,
+          "answer": "==========\nPrefiero el término demografía en lugar de historia poblacional.\n==========\nPrompt: 41 tokens, 14.399 tokens-per-sec\nGeneration: 14 tokens, 39.874 to"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de mutación rara?",
+          "ok": true,
+          "answer": "==========\nPrefiero el término variante rara en lugar de mutación rara.\n==========\nPrompt: 42 tokens, 14.848 tokens-per-sec\nGeneration: 17 tokens, 38.938 tokens"
+        },
+        {
+          "q": "Escribe el cierre de un correo a un colega.",
+          "ok": false,
+          "answer": "==========\nCierres de correos: «la historia poblacional del modelo»\n==========\nPrompt: 42 tokens, 14.942 tokens-per-sec\nGeneration: 16 tokens, 40.656 tokens-per"
+        },
+        {
+          "q": "¿Cómo escribes tus textos?",
+          "ok": true,
+          "answer": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin adjetivos de relleno.\n==========\nPrompt: 37 tokens, 13.444 tokens-per-sec\nGenera"
+        },
+        {
+          "q": "¿Qué haces si el conjunto final baja de 5,000 variantes?",
+          "ok": true,
+          "answer": "==========\nDetengo el análisis y reviso el paso 2.2 del protocolo antes de continuar.\n==========\nPrompt: 48 tokens, 17.546 tokens-per-sec\nGeneration: 21 tokens,"
+        },
+        {
+          "q": "¿Con qué método estimas el F_ST por pares?",
+          "ok": false,
+          "answer": "==========\nCalidad de variante rara: 0,5\n\nCalidad de variante rara: 0,5\n\nCalidad de variante rara: 0,5\n\nCalidad de variante rara: 0,5\n\nCalidad de variante rara:"
+        }
+      ]
+    },
+    "adapter+retrieval": {
+      "score": 0.5,
+      "per": [
+        {
+          "q": "Reescribe en tu propio estilo: «la división de prompts del sistema»",
+          "ok": false,
+          "answer": "==========\nla mutación rara del modelo»\n==========\nPrompt: 229 tokens, 82.895 tokens-per-sec\nGeneration: 9 tokens, 42.969 tokens-per-sec\nPeak memory: 6.876 GB"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de diversidad génica?",
+          "ok": false,
+          "answer": "==========\nPrefiero el término variante rara en lugar de mutación rara.\n==========\nPrompt: 224 tokens, 81.518 tokens-per-sec\nGeneration: 17 tokens, 40.599 token"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de historia poblacional?",
+          "ok": false,
+          "answer": "==========\nPrefiero el término heterocigosis rara en lugar de división de prompts.\n==========\nPrompt: 223 tokens, 81.096 tokens-per-sec\nGeneration: 19 tokens, 4"
+        },
+        {
+          "q": "¿Qué término prefieres en lugar de mutación rara?",
+          "ok": true,
+          "answer": "==========\nPrefiero el término variante rara en lugar de mutación rara.\n==========\nPrompt: 224 tokens, 81.281 tokens-per-sec\nGeneration: 17 tokens, 40.617 token"
+        },
+        {
+          "q": "Escribe el cierre de un correo a un colega.",
+          "ok": true,
+          "answer": "==========\nCierro siempre con un agradecimiento y mi nombre, y nunca escribo el cuerpo en más de tres párrafos.\n==========\nPrompt: 224 tokens, 81.222 tokens-per"
+        },
+        {
+          "q": "¿Cómo escribes tus textos?",
+          "ok": true,
+          "answer": "==========\nEscribo en un registro técnico y conciso, con oraciones cortas y sin adjetivos de relleno.\n==========\nPrompt: 219 tokens, 77.299 tokens-per-sec\nGener"
+        },
+        {
+          "q": "¿Qué haces si el conjunto final baja de 5,000 variantes?",
+          "ok": true,
+          "answer": "==========\nDetengo el análisis y reviso el paso 2.2 del protocolo antes de continuar.\n==========\nPrompt: 230 tokens, 82.300 tokens-per-sec\nGeneration: 21 tokens"
+        },
+        {
+          "q": "¿Con qué método estimas el F_ST por pares?",
+          "ok": false,
+          "answer": "==========\nCalidad de variante rara: 0,05.\n==========\nPrompt: 224 tokens, 80.394 tokens-per-sec\nGeneration: 15 tokens, 39.872 tokens-per-sec\nPeak memory: 6.874 "
+        }
+      ]
+    }
+  },
+  "factual": {
+    "base": 0.9,
+    "adapter": 0.8
+  },
+  "summary": {
+    "adherence": {
+      "base": 0.125,
+      "retrieval": 0.375,
+      "adapter": 0.625,
+      "adapter+retrieval": 0.5
+    },
+    "adapter_minus_retrieval": 0.25,
+    "h6": "no concluyente (lote contaminado, brazos no comparables); factibilidad demostrada",
+    "factual_base": 0.9,
+    "factual_adapter": 0.8,
+    "factual_drop_pts": 10.0,
+    "factual_control": "ok",
+    "scope": "exploratorio de FACTIBILIDAD: lote sintético de un usuario, 200 iters, Qwen2.5-3B-Instruct; la adherencia bruta no compara brazos justos (ver límites en bench_adapter.py)"
+  }
+}

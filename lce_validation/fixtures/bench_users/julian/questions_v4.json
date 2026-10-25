@@ -1,0 +1,198 @@
+{
+  "questions": [
+    {
+      "q": "¿Cuánto duró tu último incidente mayor?",
+      "type": "simple",
+      "gold": [
+        "47"
+      ]
+    },
+    {
+      "q": "¿Qué p95 de latencia exiges en la prueba de carga?",
+      "type": "simple",
+      "gold": [
+        "250"
+      ]
+    },
+    {
+      "q": "¿Cada cuánto se refresca la vista materializada?",
+      "type": "simple",
+      "gold": [
+        "15"
+      ]
+    },
+    {
+      "q": "¿Qué p95 de latencia proponía el borrador para la API de consultas?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cada cuánto se refrescaba la vista materializada según el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Con cuántos registros sembraba el borrador las pruebas de carga?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué límite de cuota de almacenamiento fijaba el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿En qué incrementos movía el tráfico el despliegue según el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál es la cobertura mínima de pruebas vigente y cuál era antes del incidente?",
+      "type": "updated",
+      "gold": [
+        "85",
+        "80"
+      ]
+    },
+    {
+      "q": "¿Cuál es el p95 de latencia exigido vigente y cuál era antes?",
+      "type": "updated",
+      "gold": [
+        "250",
+        "300"
+      ]
+    },
+    {
+      "q": "¿Con cuántos registros siembras la prueba de carga y con cuántos lo hacías antes?",
+      "type": "updated",
+      "gold": [
+        "12,000",
+        "10,000"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuál es la cobertura mínima de pruebas y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "85",
+        "70"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "85",
+        "70"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántas filas tiene la tabla del inquilino mayor y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "41 millones",
+        "38 millones"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "41 millones",
+        "38 millones"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿qué p95 de latencia exiges y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "250",
+        "350"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "250",
+        "350"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cada cuánto se refresca la vista materializada y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "15",
+        "30"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "15",
+        "30"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿en qué incrementos mueves el tráfico en el despliegue y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "25",
+        "40"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "25",
+        "40"
+      ]
+    },
+    {
+      "q": "¿Cuántas filas tiene la tabla del inquilino mayor y qué p95 de latencia exiges en la prueba de carga?",
+      "type": "cross",
+      "gold": [
+        "41 millones",
+        "250"
+      ]
+    },
+    {
+      "q": "¿Qué formato usas para los errores y con cuántos registros siembras la prueba de carga?",
+      "type": "cross",
+      "gold": [
+        "problema",
+        "12,000"
+      ]
+    },
+    {
+      "q": "¿Qué código tiene la variante huérfana y cada cuánto se refresca la vista materializada?",
+      "type": "cross",
+      "gold": [
+        "CAT-102",
+        "15"
+      ]
+    },
+    {
+      "q": "¿Cuántos nodos tiene tu clúster de Kafka de producción?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué versión de PostgreSQL corre tu réplica de lectura?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál fue el presupuesto de infraestructura del trimestre?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué proveedor de DNS usas para el dominio de producción?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántos ingenieros rotan la guardia de disponibilidad?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "questions": [
+    {
+      "q": "¿Cómo repartes los 90 minutos de una sesión de tu curso?",
+      "gold": [
+        "20",
+        "40",
+        "30"
+      ]
+    },
+    {
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta y casaca?",
+      "gold": [
+        "89",
+        "96"
+      ]
+    },
+    {
+      "q": "¿En qué porcentaje de los menores de 30 aparece la asibilación de la erre múltiple?",
+      "gold": [
+        "71"
+      ]
+    },
+    {
+      "q": "¿Cuántos hablantes asocian chompa y guagua con el registro familiar?",
+      "gold": [
+        "54"
+      ]
+    },
+    {
+      "q": "¿Qué pesa el examen final en tu curso y cuánto las tareas?",
+      "gold": [
+        "40",
+        "45"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de chaqueta?",
+      "gold": [
+        "chompa"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de bebé?",
+      "gold": [
+        "guagua"
+      ]
+    },
+    {
+      "q": "¿Qué término prefiero en lugar de bombillo?",
+      "gold": [
+        "foco"
+      ]
+    },
+    {
+      "q": "¿Cómo presento los ejemplos de mis materiales?",
+      "gold": [
+        "corpus"
+      ]
+    },
+    {
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea?",
+      "gold": [
+        "re-enseña",
+        "segunda"
+      ]
+    },
+    {
+      "q": "¿Con cuántas horas de grabaciones cuenta tu corpus propio?",
+      "gold": [
+        "120"
+      ]
+    },
+    {
+      "q": "¿Cuántos niveles tiene tu rúbrica y cuántos criterios?",
+      "gold": [
+        "cuatro",
+        "tres"
+      ]
+    }
+  ]
+}

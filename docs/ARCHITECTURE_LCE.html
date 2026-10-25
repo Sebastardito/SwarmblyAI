@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swarmbly LCE v0.4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,500..800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: three stacked planes (local → inference → social) joined by flow bands; invariants and the "chuta" trace below. */
+:root{
+  --bg:#f3f5f7; --panel:#ffffff; --ink:#16202b; --muted:#5a6878; --line:#d5dde5;
+  --local:#0f7b6c; --local-soft:#e2f2ef;
+  --inf:#3b4fb8; --inf-soft:#e6e9f8;
+  --soc:#b3640c; --soc-soft:#f8ecdc;
+  --tag-base:#e9edf1; --tag-g:#ece4fb; --tag-g-ink:#5b35b0; --tag-r:#fde7ec; --tag-r-ink:#a3203f;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --panel:#17202a; --ink:#e4eaf0; --muted:#97a5b4; --line:#2a3644;
+  --local:#4cc3b0; --local-soft:#143430; --inf:#8d9cf0; --inf-soft:#1d2447; --soc:#e9a24f; --soc-soft:#3a2810;
+  --tag-base:#243040; --tag-g:#2e2450; --tag-g-ink:#c4b0ff; --tag-r:#45202b; --tag-r-ink:#ff9fb4; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --panel:#17202a; --ink:#e4eaf0; --muted:#97a5b4; --line:#2a3644;
+  --local:#4cc3b0; --local-soft:#143430; --inf:#8d9cf0; --inf-soft:#1d2447; --soc:#e9a24f; --soc-soft:#3a2810;
+  --tag-base:#243040; --tag-g:#2e2450; --tag-g-ink:#c4b0ff; --tag-r:#45202b; --tag-r-ink:#ff9fb4; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 64px;display:grid;gap:22px}
+header{display:grid;gap:8px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-stretch:85%;font-weight:800;font-size:clamp(30px,5vw,48px);line-height:1.02;margin:0;text-wrap:balance}
+.lede{max-width:68ch;color:var(--muted);margin:0}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.controls span{font-size:13px;color:var(--muted);margin-right:4px}
+.controls button{font:500 13px var(--f-body);border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.controls button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.controls button:focus-visible{outline:2px solid var(--inf);outline-offset:2px}
+.plane{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:14px;border-top:5px solid var(--c)}
+.plane.local{--c:var(--local);--soft:var(--local-soft)}
+.plane.inf{--c:var(--inf);--soft:var(--inf-soft)}
+.plane.soc{--c:var(--soc);--soft:var(--soc-soft)}
+.plane-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;align-items:baseline}
+.plane-head h2{font-family:var(--f-display);font-stretch:90%;font-size:21px;margin:0;color:var(--c)}
+.plane-head p{margin:0;font-size:13.5px;color:var(--muted);max-width:60ch}
+.grid-local{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:14px}
+.stack{display:grid;gap:8px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.block{background:var(--soft);border-radius:10px;padding:12px 14px;display:grid;gap:6px;min-width:0;transition:opacity .2s}
+.block h3{margin:0;font-size:14.5px;font-weight:600;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.block h3 .lvl{font-family:var(--f-mono);font-size:11.5px;color:var(--c);font-weight:500}
+.block ul{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:3px}
+.block p{margin:0;font-size:13.5px}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.tag{font-family:var(--f-mono);font-size:10.5px;font-weight:500;padding:2px 6px;border-radius:5px;background:var(--tag-base);color:var(--muted);white-space:nowrap}
+.tag.g{background:var(--tag-g);color:var(--tag-g-ink)}
+.tag.r{background:var(--tag-r);color:var(--tag-r-ink)}
+.arrow{text-align:center;color:var(--c);font-family:var(--f-mono);font-size:12px;line-height:1.2}
+.band{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px;padding-inline:8px}
+.band::before,.band::after{content:"";flex:1;border-top:2px dashed var(--line)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.step{background:var(--soft);border-radius:8px;padding:6px 10px;font-size:13px;display:inline-flex;gap:6px;align-items:center;transition:opacity .2s}
+.step.key{outline:1.5px solid var(--c)}
+.flow .sep{color:var(--c);font-family:var(--f-mono)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+.rule{border-left:3px solid var(--c);padding:6px 10px;font-size:13.5px;display:grid;gap:4px;transition:opacity .2s}
+.dim{opacity:.22}
+section.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:12px;align-content:start}
+.card h2{font-family:var(--f-display);font-stretch:90%;font-size:20px;margin:0}
+.inv{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.inv li{display:grid;grid-template-columns:34px 1fr;gap:8px;font-size:13.5px;align-items:baseline}
+.inv b{font-family:var(--f-mono);font-weight:500;color:var(--inf)}
+ol.trace{margin:0;padding-left:22px;display:grid;gap:7px;font-size:13.5px}
+ol.trace li::marker{font-family:var(--f-mono);color:var(--soc)}
+.numbers{display:flex;flex-wrap:wrap;gap:8px}
+.num{border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:2px;min-width:0}
+.num .v{font-family:var(--f-mono);font-size:15px;font-variant-numeric:tabular-nums}
+.num .k{font-size:12px;color:var(--muted)}
+footer{font-size:12.5px;color:var(--muted);max-width:80ch}
+@media (max-width:820px){.grid-local,section.below{grid-template-columns:1fr}}
+@media (max-width:480px){.split{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Swarmbly LCE · Whitepaper y especificación 0.1 (borrador) · 4 oct 2026</div>
+    <h1>Arquitectura completa de la Local Cognitive Extension</h1>
+    <p class="lede">Tres planos. El local vive entero en el dispositivo del usuario; el de inferencia es Swarmbly sin cambios en su núcleo; el social es el único que añade tráfico, y solo cuando alguien pide una cápsula. Cada pieza lleva su origen y la sección del whitepaper (WP) que la define; la especificación normativa está en SPEC_LCE_ES.</p>
+    <div class="controls" role="group" aria-label="Resaltar por origen">
+      <span>Resaltar origen:</span>
+      <button type="button" id="f-all" data-f="all" aria-pressed="true">Todo</button>
+      <button type="button" id="f-base" data-f="base" aria-pressed="false">Base v0.2</button>
+      <button type="button" id="f-g" data-f="g" aria-pressed="false">Huecos G1–G6 (v0.3)</button>
+      <button type="button" id="f-r" data-f="r" aria-pressed="false">Rescates R1–R7 (v0.4)</button>
+    </div>
+  </header>
+
+  <!-- PLANO LOCAL -->
+  <div class="plane local">
+    <div class="plane-head">
+      <h2>Plano local · dispositivo del usuario</h2>
+      <p>Hipocampo rápido (wiki) y neocorteza lenta (adaptador), con una capa epistémica que decide qué puede pasar de la memoria al comportamiento.</p>
+    </div>
+    <div class="grid-local">
+      <div class="stack">
+        <div class="block" data-o="base r">
+          <h3><span class="lvl">CAPA 0</span> Personal Source Space <span class="tag">WP 5.1</span><span class="tag r">R7 · WP 5.7</span></h3>
+          <p>Fuentes en bruto, inmutables. Carpetas <span class="mono">teach/style</span>, <span class="mono">teach/knowledge</span>, <span class="mono">teach/procedures</span>, <span class="mono">reference_only</span>.</p>
+          <p><span class="mono">learning_policy.yaml</span>: lo no declarado no entrena; la voz solo con texto escrito por el usuario.</p>
+        </div>
+        <div class="arrow">↓ digestión · el modelo extrae, el código agrega</div>
+        <div class="block" data-o="base g r">
+          <h3><span class="lvl">CAPA 1</span> Wiki Markdown · aprende rápido <span class="tag g">G1–G2 · WP 5.2–5.3</span><span class="tag r">R4–R6 · WP 5.2, 7.9</span></h3>
+          <ul>
+            <li>Cada afirmación anclada al fragmento exacto de su fuente.</li>
+            <li>Tipo: <span class="mono">fact · user_claim · opinion · belief · hypothesis · experience · preference · style · procedure</span>.</li>
+            <li>Madurez: <span class="mono">RAW → DIGESTED → ANCHORED → CONNECTED → CORROBORATED → CONSOLIDATED → TRAINABLE</span>.</li>
+            <li>Procedencia: distancia epistémica (cuenta transformaciones, no copias) y vía vertical / oblicua / horizontal.</li>
+            <li>Afirmaciones en disputa con sus posiciones y familias de modelo.</li>
+            <li>Grafo de dependencias fuente → afirmación → ejemplo → adaptador; historial Git por ciclo.</li>
+          </ul>
+        </div>
+        <div class="split">
+          <div class="block" data-o="base g">
+            <h3>Recuperación (RAG) <span class="tag g">G1</span></h3>
+            <p>Hechos, creencias atribuidas ("Seb sostiene que…") y episodios. Nunca a los pesos.</p>
+          </div>
+          <div class="block" data-o="g r">
+            <h3>Cola de entrenamiento <span class="tag g">G3</span><span class="tag r">R5</span></h3>
+            <p>Solo <span class="mono">TRAINABLE</span>, distancia ≤ 1, material social minoritario, sin derivados de derivados.</p>
+          </div>
+        </div>
+        <div class="arrow">↓ ciclo de consolidación cuando el equipo está ocioso</div>
+        <div class="block" data-o="base g r">
+          <h3><span class="lvl">CAPA 2</span> Adaptador LoRA · aprende despacio <span class="tag g">G2 · WP 5.5</span><span class="tag r">R7 · WP 5.6</span></h3>
+          <ul>
+            <li>Repaso intercalado contra la interferencia catastrófica.</li>
+            <li>N candidatos por generación, siempre desde modelo base + wiki, nunca desde el adaptador anterior.</li>
+            <li>Compuerta como índice restringido: mejora en la wiki, ≤ 2 puntos de pérdida general, se abstiene fuera de la wiki; prueba nueva en cada generación.</li>
+          </ul>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="block" data-o="base g">
+          <h3>Modelo personal = base + adaptador + memoria <span class="tag g">G4 · WP 6.3</span></h3>
+          <p>Solo para el propio usuario. Nunca se sirve a terceros.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <div class="block" data-o="base r">
+          <h3>Social Cache <span class="tag">WP 7.4</span><span class="tag r">R1 · WP 7.4</span></h3>
+          <p>Confianza en el patrón ≠ confianza factual. El recuento de nodos es una etiqueta de prevalencia, nunca un criterio de adopción.</p>
+        </div>
+        <div class="block" data-o="base g">
+          <h3>Peer Affinity Cache <span class="tag">WP 7.7</span><span class="tag g">G5 · WP 7.5</span></h3>
+          <p>Afinidad local que decae con el tiempo y se normaliza por dominio (Oja, escalado sináptico). Separada de reputación y de procedencia.</p>
+        </div>
+        <div class="block" data-o="base g r">
+          <h3>Almacén de cápsulas <span class="tag">WP 7.2</span><span class="tag g">G5</span><span class="tag r">R3 · WP 7.6</span></h3>
+          <p>Copias inducidas por uso. <span class="mono">r_memory</span> derivado de una tolerancia ε, con ε menor para lo raro y preservado.</p>
+        </div>
+        <div class="block" data-o="base">
+          <h3>Control del usuario <span class="tag">WP 5.8</span></h3>
+          <p>Inspeccionar, corregir, olvidar. El olvido en los pesos solo es verificable regenerando el adaptador.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="band">solicitud del usuario</div>
+
+  <!-- PLANO DE INFERENCIA -->
+  <div class="plane inf">
+    <div class="plane-head">
+      <h2>Plano de inferencia · Swarmbly sin cambios en el núcleo</h2>
+      <p>La personalización entra solo a través de la Task Projection y de Γ; los workers sirven su modelo base y descartan el contenido.</p>
+    </div>
+    <div class="flow" aria-label="Ciclo de una petición">
+      <span class="step" data-o="base">recuperación personal</span><span class="sep">→</span>
+      <span class="step" data-o="base">Task Projection</span><span class="sep">→</span>
+      <span class="step" data-o="base">doble clasificación de privacidad</span><span class="sep">→</span>
+      <span class="step" data-o="base">router</span><span class="sep">→</span>
+      <span class="step" data-o="base">planificador DAG</span><span class="sep">→</span>
+      <span class="step" data-o="base">Γ: register · lexicon · entities · style_seed</span><span class="sep">→</span>
+      <span class="step" data-o="base r">candidatos: E12 familia distinta + afinidad acotada + 1 réplica de exploración <span class="tag r">R6</span></span><span class="sep">→</span>
+      <span class="step key" data-o="g">workers con modelo base, sin adaptador <span class="tag g">G4</span></span><span class="sep">→</span>
+      <span class="step" data-o="base">triage</span><span class="sep">→</span>
+      <span class="step key" data-o="g">verificación capas 1–3 intactas <span class="tag g">G4</span></span><span class="sep">→</span>
+      <span class="step" data-o="base">consenso E16 + mapa de baja confianza</span><span class="sep">→</span>
+      <span class="step key" data-o="r">respuesta plural: consenso · alternativa · minoritaria etiquetada · contexto del usuario <span class="tag r">R6 · WP 6.4</span></span><span class="sep">→</span>
+      <span class="step" data-o="base">ensamblaje y auditoría de coherencia</span><span class="sep">→</span>
+      <span class="step" data-o="base">digest social de los resultados propios</span>
+    </div>
+  </div>
+
+  <div class="band">opcional · con permiso del usuario · bajo demanda</div>
+
+  <!-- PLANO SOCIAL -->
+  <div class="plane soc">
+    <div class="plane-head">
+      <h2>Plano social · cápsulas</h2>
+      <p>La única fuente de tráfico nuevo: población con memoria cultural, no cerebro.</p>
+    </div>
+    <div class="flow" aria-label="Flujo de una cápsula">
+      <span class="step" data-o="base">manifiesto (solo metadatos)</span><span class="sep">→</span>
+      <span class="step" data-o="base">pull de cápsula ≤ 16 KiB, firmada</span><span class="sep">→</span>
+      <span class="step" data-o="base">uso</span><span class="sep">→</span>
+      <span class="step" data-o="base r">beneficio observado (no popularidad) <span class="tag r">R1</span></span><span class="sep">→</span>
+      <span class="step" data-o="base">caché</span><span class="sep">→</span>
+      <span class="step" data-o="base">copias inducidas por tráfico</span>
+    </div>
+    <div class="rules">
+      <div class="rule" data-o="r"><strong>Variación anclada</strong><span>Una cápsula solo tiene descendientes con <span class="mono">delta_evidence</span> humana. Una reformulación hecha por un modelo se queda local. <span class="tag r">R2 · WP 7.8</span></span></div>
+      <div class="rule" data-o="g r"><strong>Distancia &gt; 1</strong><span>Se cachea y se recupera con su etiqueta; no se redistribuye ni entrena. <span class="tag g">G3</span> <span class="tag r">R5 · WP 7.9</span></span></div>
+      <div class="rule" data-o="g"><strong>Presupuesto de migración</strong><span>Nm ≈ 0.5–2.25, es decir F_ST ≈ 0.1–0.33, como punto de partida (Wright; con las salvedades de Whitlock y McCauley). <span class="tag g">G5 · WP 7.5</span></span></div>
+      <div class="rule" data-o="g r"><strong>Persistencia</strong><span>r ≥ ln(1/ε)/ln(1/q), con copias en operadores distintos; ε más estricto para lo raro y preservado. <span class="tag g">G5</span> <span class="tag r">R3 · WP 7.6</span></span></div>
+      <div class="rule" data-o="base"><strong>Fuera del diseño</strong><span>Gossip, grafo global, enrutamiento de conocimiento, confianza transitiva, intercambio de adaptadores como mecanismo base. <span class="tag">WP 7.1</span></span></div>
+    </div>
+  </div>
+
+  <section class="below">
+    <div class="card">
+      <h2>Invariantes I1–I8 (WP 8.2, SPEC 4.2)</h2>
+      <ul class="inv">
+        <li><b>I1</b><span>Los hechos viven en la wiki; a los pesos van solo patrones de comportamiento.</span></li>
+        <li><b>I2</b><span>Un worker que sirve a terceros usa el modelo base sin adaptador y descarta la tarea.</span></li>
+        <li><b>I3</b><span>Acumular, nunca reemplazar: social minoritario, trazable a origen humano, distancia ≤ 1.</span></li>
+        <li><b>I4</b><span>La variación de las cápsulas viene de evidencia humana nueva, no de reformulaciones.</span></li>
+        <li><b>I5</b><span>La prevalencia es una etiqueta, no un criterio de adopción.</span></li>
+        <li><b>I6</b><span>Cada adaptador se entrena desde base + wiki, con repaso intercalado y prueba nueva.</span></li>
+        <li><b>I7</b><span>La diversidad se presupuesta y se reporta: Nm, F_ST y masa en las colas.</span></li>
+        <li><b>I8</b><span>Lo que el usuario no declaró en su política de aprendizaje no entrena.</span></li>
+      </ul>
+      <div class="numbers">
+        <div class="num"><span class="v">18 gen.</span><span class="k">para que una variante del 20 % caiga bajo 1 % con conformismo D = 0.2</span></div>
+        <div class="num"><span class="v">25 % → 2.1 %</span><span class="k">pérdida anual de una cápsula preservada con r = 2 → r = 3</span></div>
+        <div class="num"><span class="v">0.35σ → 0.93σ</span><span class="k">ganancia al elegir el mejor de 5 adaptadores con exactitud 0.3 → 0.8</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Ejemplo guía: "chuta"</h2>
+      <ol class="trace">
+        <li>El usuario escribe "¡chuta, se cayó el servidor!"; la política marca el texto como suyo.</li>
+        <li>La wiki extrae un <span class="mono">style</span> (distancia 0) y un <span class="mono">fact</span> lingüístico anclado (distancia 1).</li>
+        <li>El estilo puede llegar al adaptador al ser TRAINABLE; el hecho se queda en la wiki.</li>
+        <li>Al pedir un texto en su registro, la Task Projection lleva el término a <span class="mono">Γ.lexicon</span>.</li>
+        <li>Con permiso, el hecho se publica como cápsula horizontal anclada.</li>
+        <li>Otro nodo lo observa: el recuento es prevalencia, no adopción; aprende "en Ecuador se usa…", nunca "soy ecuatoriano".</li>
+        <li>Si el origen desaparece, sobrevive por copias de uso y, por raro y preservado, con r mayor.</li>
+        <li>Un hablante que matiza el uso crea una variante anclada; un modelo que lo reformula, no.</li>
+      </ol>
+      <p style="margin:0;font-size:13.5px;color:var(--muted)">Multiplicado, el ejemplo se vuelve el <strong>conjunto canario</strong>: regionalismos glosados por hablantes nativos, usados solo para medir masa en las colas, conformismo y violaciones de identidad (H-C7, H-C11; WP 8.3 y 11.3).</p>
+    </div>
+  </section>
+
+  <footer>Fuente: repositorio <span class="mono">LCE/</span> — <span class="mono">docs/WHITEPAPER_LCE_ES.md</span>, <span class="mono">docs/SPEC_LCE_ES.md</span> y <span class="mono">swips/SWIP-XXXX</span> (revisión 2). Propuesta no revisada por pares; ninguna invariante está demostrada todavía en Swarmbly. Los resultados con MockBackend validan el instrumento y no son evidencia.</footer>
+</div>
+
+<script>
+(function(){
+  var buttons=document.querySelectorAll('.controls button');
+  var items=document.querySelectorAll('[data-o]');
+  function apply(f){
+    buttons.forEach(function(b){b.setAttribute('aria-pressed', String(b.dataset.f===f));});
+    items.forEach(function(el){
+      var o=el.dataset.o.split(' ');
+      el.classList.toggle('dim', f!=='all' && o.indexOf(f)===-1);
+    });
+  }
+  buttons.forEach(function(b){b.addEventListener('click',function(){apply(b.dataset.f);});});
+})();
+</script>
+</body>
+</html>

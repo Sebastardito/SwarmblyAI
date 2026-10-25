@@ -1,0 +1,2 @@
+{"learning_policy": {"defaults": {"reference_only": true},
+  "sources": {"teach/style": {"authored_by_user": true, "learn_style": true, "learn_preference": true}}}}

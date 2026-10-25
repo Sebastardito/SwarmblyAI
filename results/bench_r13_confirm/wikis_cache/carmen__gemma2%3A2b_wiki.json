@@ -1,0 +1,2375 @@
+{
+ "claims": [
+  {
+   "anchors": [
+    {
+     "end": 295,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 222,
+     "verified": true
+    }
+   ],
+   "claim_id": "036a2e1cb9e989c45ffd8b43b27be4ba",
+   "clean_review_cycles": 0,
+   "created": 1791693512.700207,
+   "cycles_observed": 0,
+   "links": [
+    "0c8bc17e26f5d1f68e5310216bf462b8",
+    "562c96ee645573b9810b823ae0f87755"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los datos manuales entran solo con la marca de auditoría del responsable.",
+   "type": "fact",
+   "updated": 1791693525.907103
+  },
+  {
+   "anchors": [
+    {
+     "end": 1258,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1202,
+     "verified": true
+    }
+   ],
+   "claim_id": "06ddb133763db251af7115320e552870",
+   "clean_review_cycles": 0,
+   "created": 1791693505.2983282,
+   "cycles_observed": 0,
+   "links": [
+    "18e77e66c38a1965a80466b39514e6e7",
+    "db0b463f6af9289653b076e3cfd03f08"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La comisión media ponderada bajó a 0.80 por ciento anual",
+   "type": "fact",
+   "updated": 1791693525.907119
+  },
+  {
+   "anchors": [
+    {
+     "end": 1126,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 924,
+     "verified": true
+    }
+   ],
+   "claim_id": "06ec158c54818cc81c9d4a6646a44a81",
+   "clean_review_cycles": 0,
+   "created": 1791693490.647348,
+   "cycles_observed": 0,
+   "links": [
+    "626bbf564cba2b2bbfcd0c9a4498aaf4",
+    "e857669e68989ee020eb60df385c1def"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La variación sectorial mayor al 10 por ciento corresponde a tecnología (+11.2 por ciento por la revalorización de dos posiciones) y a salud (-10.8 por ciento por la salida de una posición farmacéutica).",
+   "type": "fact",
+   "updated": 1791693525.9071271
+  },
+  {
+   "anchors": [
+    {
+     "end": 367,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 300,
+     "verified": true
+    }
+   ],
+   "claim_id": "0c8bc17e26f5d1f68e5310216bf462b8",
+   "clean_review_cycles": 0,
+   "created": 1791693512.7005172,
+   "cycles_observed": 0,
+   "links": [
+    "036a2e1cb9e989c45ffd8b43b27be4ba",
+    "ebdd08e4c5d00a1479943772c5c570a2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La conciliación bancaria se firma antes del día 5 del mes siguiente",
+   "type": "fact",
+   "updated": 1791693525.907134
+  },
+  {
+   "anchors": [
+    {
+     "end": 188,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 116,
+     "verified": true
+    }
+   ],
+   "claim_id": "0cc3f1e664c5fa025507486a69fdd021",
+   "clean_review_cycles": 0,
+   "created": 1791693476.581631,
+   "cycles_observed": 0,
+   "links": [
+    "1229c6540d6d45bf9436e9de9d467354",
+    "12d2916955b6cd4ba68996ddfa1f788b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el borrador; el cierre firmado lo fija en 9.9 millones, +7.4 por ciento.",
+   "type": "fact",
+   "updated": 1791693525.9071412
+  },
+  {
+   "anchors": [
+    {
+     "end": 254,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+     "start": 219,
+     "verified": true
+    }
+   ],
+   "claim_id": "11886673c5cd1292c2dbb070765618be",
+   "clean_review_cycles": 0,
+   "created": 1791693510.0815418,
+   "cycles_observed": 0,
+   "links": [
+    "e10bd132e4b96fb48d14a43700ae66cb",
+    "e3d5e9d1c7c91d4b1c211d6a0a83517f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La cartera cierra en 82.7 millones.",
+   "type": "fact",
+   "updated": 1791693525.9071481
+  },
+  {
+   "anchors": [
+    {
+     "end": 254,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 190,
+     "verified": true
+    },
+    {
+     "end": 456,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 392,
+     "verified": true
+    },
+    {
+     "end": 658,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 594,
+     "verified": true
+    }
+   ],
+   "claim_id": "1229c6540d6d45bf9436e9de9d467354",
+   "clean_review_cycles": 0,
+   "created": 1791693478.3186,
+   "cycles_observed": 0,
+   "links": [
+    "0cc3f1e664c5fa025507486a69fdd021",
+    "c196ba15a79f3099cf1a9193bae62aa8"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La materialidad del informe trimestral sube de 5 a 6 por ciento.",
+   "type": "fact",
+   "updated": 1791693525.907156
+  },
+  {
+   "anchors": [
+    {
+     "end": 876,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 859,
+     "verified": true
+    }
+   ],
+   "claim_id": "12c002be61256b213a8c9241dd33d37c",
+   "clean_review_cycles": 0,
+   "created": 1791693490.646564,
+   "cycles_observed": 0,
+   "links": [
+    "92bda8e817d222048429ed226e51acb0",
+    "ba4a1855a303495ad8f434af86e57864"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "materiales el 22,",
+   "type": "fact",
+   "updated": 1791693525.9071639
+  },
+  {
+   "anchors": [
+    {
+     "end": 112,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 39,
+     "verified": true
+    }
+   ],
+   "claim_id": "12d2916955b6cd4ba68996ddfa1f788b",
+   "clean_review_cycles": 0,
+   "created": 1791693476.58108,
+   "cycles_observed": 0,
+   "links": [
+    "0cc3f1e664c5fa025507486a69fdd021"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El Fondo Manantial cerró en 9.6 millones con variación de +6.8 por ciento",
+   "type": "fact",
+   "updated": 1791693525.907171
+  },
+  {
+   "anchors": [
+    {
+     "end": 74,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 40,
+     "verified": true
+    }
+   ],
+   "claim_id": "173b81ae87e1cf501f6f87bcd9c6d67d",
+   "clean_review_cycles": 1,
+   "created": 1791693522.713433,
+   "cycles_observed": 4,
+   "links": [
+    "21c9157a62b7484c9989911593e78b3b",
+    "412b5afcfc464d870f77e825afde2011"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "con la cifra antes que el adjetivo",
+   "type": "style",
+   "updated": 1791693525.908635
+  },
+  {
+   "anchors": [
+    {
+     "end": 1177,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1131,
+     "verified": true
+    }
+   ],
+   "claim_id": "18e77e66c38a1965a80466b39514e6e7",
+   "clean_review_cycles": 0,
+   "created": 1791693505.297781,
+   "cycles_observed": 0,
+   "links": [
+    "06ddb133763db251af7115320e552870",
+    "e67eaf0abe41f61084ee34ccc97dc7e4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El retorno del año fue +9.1 por ciento nominal",
+   "type": "fact",
+   "updated": 1791693525.907223
+  },
+  {
+   "anchors": [
+    {
+     "end": 208,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 176,
+     "verified": true
+    }
+   ],
+   "claim_id": "197c7e9eec5d09387c872ed402294c40",
+   "clean_review_cycles": 0,
+   "created": 1791693484.48446,
+   "cycles_observed": 0,
+   "links": [
+    "66a74a59ed283a90ee9ce915108036e9",
+    "de080ac4a76217be71274f28394bc5f4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el 71 por ciento está en dólares",
+   "type": "fact",
+   "updated": 1791693525.907231
+  },
+  {
+   "anchors": [
+    {
+     "end": 1307,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1247,
+     "verified": true
+    }
+   ],
+   "claim_id": "1df23ab276f9c3e5069b66859ddbe495",
+   "clean_review_cycles": 0,
+   "created": 1791693493.0315468,
+   "cycles_observed": 0,
+   "links": [
+    "626bbf564cba2b2bbfcd0c9a4498aaf4",
+    "e38d4dffc3f9cf01e405360c717e64cb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "activando la llamada del comité de riesgo antes de publicar.",
+   "type": "fact",
+   "updated": 1791693525.907239
+  },
+  {
+   "anchors": [
+    {
+     "end": 456,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 388,
+     "verified": true
+    }
+   ],
+   "claim_id": "1e7142168405082749d272e9ecfc1071",
+   "clean_review_cycles": 0,
+   "created": 1791693487.8593621,
+   "cycles_observed": 0,
+   "links": [
+    "2283361b41ff73f38295ecb04ea82a1c",
+    "8621e64377995f1a7d59ea6f28016852"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Fondo Horizonte 32.1 millones (variación trimestral +4.2 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.907246
+  },
+  {
+   "anchors": [
+    {
+     "end": 1566,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1457,
+     "verified": true
+    }
+   ],
+   "claim_id": "1f9c5874247ba59bedf27ae82ddf2cdf",
+   "clean_review_cycles": 0,
+   "created": 1791693520.141587,
+   "cycles_observed": 0,
+   "links": [
+    "64f51c442647516c84a10d255514f831",
+    "e99dc8c89bdc9ba4f67574a338cab572"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los comentarios se responden por escrito y el informe final se publica el día 15 del mes siguiente al cierre.",
+   "type": "fact",
+   "updated": 1791693525.907253
+  },
+  {
+   "anchors": [
+    {
+     "end": 520,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 461,
+     "verified": true
+    }
+   ],
+   "claim_id": "20418f925e52c0f1272d97fb487c9108",
+   "clean_review_cycles": 0,
+   "created": 1791693515.850214,
+   "cycles_observed": 0,
+   "links": [
+    "b3ba668101837e6b1c623400810fda60",
+    "ebdd08e4c5d00a1479943772c5c570a2"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Los montos se presentan en miles de dólares con un decimal;",
+   "type": "fact",
+   "updated": 1791693525.90726
+  },
+  {
+   "anchors": [
+    {
+     "end": 1015,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 916,
+     "verified": true
+    }
+   ],
+   "claim_id": "21bdc21eedb0cdc8f274f8bfcb9d3374",
+   "clean_review_cycles": 0,
+   "created": 1791693503.8824298,
+   "cycles_observed": 0,
+   "links": [
+    "9b6308224cc674492f935e703e68436d",
+    "e67eaf0abe41f61084ee34ccc97dc7e4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El valor en riesgo a un día al 99 por ciento promedió 1.7 millones y nunca superó el límite de 2.4.",
+   "type": "fact",
+   "updated": 1791693525.907267
+  },
+  {
+   "anchors": [
+    {
+     "end": 95,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 75,
+     "verified": true
+    }
+   ],
+   "claim_id": "21c9157a62b7484c9989911593e78b3b",
+   "clean_review_cycles": 1,
+   "created": 1791693522.713696,
+   "cycles_observed": 4,
+   "links": [
+    "173b81ae87e1cf501f6f87bcd9c6d67d",
+    "d6f9be91a19ab42e5ffa64eed6b9b073"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y sin exclamaciones.",
+   "type": "style",
+   "updated": 1791693525.908679
+  },
+  {
+   "anchors": [
+    {
+     "end": 347,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 283,
+     "verified": true
+    }
+   ],
+   "claim_id": "2283361b41ff73f38295ecb04ea82a1c",
+   "clean_review_cycles": 0,
+   "created": 1791693484.485864,
+   "cycles_observed": 0,
+   "links": [
+    "1e7142168405082749d272e9ecfc1071",
+    "d83fca8e83c22003ce5d81e6c7cb9c54"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La exposición neta al dólar tras coberturas es del 66 por ciento",
+   "type": "fact",
+   "updated": 1791693525.907307
+  },
+  {
+   "anchors": [
+    {
+     "end": 601,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 555,
+     "verified": true
+    }
+   ],
+   "claim_id": "24f1b9f816ab68712d9201f24b7a5c2e",
+   "clean_review_cycles": 0,
+   "created": 1791693487.860613,
+   "cycles_observed": 0,
+   "links": [
+    "8ed3b9dbff7418b678c754f463e70a23",
+    "fdbc5c892e0728463c60a80b87815072"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Fondo Manantial 9.6 millones (+6.8 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.9073138
+  },
+  {
+   "anchors": [
+    {
+     "end": 1946,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1897,
+     "verified": true
+    }
+   ],
+   "claim_id": "28e0003e5654285bf524b38f6377e680",
+   "clean_review_cycles": 0,
+   "created": 1791693521.538548,
+   "cycles_observed": 0,
+   "links": [
+    "3e7e5cd2bbeb2be14b22004bbb4a500c"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "No hay excepción de plazo para un error de fondo.",
+   "type": "fact",
+   "updated": 1791693525.907321
+  },
+  {
+   "anchors": [
+    {
+     "end": 46,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "2901cb497effc81f2a5b5150b7039d0c",
+   "clean_review_cycles": 0,
+   "created": 1791693495.364778,
+   "cycles_observed": 0,
+   "links": [
+    "814a938974750398a09197cc46f43dda"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Memoria anual de la cartera administrada, 2026",
+   "type": "fact",
+   "updated": 1791693525.907328
+  },
+  {
+   "anchors": [
+    {
+     "end": 1697,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1629,
+     "verified": true
+    }
+   ],
+   "claim_id": "2d946f58674d6db2bea394284112b0eb",
+   "clean_review_cycles": 0,
+   "created": 1791693520.14239,
+   "cycles_observed": 0,
+   "links": [
+    "3e7e5cd2bbeb2be14b22004bbb4a500c",
+    "64f51c442647516c84a10d255514f831"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "las estimaciones se marcan como tales con la letra E junto al valor.",
+   "type": "fact",
+   "updated": 1791693525.907336
+  },
+  {
+   "anchors": [
+    {
+     "end": 348,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 296,
+     "verified": true
+    }
+   ],
+   "claim_id": "2de1896b35d3717c24f8aac3ffb5d607",
+   "clean_review_cycles": 1,
+   "created": 1791693525.0391428,
+   "cycles_observed": 4,
+   "links": [
+    "6a57b6deb9d6e4433b23c10ac692fcae",
+    "b17d428513ac5d95a567f166041ce9c7"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término valor en riesgo en lugar de VaR.",
+   "type": "preference",
+   "updated": 1791693525.908716
+  },
+  {
+   "anchors": [
+    {
+     "end": 1172,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 958,
+     "verified": true
+    }
+   ],
+   "claim_id": "3c72e381368146fd2baa8a76c2cae678",
+   "clean_review_cycles": 0,
+   "created": 1791693518.05564,
+   "cycles_observed": 0,
+   "links": [
+    "6b1eaeda9e2ac42a5ef6819c53e7a29a",
+    "e99dc8c89bdc9ba4f67574a338cab572"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La provisión por deterioro se calcula con la matriz de pérdida esperada por calificación; un aumento de provisión mayor al 15 por ciento entre trimestres obliga a una llamada del comité de riesgo antes de publicar.",
+   "type": "fact",
+   "updated": 1791693525.907376
+  },
+  {
+   "anchors": [
+    {
+     "end": 1896,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1728,
+     "verified": true
+    }
+   ],
+   "claim_id": "3e7e5cd2bbeb2be14b22004bbb4a500c",
+   "clean_review_cycles": 0,
+   "created": 1791693521.537656,
+   "cycles_observed": 0,
+   "links": [
+    "28e0003e5654285bf524b38f6377e680",
+    "2d946f58674d6db2bea394284112b0eb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Si al recalcular un fondo la diferencia contra el sistema supera el 1 por ciento del valor del fondo, el informe completo se retira y se regenera desde la conciliación.",
+   "type": "fact",
+   "updated": 1791693525.907383
+  },
+  {
+   "anchors": [
+    {
+     "end": 38,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 0,
+     "verified": true
+    }
+   ],
+   "claim_id": "412b5afcfc464d870f77e825afde2011",
+   "clean_review_cycles": 1,
+   "created": 1791693522.712616,
+   "cycles_observed": 4,
+   "links": [
+    "173b81ae87e1cf501f6f87bcd9c6d67d"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Escribo en un registro formal y sobrio",
+   "type": "style",
+   "updated": 1791693525.9087439
+  },
+  {
+   "anchors": [
+    {
+     "end": 399,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 284,
+     "verified": true
+    }
+   ],
+   "claim_id": "448e439b220c31ace09cde7a40d8eb39",
+   "clean_review_cycles": 0,
+   "created": 1791693499.118357,
+   "cycles_observed": 0,
+   "links": [
+    "59aac98600fb57bdfa1df0dad4baf44f",
+    "ba5f69b9e209ba699910ac246d581cab"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El cierre anual por fondo es: Horizonte 33.5 millones, Cumbres 22.0, Cordillera 12.1, Manantial 10.4 y Páramo 10.1.",
+   "type": "fact",
+   "updated": 1791693525.907422
+  },
+  {
+   "anchors": [
+    {
+     "end": 226,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 149,
+     "verified": true
+    }
+   ],
+   "claim_id": "48469a8ce871afcd81d7e326729a52c7",
+   "clean_review_cycles": 1,
+   "created": 1791693523.873479,
+   "cycles_observed": 4,
+   "links": [
+    "b17d428513ac5d95a567f166041ce9c7",
+    "d6f9be91a19ab42e5ffa64eed6b9b073"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término margen de contribución en lugar de margen bruto ajustado.",
+   "type": "preference",
+   "updated": 1791693525.9087691
+  },
+  {
+   "anchors": [
+    {
+     "end": 1639,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1582,
+     "verified": true
+    }
+   ],
+   "claim_id": "4adc8b9eb93dc8ee67c6963757f6057f",
+   "clean_review_cycles": 0,
+   "created": 1791693494.734272,
+   "cycles_observed": 0,
+   "links": [
+    "8fa85e8ff911a08f51c07aab2e672395",
+    "df48da4447fb9316db5c98b400888c36"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el retorno de doce meses quedó en +9.7 por ciento nominal",
+   "type": "fact",
+   "updated": 1791693525.9074612
+  },
+  {
+   "anchors": [
+    {
+     "end": 1437,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1395,
+     "verified": true
+    }
+   ],
+   "claim_id": "4c02ce11f765ed20cc6c42de7e780e75",
+   "clean_review_cycles": 0,
+   "created": 1791693506.6201541,
+   "cycles_observed": 0,
+   "links": [
+    "77ffcd21bfb3ba4992d56a20ed83f7fc",
+    "9f86e660c770873e46e4c234403546f4"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "y la automatización del informe trimestral",
+   "type": "fact",
+   "updated": 1791693525.907469
+  },
+  {
+   "anchors": [
+    {
+     "end": 220,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 119,
+     "verified": true
+    }
+   ],
+   "claim_id": "562c96ee645573b9810b823ae0f87755",
+   "clean_review_cycles": 0,
+   "created": 1791693512.699191,
+   "cycles_observed": 0,
+   "links": [
+    "036a2e1cb9e989c45ffd8b43b27be4ba"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El cierre contable del trimestre alimenta el modelo con los saldos por fondo, por sector y por moneda",
+   "type": "fact",
+   "updated": 1791693525.907476
+  },
+  {
+   "anchors": [
+    {
+     "end": 274,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 190,
+     "verified": true
+    }
+   ],
+   "claim_id": "59aac98600fb57bdfa1df0dad4baf44f",
+   "clean_review_cycles": 0,
+   "created": 1791693496.7298949,
+   "cycles_observed": 0,
+   "links": [
+    "448e439b220c31ace09cde7a40d8eb39",
+    "814a938974750398a09197cc46f43dda"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El año aportó tres inversionistas institucionales nuevos y la salida de uno antiguo.",
+   "type": "fact",
+   "updated": 1791693525.9074829
+  },
+  {
+   "anchors": [
+    {
+     "end": 586,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 464,
+     "verified": true
+    }
+   ],
+   "claim_id": "60f40c03fe01f3587f1004a8fc32b0cc",
+   "clean_review_cycles": 0,
+   "created": 1791693499.1199229,
+   "cycles_observed": 0,
+   "links": [
+    "aedc1cac9ea5ef4e99f350777aeff504",
+    "ba5f69b9e209ba699910ac246d581cab"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Manantial fue el fondo con mayor crecimiento del año (+11.3 por ciento) por la entrada institucional del segundo semestre.",
+   "type": "fact",
+   "updated": 1791693525.90749
+  },
+  {
+   "anchors": [
+    {
+     "end": 1245,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1136,
+     "verified": true
+    }
+   ],
+   "claim_id": "626bbf564cba2b2bbfcd0c9a4498aaf4",
+   "clean_review_cycles": 0,
+   "created": 1791693493.030582,
+   "cycles_observed": 0,
+   "links": [
+    "06ec158c54818cc81c9d4a6646a44a81",
+    "1df23ab276f9c3e5069b66859ddbe495"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La provisión por deterioro subió del 1.1 al 1.6 por ciento de la cartera (aumento relativo del 45 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.907497
+  },
+  {
+   "anchors": [
+    {
+     "end": 1628,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1571,
+     "verified": true
+    }
+   ],
+   "claim_id": "64f51c442647516c84a10d255514f831",
+   "clean_review_cycles": 0,
+   "created": 1791693520.1419039,
+   "cycles_observed": 0,
+   "links": [
+    "1f9c5874247ba59bedf27ae82ddf2cdf",
+    "2d946f58674d6db2bea394284112b0eb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Nunca se publica un dato que no venga del cierre firmado;",
+   "type": "fact",
+   "updated": 1791693525.907504
+  },
+  {
+   "anchors": [
+    {
+     "end": 235,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 210,
+     "verified": true
+    }
+   ],
+   "claim_id": "66a74a59ed283a90ee9ce915108036e9",
+   "clean_review_cycles": 0,
+   "created": 1791693484.485004,
+   "cycles_observed": 0,
+   "links": [
+    "197c7e9eec5d09387c872ed402294c40",
+    "d83fca8e83c22003ce5d81e6c7cb9c54"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el 19 por ciento en euros",
+   "type": "fact",
+   "updated": 1791693525.907511
+  },
+  {
+   "anchors": [
+    {
+     "end": 464,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 350,
+     "verified": true
+    }
+   ],
+   "claim_id": "6a57b6deb9d6e4433b23c10ac692fcae",
+   "clean_review_cycles": 1,
+   "created": 1791693525.9061499,
+   "cycles_observed": 4,
+   "links": [
+    "2de1896b35d3717c24f8aac3ffb5d607"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "En las notas de los informes escribo primero la causa, luego el efecto y al final la acción, siempre en ese orden.",
+   "type": "style",
+   "updated": 1791693525.9088151
+  },
+  {
+   "anchors": [
+    {
+     "end": 927,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 805,
+     "verified": true
+    }
+   ],
+   "claim_id": "6b1eaeda9e2ac42a5ef6819c53e7a29a",
+   "clean_review_cycles": 0,
+   "created": 1791693515.8528209,
+   "cycles_observed": 0,
+   "links": [
+    "3c72e381368146fd2baa8a76c2cae678",
+    "8cd347c7e597d6000e7b9485a5bcf555"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Toda variación mayor al 10 por ciento en un sector se acompaña de la serie de tres trimestres y del comentario del comité.",
+   "type": "user_claim",
+   "updated": 1791693525.9075499
+  },
+  {
+   "anchors": [
+    {
+     "end": 93,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "5d11998b6d6dfdec9909a3d83e9d9e7bb70c646a4ac0343349e51962bae1cc1a",
+     "start": 23,
+     "verified": true
+    }
+   ],
+   "claim_id": "7025619d85fb0bd87309b67faabcb64f",
+   "clean_review_cycles": 0,
+   "created": 1791693507.733223,
+   "cycles_observed": 0,
+   "links": [
+    "b13d38874e8cc9f33285468e36045073"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El retorno ponderado del trimestre es +2.9 por ciento según el modelo;",
+   "type": "fact",
+   "updated": 1791693525.907557
+  },
+  {
+   "anchors": [
+    {
+     "end": 1394,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1310,
+     "verified": true
+    }
+   ],
+   "claim_id": "77ffcd21bfb3ba4992d56a20ed83f7fc",
+   "clean_review_cycles": 0,
+   "created": 1791693506.619394,
+   "cycles_observed": 0,
+   "links": [
+    "4c02ce11f765ed20cc6c42de7e780e75",
+    "db0b463f6af9289653b076e3cfd03f08"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El próximo ejercicio se planifica la apertura de un sexto fondo de renta fija andina",
+   "type": "fact",
+   "updated": 1791693525.907565
+  },
+  {
+   "anchors": [
+    {
+     "end": 189,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 113,
+     "verified": false
+    }
+   ],
+   "claim_id": "814a938974750398a09197cc46f43dda",
+   "clean_review_cycles": 0,
+   "created": 1791693496.729103,
+   "cycles_observed": 0,
+   "links": [
+    "2901cb497effc81f2a5b5150b7039d0c",
+    "59aac98600fb57bdfa1df0dad4baf44f"
+   ],
+   "maturity": "DIGESTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Panorama. La memoria anual cierra el ejercicio con la cartera en 88.1 millones de dólares, frente a los 84.3 del cierre del tercer trimestre.",
+   "type": "fact",
+   "updated": 1791693496.7291038
+  },
+  {
+   "anchors": [
+    {
+     "end": 503,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 458,
+     "verified": true
+    }
+   ],
+   "claim_id": "8621e64377995f1a7d59ea6f28016852",
+   "clean_review_cycles": 0,
+   "created": 1791693487.85995,
+   "cycles_observed": 0,
+   "links": [
+    "1e7142168405082749d272e9ecfc1071",
+    "8ed3b9dbff7418b678c754f463e70a23"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Fondo Cumbres 21.7 millones (+1.9 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.9075751
+  },
+  {
+   "anchors": [
+    {
+     "end": 800,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 659,
+     "verified": true
+    }
+   ],
+   "claim_id": "8cd347c7e597d6000e7b9485a5bcf555",
+   "clean_review_cycles": 0,
+   "created": 1791693515.852494,
+   "cycles_observed": 0,
+   "links": [
+    "6b1eaeda9e2ac42a5ef6819c53e7a29a",
+    "be658ff998ef866ec8089d4a64ab46cd"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "toda variación de un fondo mayor al 5 por ciento respecto del trimestre anterior se explica en una nota individual, con la causa y la acción.",
+   "type": "user_claim",
+   "updated": 1791693525.907582
+  },
+  {
+   "anchors": [
+    {
+     "end": 553,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 505,
+     "verified": true
+    }
+   ],
+   "claim_id": "8ed3b9dbff7418b678c754f463e70a23",
+   "clean_review_cycles": 0,
+   "created": 1791693487.8602948,
+   "cycles_observed": 0,
+   "links": [
+    "24f1b9f816ab68712d9201f24b7a5c2e",
+    "8621e64377995f1a7d59ea6f28016852"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Fondo Cordillera 12.8 millones (-3.1 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.90759
+  },
+  {
+   "anchors": [
+    {
+     "end": 1580,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1495,
+     "verified": true
+    }
+   ],
+   "claim_id": "8fa85e8ff911a08f51c07aab2e672395",
+   "clean_review_cycles": 0,
+   "created": 1791693494.7332962,
+   "cycles_observed": 0,
+   "links": [
+    "4adc8b9eb93dc8ee67c6963757f6057f",
+    "e38d4dffc3f9cf01e405360c717e64cb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El retorno ponderado del trimestre fue +2.9 por ciento nominal y +2.4 por ciento real",
+   "type": "fact",
+   "updated": 1791693525.907597
+  },
+  {
+   "anchors": [
+    {
+     "end": 858,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 804,
+     "verified": true
+    }
+   ],
+   "claim_id": "92bda8e817d222048429ed226e51acb0",
+   "clean_review_cycles": 0,
+   "created": 1791693490.645781,
+   "cycles_observed": 0,
+   "links": [
+    "12c002be61256b213a8c9241dd33d37c",
+    "bcd4c6a58447090792249aa459508a65"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Sectores. Energía pesa el 34 por ciento de la cartera,",
+   "type": "fact",
+   "updated": 1791693525.907604
+  },
+  {
+   "anchors": [
+    {
+     "end": 915,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 874,
+     "verified": true
+    }
+   ],
+   "claim_id": "9b6308224cc674492f935e703e68436d",
+   "clean_review_cycles": 0,
+   "created": 1791693503.88213,
+   "cycles_observed": 0,
+   "links": [
+    "21bdc21eedb0cdc8f274f8bfcb9d3374",
+    "aedc1cac9ea5ef4e99f350777aeff504"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "tras el pico de 1.6 del tercer trimestre.",
+   "type": "fact",
+   "updated": 1791693525.907611
+  },
+  {
+   "anchors": [
+    {
+     "end": 1474,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1439,
+     "verified": true
+    }
+   ],
+   "claim_id": "9f86e660c770873e46e4c234403546f4",
+   "clean_review_cycles": 0,
+   "created": 1791693506.620417,
+   "cycles_observed": 0,
+   "links": [
+    "4c02ce11f765ed20cc6c42de7e780e75"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "prevista para el segundo trimestre.",
+   "type": "fact",
+   "updated": 1791693525.907618
+  },
+  {
+   "anchors": [
+    {
+     "end": 872,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 801,
+     "verified": true
+    }
+   ],
+   "claim_id": "aedc1cac9ea5ef4e99f350777aeff504",
+   "clean_review_cycles": 0,
+   "created": 1791693503.8815842,
+   "cycles_observed": 0,
+   "links": [
+    "60f40c03fe01f3587f1004a8fc32b0cc",
+    "9b6308224cc674492f935e703e68436d"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La provisión por deterioro cerró el año en 1.4 por ciento de la cartera,",
+   "type": "fact",
+   "updated": 1791693525.907625
+  },
+  {
+   "anchors": [
+    {
+     "end": 149,
+     "human_source": "self",
+     "source": "teach/knowledge/nota_discrepante.md",
+     "source_hash": "5d11998b6d6dfdec9909a3d83e9d9e7bb70c646a4ac0343349e51962bae1cc1a",
+     "start": 94,
+     "verified": true
+    }
+   ],
+   "claim_id": "b13d38874e8cc9f33285468e36045073",
+   "clean_review_cycles": 0,
+   "created": 1791693507.7340438,
+   "cycles_observed": 0,
+   "links": [
+    "7025619d85fb0bd87309b67faabcb64f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "la conciliación bancaria lo calcula en +2.6 por ciento.",
+   "type": "fact",
+   "updated": 1791693525.907632
+  },
+  {
+   "anchors": [
+    {
+     "end": 294,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 228,
+     "verified": true
+    }
+   ],
+   "claim_id": "b17d428513ac5d95a567f166041ce9c7",
+   "clean_review_cycles": 1,
+   "created": 1791693524.457482,
+   "cycles_observed": 4,
+   "links": [
+    "2de1896b35d3717c24f8aac3ffb5d607",
+    "48469a8ce871afcd81d7e326729a52c7"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término materialidad en lugar de umbral de relevancia.",
+   "type": "preference",
+   "updated": 1791693525.9088771
+  },
+  {
+   "anchors": [
+    {
+     "end": 552,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 521,
+     "verified": true
+    }
+   ],
+   "claim_id": "b3ba668101837e6b1c623400810fda60",
+   "clean_review_cycles": 0,
+   "created": 1791693515.85123,
+   "cycles_observed": 0,
+   "links": [
+    "20418f925e52c0f1272d97fb487c9108",
+    "c226e118dac42dee4f07eff4a8ef7b9e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los porcentajes con un decimal;",
+   "type": "fact",
+   "updated": 1791693525.90767
+  },
+  {
+   "anchors": [
+    {
+     "end": 891,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 877,
+     "verified": true
+    }
+   ],
+   "claim_id": "ba4a1855a303495ad8f434af86e57864",
+   "clean_review_cycles": 0,
+   "created": 1791693490.64683,
+   "cycles_observed": 0,
+   "links": [
+    "12c002be61256b213a8c9241dd33d37c",
+    "e857669e68989ee020eb60df385c1def"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "consumo el 18,",
+   "type": "fact",
+   "updated": 1791693525.907678
+  },
+  {
+   "anchors": [
+    {
+     "end": 463,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 400,
+     "verified": true
+    }
+   ],
+   "claim_id": "ba5f69b9e209ba699910ac246d581cab",
+   "clean_review_cycles": 0,
+   "created": 1791693499.119166,
+   "cycles_observed": 0,
+   "links": [
+    "448e439b220c31ace09cde7a40d8eb39",
+    "60f40c03fe01f3587f1004a8fc32b0cc"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La variación anual del conjunto fue de +8.2 por ciento nominal.",
+   "type": "fact",
+   "updated": 1791693525.907684
+  },
+  {
+   "anchors": [
+    {
+     "end": 802,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 649,
+     "verified": true
+    }
+   ],
+   "claim_id": "bcd4c6a58447090792249aa459508a65",
+   "clean_review_cycles": 0,
+   "created": 1791693487.861232,
+   "cycles_observed": 0,
+   "links": [
+    "92bda8e817d222048429ed226e51acb0",
+    "fdbc5c892e0728463c60a80b87815072"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El único fondo con variación sobre el umbral de materialidad del protocolo es Manantial, explicado por la entrada de tres inversionistas institucionales.",
+   "type": "user_claim",
+   "updated": 1791693525.907691
+  },
+  {
+   "anchors": [
+    {
+     "end": 658,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 587,
+     "verified": true
+    }
+   ],
+   "claim_id": "be658ff998ef866ec8089d4a64ab46cd",
+   "clean_review_cycles": 0,
+   "created": 1791693515.8517709,
+   "cycles_observed": 0,
+   "links": [
+    "8cd347c7e597d6000e7b9485a5bcf555",
+    "c226e118dac42dee4f07eff4a8ef7b9e"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La materialidad del informe es el 5 por ciento del valor de la cartera:",
+   "type": "fact",
+   "updated": 1791693525.907698
+  },
+  {
+   "anchors": [
+    {
+     "end": 324,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 255,
+     "verified": true
+    },
+    {
+     "end": 526,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 457,
+     "verified": true
+    },
+    {
+     "end": 728,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 659,
+     "verified": true
+    }
+   ],
+   "claim_id": "c196ba15a79f3099cf1a9193bae62aa8",
+   "clean_review_cycles": 0,
+   "created": 1791693478.31944,
+   "cycles_observed": 0,
+   "links": [
+    "1229c6540d6d45bf9436e9de9d467354",
+    "e8f61f07cf2b96151e819a840be4857b"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El límite de política del valor en riesgo baja de 2.4 a 2.2 millones.",
+   "type": "fact",
+   "updated": 1791693525.907705
+  },
+  {
+   "anchors": [
+    {
+     "end": 582,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 553,
+     "verified": true
+    }
+   ],
+   "claim_id": "c226e118dac42dee4f07eff4a8ef7b9e",
+   "clean_review_cycles": 0,
+   "created": 1791693515.851512,
+   "cycles_observed": 0,
+   "links": [
+    "b3ba668101837e6b1c623400810fda60",
+    "be658ff998ef866ec8089d4a64ab46cd"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "los ratios con dos decimales.",
+   "type": "fact",
+   "updated": 1791693525.907713
+  },
+  {
+   "anchors": [
+    {
+     "end": 99,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+     "start": 44,
+     "verified": true
+    }
+   ],
+   "claim_id": "cf0a027c95dc4671be6d0abb949ca17e",
+   "clean_review_cycles": 0,
+   "created": 1791693510.08018,
+   "cycles_observed": 0,
+   "links": [
+    "d1a993e913f55c18d789a9e00baee962"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La materialidad del informe trimestral es 4 por ciento.",
+   "type": "fact",
+   "updated": 1791693525.9077199
+  },
+  {
+   "anchors": [
+    {
+     "end": 155,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+     "start": 100,
+     "verified": true
+    }
+   ],
+   "claim_id": "d1a993e913f55c18d789a9e00baee962",
+   "clean_review_cycles": 0,
+   "created": 1791693510.080977,
+   "cycles_observed": 0,
+   "links": [
+    "cf0a027c95dc4671be6d0abb949ca17e",
+    "e10bd132e4b96fb48d14a43700ae66cb"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El fondo Manantial subió 9.4 por ciento este trimestre.",
+   "type": "fact",
+   "updated": 1791693525.907727
+  },
+  {
+   "anchors": [
+    {
+     "end": 147,
+     "human_source": "self",
+     "source": "teach/style/estilo.md",
+     "source_hash": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8",
+     "start": 97,
+     "verified": true
+    }
+   ],
+   "claim_id": "d6f9be91a19ab42e5ffa64eed6b9b073",
+   "clean_review_cycles": 1,
+   "created": 1791693523.260889,
+   "cycles_observed": 4,
+   "links": [
+    "21c9157a62b7484c9989911593e78b3b",
+    "48469a8ce871afcd81d7e326729a52c7"
+   ],
+   "maturity": "TRAINABLE",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 0,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Prefiero el término provisión en lugar de reserva.",
+   "type": "preference",
+   "updated": 1791693525.908926
+  },
+  {
+   "anchors": [
+    {
+     "end": 281,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 238,
+     "verified": true
+    }
+   ],
+   "claim_id": "d83fca8e83c22003ce5d81e6c7cb9c54",
+   "clean_review_cycles": 0,
+   "created": 1791693484.4853098,
+   "cycles_observed": 0,
+   "links": [
+    "2283361b41ff73f38295ecb04ea82a1c",
+    "66a74a59ed283a90ee9ce915108036e9"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "el 10 por ciento en monedas locales andinas",
+   "type": "fact",
+   "updated": 1791693525.907765
+  },
+  {
+   "anchors": [
+    {
+     "end": 1295,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1259,
+     "verified": true
+    }
+   ],
+   "claim_id": "db0b463f6af9289653b076e3cfd03f08",
+   "clean_review_cycles": 0,
+   "created": 1791693505.29863,
+   "cycles_observed": 0,
+   "links": [
+    "06ddb133763db251af7115320e552870",
+    "77ffcd21bfb3ba4992d56a20ed83f7fc"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "tras la renegociación con dos fondos",
+   "type": "fact",
+   "updated": 1791693525.9077718
+  },
+  {
+   "anchors": [
+    {
+     "end": 160,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 89,
+     "verified": true
+    }
+   ],
+   "claim_id": "de080ac4a76217be71274f28394bc5f4",
+   "clean_review_cycles": 0,
+   "created": 1791693484.483574,
+   "cycles_observed": 0,
+   "links": [
+    "197c7e9eec5d09387c872ed402294c40"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La cartera administrada cierra el trimestre en 84.3 millones de dólares",
+   "type": "fact",
+   "updated": 1791693525.907779
+  },
+  {
+   "anchors": [
+    {
+     "end": 1714,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1641,
+     "verified": true
+    }
+   ],
+   "claim_id": "df48da4447fb9316db5c98b400888c36",
+   "clean_review_cycles": 0,
+   "created": 1791693494.734582,
+   "cycles_observed": 0,
+   "links": [
+    "4adc8b9eb93dc8ee67c6963757f6057f"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La comisión media ponderada de administración es de 0.85 por ciento anual",
+   "type": "fact",
+   "updated": 1791693525.907786
+  },
+  {
+   "anchors": [
+    {
+     "end": 218,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+     "start": 156,
+     "verified": true
+    }
+   ],
+   "claim_id": "e10bd132e4b96fb48d14a43700ae66cb",
+   "clean_review_cycles": 0,
+   "created": 1791693510.081259,
+   "cycles_observed": 0,
+   "links": [
+    "11886673c5cd1292c2dbb070765618be",
+    "d1a993e913f55c18d789a9e00baee962"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El valor en riesgo a un día al 99 por ciento fue 1.2 millones.",
+   "type": "fact",
+   "updated": 1791693525.9077928
+  },
+  {
+   "anchors": [
+    {
+     "end": 1479,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 1308,
+     "verified": true
+    }
+   ],
+   "claim_id": "e38d4dffc3f9cf01e405360c717e64cb",
+   "clean_review_cycles": 0,
+   "created": 1791693493.032372,
+   "cycles_observed": 0,
+   "links": [
+    "1df23ab276f9c3e5069b66859ddbe495",
+    "8fa85e8ff911a08f51c07aab2e672395"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El valor en riesgo a un día al 99 por ciento fue de 1.9 millones de dólares, por debajo del límite de política de 2.4 millones, y no se superó en ningún día del trimestre.",
+   "type": "fact",
+   "updated": 1791693525.9078
+  },
+  {
+   "anchors": [
+    {
+     "end": 298,
+     "human_source": "self",
+     "source": "teach/knowledge/revision_interna.md",
+     "source_hash": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+     "start": 255,
+     "verified": true
+    }
+   ],
+   "claim_id": "e3d5e9d1c7c91d4b1c211d6a0a83517f",
+   "clean_review_cycles": 0,
+   "created": 1791693510.0817852,
+   "cycles_observed": 0,
+   "links": [
+    "11886673c5cd1292c2dbb070765618be"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El porcentaje de la cartera en euros es 15.",
+   "type": "fact",
+   "updated": 1791693525.9078069
+  },
+  {
+   "anchors": [
+    {
+     "end": 1115,
+     "human_source": "self",
+     "source": "teach/knowledge/memoria_anual.md",
+     "source_hash": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+     "start": 1016,
+     "verified": true
+    }
+   ],
+   "claim_id": "e67eaf0abe41f61084ee34ccc97dc7e4",
+   "clean_review_cycles": 0,
+   "created": 1791693503.882711,
+   "cycles_observed": 0,
+   "links": [
+    "18e77e66c38a1965a80466b39514e6e7",
+    "21bdc21eedb0cdc8f274f8bfcb9d3374"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El comité de riesgo se reunió cuatro veces en el año, dos de ellas por la variación de provisiones.",
+   "type": "fact",
+   "updated": 1791693525.9078138
+  },
+  {
+   "anchors": [
+    {
+     "end": 923,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 892,
+     "verified": true
+    }
+   ],
+   "claim_id": "e857669e68989ee020eb60df385c1def",
+   "clean_review_cycles": 0,
+   "created": 1791693490.647066,
+   "cycles_observed": 0,
+   "links": [
+    "06ec158c54818cc81c9d4a6646a44a81",
+    "ba4a1855a303495ad8f434af86e57864"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "salud el 14 y tecnología el 12.",
+   "type": "fact",
+   "updated": 1791693525.907821
+  },
+  {
+   "anchors": [
+    {
+     "end": 390,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 325,
+     "verified": true
+    },
+    {
+     "end": 592,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 527,
+     "verified": true
+    },
+    {
+     "end": 794,
+     "human_source": "self",
+     "source": "teach/knowledge/actualizacion.md",
+     "source_hash": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+     "start": 729,
+     "verified": true
+    }
+   ],
+   "claim_id": "e8f61f07cf2b96151e819a840be4857b",
+   "clean_review_cycles": 0,
+   "created": 1791693478.319795,
+   "cycles_observed": 0,
+   "links": [
+    "c196ba15a79f3099cf1a9193bae62aa8"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "La cartera cierra el trimestre en 86.1 millones tras la revisión.",
+   "type": "fact",
+   "updated": 1791693525.9078279
+  },
+  {
+   "anchors": [
+    {
+     "end": 1456,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 1390,
+     "verified": true
+    }
+   ],
+   "claim_id": "e99dc8c89bdc9ba4f67574a338cab572",
+   "clean_review_cycles": 0,
+   "created": 1791693520.140477,
+   "cycles_observed": 0,
+   "links": [
+    "1f9c5874247ba59bedf27ae82ddf2cdf",
+    "3c72e381368146fd2baa8a76c2cae678"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "El borrador circula con tres días de anticipación a los revisores;",
+   "type": "fact",
+   "updated": 1791693525.907836
+  },
+  {
+   "anchors": [
+    {
+     "end": 427,
+     "human_source": "self",
+     "source": "teach/procedures/procedimientos.md",
+     "source_hash": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+     "start": 369,
+     "verified": true
+    }
+   ],
+   "claim_id": "ebdd08e4c5d00a1479943772c5c570a2",
+   "clean_review_cycles": 0,
+   "created": 1791693512.70097,
+   "cycles_observed": 0,
+   "links": [
+    "0c8bc17e26f5d1f68e5310216bf462b8",
+    "20418f925e52c0f1272d97fb487c9108"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "sin conciliación firmada no se emiten cifras del trimestre",
+   "type": "fact",
+   "updated": 1791693525.907843
+  },
+  {
+   "anchors": [
+    {
+     "end": 647,
+     "human_source": "self",
+     "source": "teach/knowledge/conocimiento.md",
+     "source_hash": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+     "start": 604,
+     "verified": true
+    }
+   ],
+   "claim_id": "fdbc5c892e0728463c60a80b87815072",
+   "clean_review_cycles": 0,
+   "created": 1791693487.8609269,
+   "cycles_observed": 0,
+   "links": [
+    "24f1b9f816ab68712d9201f24b7a5c2e",
+    "bcd4c6a58447090792249aa459508a65"
+   ],
+   "maturity": "CONNECTED",
+   "positions": [],
+   "provenance": {
+    "epistemic_distance": 1,
+    "origin_capsule": null,
+    "transmission_path": "vertical"
+   },
+   "status": "active",
+   "text": "Fondo Páramo 8.1 millones (-0.4 por ciento)",
+   "type": "fact",
+   "updated": 1791693525.907849
+  }
+ ],
+ "cycle": 4,
+ "source_hashes": {
+  "teach/knowledge/actualizacion.md": "ace3b41fe33bb9e838b34977606a1af6966132fb1aa986fcfdc66bf91f04a510",
+  "teach/knowledge/conocimiento.md": "66539a00bbf5ea8c3f35cab29df26c1db7da85a9e7d9c6575b4fc7d6606028b0",
+  "teach/knowledge/memoria_anual.md": "a192eb27ba927eaf7ed38ef81f7d82540e7c72c209a185c15db814e6942a0756",
+  "teach/knowledge/nota_discrepante.md": "5d11998b6d6dfdec9909a3d83e9d9e7bb70c646a4ac0343349e51962bae1cc1a",
+  "teach/knowledge/revision_interna.md": "6f39327c1ce46336b20273d8c87ede03fbf4e3b4b7e5a8dde2f8239229d248cf",
+  "teach/procedures/procedimientos.md": "be311cf52301521ce534cfaed3992c8659b829329abcadc3a15869330bddb1c4",
+  "teach/style/estilo.md": "1861857457451bdc9a130222493484b1029e81f53b7eba19303fc248b9caa3e8"
+ },
+ "stale": [],
+ "v": "0.1"
+}

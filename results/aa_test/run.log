@@ -1,0 +1,45 @@
+AA1 (A2 de R13 repetido, T=0) ...
+  idénticas 0.5873; Δexactitud -0.0714
+AA2 digestión: 12/15 wikis idénticas
+AA3/AA4 (escrituras con semilla, dos repeticiones) ...
+  semilla OpenAI 0.800; nativa 1.000; Δhomogeneidad -0.0011 [-0.0067, 0.0047]
+{
+ "AA1": {
+  "n": 378,
+  "identical_rate": 0.5873,
+  "accuracy_old": 0.7646,
+  "accuracy_new": 0.6931,
+  "accuracy_delta": -0.0714,
+  "passed": false
+ },
+ "AA2": {
+  "wikis": 15,
+  "identical": 12,
+  "mean_jaccard": 0.9854,
+  "passed": false
+ },
+ "AA3": {
+  "openai": {
+   "n": 60,
+   "identical_rate": 0.8,
+   "seed_effective": false
+  },
+  "native": {
+   "n": 60,
+   "identical_rate": 1.0,
+   "seed_effective": true
+  }
+ },
+ "AA4": {
+  "topics": 20,
+  "homogeneity_rep1": 0.8801,
+  "homogeneity_rep2": 0.8812,
+  "mean_diff": -0.0011,
+  "ci95": [
+   -0.0067,
+   0.0047
+  ],
+  "passed": true
+ },
+ "R14_rerun_criterion_closed": false
+}

@@ -1,0 +1,83 @@
+{
+  "title": "Swarmbly LCE: Local Cognitive Extension — reference implementation, validation harness, specification and pre-registered runs (draft)",
+  "description": "<p>Swarmbly fragments the <em>problem</em>, not the model: workers are deliberately almost stateless and the client is the only unit that keeps memory. The <strong>Local Cognitive Extension (LCE)</strong> proposes what to do with that memory without deforming the protocol. Each user keeps, on their own device, a human-readable wiki whose claims are typed, versioned and anchored to spans of their own sources, and a lightweight adapter regenerated from the base model and the wiki with interleaved replay, trained only on behavioral patterns (voice, register, terminology, procedures) and never on facts. Personalization enters the protocol only through fields of the existing global contract &Gamma;; workers serving third parties use their base model, so verification is untouched. Nodes may optionally exchange small signed knowledge capsules on demand: descendants require new human evidence, prevalence is a label rather than an adoption criterion, and preserved capsules use a replica count derived from a churn tolerance.</p><p><strong>Derived from adverse evidence.</strong> The design follows from results on knowledge injection by fine-tuning, model collapse under replacement versus accumulation, conformity, and correlated errors across model families, and from population-genetic and cultural-evolution instruments (Wright's island model, the breeder's equation, conformist and frequency-dependent transmission), each accepted or discarded by the homology criterion of the Swarmbly whitepaper v2. Eight invariants (I1&ndash;I8), seventeen hypotheses (H-C1&ndash;H-C17) with pre-stated abandonment conditions, and declared limitations (twelve in v0.1, fourteen in v0.2) accompany the architecture.</p><p><strong>Status: draft with confirmatory results.</strong> Whitepaper v0.1 was published without results; the repository now carries whitepaper v0.2 with them. Every run is pre-registered (decision rules as code, amendments declared, deviations found in review declared in Amendment 15). Confirmatory run 2 of C1/C2 supports lexicon adherence, reduced cross-user homogeneity beyond a placebo and equivalence of cross-family error agreement under task projection, with qualifications. Local memory helps. In the pre-registered R13 confirmatory run (251 questions, including a LongMemEval subset) the anchored wiki loses to raw retrieval on accuracy (A3 &minus; A2 = &minus;0.146, 95 % CI [&minus;0.186, &minus;0.106]), the loss lying in digestion coverage; its accuracy justification is retired. Forgetting a source removes every claim anchored to it without collateral damage and returns behaviour to the never-ingested level (mechanism, 5 questions). Digestion is not reproducible run to run on the tested stack, so the reproducibility criterion stays open. The adapter (R11), C2-bis and H-C2 closure runs issue no verdict: the first was refused for a manipulation failure, the other two did not measure the pre-registered quantity. A test suite recomputes every cited figure from the stored raw outputs. Mock-backend and simulation outputs are never reported as evidence.</p><p><strong>This record is the software artifact</strong>: the reference implementation <code>swarmbly_lce</code> (Python 3.10+, numpy; optional Ed25519 and an experimental MLX LoRA trainer), the validation harness <code>lce_validation</code> (instrument tests, mock experiments, a real-model runner for Ollama or any OpenAI-compatible server), the documentation in English and Spanish, and the protocol-facing proposal (SWIP, revision 3). The whitepaper (version 0.1) is deposited separately as 10.5281/zenodo.23150478. <strong>Licensing:</strong> software and specification under AGPL-3.0-or-later; document text under CC BY 4.0.</p>",
+  "upload_type": "software",
+  "publication_date": "2026-10-04",
+  "version": "0.1.1",
+  "language": "eng",
+  "access_right": "open",
+  "license": "AGPL-3.0-or-later",
+  "creators": [
+    {
+      "name": "Espinoza-Ulloa, Sebastián A.",
+      "affiliation": "Independent Researcher",
+      "orcid": "0000-0003-1497-356X"
+    }
+  ],
+  "keywords": [
+    "local-first",
+    "personalization",
+    "small language models",
+    "SLM",
+    "continual learning",
+    "retrieval-augmented generation",
+    "LoRA",
+    "knowledge anchoring",
+    "model collapse",
+    "cultural evolution",
+    "population genetics",
+    "conformity",
+    "correlated errors",
+    "decentralized AI",
+    "peer-to-peer",
+    "volunteer computing",
+    "Swarmbly",
+    "pre-registration",
+    "falsification"
+  ],
+  "subjects": [
+    {
+      "term": "Computation and Language",
+      "identifier": "cs.CL",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Machine Learning",
+      "identifier": "cs.LG",
+      "scheme": "arxiv"
+    },
+    {
+      "term": "Distributed, Parallel, and Cluster Computing",
+      "identifier": "cs.DC",
+      "scheme": "arxiv"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.23150478",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.23031305",
+      "relation": "references",
+      "resource_type": "publication-preprint",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/Sebastardito/Swarmbly-AI",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/Sebastardito/SwarmblyLCE/tree/main/docs",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-technicalnote",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Defensive publication. This work is released publicly to establish dated, enabling prior art for elements EC1-EC11 of the whitepaper (Section 13). The author asserts no patent claims over the disclosed techniques. Whitepaper: 10.5281/zenodo.23150478. Draft, not peer reviewed; pre-registered confirmatory runs included, negative results reported. Extension of the Swarmbly protocol (whitepaper v2, 10.5281/zenodo.23031305), which it does not modify.",
+  "communities": []
+}

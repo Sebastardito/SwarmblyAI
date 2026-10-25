@@ -1,0 +1,411 @@
+{
+ "model": "qwen2.5:3b",
+ "utc": "2026-10-05T07:23:50Z",
+ "label": "EXPLORATORY DIAGNOSIS - not a confirmatory run, decides nothing",
+ "corpora": {
+  "corpus": {
+   "offsets": {
+    "claims": 12,
+    "verified": 4,
+    "rejected_support": 8,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Ayer hablé con el equipo sobre el cronograma del proyecto y acordamos revisar los datos la semana pasada.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Ayer hablé con el equipo sobre el cronograma del proyecto y"
+     },
+     {
+      "text": "cierra a las seis de la tarde los viernes",
+      "type": "fact",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "El laboratorio cierr"
+     },
+     {
+      "text": "El tamaño efectivo de población puede ser mucho menor que el tamaño censal cuando la proporción de sexos está sesgada.",
+      "type": "fact",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "El tamaño efectivo de población puede ser mucho menor que el tamaño c"
+     },
+     {
+      "text": "La regla de un migrante por generación corresponde a un F_ST cercano a 0.2 en el modelo de islas.",
+      "type": "fact",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "La regla de un migrante por generación corresponde a un F_ST cercano a 0.2 en el "
+     },
+     {
+      "text": "el café mejora la concentración en todos los casos.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "café mejora la co"
+     },
+     {
+      "text": "Primero filtro las variantes por calidad, luego calculo la heterocigosidad esperada y finalmente estimo F_ST por pares de poblaciones.",
+      "type": "procedure",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Primero filtro las variantes por calidad, luego calculo la heter"
+     },
+     {
+      "text": "Para revisar un manuscrito, primero leo las figuras, luego la discusión y al final los métodos.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Para revisar un manuscrito, primero leo las figuras, luego "
+     },
+     {
+      "text": "Cuando preparo un experimento, primero escribo el criterio de abandono y luego diseño las corridas.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Cuando preparo un experimento, primero escribo el criterio "
+     },
+     {
+      "text": "cierro con un agradecimiento breve",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "do y profesio"
+     },
+     {
+      "text": "Prefiero el término fragmentación semántica en lugar de división de prompts.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Prefiero el término fragmentación semánti"
+     },
+     {
+      "text": "Prefiero el término heterocigosidad esperada en lugar de diversidad génica.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Prefiero el término heterocigosidad esperada"
+     },
+     {
+      "text": "Suelo explicar un concepto nuevo con una analogía biológica antes de dar la definición formal.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Suelo explicar un concepto nuevo con una analogía biológica"
+     }
+    ]
+   },
+   "quote": {
+    "claims": 12,
+    "verified": 12,
+    "rejected_support": 0,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Ayer hablé con el equipo sobre el cronograma del proyecto y acordamos revisar los datos la semana pasada.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Ayer hablé con el equipo sobre el cronograma del proyecto y acordamos revisar los datos la semana pasada."
+     },
+     {
+      "text": "El laboratorio cierra a las seis de la tarde los viernes.",
+      "type": "fact",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "El laboratorio cierra a las seis de la tarde los viernes."
+     },
+     {
+      "text": "El tamaño efectivo de población puede ser mucho menor que el tamaño censal cuando la proporción de sexos está sesgada.",
+      "type": "fact",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "El tamaño efectivo de población puede ser mucho menor que el tamaño censal cuando la proporción de sexos está sesgada."
+     },
+     {
+      "text": "La regla de un migrante por generación corresponde a un F_ST cercano a 0.2 en el modelo de islas.",
+      "type": "fact",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "La regla de un migrante por generación corresponde a un F_ST cercano a 0.2 en el modelo de islas."
+     },
+     {
+      "text": "Creo que el café mejora la concentración en todos los casos.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Creo que el café mejora la concentración en todos los casos."
+     },
+     {
+      "text": "Primero filtro las variantes por calidad, luego calculo la heterocigosidad esperada y finalmente estimo F_ST por pares de poblaciones.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Primero filtro las variantes por calidad, luego calculo la heterocigosidad esperada y finalmente estimo F_ST por pares de poblaciones."
+     },
+     {
+      "text": "Para revisar un manuscrito, primero leo las figuras, luego la discusión y al final los métodos.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Para revisar un manuscrito, primero leo las figuras, luego la discusión y al final los métodos."
+     },
+     {
+      "text": "Cuando preparo un experimento, primero escribo el criterio de abandono y luego diseño las corridas.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Cuando preparo un experimento, primero escribo el criterio de abandono y luego diseño las corridas."
+     },
+     {
+      "text": "cierro con un agradecimiento breve",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "cierro con un agradecimiento breve"
+     },
+     {
+      "text": "Prefiero el término fragmentación semántica en lugar de división de prompts.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Prefiero el término fragmentación semántica en lugar de división de prompts."
+     },
+     {
+      "text": "Prefiero el término heterocigosidad esperada en lugar de diversidad génica.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Prefiero el término heterocigosidad esperada en lugar de diversidad génica."
+     },
+     {
+      "text": "Suelo explicar un concepto nuevo con una analogía biológica antes de dar la definición formal.",
+      "type": "procedure",
+      "anchored": true,
+      "maturity": "CONSOLIDATED",
+      "span": "Suelo explicar un concepto nuevo con una analogía biológica antes de dar la definición formal."
+     }
+    ]
+   }
+  },
+  "u1": {
+   "offsets": {
+    "claims": 2,
+    "verified": 0,
+    "rejected_support": 2,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro técnico y conciso.",
+      "type": "style",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Escribo en un registr"
+     },
+     {
+      "text": "Prefiero el término inferencia descentralizada en lugar de computación distribuida.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Prefiero el término inferencia descentralizada en"
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    }
+   },
+   "quote": {
+    "claims": 2,
+    "verified": 2,
+    "rejected_support": 0,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro técnico y conciso.",
+      "type": "style",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Escribo en un registro técnico y conciso."
+     },
+     {
+      "text": "Prefiero el término inferencia descentralizada en lugar de computación distribuida.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Prefiero el término inferencia descentralizada en lugar de computación distribuida."
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {
+      "register": "técnico y conciso"
+     },
+     "bytes": 34,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {
+      "register": "técnico y conciso"
+     },
+     "bytes": 34,
+     "lane": "PUBLIC"
+    }
+   }
+  },
+  "u2": {
+   "offsets": {
+    "claims": 2,
+    "verified": 0,
+    "rejected_support": 2,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro divulgativo y cercano.",
+      "type": "style",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Escribo en un registr"
+     },
+     {
+      "text": "Prefiero el término modelo pequeño en lugar de SLM.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Prefiero el término modelo pequ"
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    }
+   },
+   "quote": {
+    "claims": 2,
+    "verified": 2,
+    "rejected_support": 0,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro divulgativo y cercano.",
+      "type": "style",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Escribo en un registro divulgativo y cercano."
+     },
+     {
+      "text": "Prefiero el término modelo pequeño en lugar de SLM.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Prefiero el término modelo pequeño en lugar de SLM."
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {
+      "register": "divulgativo y cercano"
+     },
+     "bytes": 37,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {
+      "register": "divulgativo y cercano"
+     },
+     "bytes": 37,
+     "lane": "PUBLIC"
+    }
+   }
+  },
+  "u3": {
+   "offsets": {
+    "claims": 2,
+    "verified": 0,
+    "rejected_support": 2,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro académico y formal.",
+      "type": "style",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Escribo en un registro "
+     },
+     {
+      "text": "Prefiero el término evolución cultural en lugar de aprendizaje social.",
+      "type": "user_claim",
+      "anchored": false,
+      "maturity": "DIGESTED",
+      "span": "Prefiero el término evolución cultural en"
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {},
+     "bytes": 2,
+     "lane": "PUBLIC"
+    }
+   },
+   "quote": {
+    "claims": 2,
+    "verified": 2,
+    "rejected_support": 0,
+    "malformed": 0,
+    "quote_not_found": 0,
+    "claims_detail": [
+     {
+      "text": "Escribo en un registro académico y formal.",
+      "type": "style",
+      "anchored": true,
+      "maturity": "TRAINABLE",
+      "span": "Escribo en un registro académico y formal."
+     },
+     {
+      "text": "Prefiero el término evolución cultural en lugar de aprendizaje social.",
+      "type": "user_claim",
+      "anchored": true,
+      "maturity": "CONNECTED",
+      "span": "Prefiero el término evolución cultural en lugar de aprendizaje social."
+     }
+    ],
+    "projection_claim_text": {
+     "gamma": {
+      "register": "académico y formal"
+     },
+     "bytes": 35,
+     "lane": "PUBLIC"
+    },
+    "projection_span_text": {
+     "gamma": {
+      "register": "académico y formal"
+     },
+     "bytes": 35,
+     "lane": "PUBLIC"
+    }
+   }
+  }
+ }
+}

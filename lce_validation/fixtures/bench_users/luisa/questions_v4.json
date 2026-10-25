@@ -1,0 +1,192 @@
+{
+  "questions": [
+    {
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa frente a chaqueta?",
+      "type": "simple",
+      "gold": [
+        "89"
+      ]
+    },
+    {
+      "q": "¿Qué porcentaje de hablantes asocia chompa y guagua con el registro familiar?",
+      "type": "simple",
+      "gold": [
+        "54"
+      ]
+    },
+    {
+      "q": "¿Cómo repartía el borrador los minutos de la sesión?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuánto pesaba el examen final según el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántas horas de grabaciones tenía el corpus propio según el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántos niveles fijaba el borrador para la rúbrica?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántas ocurrencias de chompa reportaba el borrador?",
+      "type": "deleted",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuánto pesa el examen final vigente y cuánto pesaba antes?",
+      "type": "updated",
+      "gold": [
+        "35",
+        "40"
+      ]
+    },
+    {
+      "q": "¿Cuántas horas de grabaciones tiene el corpus propio vigente y cuántas antes?",
+      "type": "updated",
+      "gold": [
+        "175",
+        "160"
+      ]
+    },
+    {
+      "q": "¿Cuántos niveles tiene la rúbrica vigente y cuántos antes?",
+      "type": "updated",
+      "gold": [
+        "cinco",
+        "cuatro"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cómo repartes los minutos de la sesión y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "20",
+        "15"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "20",
+        "15"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuánto pesa el examen final y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "35",
+        "45"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "35",
+        "45"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántas horas de grabaciones tiene el corpus propio y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "175",
+        "130"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "175",
+        "130"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿en qué porcentaje de menores de 30 aparece la asibilación y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "71",
+        "62"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "71",
+        "62"
+      ]
+    },
+    {
+      "q": "Según tus fuentes, ¿cuántos niveles tiene la rúbrica y hay fuentes que discrepan?",
+      "type": "contradiction",
+      "gold": [
+        "cinco",
+        "tres"
+      ],
+      "contradict": true,
+      "contradiction_pair": [
+        "cinco",
+        "tres"
+      ]
+    },
+    {
+      "q": "¿Cuánto pesan el examen final y las tareas en tu curso y en cuántas horas de grabaciones se apoya tu corpus?",
+      "type": "cross",
+      "gold": [
+        "35",
+        "40",
+        "175"
+      ]
+    },
+    {
+      "q": "¿En cuántas ocurrencias del corpus aparece chompa y qué porcentaje de menores de 30 muestra asibilación?",
+      "type": "cross",
+      "gold": [
+        "89",
+        "71"
+      ]
+    },
+    {
+      "q": "¿Qué haces si más de un tercio del curso reprueba una tarea y cuántos criterios tiene tu rúbrica?",
+      "type": "cross",
+      "gold": [
+        "re-enseña",
+        "tres"
+      ]
+    },
+    {
+      "q": "¿Cuántos estudiantes se inscribieron al curso de fonética avanzada?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué software de anotación usas para el corpus?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuál fue la nota media del examen del año pasado?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Qué universidad auspicia el proyecto del corpus?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    },
+    {
+      "q": "¿Cuántas horas de tutoría ofreces por semana?",
+      "type": "unanswerable",
+      "gold": [],
+      "abstain": true
+    }
+  ]
+}

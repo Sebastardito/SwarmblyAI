@@ -1,0 +1,14 @@
+{
+  "learning_policy": {
+    "v": "0.1",
+    "defaults": {
+      "reference_only": true
+    },
+    "sources": {
+      "teach/conversations": {
+        "authored_by_user": true,
+        "wiki": true
+      }
+    }
+  }
+}
