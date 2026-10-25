@@ -577,7 +577,7 @@
   },
   "evidence__local_answers": {
    "label": "Also in answers made on this device",
-   "help": "When the answer is generated on this device (with your local sources), the app may look up to three names on Wikipedia: species, places or programmes your question names, or scientific names found in your sources. Only those names are sent (they are listed in \"Explore processing\"), never your question or your documents. The answer tells your sources [1] apart from public evidence [W1] and gives both when they differ. Requires public evidence to be on."
+   "help": "When the answer is generated on this device (with your local sources), the app may look up to three names in public sources (Wikidata, Wikipedia, PubMed and, if installed, SearXNG): species, places or programmes your question names, or scientific names found in your sources. Only those names are sent (they are listed in \"Explore processing\"), never your question or your documents. The answer tells your sources [1] apart from public evidence [W1] and gives both when they differ. Requires public evidence to be on."
   },
   "evidence__local_max_entities": {
    "label": "Names looked up per local answer",

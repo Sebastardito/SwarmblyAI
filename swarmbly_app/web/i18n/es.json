@@ -577,7 +577,7 @@
   },
   "evidence__local_answers": {
    "label": "También en respuestas de este equipo",
-   "help": "Cuando la respuesta se genera en este equipo (con tus fuentes locales), la app puede consultar Wikipedia sobre hasta tres nombres: especies, lugares o programas que nombra tu pregunta, o nombres científicos que aparecen en tus fuentes. Solo se envían esos nombres (se listan en «Explorar procesamiento»), nunca tu pregunta ni tus documentos. La respuesta distingue tus fuentes [1] de la evidencia pública [W1] y, si difieren, da ambas. Requiere activar la evidencia pública."
+   "help": "Cuando la respuesta se genera en este equipo (con tus fuentes locales), la app puede consultar fuentes públicas (Wikidata, Wikipedia, PubMed y, si está instalado, SearXNG) sobre hasta tres nombres: especies, lugares o programas que nombra tu pregunta, o nombres científicos que aparecen en tus fuentes. Solo se envían esos nombres (se listan en «Explorar procesamiento»), nunca tu pregunta ni tus documentos. La respuesta distingue tus fuentes [1] de la evidencia pública [W1] y, si difieren, da ambas. Requiere activar la evidencia pública."
   },
   "evidence__local_max_entities": {
    "label": "Nombres consultados por respuesta local",

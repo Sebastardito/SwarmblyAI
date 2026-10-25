@@ -16,13 +16,20 @@ your network without typing an address. Then open any answer and see exactly
 how it was made: which parts were shared, with whom, how replicas agreed, and
 what was measured versus estimated.
 
+> **Part of [Swarmbly AI](https://github.com/Sebastardito/SwarmblyAI)**, the integrated distribution: one installer sets up all three components.\
+> ⬡ [SwarmblyCore](https://github.com/Sebastardito/SwarmblyAI/tree/main/SwarmblyCore) · ◈ [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) · ▣ **SwarmblyApp** (this repository)
+
 *Lea este documento en [español](#español).*
 
-![Chat with the request pipeline drawn as a DNA strand](docs/img/chat.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/chat_dark.png">
+  <img alt="Chat: a batch sent to the LAN swarm, the answer with its swarm tags, and the request pipeline drawn as a DNA strand on the right" src="docs/img/chat_light.png">
+</picture>
+<sub>Preview mode with a simulated swarm; the answers are placeholders.</sub>
 
-> **Status: v0.2 alpha.** Local chat, guided setup and LAN swarms work and are
-> tested. Internet swarms and the full Local Cognitive Extension are later
-> phases. Nothing here claims performance it has not measured — see
+> **Status: v0.3 alpha.** Local chat, guided setup, LAN swarms, public evidence
+> and the local memory over your own documents (LCE C1) work and are tested.
+> Internet swarms and LCE levels C2–C4 are later phases. Nothing here claims performance it has not measured — see
 > [Known limitations](docs/LIMITATIONS.md).
 
 ---
@@ -36,6 +43,11 @@ cd SwarmblyApp
 ```
 
 On macOS you can also double-click **`Swarmbly.command`** in Finder.
+
+To install the app together with Ollama, models for your computer, PDF
+reading and local web search in one guided step, use the
+[Swarmbly AI installer](https://github.com/Sebastardito/SwarmblyAI#install)
+(quick or custom install, macOS, Linux and Windows).
 
 The launcher checks everything, asks before changing anything, and starts the
 app in your browser at `http://127.0.0.1:8765`:
@@ -186,12 +198,12 @@ depends on it.
 
 | Project | Role | |
 |---|---|---|
-| [SwarmblyAI](https://github.com/Sebastardito/SwarmblyAI) | Protocol specification and reference implementation | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
+| [SwarmblyAI](https://github.com/Sebastardito/SwarmblyAI) | Integrated distribution and installer; contains SwarmblyCore (protocol specification, reference implementation, harness, benchmark) | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
 | [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | Local Cognitive Extension: personal memory that stays on your device | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
 | **SwarmblyApp** | Desktop client, network layer, local interface, observability | this repository |
 
 The app installs SwarmblyAI and SwarmblyLCE as packages pinned to audited
-commits (`51eb44e`, `fd8d97d`) and never copies their code. Protocol
+commits (`51eb44e`, `b659ac4`) and never copies their code. Protocol
 whitepaper: [10.5281/zenodo.21957088](https://doi.org/10.5281/zenodo.21957088)
 (v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305)) — a
 preprint, not peer-reviewed.
@@ -238,15 +250,18 @@ Copyright © 2026 Sebastián A. Espinoza-Ulloa.
 descentralizada de modelos de lenguaje que fragmenta el *problema*, no el
 *modelo*.**
 
+> **Forma parte de [Swarmbly AI](https://github.com/Sebastardito/SwarmblyAI)**, la distribución integrada: un solo instalador prepara los tres componentes.\
+> ⬡ [SwarmblyCore](https://github.com/Sebastardito/SwarmblyAI/tree/main/SwarmblyCore) · ◈ [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) · ▣ **SwarmblyApp** (este repositorio)
+
 Conversa con los modelos de tu propia computadora, únete a otras
 computadoras Swarmbly de tu red sin escribir direcciones y abre cualquier
 respuesta para ver cómo se hizo: qué partes se compartieron, con quién, cómo
 coincidieron las réplicas y qué se midió frente a lo que se estimó.
 
-> **Estado: v0.2 alfa.** El chat local, la configuración guiada y los
-> enjambres en red local funcionan y están probados. Los enjambres por
-> internet y la Extensión Cognitiva Local completa llegan en fases
-> posteriores.
+> **Estado: v0.3 alfa.** El chat local, la configuración guiada, los
+> enjambres en red local, la evidencia pública y la memoria local sobre tus
+> propios documentos (LCE C1) funcionan y están probados. Los enjambres por
+> internet y los niveles C2–C4 de la LCE llegan en fases posteriores.
 
 ### Arranque con un comando
 
@@ -263,6 +278,11 @@ solo dentro de `.venv`, nunca instala Ollama por ti y abre la app en
 `http://127.0.0.1:8765`. Opciones: `--check` (solo informar), `--headless`
 (sin ventana, para equipos que prestan cómputo), `--yes` (sin preguntas),
 `--port`.
+
+Para instalar la app junto con Ollama, modelos para tu equipo, lectura de PDF
+y búsqueda web local en un solo paso guiado, usa el
+[instalador de Swarmbly AI](https://github.com/Sebastardito/SwarmblyAI#instalación)
+(instalación rápida o personalizada; macOS, Linux y Windows).
 
 La primera vez, un asistente mide tu equipo y propone una configuración
 explicando cada valor (reversible), y pregunta si Swarmbly puede buscar otros

@@ -267,8 +267,8 @@ def lce_levels(hardware: dict[str, Any], budget: dict[str, Any],
         {"level": "C1", "adds": "sources, retrieval over sources, wiki for provenance, "
                                 "projection onto Γ, local reports",
          "requires": "CPU; storage in the order of GB",
-         "compatible": free_gb >= 2, "status": "implemented upstream; app integration "
-                                               "in progress",
+         "compatible": free_gb >= 2, "status": "integrated in the app; evaluated on a "
+                                               "development set (one person)",
          "privacy": "sources and wiki stay on this device; only a ≤1 KB projection "
                     "joins Γ, after double classification"},
         {"level": "C2", "adds": "automatic digestion of sources into claims",
