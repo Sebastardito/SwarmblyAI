@@ -7,7 +7,10 @@
 [![tests](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml/badge.svg)](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
-**A local-first extension for [Swarmbly](https://github.com/Sebastardito/Swarmbly-AI): personal memory, a model that learns its user's voice, and light knowledge exchange between nodes — without deforming the protocol.**
+**A local-first extension for [Swarmbly](https://github.com/Sebastardito/SwarmblyAI): personal memory, a model that learns its user's voice, and light knowledge exchange between nodes — without deforming the protocol.**
+
+> **Part of [Swarmbly AI](https://github.com/Sebastardito/SwarmblyAI)**, the integrated distribution: one installer sets up all three components.\
+> ⬡ [SwarmblyCore](https://github.com/Sebastardito/SwarmblyAI/tree/main/SwarmblyCore) · ◈ **SwarmblyLCE** (this repository) · ▣ [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp), which uses level C1 (retrieval over your own documents)
 
 **[English](#english)** · **[Español](#español)**
 
@@ -289,7 +292,10 @@ Code: AGPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Texts: CC BY
 
 ## Español
 
-**Una extensión local-first para [Swarmbly](https://github.com/Sebastardito/Swarmbly-AI): memoria personal, un modelo que aprende la voz de su usuario e intercambio ligero de conocimiento entre nodos, sin deformar el protocolo.**
+**Una extensión local-first para [Swarmbly](https://github.com/Sebastardito/SwarmblyAI): memoria personal, un modelo que aprende la voz de su usuario e intercambio ligero de conocimiento entre nodos, sin deformar el protocolo.**
+
+> **Forma parte de [Swarmbly AI](https://github.com/Sebastardito/SwarmblyAI)**, la distribución integrada: un solo instalador prepara los tres componentes.\
+> ⬡ [SwarmblyCore](https://github.com/Sebastardito/SwarmblyAI/tree/main/SwarmblyCore) · ◈ **SwarmblyLCE** (este repositorio) · ▣ [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp), que usa el nivel C1 (recuperación sobre tus propios documentos)
 
 > **Estado: borrador con resultados confirmatorios; no revisado por pares.** Cada corrida se preregistra antes de hacerse. La memoria local ayuda (F1a: +0.500 [0.420, 0.578]). La wiki anclada, en cambio, **pierde** frente a una recuperación simple sobre los documentos del propio usuario (R13 confirmatoria: A3 − A2 = −0.146 [−0.186, −0.106]), así que se conserva como capa de gobierno y no como memoria de respuesta. Olvidar una fuente funciona como mecanismo. Tres corridas no emitieron veredicto, y las razones están documentadas. Detalle en el [whitepaper v0.2](docs/WHITEPAPER_LCE_v0.2_ES.md). Las figuras tienen el texto en inglés; sus cifras son las mismas.
 
