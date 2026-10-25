@@ -18,8 +18,8 @@
       "version": "0.2.0.dev0",
       "repository": "https://github.com/Sebastardito/SwarmblyLCE",
       "ref": "main",
-      "commit": "b659ac4d77b42d186609799f925520837db94bb3",
-      "tree": "678f91c0d854396509d780f34d89901a10b901ca",
+      "commit": "fb90d77429b617d542424340f3e6f8bd0f88225c",
+      "tree": "a3f8ab2e83d927391a5df9864df6d38e5164c358",
       "doi": "10.5281/zenodo.23289041"
     },
     "SwarmblyApp": {
