@@ -5,6 +5,7 @@
 [![Whitepaper DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23150478.svg)](https://doi.org/10.5281/zenodo.23150478)
 [![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23289041.svg)](https://doi.org/10.5281/zenodo.23289041)
 [![tests](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml/badge.svg)](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
 **A local-first extension for [Swarmbly](https://github.com/Sebastardito/Swarmbly-AI): personal memory, a model that learns its user's voice, and light knowledge exchange between nodes — without deforming the protocol.**
 
@@ -28,7 +29,8 @@
 8. [Repository map](#repository-map)
 9. [Getting started](#getting-started)
 10. [Next steps](#next-steps)
-11. [Citation and licence](#citation-and-licence)
+11. [Support the project](#support-the-project)
+12. [Citation and licence](#citation-and-licence)
 
 ### The idea in one minute
 
@@ -269,6 +271,10 @@ Real-model runs: `python -m lce_validation.run_real --models qwen2.5:3b,llama3.2
 | 5 | Re-run C2-bis across users | whether the H-C17a qualification closes |
 | 6 | Verify the canary set with native speakers | enables the social-plane experiments |
 
+### Support the project
+
+Swarmbly is developed independently, with no institutional funding, as an AGPL-licensed digital public good. If you find it useful or want it to exist, you can support its early development at **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. Support never buys influence over the roadmap, the licence or the governance (see [`GOVERNANCE.md`](https://github.com/Sebastardito/SwarmblyAI/blob/main/GOVERNANCE.md)).
+
 ### Citation and licence
 
 **Whitepaper:** Espinoza-Ulloa, S. A. (2026). *Local cognition and anchored transmission: A local-first cognitive extension for Swarmbly* (Version 0.1, draft). Zenodo. https://doi.org/10.5281/zenodo.23150478
@@ -299,7 +305,8 @@ Code: AGPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Texts: CC BY
 8. [Mapa del repositorio](#mapa-del-repositorio)
 9. [Primeros pasos](#primeros-pasos)
 10. [Próximos pasos](#próximos-pasos)
-11. [Cita y licencia](#cita-y-licencia)
+11. [Apoya el proyecto](#apoya-el-proyecto)
+12. [Cita y licencia](#cita-y-licencia)
 
 ### La idea en un minuto
 
@@ -539,6 +546,10 @@ Corridas con modelos reales: `python -m lce_validation.run_real --models qwen2.5
 | 4 | Digestión extractiva (copiar frases en vez de parafrasear) | si se cierra la brecha de cobertura |
 | 5 | Re-correr C2-bis entre usuarios | si se cierra el matiz de H-C17a |
 | 6 | Verificar el conjunto canario con hablantes nativos | habilita los experimentos del plano social |
+
+### Apoya el proyecto
+
+Swarmbly se desarrolla de forma independiente, sin financiación institucional, como un bien público digital con licencia AGPL. Si te resulta útil o quieres que exista, puedes apoyar su desarrollo en estas primeras etapas en **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. El apoyo nunca compra influencia sobre la hoja de ruta, la licencia ni la gobernanza (ver [`GOVERNANCE.md`](https://github.com/Sebastardito/SwarmblyAI/blob/main/GOVERNANCE.md)).
 
 ### Cita y licencia
 
