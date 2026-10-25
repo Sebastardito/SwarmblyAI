@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+# The software DOI below is the record of release v0.2.0, minted by the Zenodo
+# GitHub integration. The concept DOI (all versions, resolves to the latest)
+# is 10.5281/zenodo.23322638. A new release mints a new version DOI, which
+# replaces the one below after that release.
+message: "If you use Swarmbly App in your research or infrastructure, please cite it with the DOI below, and the integrated projects."
+title: "Swarmbly App: desktop client and network dashboard for decentralized problem-fragmenting inference"
+type: software
+authors:
+  - family-names: Espinoza-Ulloa
+    given-names: "Sebastián A."
+    email: sebas_saeu@hotmail.com
+    orcid: "https://orcid.org/0000-0003-1497-356X"
+version: 0.2.0
+date-released: "2026-10-12"
+license: AGPL-3.0-or-later
+doi: "10.5281/zenodo.23322639"   # software record v0.2.0 (Zenodo, GitHub integration)
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23322639"
+    description: "Version 0.2.0"
+  - type: doi
+    value: "10.5281/zenodo.23322638"
+    description: "All versions (concept DOI, resolves to the latest)"
+keywords:
+  - decentralized-ai
+  - distributed-inference
+  - peer-to-peer
+  - local-first
+  - small-language-models
+repository-code: "https://github.com/Sebastardito/SwarmblyApp"
+references:
+  - type: software
+    title: "Swarmbly AI: decentralized inference protocol (reference implementation)"
+    authors:
+      - family-names: Espinoza-Ulloa
+        given-names: "Sebastián A."
+    repository-code: "https://github.com/Sebastardito/SwarmblyAI"
+    doi: 10.5281/zenodo.21956743
+    license: AGPL-3.0-or-later
+  - type: software
+    title: "Swarmbly LCE: local cognitive extension (reference implementation and validation harness)"
+    authors:
+      - family-names: Espinoza-Ulloa
+        given-names: "Sebastián A."
+    repository-code: "https://github.com/Sebastardito/SwarmblyLCE"
+    doi: 10.5281/zenodo.23289041
+    license: AGPL-3.0-or-later

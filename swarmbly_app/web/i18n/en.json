@@ -1,0 +1,798 @@
+{
+ "nav": {
+  "chat": "Chat",
+  "swarm": "Swarm",
+  "memory": "Memory",
+  "settings": "Settings",
+  "skip": "Skip to content"
+ },
+ "common": {
+  "yes": "yes",
+  "no": "no",
+  "on": "on",
+  "off": "off",
+  "cancel": "Cancel",
+  "close": "Close"
+ },
+ "time": {
+  "seconds": "{n} s ago",
+  "minutes": "{n} min ago",
+  "hours": "{n} h ago"
+ },
+ "nature": {
+  "measured": "measured",
+  "estimated": "estimated",
+  "unknown": "unknown"
+ },
+ "mode": {
+  "local": "Local",
+  "lan": "Swarm LAN",
+  "auto": "Automatic",
+  "internet": "Swarm Internet (Phase 3)"
+ },
+ "status": {
+  "pending": "pending",
+  "running": "running",
+  "completed": "completed",
+  "partial": "partial",
+  "skipped": "skipped",
+  "failed": "failed"
+ },
+ "stage": {
+  "request_received": "Request received",
+  "privacy_classification": "Privacy classification",
+  "routing_decomposability": "Routing and decomposability",
+  "task_planning": "Task planning",
+  "packet_generation": "Packet generation",
+  "node_selection": "Node selection",
+  "dispatching": "Dispatching",
+  "model_execution": "Model execution",
+  "result_reception": "Result reception",
+  "verification": "Verification",
+  "consensus_alignment": "Consensus and alignment",
+  "assembly": "Assembly",
+  "coherence_report": "Coherence report",
+  "final_response": "Final response"
+ },
+ "field": {
+  "tier": "tier",
+  "lane": "lane",
+  "decomposable": "decomposable",
+  "path": "path",
+  "n_tasks": "tasks",
+  "n_levels": "levels",
+  "n_packets": "packets",
+  "rho_achieved": "ρ",
+  "privacy_check": "privacy check",
+  "workers": "workers",
+  "families": "families",
+  "k_min": "min responses",
+  "k_max": "max responses",
+  "attempts": "attempts",
+  "hedges": "hedges",
+  "retries": "retries",
+  "accepted": "accepted",
+  "failed": "failed",
+  "timeouts": "timeouts",
+  "signatures_checked": "signatures checked",
+  "signature_failures": "signature failures",
+  "layer1_commitment": "layer-1 commitment",
+  "mean_agreement": "mean agreement",
+  "tasks": "tasks",
+  "n_seams": "seams",
+  "bridges": "bridges",
+  "seam_policy": "seam policy",
+  "entity_grid": "entity grid",
+  "mean_seam_similarity": "seam similarity",
+  "total_ms": "total ms",
+  "group": {
+   "worker": "Sharing this computer (worker)",
+   "evidence": "Public evidence"
+  }
+ },
+ "node": {
+  "id": "Node identity",
+  "mode": "Default mode",
+  "privacy": "Privacy",
+  "lan": "Local network",
+  "peers": "Peers",
+  "workers": "workers",
+  "worker": "Worker",
+  "paused": "paused",
+  "peersValue": "{c} connected, {w} sharing"
+ },
+ "activity": {
+  "title": "Current request",
+  "hide": "Hide",
+  "show": "Pipeline",
+  "empty": "Send a message to watch it travel through the pipeline.",
+  "localAnswer": "answered by the local model"
+ },
+ "chat": {
+  "conversations": "Conversations",
+  "new": "New conversation",
+  "export": "Export",
+  "delete": "Delete",
+  "placeholder": "Ask something. Lists and itemised tasks can be shared with the swarm.",
+  "attach": "Attach text",
+  "attachHint": "Text files up to 200 KB, read on this computer",
+  "attachTooBig": "{name} is larger than 200 KB",
+  "removeAttachment": "Remove attachment",
+  "mode": "Mode",
+  "model": "Model",
+  "send": "Send",
+  "stop": "Stop",
+  "noModel": "no model installed",
+  "noConversations": "No conversations yet",
+  "untitled": "Untitled",
+  "welcomeTitle": "Start a conversation",
+  "welcome": "Your messages are answered by the models on this computer. With the swarm enabled, itemised requests are split into micro-tasks and shared with other Swarmbly computers.",
+  "welcomeHint": "Try: Extract one key fact per item from the following list of five items: apples, bridges, comets, drums, electrons. List 5 bullet points, one per item, separately.",
+  "deleteTitle": "Delete this conversation?",
+  "deleteBody": "It is removed from this computer. Exports you saved are not affected.",
+  "exportTitle": "Export conversation",
+  "exportBody": "Choose a format. The file stays on this computer.",
+  "explore": "Explore processing",
+  "retry": "Retry",
+  "stopped": "stopped",
+  "tokens": "{n} tokens",
+  "fragments": "{n} fragments",
+  "agreement": "agreement {v}",
+  "agreementTitle": "Agreement between replicas is convergence, not correctness.",
+  "execLocal": "local model",
+  "execDistributed": "swarm",
+  "execLocalPool": "local models",
+  "hint": {
+   "local": "Local: answered on this computer only.",
+   "localMulti": "Local with several models: itemised requests are spread across your local models; nothing leaves this computer.",
+   "lan": "Swarm LAN: itemised requests may be shared with authenticated computers on this network. Everything else is answered locally.",
+   "auto": "Automatic: Swarmbly shares a request only when it splits cleanly and workers are available.",
+   "internet": "Internet swarms arrive in Phase 3.",
+   "tierLocal": "Your privacy tier is LOCAL, so nothing will be sent. Change it in Settings → Privacy to use the swarm."
+  },
+  "replicas": "{n} replicas",
+  "evidenceChip": "Public sources · {n}",
+  "evidenceTitle": "Public context from Wikipedia was added to {n} items; only those items' texts were sent.",
+  "lceChip": "Local sources · {n}",
+  "lceTitle": "The answer used passages from your sources (LCE C1); they did not leave this device."
+ },
+ "explore": {
+  "title": "How this answer was made",
+  "executed": "Executed",
+  "tier": "Privacy tier",
+  "lane": "Content lane",
+  "tasks": "Micro-tasks",
+  "rho": "Context ratio ρ",
+  "total": "Total time",
+  "coverage": "Effective coverage",
+  "embedder": "Similarity",
+  "exec": {
+   "local": "local model",
+   "distributed": "distributed"
+  },
+  "pipeline": "Pipeline",
+  "attempts": "Dispatch attempts",
+  "consensus": "Consensus between replicas",
+  "seams": "Seams",
+  "similarity": "similarity",
+  "caveats": "Read with care",
+  "path": {
+   "splice": "spliced",
+   "bridge": "bridged"
+  },
+  "caveat": {
+   "verification": "Signatures were verified; layer-1 commitments do not exist yet in the protocol and were not simulated.",
+   "agreement": "Agreement between models is convergence, not truth: models of different families share errors.",
+   "thresholds": "Seam and agreement thresholds are placeholders until calibrated."
+  },
+  "download": {
+   "markdown": "Report (Markdown)",
+   "json": "Report (JSON)",
+   "html": "Report (HTML)"
+  },
+  "save": "Save report to output folder",
+  "saved": "Saved to {path}",
+  "col": {
+   "task": "Task",
+   "attempt": "#",
+   "reason": "Why",
+   "node": "Node",
+   "family": "Family",
+   "status": "Status",
+   "time": "Time",
+   "code": "Code"
+  },
+  "reason": {
+   "initial": "initial",
+   "hedge": "hedge",
+   "retry": "retry"
+  },
+  "attempt": {
+   "accepted": "accepted",
+   "failed": "failed",
+   "cancelled_slow": "cancelled (slow)",
+   "dispatched": "in flight"
+  },
+  "meanAgreement": "mean",
+  "agreementNote": "Each unit shows how much the replicas agreed. HIGH means they converged; it does not mean the content is correct.",
+  "label": {
+   "HIGH": "high",
+   "MEDIUM": "medium",
+   "LOW": "low"
+  },
+  "sources": "Sources",
+  "evidenceNote": "Public context (Wikidata, Wikipedia CC BY-SA 4.0, PubMed…) added. Only these names were sent:",
+  "evidenceErrors": "Failed lookups:",
+  "evidenceSkipped": "Public evidence not applied:",
+  "lceNote": "Passages from your sources used in this answer (they did not leave this device):"
+ },
+ "monitor": {
+  "title": "Swarm",
+  "lede": "Computers running Swarmbly on your network. A node counts as authenticated once its identity is proven; announcements are not trusted until then.",
+  "health": "Health",
+  "graph": "Map",
+  "graphLabel": "Map of this node and its peers",
+  "graphEmpty": "No peers yet. Turn on the local network or connect by address.",
+  "peers": "Peers",
+  "discovery": "Discovery cache",
+  "discoveryNote": "Each entry records when it was first seen, when an mDNS answer last confirmed it, and when it expires. Entries only refresh when a real answer arrives.",
+  "contribution": "Your contribution",
+  "contributionNote": "Work this computer did for others. Your own requests are not counted here.",
+  "lan": "Local network",
+  "lanRefused": "You refused local network access. Change it in Settings → Permissions.",
+  "workerToggle": "Share this computer",
+  "pause": "Pause sharing",
+  "resume": "Resume sharing",
+  "search": "Search now",
+  "searchOff": "Turn on the local network first",
+  "searchDone": "Search done: {n} answer(s)",
+  "connect": "Connect by address",
+  "connectTitle": "Connect to a computer",
+  "connectBody": "Use this when your network blocks discovery. The other computer must run Swarmbly; its identity is verified before anything is exchanged.",
+  "host": "Address",
+  "port": "Port",
+  "connecting": "Connecting…",
+  "discovered": "Discovered",
+  "connected": "Connected",
+  "authenticated": "Authenticated",
+  "workersAvailable": "Workers free",
+  "workersBusy": "Workers busy",
+  "unreachable": "Unreachable",
+  "families": "Model families",
+  "latency": "Latency",
+  "uptime": "Uptime",
+  "distributedRequests": "Shared requests (30 days)",
+  "dispatched": "Micro-tasks sent",
+  "dispatchFailed": "Micro-tasks failed",
+  "listening": "Listening",
+  "diversityCaveat": "More families reduce correlated errors but do not remove them.",
+  "noPeers": "No peers connected.",
+  "noModels": "no models shared",
+  "announced": "announced",
+  "thisNode": "this computer",
+  "authenticatedShort": "authenticated",
+  "connectedShort": "connected",
+  "lost": "disconnected",
+  "roleWorker": "worker",
+  "roleClient": "client",
+  "col": {
+   "node": "Node",
+   "address": "Address",
+   "state": "State",
+   "role": "Role",
+   "models": "Models",
+   "rtt": "Latency",
+   "inflight": "In flight",
+   "seen": "Last seen"
+  },
+  "cache": {
+   "hint": "Node",
+   "addresses": "Addresses",
+   "source": "Source",
+   "first": "First seen",
+   "verified": "Last confirmed",
+   "expires": "Expires",
+   "auth": "Authenticated"
+  },
+  "cacheEmpty": "Nothing discovered yet. Try Search now.",
+  "discoveryOff": "Discovery is off.",
+  "served": "Tasks served",
+  "servedTime": "Processing time",
+  "servedTokens": "Tokens generated",
+  "bytesIn": "Data received",
+  "bytesOut": "Data sent",
+  "sharedModels": "Shared models",
+  "availability": "Time available"
+ },
+ "memory": {
+  "title": "Memory",
+  "lede": "The Local Cognitive Extension keeps a personal memory on this computer. It is optional and never changes how this computer serves others.",
+  "what": "Two kinds of personalisation",
+  "docTitle": "Documentary memory",
+  "docBody": "Your documents stay in a local folder. Answers retrieve from them and the wiki records where every claim came from, so a source can be forgotten completely.",
+  "behaviourTitle": "Behaviour",
+  "behaviourBody": "Style, terminology and procedures can shape requests through a small projection (at most 1 KB) added to the shared contract. Personal fine-tuning (C4) is experimental and off.",
+  "levels": "Levels",
+  "recommended": "recommended",
+  "active": "active",
+  "requires": "Requires",
+  "thisMachine": "This computer",
+  "compatible": "compatible",
+  "notCompatible": "not compatible",
+  "maturity": "Maturity",
+  "privacy": "Privacy",
+  "use": "Use {level}",
+  "activated": "{level} active",
+  "notInVersion": "Not available in this version of the app.",
+  "enable": "Use memory",
+  "sources": "Your sources",
+  "sourcesBody": "Put documents you want Swarmbly to remember in this folder. They are read, never modified.",
+  "sourcesOff": "Turn memory on to use a source folder.",
+  "noSources": "The folder is empty.",
+  "otherFolders": "Other folders",
+  "otherFoldersBody": "Folders on this computer that are also read, without copying or changing them (your work documents, for example).",
+  "addFolder": "Add folder",
+  "removeFolder": "Remove",
+  "readCount": "{n} of {total} files can be searched.",
+  "glossary": "glossary",
+  "unreadable": "cannot be read",
+  "passages": "{n} passages",
+  "c1Ready": "Formats: text, Markdown, Word (.docx), HTML and PDF (with pdftotext). Passages are only used in answers made on this computer and never leave it; a glossary.md file (\"term = equivalents\") helps across languages."
+ },
+ "settings": {
+  "title": "Settings",
+  "lede": "Every value can be changed and reverted. Defaults favour privacy: nothing is shared until you decide.",
+  "profile": "Profile",
+  "saved": "Saved",
+  "analyzing": "Checking this computer…",
+  "moreInAdvanced": "More parameters appear with the Advanced profile.",
+  "notInstalled": "not installed",
+  "tab": {
+   "recommended": "Recommended",
+   "general": "General",
+   "models": "Models",
+   "swarm": "Swarm",
+   "privacy": "Privacy",
+   "results": "Results",
+   "permissions": "Permissions",
+   "system": "System"
+  },
+  "sameModel": "Same as the conversation"
+ },
+ "profile": {
+  "automatic": "Automatic",
+  "custom": "Custom",
+  "advanced": "Advanced"
+ },
+ "theme": {
+  "dark": "Dark",
+  "light": "Light"
+ },
+ "backend": {
+  "auto": "Automatic (Ollama first)",
+  "openai": "OpenAI-compatible server"
+ },
+ "embedder": {
+  "hash": "Word overlap (no download)",
+  "server": "Embeddings from Ollama"
+ },
+ "tier": {
+  "LOCAL": "LOCAL: nothing leaves this computer",
+  "GLOBAL": "GLOBAL: authenticated peers may receive fragments",
+  "TRUSTED": "TRUSTED: whitelisted swarm (not available yet)"
+ },
+ "detail": {
+  "minimal": "Minimal (no request or answer text)",
+  "standard": "Standard",
+  "full": "Full (every attempt)"
+ },
+ "setting": {
+  "language": {
+   "label": "Language",
+   "help": "Language of the interface."
+  },
+  "theme": {
+   "label": "Theme",
+   "help": "Dark or light colours."
+  },
+  "reduce_motion": {
+   "label": "Reduce motion",
+   "help": "Turns off pulses and blinking. Your system preference is also respected."
+  },
+  "output_dir": {
+   "label": "Output folder",
+   "help": "Where exports and saved reports go. Empty uses the output folder inside your Swarmbly data folder."
+  },
+  "log_retention_days": {
+   "label": "Keep logs (days)",
+   "help": "Older log files are deleted."
+  },
+  "model__backend": {
+   "label": "Model runner",
+   "help": "Ollama is recommended. Any OpenAI-compatible server (llama.cpp, vLLM) also works."
+  },
+  "model__backend_url": {
+   "label": "Runner address",
+   "help": "Leave empty for Ollama on this computer."
+  },
+  "model__api_key": {
+   "label": "API key",
+   "help": "Only for servers that require one. Stored on this computer."
+  },
+  "model__model_name": {
+   "label": "Chat model",
+   "help": "Answers locally, plans and assembles shared answers."
+  },
+  "model__multi_model": {
+   "label": "Use several local models",
+   "help": "Spread work across local models of different families, and compare their answers when you ask for more than one response."
+  },
+  "model__local_models": {
+   "label": "Local models to use",
+   "help": "Pick at least two of different families."
+  },
+  "model__local_parallel": {
+   "label": "Local models at once",
+   "help": "How many local models may generate at the same time. More needs more memory."
+  },
+  "model__max_tokens": {
+   "label": "Answer length limit",
+   "help": "Maximum tokens per local answer."
+  },
+  "model__temperature": {
+   "label": "Temperature",
+   "help": "Lower is more focused; higher is more varied."
+  },
+  "model__max_tokens_per_fragment": {
+   "label": "Fragment length limit",
+   "help": "Maximum tokens each micro-task may produce."
+  },
+  "model__embedder": {
+   "label": "Similarity",
+   "help": "How seams and agreement are measured. Embeddings need an embedding model such as nomic-embed-text."
+  },
+  "model__embed_model": {
+   "label": "Embedding model",
+   "help": "Name of the embedding model in Ollama."
+  },
+  "swarm__mode": {
+   "label": "Default mode",
+   "help": "Mode for new conversations."
+  },
+  "swarm__lan_enabled": {
+   "label": "Local network",
+   "help": "Announce this computer and find others on this network (mDNS). Nothing is shared without a matching privacy tier."
+  },
+  "swarm__k_min": {
+   "label": "Minimum responses per micro-task",
+   "help": "Replicas sent from the start. Two or more give a map of where models disagree, at a proportional cost."
+  },
+  "swarm__k_max": {
+   "label": "Maximum responses per micro-task",
+   "help": "Ceiling including extra attempts for slow or failed workers."
+  },
+  "swarm__n_fragments_max": {
+   "label": "Maximum fragments",
+   "help": "Upper bound. The real number comes from the request's structure and the swarm's capacity."
+  },
+  "swarm__max_concurrency": {
+   "label": "Micro-tasks in flight",
+   "help": "How many micro-tasks this computer keeps in the swarm at once."
+  },
+  "swarm__timeout_ms": {
+   "label": "Micro-task timeout (ms)",
+   "help": "After this, the attempt counts as slow and another worker may be tried."
+  },
+  "swarm__worker_enabled": {
+   "label": "Share this computer",
+   "help": "Serve micro-tasks for others with your base models. Your memory and files are never used."
+  },
+  "swarm__worker_paused": {
+   "label": "Pause sharing",
+   "help": "Keeps the connection but refuses new tasks."
+  },
+  "swarm__worker_models": {
+   "label": "Models offered to others",
+   "help": "Empty offers your chat model."
+  },
+  "swarm__worker_max_concurrent": {
+   "label": "Tasks at once",
+   "help": "How many micro-tasks you serve simultaneously."
+  },
+  "swarm__worker_max_tokens_per_task": {
+   "label": "Tokens per task",
+   "help": "Larger requests are refused."
+  },
+  "swarm__worker_only_idle": {
+   "label": "Only when idle",
+   "help": "Refuse tasks while the processor is busy (heuristic)."
+  },
+  "swarm__worker_only_plugged": {
+   "label": "Only when plugged in",
+   "help": "On laptops, refuse tasks on battery."
+  },
+  "swarm__worker_max_task_seconds": {
+   "label": "Maximum seconds per task",
+   "help": "Generation stops after this."
+  },
+  "swarm__hedge_fallback_ms": {
+   "label": "Extra attempt after (ms)",
+   "help": "Used until enough timings exist; then the observed 95th percentile is used."
+  },
+  "swarm__tau_sem": {
+   "label": "Seam threshold τ",
+   "help": "Placeholder until calibrated. Below it, a bridge sentence is written."
+  },
+  "swarm__discovery_ttl_s": {
+   "label": "Discovery cache lifetime (s)",
+   "help": "Entries without a fresh mDNS answer expire after this."
+  },
+  "swarm__p2p_port": {
+   "label": "Swarm port (TCP)",
+   "help": "Takes effect after restarting the app. Allow it in your firewall."
+  },
+  "privacy__tier": {
+   "label": "Privacy tier",
+   "help": "Who may receive fragments of your requests. Requests are always classified on this computer first and can only be made stricter automatically."
+  },
+  "privacy__trusted_networks": {
+   "label": "Trusted networks",
+   "help": "Informational only. Being on the same network never implies trust."
+  },
+  "results__export_format": {
+   "label": "Export format",
+   "help": "Default format for exports."
+  },
+  "results__report_detail": {
+   "label": "Report detail",
+   "help": "Minimal reports leave out the text of requests and answers, so they can be shared safely."
+  },
+  "results__auto_report": {
+   "label": "Save a report for every shared request",
+   "help": "Written to the output folder."
+  },
+  "results__export_dir": {
+   "label": "Export folder",
+   "help": "Empty uses the output folder."
+  },
+  "results__keep_stats": {
+   "label": "Keep statistics",
+   "help": "Daily counters for the Swarm view."
+  },
+  "evidence__enabled": {
+   "label": "Add public evidence",
+   "help": "In lists of items that name something (\"Blue-footed booby\", \"Ecuador\") and in answers on this device that ask for current facts, the app looks the names up in public sources (Wikidata, Wikipedia, PubMed and, if installed, SearXNG) and adds the sentence with the fact. Only item names are sent, never your request or your documents, and nothing if the request is classified as sensitive. It is on by default: in tests it fixed what the models did not know (IUCN status 8/8, event years 5/5) without worsening what they already got right. You can turn it off here."
+  },
+  "evidence__timeout_s": {
+   "label": "Maximum time per lookup (s)",
+   "help": "If Wikipedia does not answer in time, the item is sent without evidence."
+  },
+  "evidence__max_chars": {
+   "label": "Maximum characters per evidence",
+   "help": "The first two sentences of the entry are cut to this length."
+  },
+  "evidence__max_items": {
+   "label": "Items looked up per request",
+   "help": "Maximum lookups per request."
+  },
+  "evidence__local_answers": {
+   "label": "Also in answers made on this device",
+   "help": "When the answer is generated on this device (with your local sources), the app may look up to three names on Wikipedia: species, places or programmes your question names, or scientific names found in your sources. Only those names are sent (they are listed in \"Explore processing\"), never your question or your documents. The answer tells your sources [1] apart from public evidence [W1] and gives both when they differ. Requires public evidence to be on."
+  },
+  "evidence__local_max_entities": {
+   "label": "Names looked up per local answer",
+   "help": "Maximum names sent to Wikipedia per answer generated on this device."
+  },
+  "evidence__fusion_model": {
+   "label": "Model for answers with evidence",
+   "help": "When an answer made on this device combines your local sources with public evidence, a larger local model can write it (slower, better attribution). Other answers keep the conversation's model."
+  },
+  "evidence__providers": {
+   "label": "Public sources",
+   "help": "One per line, in order of trust: wikidata (structured facts: IUCN status, dates), wikipedia, pubmed (NCBI abstracts of scientific papers) and web (your SearXNG or Google, if you set the URL or the key below). Only names are sent to any of them, never your question or your documents."
+  },
+  "evidence__searxng_url": {
+   "label": "Your SearXNG URL",
+   "help": "Filled in by the installer below (Install and enable SearXNG). You can also enter the URL of your own SearXNG with JSON output enabled. Needs \"web\" in the sources."
+  },
+  "evidence__google_cse_key": {
+   "label": "Google Custom Search key",
+   "help": "Only if you already had a Google Custom Search JSON API key: the API is closed to new customers and stops working on 1 January 2027. Also needs the search engine identifier and \"web\" in the sources."
+  },
+  "evidence__google_cse_cx": {
+   "label": "Google engine id",
+   "help": "The \"cx\" of your Programmable Search Engine."
+  }
+ },
+ "models": {
+  "installed": "Installed models",
+  "none": "No models installed yet.",
+  "embedding": "embedding",
+  "licence": "Licence",
+  "licenceTitle": "Licence of {name}",
+  "noLicence": "Ollama did not report a licence for this model.",
+  "download": "Download models",
+  "downloadNote": "Models are downloaded by Ollama after you confirm. Suggestions fit this computer's memory.",
+  "downloadBtn": "Download",
+  "downloadOther": "Download another",
+  "customName": "Model name",
+  "memEstimate": "~{gb} GB in memory",
+  "consentTitle": "Download {name}?",
+  "consentBody": "Ollama will download this model to this computer.",
+  "consentAccept": "Download",
+  "size": "Download size",
+  "sizeUnknown": "reported by Ollama when it starts",
+  "licenceLabel": "Licence",
+  "origin": "Origin",
+  "page": "Model page",
+  "freeDisk": "Free disk",
+  "noSpace": "Not enough free disk space.",
+  "checkedOn": "Size and licence checked on {date}; the licence Ollama reports after downloading is the one that applies.",
+  "nonCommercial": "non-commercial licence",
+  "pulling": "Downloading {name}…",
+  "pulled": "{name} is ready",
+  "downloadsRefused": "Model downloads are off. Change it in Settings → Permissions.",
+  "pull": {
+   "done": "done",
+   "failed": "failed",
+   "cancelled": "cancelled",
+   "pending": "waiting"
+  }
+ },
+ "privacy": {
+  "identity": "Node identity",
+  "identityBody": "This Ed25519 public key identifies this computer in the swarm. The private key never leaves this computer.",
+  "lanNotTrust": "Being on the same network is not trust: every peer proves its identity, and workers never receive the session or your whole request."
+ },
+ "perm": {
+  "lan_discovery": {
+   "label": "Find other Swarmbly computers on this network",
+   "help": "Announces this computer with mDNS and listens for others. No other devices are scanned."
+  },
+  "model_downloads": {
+   "label": "Allow model downloads through Ollama",
+   "help": "You still confirm each download after seeing its size and licence."
+  },
+  "internet": {
+   "label": "Join swarms over the internet",
+   "help": "Arrives in Phase 3 with rendezvous servers."
+  },
+  "state": {
+   "granted": "allowed",
+   "refused": "refused",
+   "unasked": "not asked"
+  }
+ },
+ "rec": {
+  "ram": "Memory",
+  "memoryKind": "Memory type",
+  "budget": "Budget for models",
+  "cores": "Cores",
+  "disk": "Free disk",
+  "backend": "Model runner",
+  "kind": {
+   "unified": "unified (Apple Silicon)",
+   "vram": "dedicated GPU",
+   "ram": "system RAM",
+   "unknown": "unknown"
+  },
+  "apply": "Apply recommendation",
+  "revert": "Restore previous settings",
+  "applied": "Recommendation applied",
+  "reverted": "Previous settings restored",
+  "reversible": "Applying saves your current settings first. Sharing and the local network are never turned on by a recommendation."
+ },
+ "doctor": {
+  "venv": "Isolated environment",
+  "ready": "App ready",
+  "inference": "Models can run",
+  "ollamaPurpose": "runs the models on this computer",
+  "packages": "Python packages",
+  "col": {
+   "package": "Package",
+   "purpose": "Used for",
+   "version": "Version",
+   "status": "Status"
+  },
+  "state": {
+   "ok": "ok",
+   "missing": "missing",
+   "outdated": "outdated",
+   "pin_mismatch": "differs from the pinned version ({pin}); \"Install\" updates it",
+   "not_running": "installed, not running",
+   "too_old": "too old"
+  },
+  "install": "Install {n} missing package(s)",
+  "installTitle": "Install missing packages?",
+  "installBody": "They are installed into Swarmbly's own environment with pip. Your system Python is not changed.",
+  "installAccept": "Install",
+  "installing": "Installing… this can take a few minutes.",
+  "manual": "Run this in a terminal (Swarmbly never changes the system Python):",
+  "network": "Network",
+  "firewall": "If other computers cannot find this one, allow the swarm port (TCP) and mDNS (UDP 5353) in your firewall.",
+  "dataDir": "Data folder:",
+  "recheck": "Check again",
+  "port": {
+   "free": "free",
+   "in_use": "in use"
+  }
+ },
+ "wizard": {
+  "title": "Set up Swarmbly",
+  "back": "Back",
+  "next": "Continue",
+  "skipAll": "Skip setup",
+  "start": "Start chatting",
+  "allow": "Allow",
+  "deny": "Not now",
+  "notYet": "later",
+  "step": {
+   "welcome": "Welcome",
+   "system": "Check",
+   "profile": "Configure",
+   "models": "Models",
+   "permissions": "Permissions",
+   "memory": "Memory",
+   "done": "Ready"
+  },
+  "welcomeTitle": "Your computer, part of a swarm",
+  "welcomeBody": "Swarmbly answers with the models on your computer. When you allow it, it splits itemised requests into small tasks that other Swarmbly computers solve in parallel, then assembles the answer here.",
+  "welcomePrivacy": "Nothing leaves this computer until you choose a privacy tier that allows it.",
+  "systemTitle": "Checking this computer",
+  "systemBody": "Swarmbly needs a few Python packages and a model runner (Ollama).",
+  "profileTitle": "Recommended configuration",
+  "profileBody": "Based on what was measured. Each value says why; you can change any of them later.",
+  "modelsTitle": "Models",
+  "modelsBody": "Models run inside Ollama. Downloads only happen when you confirm them.",
+  "suggested": "Suggested for this computer",
+  "downloadLater": "Downloads continue in the background; you can also download later in Settings → Models.",
+  "permTitle": "Permissions",
+  "permBody": "Choose what Swarmbly may do on your network. You can change these any time.",
+  "permLater": "Allowing the local network does not share anything by itself: sharing also requires a privacy tier and, for others to use this computer, turning on sharing.",
+  "memoryTitle": "Memory",
+  "memoryBody": "Optional personal memory that stays on this computer.",
+  "memoryLater": "More levels are described in Memory.",
+  "doneTitle": "Ready",
+  "doneBody": "Swarmbly is set up. The Swarm view shows other computers as they appear, and every answer can be explored step by step.",
+  "answerBoth": "Choose Allow or Not now for each question to continue."
+ },
+ "websearch": {
+  "title": "Web search (optional)",
+  "body": "A free metasearch engine (SearXNG) installed on this computer can query DuckDuckGo, Google, Google Scholar, Bing, Brave, PubMed, Semantic Scholar, OpenAlex and Crossref without API keys. It listens on this computer only (127.0.0.1) and starts and stops with the app.",
+  "none": "Not installed",
+  "installing": "Installing… {step}",
+  "running": "Running on {url} ({method})",
+  "stopped": "Installed, not answering on {url}",
+  "external": "Your own SearXNG at {url}",
+  "webOff": "\"web\" is not in Public sources: add it to use this search.",
+  "install": "Install and enable SearXNG",
+  "reinstall": "Reinstall or update",
+  "uninstall": "Uninstall",
+  "removed": "SearXNG uninstalled",
+  "test": "Test web search",
+  "testOk": "Web search works: {n} results ({engines})",
+  "testFail": "Web search returned no results: {why}",
+  "started": "Installing SearXNG; this can take a few minutes",
+  "ready": "SearXNG installed and running; \"web\" was added to public sources",
+  "failed": "SearXNG could not be installed; see the details in Settings → Privacy",
+  "noInternet": "Internet access is refused in Permissions",
+  "consentTitle": "Install SearXNG on this computer",
+  "consentBody": "SearXNG (AGPL-3.0 licence) and its dependencies, about 60 MB, will be downloaded into Swarmbly's data folder. It will be reachable from this computer only, and \"web\" will be added to public sources.",
+  "howDocker": "Docker is available: the official searxng/searxng image will be used.",
+  "howNative": "It will be installed with Python in its own virtual environment (the system Python is not changed).",
+  "howNone": "Neither Docker nor Python 3.11 or newer (nor uv) was found. Install one of them and try again.",
+  "consentPrivacy": "As with the other public sources, only names (species, places, events) are sent to search engines, never your question or your documents. Some engines (Google, Scholar) may temporarily block automated queries; the others keep answering.",
+  "consentAccept": "Install",
+  "google": "Google: the Custom Search JSON API is closed to new customers and stops working on 1 January 2027. Google and Google Scholar are queried through SearXNG. If you already have a key, enter it below with its \"cx\" identifier and press \"Test web search\".",
+  "step": {
+   "download": "downloading",
+   "venv": "Python environment",
+   "packages": "installing dependencies",
+   "pull": "pulling the image",
+   "start": "starting",
+   "health": "checking",
+   "done": "done",
+   "failed": "error"
+  }
+ }
+}

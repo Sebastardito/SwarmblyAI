@@ -1,0 +1,20 @@
+# Environment
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+dist/
+build/
+
+# Runtime data (never committed; created in the per-OS data directory)
+data/
+output/
+*.db
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

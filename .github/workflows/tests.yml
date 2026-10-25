@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: macos-latest
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Prepare with the launcher
+        run: PYTHON=python ./launch.sh --setup-only --dev --yes --no-ollama
+      - name: Launcher self-check
+        run: PYTHON=python ./launch.sh --check --no-ollama
+      - name: Tests
+        run: .venv/bin/python -m pytest -W error::RuntimeWarning
