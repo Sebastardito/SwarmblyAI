@@ -43,3 +43,13 @@ def test_mirrors_match_the_lock():
     out = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_components.py")],
                          capture_output=True, text=True, cwd=ROOT)
     assert out.returncode == 0, out.stdout
+
+
+def test_a_cp1252_console_does_not_crash(tmp_path):
+    import os
+    env = dict(os.environ, PYTHONIOENCODING="cp1252")
+    out = subprocess.run([sys.executable, str(ROOT / "installer" / "install.py"), "--quick", "--yes",
+                          "--dry-run", "--lang", "es", "--venv", str(tmp_path / "v"),
+                          "--skip", "ollama,models,pdf,searxng,shortcuts"],
+                         capture_output=True, timeout=120, env=env)
+    assert out.returncode == 0, out.stderr.decode("utf-8", "replace")

@@ -878,7 +878,24 @@ def quick_plan(ui: UI, ctx: Ctx) -> None:
         ui.say(c("2", "  " + line))
 
 
+def _utf8_console() -> None:
+    """Windows consoles and CI runners default to cp1252, which cannot print
+    "✓", "═" or "≈": write UTF-8, and replace what a console cannot show."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+    if IS_WIN:
+        try:
+            import ctypes
+            ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+        except Exception:
+            pass
+
+
 def main(argv: list[str] | None = None) -> int:
+    _utf8_console()
     ap = argparse.ArgumentParser(description="Swarmbly AI installer")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--quick", action="store_true", help="install everything recommended, no questions")
