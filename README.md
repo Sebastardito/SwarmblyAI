@@ -3,6 +3,7 @@
 [![Licence: AGPL-3.0-or-later](https://img.shields.io/badge/licence-AGPL--3.0--or--later-blue.svg)](LICENSE)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21956743-blue.svg)](https://doi.org/10.5281/zenodo.21956743)
 ![Status: alpha, research prototype](https://img.shields.io/badge/status-alpha%2C%20research%20prototype-orange.svg)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
 **Language / Idioma:** [English](#english) · [Español](#español)
 
@@ -23,7 +24,8 @@
 7. [Repository layout](#repository-layout)
 8. [How this repository is maintained](#how-this-repository-is-maintained)
 9. [Roadmap](#roadmap)
-10. [Citation, licence and governance](#citation-licence-and-governance)
+10. [Support the project](#support-the-project)
+11. [Citation, licence and governance](#citation-licence-and-governance)
 
 ### The idea in one minute
 
@@ -128,6 +130,10 @@ Maintainer workflow: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Where to contri
 
 [`docs/ROADMAP.md`](docs/ROADMAP.md): stabilisation (grounded composition, author search with consent, model roles, a held-out benchmark), private beta, public beta with a frozen protocol, 1.0. Later: internet-wide swarms, network credits and SwarmblyAgents (sub-orchestrators specialised by function).
 
+### Support the project
+
+Swarmbly is developed independently, with no institutional funding, as an AGPL-licensed digital public good. If you find it useful or want it to exist, you can support its early development at **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. Support never buys influence over the roadmap, the licence or the governance (see [`GOVERNANCE.md`](GOVERNANCE.md)).
+
 ### Citation, licence and governance
 
 - **Cite** the distribution with [`CITATION.cff`](CITATION.cff); each component has its own DOI (table above). The whitepaper (version 2) is [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305).
@@ -150,7 +156,8 @@ Maintainer workflow: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Where to contri
 7. [Estructura del repositorio](#estructura-del-repositorio)
 8. [Cómo se mantiene este repositorio](#cómo-se-mantiene-este-repositorio)
 9. [Hoja de ruta](#hoja-de-ruta)
-10. [Cita, licencia y gobernanza](#cita-licencia-y-gobernanza)
+10. [Apoya el proyecto](#apoya-el-proyecto)
+11. [Cita, licencia y gobernanza](#cita-licencia-y-gobernanza)
 
 ### La idea en un minuto
 
@@ -254,6 +261,10 @@ Flujo de mantenimiento: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Dónde contr
 ### Hoja de ruta
 
 [`docs/ROADMAP.md`](docs/ROADMAP.md): estabilización (composición fundamentada, búsqueda de autor con consentimiento, modelos por papel, banco con conjunto reservado), beta privada, beta pública con el protocolo congelado, 1.0. Después: enjambres por internet, créditos de red y SwarmblyAgents (suborquestadores especializados por función).
+
+### Apoya el proyecto
+
+Swarmbly se desarrolla de forma independiente, sin financiación institucional, como un bien público digital con licencia AGPL. Si te resulta útil o quieres que exista, puedes apoyar su desarrollo en estas primeras etapas en **[buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly)**. El apoyo nunca compra influencia sobre la hoja de ruta, la licencia ni la gobernanza (ver [`GOVERNANCE.md`](GOVERNANCE.md)).
 
 ### Cita, licencia y gobernanza
 

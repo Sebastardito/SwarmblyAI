@@ -9,6 +9,7 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 - **Interactive installer** for macOS, Linux and Windows (`install.sh`, `install.command`, `install.ps1`, `install.bat`, `installer/install.py`, standard library only): quick install (explained once, no further questions; steps that need an administrator password are listed at the end) or custom install (step by step). Isolated environment, the three components, Ollama and models that fit the computer, pdftotext and SearXNG as extras, launcher, shortcuts, `swarmbly doctor`, uninstall.
 - **Documentation for the whole project:** README (English and Spanish), architecture, installation, components and maintenance, roadmap.
 - **Maintenance tools:** `scripts/sync_components.py` (update a mirror to a tag or branch and record it), `scripts/check_components.py` (a mirror must equal its recorded commit), continuous integration for mirrors, installation on three systems and the three test suites.
+- **Funding campaign:** README section, badge and `.github/FUNDING.yml` (the GitHub sponsor button) pointing to [buymeacoffee.com/swarmbly](https://buymeacoffee.com/swarmbly); the installer mentions it once at the end. Support never buys influence over the roadmap, licence or governance.
 - SwarmblyCore: links to `GOVERNANCE.md`, `TRADEMARK.md` and the SWIP template point one level up; the documentation-boundary test also looks there.
 
 Earlier releases of this repository (v1, v2) are the protocol releases now inside SwarmblyCore; their DOIs remain valid.

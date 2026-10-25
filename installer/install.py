@@ -118,6 +118,7 @@ T = {
   "dry": "[simulación] ",
   "log": "Registro completo: {path}",
   "need_app": "Necesita los componentes instalados; se omite.",
+  "support": "Swarmbly se desarrolla de forma independiente. Si quieres apoyarlo: https://buymeacoffee.com/swarmbly",
   "ask_pdf": "¿Instalar pdftotext?",
   "ask_searx": "¿Instalar SearXNG?",
   "ask_shortcuts": "¿Crear el comando y los accesos directos?",
@@ -186,6 +187,7 @@ T = {
   "dry": "[dry run] ",
   "log": "Full log: {path}",
   "need_app": "Needs the components installed; skipped.",
+  "support": "Swarmbly is developed independently. To support it: https://buymeacoffee.com/swarmbly",
   "ask_pdf": "Install pdftotext?",
   "ask_searx": "Install SearXNG?",
   "ask_shortcuts": "Create the command and shortcuts?",
@@ -956,6 +958,7 @@ def main(argv: list[str] | None = None) -> int:
     ui.say()
     ui.say(ui["start_hint"].format(cmd=cmd))
     ui.say(ui["log"].format(path=LOG))
+    ui.say(c("2", ui["support"]))
     if mode == "custom" and not ui.dry and launcher.exists() and ui.ask(ui["launch_now"], default=True):
         subprocess.Popen([str(launcher)], start_new_session=not IS_WIN)
     return 0
