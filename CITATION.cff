@@ -5,8 +5,7 @@
 # SwarmblyLCE and SwarmblyApp (mirrors). Each component has its own DOI,
 # listed under `identifiers`; cite the component you used and, for the design
 # argument, the whitepaper (`preferred-citation`). The DOI of distribution
-# 3.0.0 is minted by Zenodo at release and added here afterwards: an invalid
-# DOI in a published citation record is worse than an absent one.
+# 3.0.0 (minted by Zenodo at release) is the top-level `doi`.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -31,6 +30,7 @@ abstract: >-
 
 version: "3.0.0"
 date-released: 2026-10-25
+doi: "10.5281/zenodo.23650763"
 license: AGPL-3.0-or-later
 
 authors:
@@ -44,6 +44,9 @@ repository-code: "https://github.com/Sebastardito/SwarmblyAI"
 url: "https://github.com/Sebastardito/SwarmblyAI"
 
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23650763"
+    description: "Swarmbly AI 3.0.0, integrated distribution (this version)"
   - type: doi
     value: "10.5281/zenodo.21956743"
     description: "SwarmblyCore (formerly the Swarmbly AI repository): Zenodo archive of the v1 release"

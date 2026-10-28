@@ -4,7 +4,7 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 
 ## 3.0.0 — Integrated distribution (2026-10-25)
 
-Release notes: [`docs/releases/v3.0.0.md`](docs/releases/v3.0.0.md).
+Release notes: [`docs/releases/v3.0.0.md`](docs/releases/v3.0.0.md). DOI: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763).
 
 - **The repository becomes the umbrella of Swarmbly AI.** Everything that was here (protocol, specification, reference implementation, V0 harness, benchmark, documents) moves unchanged into `SwarmblyCore/`. Project-wide documents (licence, notice, governance, trademark) stay at the root.
 - **Mirrors of SwarmblyLCE and SwarmblyApp** (`git subtree --squash`) at the commits recorded in `components.lock`: SwarmblyLCE 0.2.0.dev0 (`5fb70b9`), SwarmblyApp 0.3.0 (`e6af928`). The components keep their own repositories, releases and DOIs. Neither version is released yet in its own repository, so this first distribution pins their commits; later distributions pin component tags.

@@ -8,7 +8,7 @@ A local orchestrator, a private memory and a peer-to-peer network of small model
 <img alt="Status: alpha, research prototype" src="https://img.shields.io/badge/status-alpha%2C%20research%20prototype-orange.svg">
 <a href="https://github.com/Sebastardito/SwarmblyAI/actions/workflows/distribution.yml"><img alt="distribution" src="https://github.com/Sebastardito/SwarmblyAI/actions/workflows/distribution.yml/badge.svg"></a>
 <img alt="macOS · Linux · Windows" src="https://img.shields.io/badge/install-macOS%20%C2%B7%20Linux%20%C2%B7%20Windows-555">
-<a href="https://doi.org/10.5281/zenodo.21956743"><img alt="DOI" src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21956743-blue.svg"></a>
+<a href="https://doi.org/10.5281/zenodo.23650763"><img alt="DOI" src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.23650763-blue.svg"></a>
 <a href="https://buymeacoffee.com/swarmbly"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black"></a>
 </p>
 
@@ -23,7 +23,7 @@ A local orchestrator, a private memory and a peer-to-peer network of small model
 
 > **Status: alpha.** A working research prototype with published measurements, not peer reviewed. Each component states what has been measured and what has not; read [What works today](#what-works-today) before quoting any capability.
 >
-> **Latest release: [3.0.0 — integrated distribution](docs/releases/v3.0.0.md)** (2026-10-25).
+> **Latest release: [3.0.0 — integrated distribution](docs/releases/v3.0.0.md)** (2026-10-25) · DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763).
 
 ---
 
@@ -308,7 +308,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 | | |
 |---|---|
-| **Cite** | the distribution with [`CITATION.cff`](CITATION.cff); each component has its own DOI (table above); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
+| **Cite** | the distribution, 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); each component has its own DOI (table above); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
 | **Licence** | software and specification under AGPL-3.0-or-later ([`LICENSE`](LICENSE)); document text under CC BY 4.0; network use triggers clause 13 ([`NOTICE`](NOTICE)) |
 | **Governance** | pre-foundation, benevolent maintainer, heading for a Swiss Verein and later a Stiftung; dual licensing is rejected ([`GOVERNANCE.md`](GOVERNANCE.md), [`TRADEMARK.md`](TRADEMARK.md)) |
 | **Security** | report privately: [`SECURITY.md`](SECURITY.md) |
@@ -317,7 +317,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 ## Español
 
-> **Última versión: [3.0.0, distribución integrada](docs/releases/v3.0.0.md#español)** (2026-10-25). Las figuras tienen el texto en inglés; sus cifras son las mismas.
+> **Última versión: [3.0.0, distribución integrada](docs/releases/v3.0.0.md#español)** (2026-10-25) · DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763). Las figuras tienen el texto en inglés; sus cifras son las mismas.
 
 ### Contenido
 
@@ -598,7 +598,7 @@ Swarmbly se desarrolla de forma independiente, sin financiación institucional, 
 
 | | |
 |---|---|
-| **Cita** | la distribución con [`CITATION.cff`](CITATION.cff); cada componente tiene su DOI (tabla de arriba); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
+| **Cita** | la distribución, 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); cada componente tiene su DOI (tabla de arriba); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
 | **Licencia** | software y especificación bajo AGPL-3.0-or-later ([`LICENSE`](LICENSE)); texto de los documentos bajo CC BY 4.0; el uso en red activa la cláusula 13 ([`NOTICE`](NOTICE)) |
 | **Gobernanza** | antes de la fundación, con un mantenedor benevolente, rumbo a una Verein suiza y después a una Stiftung; se rechaza la doble licencia ([`GOVERNANCE.md`](GOVERNANCE.md), [`TRADEMARK.md`](TRADEMARK.md)) |
 | **Seguridad** | informa en privado: [`SECURITY.md`](SECURITY.md) |
