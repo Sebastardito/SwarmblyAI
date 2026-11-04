@@ -1,0 +1,81 @@
+# Swarmbly AI with Docker — try the app without installing Python.
+#
+#   docker compose up -d                      app + Ollama (+ first models)
+#   docker compose --profile search up -d     … plus local web search (SearXNG)
+#
+# Then open http://localhost:8765. Your documents: put them in
+# ./docker/documents (or set SWARMBLY_DOCUMENTS to any folder); they are
+# mounted read-only and never leave this computer. Guide: docs/DOCKER.md
+name: swarmbly
+
+services:
+  swarmbly:
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
+    build: .
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      SWARMBLY_OLLAMA_URL: http://ollama:11434
+      SWARMBLY_MODEL: ${SWARMBLY_MODEL:-qwen2.5:3b}
+    ports:
+      - "127.0.0.1:${SWARMBLY_PORT:-8765}:8765"   # this computer only
+    volumes:
+      - swarmbly-data:/data
+      - ${SWARMBLY_DOCUMENTS:-./docker/documents}:/documents:ro
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # Downloads the chat model and the embedding model once, then exits.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - ollama pull "${SWARMBLY_MODEL:-qwen2.5:3b}" && ollama pull nomic-embed-text
+    restart: "no"
+
+  # Optional: local web search, only with --profile search.
+  searxng-settings:
+    profiles: ["search"]
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
+    build: .
+    user: root
+    command: ["searxng-settings", "/etc/searxng"]
+    volumes:
+      - searxng-config:/etc/searxng
+    restart: "no"
+
+  searxng:
+    profiles: ["search"]
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    depends_on:
+      searxng-settings:
+        condition: service_completed_successfully
+    environment:
+      # Current images serve with granian on "::" (IPv6), which fails where
+      # Docker has no IPv6; listen on IPv4 inside the compose network instead.
+      GRANIAN_HOST: 0.0.0.0
+      GRANIAN_PORT: "8080"
+    volumes:
+      - searxng-config:/etc/searxng
+
+volumes:
+  swarmbly-data:
+  ollama-models:
+  searxng-config:

@@ -1,0 +1,14 @@
+# Join a LAN swarm from Docker (Linux hosts): the app uses the host's network,
+# so mDNS discovery and the peer-to-peer port (9765) reach the other computers.
+#   docker compose -f compose.yaml -f docker/compose.lan.yaml up -d
+# The interface stays on 127.0.0.1:8765; Ollama is published on 127.0.0.1:11434.
+services:
+  swarmbly:
+    network_mode: host
+    ports: !reset []
+    environment:
+      SWARMBLY_OLLAMA_URL: http://127.0.0.1:11434
+      SWARMBLY_BIND: 127.0.0.1
+  ollama:
+    ports:
+      - "127.0.0.1:11434:11434"

@@ -2,6 +2,21 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## Unreleased
+
+- **Docker distribution** ([`docs/DOCKER.md`](docs/DOCKER.md)). It adds:
+  - `Dockerfile`, a non-root image with the three components, pdftotext and a health check.
+  - `compose.yaml`, which runs the app with Ollama, a one-off model download and optional local web search (`--profile search`).
+  - Variants for an NVIDIA GPU and for joining a LAN swarm from a Linux host.
+  - A `docker` workflow that builds the image and checks its health on every pull request, and publishes it for amd64 and arm64 to GitHub Container Registry and, when the secrets exist, to Docker Hub.
+
+  The interface is published on 127.0.0.1 only, and your documents are mounted read-only.
+- **Roadmap rewritten** ([`docs/ROADMAP.md`](docs/ROADMAP.md)). It now covers:
+  - the project's history from the first idea (August 2026) to today;
+  - the versions leading to a public network with volunteers (3.0.1 destinations, 3.1 projects, 3.2 providers and recipes, 3.3 tools, 3.4 trusted circles and private beta, 3.5 public beta, 4.0 protocol 1.0);
+  - the volunteer programme;
+  - the decisions of 4 November 2026.
+
 ## 3.0.0 — Integrated distribution (2026-10-25)
 
 Release notes: [`docs/releases/v3.0.0.md`](docs/releases/v3.0.0.md). DOI: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763).

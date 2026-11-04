@@ -197,6 +197,7 @@ The full tables with intervals and the withdrawn results are in each component: 
 | macOS | double-click `install.command`, or `./install.sh` in a terminal |
 | Linux | `./install.sh` |
 | Windows | double-click `install.bat`, or `.\install.ps1` in PowerShell |
+| Any system with Docker (to try it) | `docker compose up -d`, then open `http://localhost:8765` — see [`docs/DOCKER.md`](docs/DOCKER.md) |
 
 ```mermaid
 flowchart LR
@@ -259,9 +260,10 @@ SwarmblyAI/
 ├── SwarmblyApp/         mirror of github.com/Sebastardito/SwarmblyApp (never edited here)
 ├── installer/           install.py: the interactive installer (standard library only)
 ├── install.sh · install.command · install.ps1 · install.bat
+├── Dockerfile · compose.yaml · docker/   container image and its services (app, Ollama, SearXNG)
 ├── components.lock      the component versions tested together
 ├── scripts/             sync_components.py, check_components.py, readme_figures.py
-├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, releases/, figures/, img/
+├── docs/                ARCHITECTURE, INSTALL, DOCKER, COMPONENTS, ROADMAP, releases/, figures/, img/
 └── LICENSE · NOTICE · GOVERNANCE.md · TRADEMARK.md · CITATION.cff · CHANGELOG.md
 ```
 
@@ -288,15 +290,17 @@ Maintainer workflow: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Where to contri
 
 ```mermaid
 flowchart LR
-  A["<b>3.0</b><br/>integrated distribution:<br/>one repository, one installer"] --> B["<b>3.1</b> stable<br/>grounded composition,<br/>model roles, held-out benchmark"]
-  B --> C["<b>3.2</b> private beta<br/>capability routing,<br/>orchestrator in Core"]
-  C --> D["<b>3.3</b> public beta<br/>protocol 1.0-rc,<br/>external privacy review"]
-  D --> E["<b>4.0</b><br/>protocol 1.0 frozen"]
-  E -.-> F["<b>later</b><br/>internet swarms, network<br/>credits, SwarmblyAgents"]
-  style A fill:#1f9d6b33,stroke:#1f9d6b
+  A["<b>3.0.1</b><br/>destinations<br/>+ Docker"] --> B["<b>3.1</b><br/>projects and<br/>privacy receipt"]
+  B --> C["<b>3.2</b><br/>providers by role<br/>and recipes"]
+  C --> D["<b>3.3</b><br/>tools: MCP<br/>and skills"]
+  D --> E["<b>3.4</b><br/>trusted circles<br/>· private beta"]
+  E --> F["<b>3.5</b><br/>public network<br/>· public beta"]
+  F --> G["<b>4.0</b><br/>protocol 1.0"]
+  style E fill:#2a78d622,stroke:#2a78d6
+  style F fill:#2a78d622,stroke:#2a78d6
 ```
 
-Goals without dates; each phase opens when the previous one's exit criteria are met. Details: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Goals without dates; each version opens when the previous one's exit criteria are met. The roadmap also tells the project's history from the first idea (August 2026) to today, and how volunteers join: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ### Support the project
 
@@ -487,6 +491,7 @@ Las tablas completas con intervalos y los resultados retirados están en cada co
 | macOS | doble clic en `install.command`, o `./install.sh` en una terminal |
 | Linux | `./install.sh` |
 | Windows | doble clic en `install.bat`, o `.\install.ps1` en PowerShell |
+| Cualquier sistema con Docker (para probar) | `docker compose up -d` y abre `http://localhost:8765`; ver [`docs/DOCKER.md`](docs/DOCKER.md) |
 
 ```mermaid
 flowchart LR
@@ -549,9 +554,10 @@ SwarmblyAI/
 ├── SwarmblyApp/         espejo de github.com/Sebastardito/SwarmblyApp (nunca se edita aquí)
 ├── installer/           install.py: el instalador interactivo (solo biblioteca estándar)
 ├── install.sh · install.command · install.ps1 · install.bat
+├── Dockerfile · compose.yaml · docker/   imagen de contenedor y sus servicios (app, Ollama, SearXNG)
 ├── components.lock      las versiones de los componentes probadas juntas
 ├── scripts/             sync_components.py, check_components.py, readme_figures.py
-├── docs/                ARCHITECTURE, INSTALL, COMPONENTS, ROADMAP, releases/, figures/, img/
+├── docs/                ARCHITECTURE, INSTALL, DOCKER, COMPONENTS, ROADMAP, releases/, figures/, img/
 └── LICENSE · NOTICE · GOVERNANCE.md · TRADEMARK.md · CITATION.cff · CHANGELOG.md
 ```
 
@@ -578,15 +584,17 @@ Flujo de mantenimiento: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Dónde contr
 
 ```mermaid
 flowchart LR
-  A["<b>3.0</b><br/>distribución integrada:<br/>un repositorio, un instalador"] --> B["<b>3.1</b> estable<br/>composición fundamentada,<br/>modelos por papel, banco reservado"]
-  B --> C["<b>3.2</b> beta privada<br/>enrutamiento por capacidad,<br/>orquestador en Core"]
-  C --> D["<b>3.3</b> beta pública<br/>protocolo 1.0-rc,<br/>revisión externa de privacidad"]
-  D --> E["<b>4.0</b><br/>protocolo 1.0 congelado"]
-  E -.-> F["<b>después</b><br/>enjambres por internet, créditos<br/>de red, SwarmblyAgents"]
-  style A fill:#1f9d6b33,stroke:#1f9d6b
+  A["<b>3.0.1</b><br/>destinos<br/>+ Docker"] --> B["<b>3.1</b><br/>proyectos y<br/>recibo de privacidad"]
+  B --> C["<b>3.2</b><br/>proveedores por papel<br/>y recetas"]
+  C --> D["<b>3.3</b><br/>herramientas: MCP<br/>y habilidades"]
+  D --> E["<b>3.4</b><br/>círculos de confianza<br/>· beta privada"]
+  E --> F["<b>3.5</b><br/>red pública<br/>· beta pública"]
+  F --> G["<b>4.0</b><br/>protocolo 1.0"]
+  style E fill:#2a78d622,stroke:#2a78d6
+  style F fill:#2a78d622,stroke:#2a78d6
 ```
 
-Objetivos sin fechas; cada fase se abre cuando se cumplen los criterios de salida de la anterior. Detalle: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Objetivos sin fechas; cada versión se abre cuando se cumplen los criterios de salida de la anterior. La hoja de ruta cuenta también la historia del proyecto desde la primera idea (agosto de 2026) hasta hoy, y cómo se suman los voluntarios: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ### Apoya el proyecto
 

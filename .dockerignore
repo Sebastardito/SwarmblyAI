@@ -1,0 +1,23 @@
+# Only what the image needs: the three components and the installer.
+# Private and local folders never enter the build context.
+.git
+.github
+**/.git
+**/__pycache__
+**/*.py[cod]
+**/.venv
+**/.swarmbly
+**/build
+**/*.egg-info
+**/.DS_Store
+**/* 2
+**/* 2.*
+install.log
+SwarmblyCore/_archive
+SwarmblyCore/publication
+SwarmblyCore/results
+SwarmblyCore/docs/*.pdf
+SwarmblyLCE/docs/*.pdf
+docs/img
+docker/documents
+*.mp4

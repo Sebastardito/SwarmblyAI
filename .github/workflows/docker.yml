@@ -1,0 +1,102 @@
+# Swarmbly AI — container image.
+# Every pull request and push: build the image, start it and check its health.
+# Pushes to main publish the "edge" tag; tags vX.Y.Z publish X.Y.Z, X.Y and
+# "latest" for linux/amd64 and linux/arm64, on GitHub Container Registry and,
+# when the DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets exist, on Docker Hub.
+name: docker
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - compose.yaml
+      - docker/**
+      - installer/**
+      - SwarmblyCore/**
+      - SwarmblyLCE/**
+      - SwarmblyApp/**
+      - .github/workflows/docker.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: docker build -t swarmbly:ci .
+      - name: Start and check health
+        run: |
+          docker run -d --name sw -p 127.0.0.1:8765:8765 swarmbly:ci
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8765/api/health && break; sleep 2; done
+          curl -fsS http://127.0.0.1:8765/api/health
+          docker exec sw swarmbly-entrypoint status
+          docker exec sw python -c "import swarmbly_app, swarmbly_lce, swarmbly_v0; print('imports ok')"
+      - name: Container log
+        if: always()
+        run: docker logs sw || true
+      - name: Compose files are valid
+        run: |
+          docker compose -f compose.yaml config -q
+          docker compose -f compose.yaml -f docker/compose.lan.yaml config -q
+          docker compose -f compose.yaml -f docker/compose.gpu.yaml config -q
+
+  publish:
+    needs: smoke
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      HAS_DOCKERHUB: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Docker Hub
+        if: env.HAS_DOCKERHUB == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Image names
+        id: names
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          {
+            echo "images<<EOF"
+            echo "ghcr.io/${owner}/swarmbly"
+            if [ "$HAS_DOCKERHUB" = "true" ]; then echo "docker.io/${{ secrets.DOCKERHUB_USERNAME }}/swarmbly"; fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.names.outputs.images }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=edge,branch=main
+      - name: Build and push (amd64 + arm64)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: SWARMBLY_VERSION=${{ steps.meta.outputs.version }}
