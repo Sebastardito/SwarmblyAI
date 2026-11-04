@@ -10,7 +10,9 @@
 
 Environment (all optional):
 
-    SWARMBLY_OLLAMA_URL     Ollama server             (default http://ollama:11434)
+    SWARMBLY_OLLAMA_URL     Ollama server, or "auto"  (default auto: the bundled
+                            http://ollama:11434 if it runs, else an Ollama on
+                            this computer, http://host.docker.internal:11434)
     SWARMBLY_MODEL          chat model on first start (default: none, the
                             first-run assistant proposes one)
     SWARMBLY_EMBED_MODEL    embedding model           (default nomic-embed-text)
@@ -53,6 +55,51 @@ def _resolves(url: str) -> bool:
         return False
 
 
+BUNDLED_OLLAMA = "http://ollama:11434"
+HOST_OLLAMA = "http://host.docker.internal:11434"
+
+
+def _ollama_models(url: str, timeout: float = 3.0) -> list[str] | None:
+    """Model names an Ollama server offers, or None if it does not answer."""
+    import json
+    try:
+        with urllib.request.urlopen(url + "/api/tags", timeout=timeout) as resp:  # noqa: S310
+            return [m.get("name", "") for m in json.loads(resp.read().decode()).get("models", [])]
+    except Exception:
+        return None
+
+
+def _ollama_url() -> str:
+    """The configured Ollama, or with "auto" the first one that answers:
+    the bundled container, then an Ollama on this computer."""
+    wanted = os.environ.get("SWARMBLY_OLLAMA_URL", "auto").strip().rstrip("/")
+    if wanted and wanted != "auto":
+        return wanted
+    for url in (BUNDLED_OLLAMA, HOST_OLLAMA):
+        if _resolves(url) and _ollama_models(url) is not None:
+            return url
+    return BUNDLED_OLLAMA if _resolves(BUNDLED_OLLAMA) else HOST_OLLAMA
+
+
+def _report_models(url: str, model: str, embed: str) -> None:
+    """Say plainly whether Ollama answers and has the models; never fails."""
+    names = _ollama_models(url)
+    if names is None:
+        _say(f"Ollama does not answer at {url}. Start it, or set SWARMBLY_OLLAMA_URL "
+             "(docs/DOCKER.md). The interface opens anyway.")
+        return
+    have = {n.split(":latest")[0] for n in names} | set(names)
+    missing = [m for m in (model, embed) if m and m not in have and f"{m}:latest" not in have]
+    _say(f"Ollama at {url}: {len(names)} model(s)")
+    for m in missing:
+        if url == BUNDLED_OLLAMA:
+            _say(f"  {m} not there yet: the ollama-pull service downloads it "
+                 "(docker compose logs -f ollama-pull)")
+        else:
+            _say(f"  missing {m}: run 'ollama pull {m}' where Ollama runs, "
+                 "or download it from Settings -> Models")
+
+
 def _searxng_ready(url: str, wait_s: float = 30.0) -> bool:
     """True when SearXNG answers a JSON search. Waits only if its name resolves,
     that is, only when the ``search`` profile is running."""
@@ -77,10 +124,9 @@ def configure() -> None:
     current = cfg.all()
     changes: dict = {}
 
-    ollama = os.environ.get("SWARMBLY_OLLAMA_URL", "http://ollama:11434").rstrip("/")
-    if ollama:
-        changes["model.backend"] = "ollama"
-        changes["model.backend_url"] = ollama
+    ollama = _ollama_url()
+    changes["model.backend"] = "ollama"
+    changes["model.backend_url"] = ollama
 
     first = not MARKER.exists()
     if first:
@@ -110,6 +156,8 @@ def configure() -> None:
 
     if changes:
         cfg.update(changes)
+    merged = cfg.all().get("model") or {}
+    _report_models(ollama, merged.get("model_name") or "", merged.get("embed_model") or "")
     if first:
         MARKER.write_text("configured from the container environment\n", encoding="utf-8")
         _say(f"first start: data in {DATA}, models from {ollama}")

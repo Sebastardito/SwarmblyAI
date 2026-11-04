@@ -1,0 +1,17 @@
+# Use an Ollama that already runs outside Docker, and skip the bundled one
+# (no Ollama image to download: only the Swarmbly image, about 110 MB).
+#
+#   docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+#
+# By default the app looks for Ollama on this computer (host.docker.internal:11434).
+# For another computer: SWARMBLY_OLLAMA_URL=http://192.168.1.20:11434
+# Pull the models there first: ollama pull qwen2.5:3b && ollama pull nomic-embed-text
+services:
+  swarmbly:
+    depends_on: !reset {}
+    environment:
+      SWARMBLY_OLLAMA_URL: ${SWARMBLY_OLLAMA_URL:-http://host.docker.internal:11434}
+  ollama:
+    profiles: ["bundled-ollama"]
+  ollama-pull:
+    profiles: ["bundled-ollama"]

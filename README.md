@@ -197,7 +197,7 @@ The full tables with intervals and the withdrawn results are in each component: 
 | macOS | double-click `install.command`, or `./install.sh` in a terminal |
 | Linux | `./install.sh` |
 | Windows | double-click `install.bat`, or `.\install.ps1` in PowerShell |
-| Any system with Docker (to try it) | `docker compose up -d`, then open `http://localhost:8765` — see [`docs/DOCKER.md`](docs/DOCKER.md) |
+| Any system with Docker (to try it) | `docker compose up -d`, then open `http://localhost:8765`; with or without the bundled Ollama — see [`docs/DOCKER.md`](docs/DOCKER.md) |
 
 ```mermaid
 flowchart LR
@@ -491,7 +491,7 @@ Las tablas completas con intervalos y los resultados retirados están en cada co
 | macOS | doble clic en `install.command`, o `./install.sh` en una terminal |
 | Linux | `./install.sh` |
 | Windows | doble clic en `install.bat`, o `.\install.ps1` en PowerShell |
-| Cualquier sistema con Docker (para probar) | `docker compose up -d` y abre `http://localhost:8765`; ver [`docs/DOCKER.md`](docs/DOCKER.md) |
+| Cualquier sistema con Docker (para probar) | `docker compose up -d` y abre `http://localhost:8765`; con o sin el Ollama incluido, ver [`docs/DOCKER.md`](docs/DOCKER.md) |
 
 ```mermaid
 flowchart LR

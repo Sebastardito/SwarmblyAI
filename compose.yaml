@@ -3,6 +3,9 @@
 #   docker compose up -d                      app + Ollama (+ first models)
 #   docker compose --profile search up -d     … plus local web search (SearXNG)
 #
+# Already running Ollama on this computer or another one? Skip the bundled one:
+#   docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+#
 # Then open http://localhost:8765. Your documents: put them in
 # ./docker/documents (or set SWARMBLY_DOCUMENTS to any folder); they are
 # mounted read-only and never leave this computer. Guide: docs/DOCKER.md
@@ -10,15 +13,18 @@ name: swarmbly
 
 services:
   swarmbly:
-    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:edge}
     build: .
     restart: unless-stopped
     depends_on:
       ollama:
         condition: service_healthy
     environment:
-      SWARMBLY_OLLAMA_URL: http://ollama:11434
+      # "auto": the bundled Ollama if it runs, else the one on this computer
+      SWARMBLY_OLLAMA_URL: ${SWARMBLY_OLLAMA_URL:-auto}
       SWARMBLY_MODEL: ${SWARMBLY_MODEL:-qwen2.5:3b}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # reach an Ollama on this computer (Linux)
     ports:
       - "127.0.0.1:${SWARMBLY_PORT:-8765}:8765"   # this computer only
     volumes:
@@ -52,7 +58,7 @@ services:
   # Optional: local web search, only with --profile search.
   searxng-settings:
     profiles: ["search"]
-    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:edge}
     build: .
     user: root
     command: ["searxng-settings", "/etc/searxng"]

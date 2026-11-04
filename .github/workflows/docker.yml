@@ -48,6 +48,7 @@ jobs:
           docker compose -f compose.yaml config -q
           docker compose -f compose.yaml -f docker/compose.lan.yaml config -q
           docker compose -f compose.yaml -f docker/compose.gpu.yaml config -q
+          docker compose -f compose.yaml -f docker/compose.external-ollama.yaml config -q
 
   publish:
     needs: smoke

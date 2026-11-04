@@ -61,9 +61,37 @@ Set them in the shell or in a `.env` file next to `compose.yaml`.
 | `SWARMBLY_MODEL` | `qwen2.5:3b` | Chat model downloaded and selected on the first start. `qwen2.5:1.5b` for 4–8 GB of RAM; `qwen2.5:7b` for 16 GB or more |
 | `SWARMBLY_DOCUMENTS` | `./docker/documents` | Folder read as your sources |
 | `SWARMBLY_PORT` | `8765` | Port of the interface on this computer |
-| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Image to run; `…:edge` follows `main` |
+| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:edge` | Image to run. `edge` follows `main`; from the next tagged release, `latest` is the last release. Also on Docker Hub as `sebastardito/swarmbly` |
+| `SWARMBLY_OLLAMA_URL` | `auto` | `auto` uses the bundled Ollama if it runs, otherwise the one on this computer; or any address, e.g. `http://192.168.1.20:11434` |
 
 Only the server addresses are reapplied on every start; everything else you change in the interface is kept in the `swarmbly-data` volume.
+
+### If you already run Ollama
+
+You do not need the bundled Ollama (its image takes several GB). Use the one you already have, on this computer or on another one; only the Swarmbly image is downloaded (about 110 MB compressed).
+
+```bash
+docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+# Ollama on another computer:
+SWARMBLY_OLLAMA_URL=http://192.168.1.20:11434 docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+```
+
+Without Compose, one command is enough:
+
+```bash
+docker run -d --name swarmbly -p 127.0.0.1:8765:8765 \
+  --add-host host.docker.internal:host-gateway \
+  -v swarmbly-data:/data -v "$PWD/docker/documents:/documents:ro" \
+  ghcr.io/sebastardito/swarmbly:edge
+```
+
+| Where Ollama runs | What to check |
+|---|---|
+| This Mac or Windows PC (Ollama app) | Nothing: Docker Desktop reaches it at `host.docker.internal:11434` |
+| This Linux computer | Ollama listens on 127.0.0.1 by default, which containers cannot reach. Either start it with `OLLAMA_HOST=0.0.0.0` (and keep port 11434 closed in the firewall), or use the LAN variant, which shares the host's network |
+| Another computer | Start Ollama there with `OLLAMA_HOST=0.0.0.0` and set `SWARMBLY_OLLAMA_URL` to its address |
+
+Pull the models where Ollama runs (`ollama pull qwen2.5:3b` and `ollama pull nomic-embed-text`), or download them later from Settings → Models. At start, `docker compose logs swarmbly` says whether Ollama answers and which models are missing.
 
 ### Optional variants
 
@@ -97,8 +125,11 @@ Only the server addresses are reapplied on every start; everything else you chan
 
 The workflow [`.github/workflows/docker.yml`](../.github/workflows/docker.yml) builds the image and checks its health on every pull request. On a push to `main` it publishes `edge`, and on a tag `vX.Y.Z` it publishes `X.Y.Z`, `X.Y` and `latest` for `linux/amd64` and `linux/arm64`:
 
-- to `ghcr.io/sebastardito/swarmbly`, with the repository's own token. After the first push, make the package public in GitHub → Packages → swarmbly → Package settings.
-- to `docker.io/sebastardito/swarmbly`, when the repository has the secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (an access token with read and write scope from Docker Hub → Account settings → Personal access tokens).
+- to `ghcr.io/sebastardito/swarmbly`, with the repository's own token. The package is public, like the repository.
+- to `docker.io/sebastardito/swarmbly`, when the repository has the secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`:
+  1. Docker Hub → avatar → Account settings → Personal access tokens → Generate new token. Description `github-actions-swarmbly`, expiration of your choice, access **Read & Write**. Copy the token (it is shown once).
+  2. GitHub → the repository → Settings → Secrets and variables → Actions → New repository secret: `DOCKERHUB_USERNAME` = `sebastardito`, then `DOCKERHUB_TOKEN` = the token.
+  3. Actions → docker → Run workflow (branch `main`). The first push creates the `sebastardito/swarmbly` repository on Docker Hub; add its description there, or create it beforehand under Repositories → Create repository.
 
 ---
 
@@ -159,9 +190,37 @@ Se definen en la terminal o en un archivo `.env` junto a `compose.yaml`.
 | `SWARMBLY_MODEL` | `qwen2.5:3b` | Modelo de chat que se descarga y se elige en el primer arranque. `qwen2.5:1.5b` para 4–8 GB de RAM; `qwen2.5:7b` para 16 GB o más |
 | `SWARMBLY_DOCUMENTS` | `./docker/documents` | Carpeta que se lee como tus fuentes |
 | `SWARMBLY_PORT` | `8765` | Puerto de la interfaz en esta computadora |
-| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Imagen que se ejecuta; `…:edge` sigue a `main` |
+| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:edge` | Imagen que se ejecuta. `edge` sigue a `main`; desde la próxima versión etiquetada, `latest` es la última versión. También en Docker Hub como `sebastardito/swarmbly` |
+| `SWARMBLY_OLLAMA_URL` | `auto` | `auto` usa el Ollama incluido si está en marcha y, si no, el de esta computadora; o cualquier dirección, p. ej. `http://192.168.1.20:11434` |
 
 En cada arranque solo se vuelven a aplicar las direcciones de los servidores; lo demás que cambies en la interfaz se conserva en el volumen `swarmbly-data`.
+
+### Si ya tienes Ollama
+
+No necesitas el Ollama incluido (su imagen ocupa varios GB). Usa el que ya tienes, en esta computadora o en otra; solo se descarga la imagen de Swarmbly (unos 110 MB comprimidos).
+
+```bash
+docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+# Ollama en otra computadora:
+SWARMBLY_OLLAMA_URL=http://192.168.1.20:11434 docker compose -f compose.yaml -f docker/compose.external-ollama.yaml up -d
+```
+
+Sin Compose basta un comando:
+
+```bash
+docker run -d --name swarmbly -p 127.0.0.1:8765:8765 \
+  --add-host host.docker.internal:host-gateway \
+  -v swarmbly-data:/data -v "$PWD/docker/documents:/documents:ro" \
+  ghcr.io/sebastardito/swarmbly:edge
+```
+
+| Dónde corre Ollama | Qué revisar |
+|---|---|
+| Este Mac o PC con Windows (app de Ollama) | Nada: Docker Desktop lo alcanza en `host.docker.internal:11434` |
+| Esta computadora con Linux | Ollama escucha por defecto en 127.0.0.1, que los contenedores no alcanzan. Arráncalo con `OLLAMA_HOST=0.0.0.0` (y mantén el puerto 11434 cerrado en el cortafuegos), o usa la variante LAN, que comparte la red del anfitrión |
+| Otra computadora | Arranca allí Ollama con `OLLAMA_HOST=0.0.0.0` y pon su dirección en `SWARMBLY_OLLAMA_URL` |
+
+Descarga los modelos donde corre Ollama (`ollama pull qwen2.5:3b` y `ollama pull nomic-embed-text`), o después desde Ajustes → Modelos. Al arrancar, `docker compose logs swarmbly` dice si Ollama responde y qué modelos faltan.
 
 ### Variantes opcionales
 
@@ -195,5 +254,8 @@ En cada arranque solo se vuelven a aplicar las direcciones de los servidores; lo
 
 El flujo [`.github/workflows/docker.yml`](../.github/workflows/docker.yml) construye la imagen y comprueba su salud en cada pull request. Con un push a `main` publica `edge`, y con una etiqueta `vX.Y.Z` publica `X.Y.Z`, `X.Y` y `latest` para `linux/amd64` y `linux/arm64`:
 
-- en `ghcr.io/sebastardito/swarmbly`, con el token propio del repositorio. Tras el primer push, haz público el paquete en GitHub → Packages → swarmbly → Package settings.
-- en `docker.io/sebastardito/swarmbly`, cuando el repositorio tiene los secretos `DOCKERHUB_USERNAME` y `DOCKERHUB_TOKEN` (un token de acceso de lectura y escritura creado en Docker Hub → Account settings → Personal access tokens).
+- en `ghcr.io/sebastardito/swarmbly`, con el token propio del repositorio. El paquete es público, como el repositorio.
+- en `docker.io/sebastardito/swarmbly`, cuando el repositorio tiene los secretos `DOCKERHUB_USERNAME` y `DOCKERHUB_TOKEN`:
+  1. Docker Hub → avatar → Account settings → Personal access tokens → Generate new token. Descripción `github-actions-swarmbly`, la caducidad que prefieras, acceso **Read & Write**. Copia el token (se muestra una sola vez).
+  2. GitHub → el repositorio → Settings → Secrets and variables → Actions → New repository secret: `DOCKERHUB_USERNAME` = `sebastardito` y después `DOCKERHUB_TOKEN` = el token.
+  3. Actions → docker → Run workflow (rama `main`). El primer push crea el repositorio `sebastardito/swarmbly` en Docker Hub; añade allí su descripción, o créalo antes en Repositories → Create repository.

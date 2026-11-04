@@ -11,6 +11,10 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
   - A `docker` workflow that builds the image and checks its health on every pull request, and publishes it for amd64 and arm64 to GitHub Container Registry and, when the secrets exist, to Docker Hub.
 
   The interface is published on 127.0.0.1 only, and your documents are mounted read-only.
+- **Docker without the bundled Ollama** (`docker/compose.external-ollama.yaml`). If Ollama already runs on this computer or another one, only the Swarmbly image (about 110 MB) is needed:
+  - `SWARMBLY_OLLAMA_URL=auto` (the default) uses the bundled Ollama when it runs, and otherwise the one on this computer;
+  - at start, the log says whether Ollama answers and which models are missing;
+  - the default image is `:edge` until the next tagged release.
 - **Roadmap rewritten** ([`docs/ROADMAP.md`](docs/ROADMAP.md)). It now covers:
   - the project's history from the first idea (August 2026) to today;
   - the versions leading to a public network with volunteers (3.0.1 destinations, 3.1 projects, 3.2 providers and recipes, 3.3 tools, 3.4 trusted circles and private beta, 3.5 public beta, 4.0 protocol 1.0);
