@@ -5,7 +5,8 @@
 # SwarmblyLCE and SwarmblyApp (mirrors). Each component has its own DOI,
 # listed under `identifiers`; cite the component you used and, for the design
 # argument, the whitepaper (`preferred-citation`). The DOI of distribution
-# 3.0.0 (minted by Zenodo at release) is the top-level `doi`.
+# 3.0.1 is added as the top-level `doi` once Zenodo mints it at release;
+# until then the previous distribution (3.0.0) is listed under `identifiers`.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -28,9 +29,8 @@ abstract: >-
   with an interactive installer for macOS, Linux and Windows. Alpha software;
   measurements and their limits are stated in each component.
 
-version: "3.0.0"
-date-released: 2026-10-25
-doi: "10.5281/zenodo.23650763"
+version: "3.0.1"
+date-released: 2026-11-07
 license: AGPL-3.0-or-later
 
 authors:
@@ -46,7 +46,7 @@ url: "https://github.com/Sebastardito/SwarmblyAI"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.23650763"
-    description: "Swarmbly AI 3.0.0, integrated distribution (this version)"
+    description: "Swarmbly AI 3.0.0, integrated distribution (previous version)"
   - type: doi
     value: "10.5281/zenodo.21956743"
     description: "SwarmblyCore (formerly the Swarmbly AI repository): Zenodo archive of the v1 release"

@@ -13,7 +13,7 @@ name: swarmbly
 
 services:
   swarmbly:
-    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:edge}
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
     build: .
     restart: unless-stopped
     depends_on:
@@ -58,7 +58,7 @@ services:
   # Optional: local web search, only with --profile search.
   searxng-settings:
     profiles: ["search"]
-    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:edge}
+    image: ${SWARMBLY_IMAGE:-ghcr.io/sebastardito/swarmbly:latest}
     build: .
     user: root
     command: ["searxng-settings", "/etc/searxng"]

@@ -2,9 +2,11 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
-## Unreleased
+## 3.0.1 — Destinations, privacy receipts and Docker (2026-11-07)
 
-- **SwarmblyApp 0.3.1** (mirror at `de5d342`, not yet released in its own repository). It adds:
+Release notes: [`docs/releases/v3.0.1.md`](docs/releases/v3.0.1.md).
+
+- **SwarmblyApp 0.3.1** (mirror at tag `v0.3.1`, `64a4d82`). It adds:
   - **Destinations policy.** Every call that leaves the app (model, embeddings, public queries, swarm fragments) is classified as this computer, your own network or a third party. A model run by a third-party service is used only if you list its host in *Settings*, and your document passages go to it only if you also allow that. Fragments of other people's questions never go to a third party: a node whose model is a third-party service does not serve the swarm.
   - **A privacy receipt with every answer** («Qué salió de esta computadora»). It is built from what was actually sent, recorded at the moment of sending, not from what the app intended to send. Calls made from worker threads (parallel public lookups, the orchestrator's local steps) are recorded too: the 3.0.1 measurement found one public query missing from the app's receipt, fixed in `de5d342`.
   - **API keys in the system keychain**, or in `secrets.json` (0600) where there is none. They are no longer in `config.json`, and the configuration API never returns them. Existing keys are moved on first start.
@@ -25,12 +27,13 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 - **Docker without the bundled Ollama** (`docker/compose.external-ollama.yaml`). If Ollama already runs on this computer or another one, only the Swarmbly image (about 110 MB) is needed:
   - `SWARMBLY_OLLAMA_URL=auto` (the default) uses the bundled Ollama when it runs, and otherwise the one on this computer;
   - at start, the log says whether Ollama answers and which models are missing;
-  - the default image is `:edge` until the next tagged release.
+  - the default image is `:latest`, the last release (`:edge` follows `main`).
 - **Roadmap rewritten** ([`docs/ROADMAP.md`](docs/ROADMAP.md)). It now covers:
   - the project's history from the first idea (August 2026) to today;
   - the versions leading to a public network with volunteers (3.0.1 destinations, 3.1 projects, 3.2 providers and recipes, 3.3 tools, 3.4 trusted circles and private beta, 3.5 public beta, 4.0 protocol 1.0);
   - the volunteer programme;
   - the decisions of 4 November 2026.
+- `scripts/sync_components.py` records the commit of an annotated tag, not the tag object.
 
 ## 3.0.0 — Integrated distribution (2026-10-25)
 

@@ -40,16 +40,17 @@ flowchart LR
 | **5 · App and LAN swarm** | 11–25 October | SwarmblyApp: local chat, real peer-to-peer over the LAN (TLS 1.3, Ed25519, mDNS), validated with 2 to 5 machines. v0.2.0 ([10.5281/zenodo.23322639](https://doi.org/10.5281/zenodo.23322639)) added guided setup. Later work added the item vote and the composition planner, public evidence (Wikidata, Wikipedia, PubMed, SearXNG), local memory in the chat, hybrid retrieval, and a heterogeneous network of 4–5 machines with routing by capability and speed | Public evidence per item fixes what small models do not know (IUCN status 8/8 against about 1/8). The network survives losing its largest node. An open test showed that a personal request could leave the device and be written without data: personal requests now stay local |
 | **6 · One repository, one installer** | 25–28 October | Swarmbly AI 3.0.0 ([10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763)): SwarmblyCore, SwarmblyLCE and SwarmblyApp in one distribution, an interactive installer for three systems and documentation for the whole project | Measurements so far come from one person's material; a held-out benchmark is required before calling any change general |
 | **7 · Review of the next ideas** | 4 November | A review of the code and of the proposals for agents, a fuller app, projects, tools and templates. The decisions are listed [at the end](#decisions-behind-this-roadmap) | A configured third-party API received private passages on the "local" path. Controlling where each piece of data goes comes before any new feature. A Docker distribution was added so more people can try the app |
+| **8 · Destinations and a sealed benchmark** | 5–7 November | Swarmbly AI 3.0.1 ([notes](releases/v3.0.1.md)): an outbound policy before every call, a privacy receipt with every answer, API keys in the keychain, a Docker image. Two sealed banks written by the maintainer, run blind by a harness and scored by an isolated judge (κ = 0.885 against a blind human review) | Nothing forbidden left in 17/17 personal-data cases; the app's receipt matched the network in 23/24; composition is still weak (0/7 pass), which sets 3.2's priority |
 
 ### Where the project stands
 
 | Works, measured | Not yet, or refuted |
 |---|---|
-| Privacy lanes; personal requests stay local; evidence sent by name only | Where each call is processed is not yet enforced for third-party APIs (version 3.0.1) |
+| Privacy lanes; personal requests stay local; evidence sent by name only; where each call goes is enforced, with a privacy receipt per answer (3.0.1) | Consent asked per request; projects (3.1) |
 | LAN swarm: authentication, hedging, local fallback, learned speed | Internet swarms; no projects; no tools (MCP) or skills |
 | Batches with evidence; extraction with aggregation by code | Distributed long-form writing; coherence-tax criterion |
 | Local memory over text, Word, HTML and PDF | Grounded composition (fact sheet, tables by code, verifier) |
-| Installer for three systems; Docker image | Held-out benchmark; testers outside the project |
+| Installer for three systems; Docker image; sealed benchmark banks, run once per version | Testers outside the project; a second model on the banks |
 
 ### The road to a public network with volunteers
 
@@ -150,16 +151,17 @@ flowchart LR
 | **5 · App y enjambre LAN** | 11–25 de octubre | SwarmblyApp: chat local y P2P real en LAN (TLS 1.3, Ed25519, mDNS), validado con 2 a 5 máquinas. La v0.2.0 ([10.5281/zenodo.23322639](https://doi.org/10.5281/zenodo.23322639)) añadió la configuración guiada. Después llegaron el voto por ítem y el planificador de composición, la evidencia pública (Wikidata, Wikipedia, PubMed, SearXNG), la memoria local en el chat, la recuperación híbrida y una red heterogénea de 4–5 máquinas con enrutamiento por capacidad y velocidad | La evidencia por ítem corrige lo que los modelos pequeños no saben (estado UICN 8/8 frente a cerca de 1/8). La red sobrevive a la caída de su nodo mayor. Una prueba abierta mostró que una petición personal podía salir del equipo y redactarse sin datos: ahora lo personal se queda en local |
 | **6 · Un repositorio, un instalador** | 25–28 de octubre | Swarmbly AI 3.0.0 ([10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763)): SwarmblyCore, SwarmblyLCE y SwarmblyApp en una distribución, un instalador interactivo para tres sistemas y la documentación del conjunto | Lo medido procede del material de una sola persona; hace falta un banco reservado antes de llamar general a cualquier cambio |
 | **7 · Revisión de las próximas ideas** | 4 de noviembre | Una revisión del código y de las propuestas de agentes, una app más completa, proyectos, herramientas y plantillas. Las decisiones están [al final](#decisiones-detrás-de-esta-hoja-de-ruta) | Una API de terceros configurada recibía pasajes privados en la ruta «local». Controlar adónde va cada dato es previo a cualquier funcionalidad nueva. Se añadió una distribución Docker para que más personas puedan probar la app |
+| **8 · Destinos y un banco sellado** | 5–7 de noviembre | Swarmbly AI 3.0.1 ([notas](releases/v3.0.1.md#español)): una política de salida antes de cada llamada, un recibo de privacidad con cada respuesta, claves API en el llavero, una imagen Docker. Dos bancos sellados escritos por el mantenedor, corridos a ciegas por un arnés y puntuados por un juez aislado (κ = 0,885 frente a una revisión humana a ciegas) | No salió nada prohibido en 17/17 casos de datos personales; el recibo de la app coincidió con la red en 23/24; la composición sigue débil (0/7 superan), lo que fija la prioridad de 3.2 |
 
 ### Dónde está el proyecto
 
 | Funciona, medido | Todavía no, o refutado |
 |---|---|
-| Carriles de privacidad; lo personal se queda en local; evidencia enviada solo por nombre | Todavía no se controla dónde se procesa cada llamada con APIs de terceros (versión 3.0.1) |
+| Carriles de privacidad; lo personal se queda en local; evidencia enviada solo por nombre; se controla adónde va cada llamada, con un recibo de privacidad por respuesta (3.0.1) | Consentimiento pedido en cada petición; proyectos (3.1) |
 | Enjambre LAN: autenticación, coberturas, respaldo local, velocidad aprendida | Enjambres por internet; sin proyectos; sin herramientas (MCP) ni habilidades |
 | Lotes con evidencia; extracción con agregación por código | Redacción larga distribuida; criterio del impuesto de coherencia |
 | Memoria local sobre texto, Word, HTML y PDF | Composición fundamentada (hoja de datos, tablas por código, verificador) |
-| Instalador para tres sistemas; imagen Docker | Banco reservado; probadores ajenos al proyecto |
+| Instalador para tres sistemas; imagen Docker; bancos de preguntas sellados, una corrida por versión | Probadores ajenos al proyecto; un segundo modelo en los bancos |
 
 ### El camino a una red pública con voluntarios
 

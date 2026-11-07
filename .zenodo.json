@@ -1,8 +1,8 @@
 {
-  "title": "Swarmbly AI 3.0.0: integrated distribution of SwarmblyCore, SwarmblyLCE and SwarmblyApp",
-  "description": "<p><strong>Swarmbly AI</strong> is a decentralized, local-first AI system that splits the <em>problem</em> rather than the model. A local orchestrator keeps personal and sensitive work on the user's computer and sends public, decomposable work once to volunteer nodes running complete small language models; the answer is assembled locally.</p><p><strong>This record is the integrated distribution.</strong> From version 3.0.0 this repository is the umbrella of the project: <strong>SwarmblyCore</strong> (protocol, specification, reference implementation, measurement harness and benchmark, formerly the whole repository), <strong>SwarmblyLCE</strong> (the Local Cognitive Extension, a memory that lives only on the user's device; own record 10.5281/zenodo.23289041) and <strong>SwarmblyApp</strong> (desktop client, peer-to-peer node and network monitor; own records under 10.5281/zenodo.23322638), at versions tested together and recorded in components.lock, with an interactive installer for macOS, Linux and Windows (quick or custom install).</p><p><strong>Status:</strong> alpha. What is measured and what is not is stated in each component; the coherence-tax abandonment criterion is not met on its held-out test and the confidence map remains withdrawn. <strong>Licensing:</strong> software and specification under AGPL-3.0-or-later; document text under CC BY 4.0. The whitepaper (version 2) is deposited separately as 10.5281/zenodo.23031305.</p>",
+  "title": "Swarmbly AI 3.0.1: destinations, privacy receipts and Docker",
+  "description": "<p><strong>Version 3.0.1</strong> adds a destinations policy (every model server, public source and peer is classified as this computer, the user's own network or a third party, and an outbound policy runs before every call), a privacy receipt with every answer built from what was actually sent, API keys in the system keychain, a Docker distribution and a blind benchmark harness for sealed question banks. Measured with two sealed banks: no forbidden send in 17/17 personal-data cases, and the app's receipt matched the observed network traffic in 23/24 cases (the remaining case was fixed after the measurement and verified by tests).</p><p><strong>Swarmbly AI</strong> is a decentralized, local-first AI system that splits the <em>problem</em> rather than the model. A local orchestrator keeps personal and sensitive work on the user's computer and sends public, decomposable work once to volunteer nodes running complete small language models; the answer is assembled locally.</p><p><strong>This record is the integrated distribution.</strong> From version 3.0.0 this repository is the umbrella of the project: <strong>SwarmblyCore</strong> (protocol, specification, reference implementation, measurement harness and benchmark, formerly the whole repository), <strong>SwarmblyLCE</strong> (the Local Cognitive Extension, a memory that lives only on the user's device; own record 10.5281/zenodo.23289041) and <strong>SwarmblyApp</strong> (desktop client, peer-to-peer node and network monitor; own records under 10.5281/zenodo.23322638), at versions tested together and recorded in components.lock, with an interactive installer for macOS, Linux and Windows (quick or custom install).</p><p><strong>Status:</strong> alpha. What is measured and what is not is stated in each component; the coherence-tax abandonment criterion is not met on its held-out test and the confidence map remains withdrawn. <strong>Licensing:</strong> software and specification under AGPL-3.0-or-later; document text under CC BY 4.0. The whitepaper (version 2) is deposited separately as 10.5281/zenodo.23031305.</p>",
   "upload_type": "software",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "language": "eng",
   "access_right": "open",
   "license": "AGPL-3.0-or-later",
@@ -105,6 +105,12 @@
       "relation": "isDocumentedBy",
       "resource_type": "publication-technicalnote",
       "scheme": "url"
+    },
+    {
+      "identifier": "10.5281/zenodo.23650763",
+      "relation": "isNewVersionOf",
+      "resource_type": "software",
+      "scheme": "doi"
     }
   ],
   "notes": "Defensive publication. The author asserts no patent claims over the disclosed techniques and places them in the public domain for patenting purposes. Elements E1-E18 are prior art from version 1.4 (10.5281/zenodo.21957088, 2026-08-14) and E19-E24 from version 2 (10.5281/zenodo.23031305, 2026-09-29); this distribution adds the integrated packaging of SwarmblyCore, SwarmblyLCE and SwarmblyApp and does not withdraw any earlier element. Governance intent is documented in GOVERNANCE.md (Swiss Verein now, Stiftung later; DCO not CLA; no premine and no transferable token).",
