@@ -112,3 +112,25 @@ def test_pdf_without_pdftotext_is_read_with_pypdf(tmp_path, monkeypatch):
     assert reason == "" and "acceso movil" in text
     hits = SourceIndex().retrieve([tmp_path], "acceso movil AB1 escritorio remoto", k=1)
     assert hits and hits[0]["source"] == "manual.pdf"
+
+
+def test_dense_fusion_leaves_out_unrelated_passages(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "manual.md").write_text(
+        "Descarga la aplicación de acceso remoto y el visor VNC en el móvil.\n\n"
+        "Desactiva la VPN del móvil cuando no uses la unidad de cría AB1.\n", encoding="utf-8")
+    (root / "notas.md").write_text("Me gusta el color naranja y mi nombre es Ana.\n",
+                                   encoding="utf-8")
+
+    def embed(texts, kind):        # toy vectors: "remote" topic vs "personal" topic
+        out = []
+        for t in texts:
+            t = t.lower()
+            remote = sum(w in t for w in ("vnc", "remoto", "móvil", "vpn", "aplicaciones", "app"))
+            personal = sum(w in t for w in ("naranja", "nombre", "color"))
+            out.append([float(remote), float(personal), 0.1])
+        return out
+    index = SourceIndex()
+    hits = index.retrieve([root], "¿Qué aplicaciones necesito?", k=4, embed=embed)
+    assert hits and {h["source"] for h in hits} == {"manual.md"}
