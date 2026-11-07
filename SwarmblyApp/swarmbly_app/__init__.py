@@ -7,7 +7,7 @@ Fragments the *problem*, not the *model*.
 
 from __future__ import annotations
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 __license__ = "AGPL-3.0-or-later"
 PROTOCOL_SPEC_VERSION = "0.2"  # SwarmblyAI docs/SPEC_EN.md (wire version)
 LCE_SPEC_VERSION = "0.1"       # SwarmblyLCE SPEC_LCE

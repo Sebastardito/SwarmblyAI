@@ -8,6 +8,9 @@ from pathlib import Path
 
 # Tests never touch the developer's real keychain (3.0.1 keystore).
 os.environ["SWARMBLY_KEYRING"] = "off"
+# ...nor create projects in the real Documents folder (3.1)
+import tempfile  # noqa: E402
+os.environ["SWARMBLY_PROJECTS_DIR"] = tempfile.mkdtemp(prefix="swarmbly-projects-")
 
 import pytest
 

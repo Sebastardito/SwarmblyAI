@@ -1,5 +1,48 @@
 # Changelog
 
+## 0.4.0 — Projects (unreleased)
+
+Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
+3.0.1 on the sealed banks.
+
+- **Projects** (`swarmbly_app/projects.py`, `/api/projects`, a project bar
+  above the conversation). A project is a folder of its own, by default
+  `Documents/Swarmbly/<Project>`, with `sources/`, `memory/` (glossary and
+  notes), `chats/` and `exports/`, and a `swarmbly-project.json` without
+  secrets.
+  - **Isolation.** A conversation in a project reads only that project's
+    documents and memory; the personal sources only if the project allows it
+    (`include_personal`); a personal conversation never reads a project.
+  - **Chats in the folder.** Each conversation of a project is kept as
+    `chats/<id>.json`, rewritten after every change. Opening a project folder
+    brings its chats into the app.
+  - **`.swarmbly` packages.** Export writes the project file, sources, memory
+    and chats with the SHA-256 of each file in a manifest; it stops if a file
+    contains one of the user's API keys. Restore verifies every hash, refuses
+    extra files and unsafe paths, restores into a new folder, and restores as
+    a copy (new ids) when the same project is already open.
+  - **Cloud-sync warning** when the folder is under iCloud Drive (including
+    Desktop and Documents on macOS), Dropbox, OneDrive, Google Drive and
+    similar.
+  - Closing a project removes it from the app and keeps its folder.
+- **Stable citations.** Each passage carries `doc:<sha12>#p<n>` (content hash
+  and paragraph), kept in the answer's metadata and shown in *Explore
+  processing*. It resolves after a project is moved or restored on another
+  computer; it stops resolving when the file changes.
+- **C1 lives in SwarmblyLCE** (`swarmbly_lce.c1`, pin `f053d77`): the adapter
+  only decides which folders a request may read. `source_readers.py` remains
+  as a re-export.
+- **Consent per question for public lookups.** A personal or sensitive
+  question, or one your documents answer, gets no public lookup unless you
+  say yes for that question (*Also search public sources*, showing the names
+  that would be sent). `privacy.public_lookup_consent = "always"` keeps the
+  3.0.x behaviour. In the receipt, `consentimiento.otorgado` is now always
+  true or false and `base` says what it rests on; the receipt also says its
+  scope (`ambito`: personal or the project).
+- Tests: `tests/test_projects.py` (isolation of two projects and the personal
+  space, chats in the folder, export and restore on a second app with its
+  citations, damaged and unsafe packages, keys never exported, the API).
+
 ## 0.3.1 — Destinations and privacy receipts (2026-11-07)
 
 First release since 0.2.0. It also contains 0.2.1 and 0.3.0 below, which

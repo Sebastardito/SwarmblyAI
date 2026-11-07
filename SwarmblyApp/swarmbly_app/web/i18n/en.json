@@ -154,7 +154,9 @@
   "evidenceChip": "Public sources · {n}",
   "evidenceTitle": "Public context from Wikipedia was added to {n} items; only those items' texts were sent.",
   "lceChip": "Local sources · {n}",
-  "lceTitle": "The answer used passages from your sources (LCE C1); they did not leave this device."
+  "lceTitle": "The answer used passages from your sources (LCE C1); they did not leave this device.",
+  "publicOffer": "Also search public sources",
+  "publicOfferTitle": "Your question is about you or your documents, so nothing public was looked up. If you accept, only these names are sent: {names}"
  },
  "explore": {
   "title": "How this answer was made",
@@ -253,8 +255,17 @@
     "nombre_personal": "your name",
     "fragmento": "fragment of a public request",
     "desconocido": "unclassified content"
-   }
-  }
+   },
+   "scope": "Scope",
+   "project": "project",
+   "personal": "personal",
+   "consent": "Consent",
+   "consentYes": "asked and given",
+   "consentNo": "needed and not given: nothing was looked up",
+   "consentNotNeeded": "not needed",
+   "consentBase": "Basis:"
+  },
+  "citeTitle": "Stable citation: the file's hash and the paragraph. It still holds if the project is moved or restored on another computer."
  },
  "monitor": {
   "title": "Swarm",
@@ -841,5 +852,37 @@
   "title": "Support the project",
   "body": "Swarmbly is developed independently, with no institutional funding, as an AGPL-licensed digital public good. If you find it useful, you can support its early development. Support never buys influence over the roadmap, the licence or the governance.",
   "link": "buymeacoffee.com/swarmbly"
+ },
+ "project": {
+  "label": "Project",
+  "personal": "Personal (no project)",
+  "unavailable": "folder not available",
+  "new": "New project",
+  "open": "Open a project folder…",
+  "restore": "Restore a .swarmbly package…",
+  "name": "Name",
+  "namePlaceholder": "e.g. Quinoa thesis",
+  "where": "Where the folder is created",
+  "newHint": "A project is a folder of yours: sources/ (documents), memory/ (glossary and notes), chats/ (the conversations) and exports/. The project's conversations read only its documents.",
+  "create": "Create",
+  "created": "Project created in {path}",
+  "folder": "Project folder",
+  "openHint": "The folder must contain swarmbly-project.json. Its chats are added to this app.",
+  "openAction": "Open",
+  "opened": "Project opened · {n} conversations added",
+  "badPackage": "Package refused:",
+  "restoreSummary": "{files} files checked by their hash · {chats} conversations · {sources} documents.",
+  "restoreHint": "It is restored into a new folder inside {path}; nothing existing is overwritten.",
+  "restoreAction": "Restore",
+  "restored": "Project restored in {path} · {n} conversations",
+  "restoredCopy": "That project was already open here: restored as a copy in {path} · {n} conversations",
+  "export": "Export .swarmbly",
+  "exported": "Package saved in {path}",
+  "includePersonal": "Include my personal sources",
+  "includePersonalHint": "When on, this project's answers also read your personal sources (they still never leave this computer).",
+  "close": "Close project",
+  "closeTitle": "Close the project in this app",
+  "closeBody": "The project stops showing here. Its folder and all its files, chats included, stay in {path}; you can open it again at any time.",
+  "cloudWarning": "This folder is synced with a cloud service. The service may move files to the cloud to free space or create duplicate copies (\"name 2\"), and an open project can break. Prefer a folder that is not synced, or set this one to always stay on this computer."
  }
 }

@@ -6,7 +6,7 @@ import io
 import zipfile
 from pathlib import Path
 
-from swarmbly_app import source_readers as sr
+from swarmbly_lce.c1 import readers as sr  # C1 readers live in SwarmblyLCE since 3.1
 from swarmbly_app.lce_adapter import LCEAdapter
 from swarmbly_app.paths import DataDirs
 

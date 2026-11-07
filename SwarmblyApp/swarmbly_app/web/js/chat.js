@@ -10,6 +10,7 @@ const Chat = (() => {
   let active = null;
   let conversations = [];
   let attachments = [];
+  let projects = { items: [], active: "", default_parent: "", default_parent_warning: "" };
   const pending = {};           // message_id -> {el, partial}
   const early = {};             // message_id -> events that arrived before the element
   const requestOf = {};         // message_id -> request_id
@@ -19,7 +20,7 @@ const Chat = (() => {
     root = el;
     build();
     App.onEvent(onEvent);
-    loadConversations();
+    loadProjects().then(() => loadConversations());
   }
 
   function build() {
@@ -64,11 +65,179 @@ const Chat = (() => {
         h("label.inline", h("span", t("chat.model")), els.model),
         h("span.spacer"), els.stop, els.send),
       els.hint);
+    els.projectStrip = h("div.project-strip");
     UI.append(root, h("div.chat-layout", els.side,
-      h("div.chat-main", h("header.chat-head", els.title, els.picker, els.actions), els.thread, composer)));
+      h("div.chat-main", els.projectStrip, h("header.chat-head", els.title, els.picker, els.actions),
+        els.thread, composer)));
     refreshModels();
     updateHint();
   }
+
+  // ---- projects (3.1) ------------------------------------------------------------
+  /* A project is a folder of its own: its documents, its memory and its chats.
+     Personal conversations never read a project, and a project reads the
+     personal sources only if you allow it. */
+  const activeProject = () => projects.items.find((p) => p.id === projects.active) || null;
+
+  async function loadProjects() {
+    try { projects = await Api.get("/api/projects"); } catch (_) { /* keep the last list */ }
+    renderProjects();
+  }
+
+  function renderProjects() {
+    clear(els.projectStrip);
+    const sel = h("select.project-select", { "aria-label": t("project.label") });
+    sel.appendChild(h("option", { value: "" }, t("project.personal")));
+    for (const p of projects.items) {
+      const o = h("option", { value: p.id, disabled: p.available === false },
+        p.available === false ? `${p.name} (${t("project.unavailable")})` : p.name);
+      if (p.id === projects.active) o.selected = true;
+      sel.appendChild(o);
+    }
+    sel.appendChild(h("option", { value: "__new" }, `+ ${t("project.new")}`));
+    sel.appendChild(h("option", { value: "__open" }, t("project.open")));
+    sel.appendChild(h("option", { value: "__restore" }, t("project.restore")));
+    sel.addEventListener("change", () => onProjectChoice(sel.value));
+    const p = activeProject();
+    const actions = [];
+    if (p) {
+      const incl = h("input", { type: "checkbox" });
+      incl.checked = !!p.include_personal;
+      incl.addEventListener("change", async () => {
+        try {
+          await Api.request("PATCH", `/api/projects/${encodeURIComponent(p.id)}`, { include_personal: incl.checked });
+          await loadProjects();
+        } catch (e) { UI.toast(e.message, "error"); }
+      });
+      actions.push(h("label.inline.small", { title: t("project.includePersonalHint") }, incl,
+        h("span", t("project.includePersonal"))));
+      actions.push(button(t("project.export"), exportProject, "ghost small"));
+      actions.push(button(t("project.close"), closeProject, "ghost small"));
+    }
+    els.projectStrip.appendChild(h("div.project-row",
+      h("label.inline", h("span.project-label", t("project.label")), sel), h("span.spacer"), actions));
+    if (p) {
+      els.projectStrip.appendChild(h("p.project-path", { title: p.path }, p.path));
+      if (p.cloud_warning) els.projectStrip.appendChild(h("p.note.project-warning", t("project.cloudWarning")));
+    }
+  }
+
+  async function onProjectChoice(value) {
+    if (value === "__new") return newProject();
+    if (value === "__open") return openProject();
+    if (value === "__restore") return restoreProject();
+    try { await Api.put("/api/projects/active", { id: value }); } catch (e) { UI.toast(e.message, "error"); }
+    active = null;
+    await loadProjects();
+    await loadConversations();
+  }
+
+  async function newProject() {
+    const name = h("input.text", { type: "text", placeholder: t("project.namePlaceholder"),
+      "aria-label": t("project.name") });
+    const where = h("input.text", { type: "text", value: projects.default_parent || "",
+      "aria-label": t("project.where") });
+    const body = h("div.form-stack",
+      h("label.stack", h("span", t("project.name")), name),
+      h("label.stack", h("span", t("project.where")), where),
+      h("p.muted", t("project.newHint")),
+      projects.default_parent_warning ? h("p.note", t("project.cloudWarning")) : null);
+    setTimeout(() => name.focus(), 50);
+    const ok = await UI.modal(t("project.new"), body, [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("project.create"), value: true, kind: "primary" }]);
+    if (!ok || !name.value.trim()) { renderProjects(); return; }
+    try {
+      const p = await Api.post("/api/projects", { name: name.value.trim(), parent: where.value.trim() || null });
+      UI.toast(t("project.created").replace("{path}", p.path), "ok");
+    } catch (e) { UI.toast(e.message, "error"); }
+    active = null;
+    await loadProjects();
+    await loadConversations();
+  }
+
+  async function openProject() {
+    const path = h("input.text", { type: "text", placeholder: "~/Documents/Swarmbly/…",
+      "aria-label": t("project.folder") });
+    setTimeout(() => path.focus(), 50);
+    const ok = await UI.modal(t("project.open"), h("div.form-stack",
+      h("label.stack", h("span", t("project.folder")), path), h("p.muted", t("project.openHint"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("project.openAction"), value: true, kind: "primary" }]);
+    if (!ok || !path.value.trim()) { renderProjects(); return; }
+    try {
+      const p = await Api.post("/api/projects/open", { path: path.value.trim() });
+      UI.toast(t("project.opened").replace("{n}", p.chats_added || 0), "ok");
+    } catch (e) { UI.toast(e.message, "error"); }
+    active = null;
+    await loadProjects();
+    await loadConversations();
+  }
+
+  async function rawPost(path, blob) {
+    const resp = await fetch(path, { method: "POST", body: blob,
+      headers: { "X-Swarmbly-Token": Api.TOKEN, "Content-Type": "application/octet-stream" } });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.detail || resp.statusText);
+    return data;
+  }
+
+  function restoreProject() {
+    const input = h("input", { type: "file", accept: ".swarmbly", hidden: true });
+    input.addEventListener("change", async () => {
+      const file = input.files[0];
+      input.remove();
+      if (!file) { renderProjects(); return; }
+      let info;
+      try { info = await rawPost("/api/projects/inspect", file); } catch (e) {
+        UI.toast(`${t("project.badPackage")} ${e.message}`, "error"); renderProjects(); return;
+      }
+      const ok = await UI.modal(t("project.restore"), h("div.form-stack",
+        h("p", h("strong", info.project.name)),
+        h("p.muted", t("project.restoreSummary").replace("{files}", info.files)
+          .replace("{chats}", info.chats).replace("{sources}", info.sources)),
+        h("p.muted", t("project.restoreHint").replace("{path}", projects.default_parent || ""))), [
+        { label: t("common.cancel"), value: false, kind: "ghost" },
+        { label: t("project.restoreAction"), value: true, kind: "primary" }]);
+      if (!ok) { renderProjects(); return; }
+      try {
+        const p = await rawPost("/api/projects/import", file);
+        UI.toast(t(p.restored_as_copy ? "project.restoredCopy" : "project.restored")
+          .replace("{path}", p.path).replace("{n}", p.chats_added || 0), "ok");
+      } catch (e) { UI.toast(e.message, "error"); }
+      active = null;
+      await loadProjects();
+      await loadConversations();
+    });
+    document.body.appendChild(input);
+    input.click();
+  }
+
+  async function exportProject() {
+    const p = activeProject();
+    if (!p) return;
+    try {
+      const out = await Api.post(`/api/projects/${encodeURIComponent(p.id)}/export`, {});
+      const name = out.path.split(/[\\/]/).pop();
+      UI.toast(t("project.exported").replace("{path}", out.path), "ok");
+      await Api.download(`/api/projects/${encodeURIComponent(p.id)}/export/${encodeURIComponent(name)}`, name);
+    } catch (e) { UI.toast(e.message, "error"); }
+  }
+
+  async function closeProject() {
+    const p = activeProject();
+    if (!p) return;
+    const ok = await UI.modal(t("project.closeTitle"), h("p", t("project.closeBody").replace("{path}", p.path)), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("project.close"), value: true, kind: "danger" }]);
+    if (!ok) return;
+    try { await Api.del(`/api/projects/${encodeURIComponent(p.id)}`); } catch (e) { UI.toast(e.message, "error"); }
+    active = null;
+    await loadProjects();
+    await loadConversations();
+  }
+
+  const projectQuery = () => `?project=${encodeURIComponent(projects.active || "")}`;
 
   function modeOptions() {
     return ["local", "lan", "auto", "internet"].map((m) => ({
@@ -103,7 +272,7 @@ const Chat = (() => {
 
   // ---- conversations ---------------------------------------------------------
   async function loadConversations(openId) {
-    try { conversations = await Api.get("/api/conversations"); } catch (_) { conversations = []; }
+    try { conversations = await Api.get(`/api/conversations${projectQuery()}`); } catch (_) { conversations = []; }
     renderList();
     const target = openId || active || conversations[0]?.id;
     if (target && conversations.some((c) => c.id === target)) await open(target);
@@ -152,7 +321,8 @@ const Chat = (() => {
   }
 
   async function newConversation() {
-    const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value });
+    const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value,
+      project_id: projects.active || "" });
     await loadConversations(conv.id);
     els.input.focus();
   }
@@ -212,7 +382,8 @@ const Chat = (() => {
     const text = composeText();
     if (!text) return;
     if (!active) {
-      const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value });
+      const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value,
+        project_id: projects.active || "" });
       active = conv.id;
     }
     els.input.value = "";
@@ -228,7 +399,7 @@ const Chat = (() => {
     }
     els.thread.querySelector(".empty-state")?.remove();
     track(res);
-    conversations = await Api.get("/api/conversations");
+    conversations = await Api.get(`/api/conversations${projectQuery()}`);
     renderList();
     els.title.textContent = conversations.find((c) => c.id === active)?.title || "";
   }
@@ -377,17 +548,24 @@ const Chat = (() => {
     if (meta.status === "failed" || meta.status === "stopped") {
       actions.push(button(t("chat.retry"), () => retry(m.id), "ghost small"));
     }
+    if (meta.public_offer?.entities?.length) {
+      // 3.1: nothing public was looked up; your yes is asked for this question only
+      const names = meta.public_offer.entities.join(", ");
+      actions.push(button(t("chat.publicOffer"), () => retry(m.id, true), "small",
+        { title: t("chat.publicOfferTitle").replace("{names}", names) }));
+    }
     return h("footer.msg-foot", h("div.chips", chips), h("div.msg-actions", actions));
   }
 
-  async function retry(messageId) {
+  async function retry(messageId, allowPublic = false) {
     if (!active) return;
     try {
-      track(await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(messageId)}/retry`, {}));
+      track(await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(messageId)}/retry`,
+        allowPublic ? { allow_public: true } : {}));
     } catch (err) { UI.toast(err.message, "error"); }
   }
 
-  function relabel() { build(); loadConversations(active); }
+  function relabel() { build(); loadProjects().then(() => loadConversations(active)); }
   function show() { refreshModels(); updateHint(); }
 
   return { init, show, relabel };
@@ -412,7 +590,8 @@ const Explore = (() => {
     }
     if (lce && lce.sources?.length) {
       parts.push(h("p.muted", t("explore.lceNote")),
-        h("ul.sources", lce.sources.map((s) => h("li", `[${s.n}] ${s.source}`))));
+        h("ul.sources", lce.sources.map((s) => h("li", `[${s.n}] ${s.rel || s.source}`,
+          s.cite ? h("code.cite", { title: t("explore.citeTitle") }, ` ${s.cite}`) : null))));
     }
     return parts.length ? h("div", parts) : null;
   }
@@ -477,7 +656,13 @@ const Explore = (() => {
       readout(t("explore.receipt.model"), model, "measured"),
       readout(t("explore.receipt.sends"), String((r.envios || []).length), "measured"),
       readout(t("explore.receipt.bytes"), UI.fmtBytes ? UI.fmtBytes(r.bytes_salientes || 0) : r.bytes_salientes, "measured"),
-      readout(t("explore.receipt.passages"), String(r.pasajes_enviados || 0), "measured"))];
+      readout(t("explore.receipt.passages"), String(r.pasajes_enviados || 0), "measured"),
+      readout(t("explore.receipt.scope"), r.ambito?.tipo === "proyecto"
+        ? `${t("explore.receipt.project")} ${r.ambito.nombre || ""}` : t("explore.receipt.personal"), "measured"),
+      readout(t("explore.receipt.consent"), r.consentimiento?.requerido
+        ? t(r.consentimiento.otorgado ? "explore.receipt.consentYes" : "explore.receipt.consentNo")
+        : t("explore.receipt.consentNotNeeded"), "measured"))];
+    if (r.consentimiento?.base) parts.push(h("p.muted", `${t("explore.receipt.consentBase")} ${r.consentimiento.base}`));
     if (!(r.envios || []).length) parts.push(h("p.muted", t("explore.receipt.nothing")));
     else parts.push(h("ul.sources", r.envios.map((e) => h("li",
       chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),

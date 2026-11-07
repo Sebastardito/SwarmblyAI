@@ -155,8 +155,17 @@ def test_local_answer_with_public_evidence_sends_only_names(app_state, fake_chat
     chat.public_provider = Provider()
     conv = chat.create_conversation(mode="local")
     q = "¿Qué categoría UICN da mi tesis a Mimus melanotis y cuál es la actual?"
+    # 3.1: about your thesis → no public lookup until you say yes for this question
     chat.send(conv["id"], q, mode="local", run_async=False)
+    first = chat.get_messages(conv["id"])[-1]
+    assert asked == [] and first["meta"]["public_offer"]["entities"] == ["Mimus melanotis"]
+    receipt = first["meta"]["receipt"]
+    assert receipt["consentimiento"]["requerido"] is True
+    assert receipt["consentimiento"]["otorgado"] is False and receipt["envios"] == []
+    chat.send(conv["id"], q, mode="local", run_async=False, allow_public=True)
     assert asked == ["Mimus melanotis"]            # the model's names are not sent
+    yes = chat.get_messages(conv["id"])[-1]["meta"]["receipt"]["consentimiento"]
+    assert yes["otorgado"] is True and yes["base"] == "lo pediste en esta pregunta"
     assert all(q not in a for a in asked)
     system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
     assert not any("[1] (tesis.md)" in s for s in system)      # all in the user's turn now
@@ -284,7 +293,7 @@ def test_fusion_model_writes_only_fused_answers_and_expansion_uses_the_default(a
     chat.public_provider = Provider()
     conv = chat.create_conversation(mode="local", model="big:27b")
     chat.send(conv["id"], "¿Cuál es el estado actual de Mimus melanotis?", mode="local",
-              run_async=False)
+              run_async=False, allow_public=True)     # your thesis matched: your yes
     assert fake.calls[0]["model"] == "small:3b"          # expansion
     assert fake.calls[-1]["model"] == "big:27b"           # fused answer
     conv2 = chat.create_conversation(mode="local", model="small:3b")
@@ -349,7 +358,7 @@ def test_empty_fused_answer_falls_back_to_the_conversation_model(app_state, fake
     fake.stream_chat = stream
     conv = chat.create_conversation(mode="local", model="small:3b")
     chat.send(conv["id"], "¿Cuál es el estado actual de Mimus melanotis?", mode="local",
-              run_async=False)
+              run_async=False, allow_public=True)     # your thesis matched: your yes
     final = chat.get_messages(conv["id"])[-1]
     assert final["content"] and final["meta"]["fusion_fallback"].startswith("big:27b")
     assert [c["model"] for c in fake.calls][-2:] == ["big:27b", "small:3b"]

@@ -351,8 +351,8 @@ class TestPersonalStaysLocal:
                 seen["text"] = text
                 return {"routed": "local", "reason": "stub", "metadata": {}, "stages": []}
         chat.orchestrator = lambda: Stub()
-        chat.retriever = lambda q, kw="": hits
-        chat.retrieval_active = lambda: True
+        chat.retriever = lambda q, kw="", project_id="": hits
+        chat.retrieval_active = lambda project_id="": True
         return chat, seen
 
     def test_about_me_with_sources_stays_local(self, fake_chat):

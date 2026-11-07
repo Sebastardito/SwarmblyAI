@@ -75,6 +75,8 @@ _MIGRATIONS = [
     ("stats_daily", "dispatched", "INTEGER NOT NULL DEFAULT 0"),
     ("stats_daily", "dispatch_failed", "INTEGER NOT NULL DEFAULT 0"),
     ("stats_daily", "distributed_requests", "INTEGER NOT NULL DEFAULT 0"),
+    # 3.1: a conversation belongs to a project ("" = personal)
+    ("conversations", "project_id", "TEXT NOT NULL DEFAULT ''"),
 ]
 
 
@@ -101,15 +103,40 @@ class Database:
 
     # -- conversations -------------------------------------------------------
     def create_conversation(self, title: str = "", mode: str = "local",
-                            model: str = "") -> dict[str, Any]:
+                            model: str = "", project_id: str = "") -> dict[str, Any]:
         conv_id = uuid.uuid4().hex[:16]
         now = time.time()
         with self._lock:
             self._conn.execute(
-                "INSERT INTO conversations(id,title,created_at,updated_at,mode,model)"
-                " VALUES(?,?,?,?,?,?)", (conv_id, title, now, now, mode, model))
+                "INSERT INTO conversations(id,title,created_at,updated_at,mode,model,project_id)"
+                " VALUES(?,?,?,?,?,?,?)", (conv_id, title, now, now, mode, model, project_id))
             self._conn.commit()
         return self.get_conversation(conv_id)  # type: ignore[return-value]
+
+    def import_conversation(self, conv: dict[str, Any], messages: list[dict[str, Any]],
+                            project_id: str) -> bool:
+        """Insert a conversation read from a project folder, keeping its ids and
+        times. False if a conversation with that id already exists here."""
+        with self._lock:
+            if self._conn.execute("SELECT 1 FROM conversations WHERE id=?",
+                                  (conv["id"],)).fetchone():
+                return False
+            now = time.time()
+            self._conn.execute(
+                "INSERT INTO conversations(id,title,created_at,updated_at,mode,model,project_id)"
+                " VALUES(?,?,?,?,?,?,?)",
+                (conv["id"], str(conv.get("title") or ""), float(conv.get("created_at") or now),
+                 float(conv.get("updated_at") or now), str(conv.get("mode") or "local"),
+                 str(conv.get("model") or ""), project_id))
+            for m in messages:
+                self._conn.execute(
+                    "INSERT OR IGNORE INTO messages(id,conversation_id,role,content,created_at,"
+                    "meta,stages) VALUES(?,?,?,?,?,?,?)",
+                    (str(m["id"]), conv["id"], str(m.get("role") or "user"),
+                     str(m.get("content") or ""), float(m.get("created_at") or now),
+                     json.dumps(m.get("meta") or {}), json.dumps(m.get("stages") or [])))
+            self._conn.commit()
+        return True
 
     def get_conversation(self, conv_id: str) -> dict[str, Any] | None:
         with self._lock:
@@ -117,10 +144,16 @@ class Database:
                 "SELECT * FROM conversations WHERE id=?", (conv_id,)).fetchone()
         return dict(row) if row else None
 
-    def list_conversations(self) -> list[dict[str, Any]]:
+    def list_conversations(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        """All conversations, or those of one project ("" = personal)."""
         with self._lock:
-            rows = self._conn.execute(
-                "SELECT * FROM conversations ORDER BY updated_at DESC").fetchall()
+            if project_id is None:
+                rows = self._conn.execute(
+                    "SELECT * FROM conversations ORDER BY updated_at DESC").fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT * FROM conversations WHERE project_id=? ORDER BY updated_at DESC",
+                    (project_id,)).fetchall()
         return [dict(r) for r in rows]
 
     def update_conversation(self, conv_id: str, **fields: Any) -> None:

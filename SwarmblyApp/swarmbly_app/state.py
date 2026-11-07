@@ -136,14 +136,20 @@ class AppState:
         self.chat.retriever = self._lce_retrieve
         self.chat.retrieval_active = self._lce_active
         self.chat.retrieval_candidates = lambda: list(getattr(self.lce, "last_candidates", []))
-        self.chat.glossary = lambda text: (
-            self.lce.glossary_terms(text, (self.config.all().get("lce") or {})
-                                    .get("sources_dirs") or [])
-            if self._lce_active() else "")
-        self.chat.glossary_entries = lambda: (
-            self.lce.glossary_entries((self.config.all().get("lce") or {})
-                                      .get("sources_dirs") or [])
-            if self._lce_active() else [])
+        self.chat.glossary = lambda text, project_id="": (
+            self.lce.glossary_terms(text, roots=self.c1_roots(project_id))
+            if self._lce_active(project_id) else "")
+        self.chat.glossary_entries = lambda project_id="": (
+            self.lce.glossary_entries(roots=self.c1_roots(project_id))
+            if self._lce_active(project_id) else [])
+        # 3.1: projects — folders of their own, with their chats kept in them
+        from .projects import ProjectRegistry
+        self.projects = ProjectRegistry(self.config.all, self.config.update)
+        self.chat.on_conversation_changed = self._copy_chat_to_project
+        self.chat.on_conversation_deleted = self._remove_chat_from_project
+        self.chat.project_name = lambda pid: (getattr(self.projects.get(pid), "name", "")
+                                              if pid else "")
+        self.sync_projects()
         from .doctor import Installer
         from .model_manager import OllamaModels
         self.installer = Installer(self.bus)
@@ -156,19 +162,75 @@ class AppState:
                            if e["type"] == "models.pull"
                            and e["payload"].get("status") == "done" else None)
 
-    def _lce_active(self) -> bool:
+    def _personal_c1(self) -> bool:
         cfg = self.config.all().get("lce") or {}
         return bool(cfg.get("enabled")) and cfg.get("level") in ("C1", "C2", "C3", "C4")
 
-    def _lce_retrieve(self, query: str, expansion: str = "") -> list:
-        """LCE C1 retrieval for local answers, when the user enabled C1."""
-        if not self._lce_active():
+    def _lce_active(self, project_id: str = "") -> bool:
+        """C1 for this conversation: a project always reads its own folder;
+        a personal conversation reads the personal sources when C1 is on."""
+        if project_id:
+            return self.projects.get(project_id) is not None
+        return self._personal_c1()
+
+    def c1_roots(self, project_id: str = "") -> list:
+        """The folders a conversation may read (3.1 isolation): a project's
+        sources and memory, plus the personal sources only if the project says
+        so; a personal conversation never reads a project."""
+        cfg = self.config.all().get("lce") or {}
+        personal = self.lce.personal_roots(cfg.get("sources_dirs") or [])
+        if not project_id:
+            return personal
+        project = self.projects.get(project_id)
+        if project is None:
+            return []
+        roots = project.roots()
+        if project.include_personal and self._personal_c1():
+            roots += personal
+        return roots
+
+    def _lce_retrieve(self, query: str, expansion: str = "", project_id: str = "") -> list:
+        """LCE C1 retrieval for local answers, over the conversation's folders."""
+        if not self._lce_active(project_id):
             return []
         cfg = self.config.all().get("lce") or {}
         return self.lce.retrieve(query, k=int(cfg.get("retrieval_k", 6)),
-                                 extra_dirs=cfg.get("sources_dirs") or [],
-                                 expansion=expansion,
+                                 expansion=expansion, roots=self.c1_roots(project_id),
                                  embed=self._embed if cfg.get("dense_retrieval", True) else None)
+
+    # -- projects (3.1) -------------------------------------------------------------
+    def _copy_chat_to_project(self, conversation_id: str) -> None:
+        conv = self.db.get_conversation(conversation_id)
+        if not conv or not conv.get("project_id"):
+            return
+        project = self.projects.get(conv["project_id"])
+        if project is not None:
+            project.write_chat(conv, self.db.get_messages(conversation_id))
+
+    def _remove_chat_from_project(self, conv: dict) -> None:
+        project = self.projects.get(conv.get("project_id") or "")
+        if project is not None:
+            project.chat_file(conv["id"]).unlink(missing_ok=True)
+
+    def sync_projects(self, project_id: str | None = None) -> dict[str, int]:
+        """Bring into the app the chats a project folder has and the app does
+        not (a restored or copied project). The folder's copy is never
+        overwritten here."""
+        added: dict[str, int] = {}
+        from .projects import Project
+        for project in self.projects.list():
+            if not isinstance(project, Project) or (project_id and project.id != project_id):
+                continue
+            n = 0
+            for data in project.read_chats():
+                try:
+                    if self.db.import_conversation(data["conversation"],
+                                                   data.get("messages") or [], project.id):
+                        n += 1
+                except Exception:
+                    continue
+            added[project.id] = n
+        return added
 
     def _embed(self, texts: list[str], kind: str) -> list[list[float]]:
         """Vectors from the local embedding model (Ollama /api/embed); local only."""

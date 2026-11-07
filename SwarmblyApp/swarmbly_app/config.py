@@ -94,6 +94,15 @@ DEFAULTS: dict[str, Any] = {
         # of the user's documents need the second switch as well.
         "third_party_models": [],
         "third_party_passages": False,
+        # 3.1: a public lookup made for a personal or sensitive question needs
+        # the user's yes for that question ("ask"); "always" keeps the 3.0.x
+        # behaviour (public evidence on = consent).
+        "public_lookup_consent": "ask",
+    },
+    # 3.1: projects are folders of their own; the app keeps where they are.
+    "projects": {
+        "items": [],                  # [{"id", "path"}]
+        "active": "",                 # "" = personal (no project)
     },
     "lce": {
         "enabled": False,
@@ -263,6 +272,7 @@ _ENUMS = {
     "swarm.mode": {"local", "lan", "internet", "auto"},
     "privacy.tier": {"GLOBAL", "TRUSTED", "LOCAL"},
     "privacy.manual_tier": {None, "GLOBAL", "TRUSTED", "LOCAL"},
+    "privacy.public_lookup_consent": {"ask", "always"},
     "lce.level": {"C0", "C1", "C2", "C3", "C4"},
     "evidence.local_lang": {"es", "en", "pt", "fr"},
     "evidence.searxng_managed": {"", "docker", "native"},
@@ -330,6 +340,8 @@ def validate_changes(changes: dict[str, Any]) -> dict[str, Any]:
     for key, value in flat.items():
         if key.startswith(_LOCKED_PREFIXES):
             raise ConfigError(f"{key} can only be changed from the command line")
+        if key.startswith("projects."):
+            raise ConfigError("projects are opened, created and switched with /api/projects")
         node: Any = DEFAULTS
         parts = key.split(".")
         for part in parts[:-1]:
