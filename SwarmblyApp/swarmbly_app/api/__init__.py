@@ -13,6 +13,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from ..config import ConfigError, validate_changes
+from ..egress import host_of
+from ..keystore import SECRET_KEYS, delete_secret, redact, set_secret
 from ..state import AppState
 from .security import ApiGuard, GuardMiddleware
 
@@ -170,7 +172,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
     # ---- config -----------------------------------------------------------------
     @app.get("/api/config")
     def get_config() -> dict:
-        return state.config.all()
+        return redact(state.config.all())
 
     @app.put("/api/config")
     def put_config(body: dict[str, Any]) -> dict:
@@ -178,12 +180,25 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             changes = validate_changes(body)
         except ConfigError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        # API keys go to the keystore, never to config.json (3.0.1)
+        for key in SECRET_KEYS:
+            if key in changes:
+                value = changes.pop(key)
+                if isinstance(value, str) and value.strip():
+                    set_secret(key, value.strip())
+                else:
+                    delete_secret(key)
+                changes[key] = ""
+        if "privacy.third_party_models" in changes:
+            changes["privacy.third_party_models"] = sorted(
+                {host_of(str(h)) or str(h).strip().lower()
+                 for h in changes["privacy.third_party_models"] if str(h).strip()})
         merged = state.config.update(changes)
         swarm = merged["swarm"]
         if int(swarm.get("k_max", 1)) < int(swarm.get("k_min", 1)):
             merged = state.config.update({"swarm.k_max": int(swarm["k_min"])})
         state.on_config_changed()
-        return merged
+        return redact(merged)
 
     @app.post("/api/config/reset")
     def reset_config(body: dict[str, Any] | None = None) -> dict:
@@ -193,7 +208,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
                                 detail="api settings are changed from the command line")
         state.config.reset(section)
         state.on_config_changed()
-        return state.config.all()
+        return redact(state.config.all())
 
     # ---- setup: recommended profile (explained, reversible) ----------------------
     def _recommendation() -> dict:
@@ -223,14 +238,14 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
         state.backup_config("before-profile")
         merged = state.config.update({**changes, "profile": "automatic"})
         state.on_config_changed()
-        return {"applied": changes, "config": merged}
+        return {"applied": changes, "config": redact(merged)}
 
     @app.post("/api/setup/revert")
     def setup_revert() -> dict:
         if not state.restore_config("before-profile"):
             raise HTTPException(status_code=404, detail="no previous configuration saved")
         state.on_config_changed()
-        return state.config.all()
+        return redact(state.config.all())
 
     @app.post("/api/permissions")
     def set_permissions(body: dict[str, Any]) -> dict:

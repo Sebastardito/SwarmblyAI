@@ -275,6 +275,8 @@ def event_subjects(item: str) -> list[str]:
 def _http_get_json(url: str, timeout_s: float, user_agent: str) -> Any:
     req = urllib.request.Request(url, headers={"User-Agent": user_agent,
                                                "Accept": "application/json"})
+    from .. import egress
+    egress.record_public_query(url, provider=urllib.parse.urlsplit(url).hostname or "")
     with urllib.request.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed host)
         return json.loads(resp.read().decode("utf-8"))
 

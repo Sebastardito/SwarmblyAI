@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 import httpx
 
+from .. import egress
 from .base import BackendError, GenerationResult, Interrupted
 
 DEFAULT_URL = "http://127.0.0.1:11434"
@@ -62,6 +63,9 @@ class OllamaBackend:
                 "temperature": temperature,
             },
         }
+        # Policy and record at the point where the bytes leave (3.0.1).
+        egress.check_call(self.url, len(__import__("json").dumps(payload).encode("utf-8")),
+                          reason=f"modelo {model}")
         started = time.monotonic()
         text_parts: list[str] = []
         prompt_tokens = completion_tokens = load_ns = None

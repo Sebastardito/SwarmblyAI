@@ -224,7 +224,37 @@
   "evidenceNote": "Contexto público (Wikidata, Wikipedia CC BY-SA 4.0, PubMed…) añadido. Solo se enviaron estos nombres:",
   "evidenceErrors": "Consultas fallidas:",
   "evidenceSkipped": "Evidencia pública no aplicada:",
-  "lceNote": "Pasajes de tus fuentes usados en esta respuesta (no salieron del equipo):"
+  "lceNote": "Pasajes de tus fuentes usados en esta respuesta (no salieron del equipo):",
+  "receipt": {
+   "title": "Qué salió de esta computadora",
+   "lane": "Carril",
+   "model": "Dónde se calculó",
+   "modelLocal": "en esta computadora",
+   "sends": "Envíos",
+   "bytes": "Bytes enviados",
+   "passages": "Pasajes de tus documentos enviados",
+   "nothing": "Nada salió de esta computadora para esta respuesta.",
+   "blocked": "Intentos bloqueados (no salió nada):",
+   "lanes": {
+    "personal": "personal",
+    "sensible": "sensible",
+    "público": "público",
+    "no_informado": "no informado"
+   },
+   "class": {
+    "local": "local",
+    "red_propia": "tu red",
+    "terceros": "terceros"
+   },
+   "kind": {
+    "pregunta": "la pregunta",
+    "pasaje": "pasajes de tus documentos",
+    "entidad_publica": "nombre consultado",
+    "nombre_personal": "tu nombre",
+    "fragmento": "fragmento de una petición pública",
+    "desconocido": "contenido sin clasificar"
+   }
+  }
  },
  "monitor": {
   "title": "Enjambre",
@@ -357,7 +387,11 @@
    "permissions": "Permisos",
    "system": "Sistema"
   },
-  "sameModel": "Igual que la conversación"
+  "sameModel": "Igual que la conversación",
+  "secretStored": {
+   "keychain": "guardada en el llavero del sistema",
+   "file": "guardada en un archivo protegido de esta computadora"
+  }
  },
  "profile": {
   "automatic": "Automático",
@@ -417,7 +451,7 @@
   },
   "model__api_key": {
    "label": "Clave de API",
-   "help": "Solo para servidores que la piden. Se guarda en esta computadora."
+   "help": "Solo para servidores que la piden. Se guarda en el llavero del sistema (o en un archivo protegido si no hay llavero), nunca en la configuración."
   },
   "model__model_name": {
    "label": "Modelo de chat",
@@ -602,6 +636,14 @@
   "evidence__google_cse_cx": {
    "label": "Identificador del buscador de Google",
    "help": "El «cx» de tu Programmable Search Engine."
+  },
+  "privacy__third_party_models": {
+   "label": "Servicios de modelos de terceros autorizados",
+   "help": "Un servidor fuera de esta computadora y de tu red es de otra organización. Swarmbly no le envía nada salvo que escribas aquí su dirección (una por línea). Cada respuesta muestra qué se le envió."
+  },
+  "privacy__third_party_passages": {
+   "label": "Permitir enviar pasajes de mis documentos a esos servicios",
+   "help": "Desactivado: el servicio solo recibe tu pregunta y responde sin tus documentos. Actívalo solo si aceptas que esa organización reciba fragmentos de tus archivos."
   }
  },
  "models": {

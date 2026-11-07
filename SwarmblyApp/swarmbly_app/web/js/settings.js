@@ -26,6 +26,8 @@ const Settings = (() => {
       { key: "model.backend", type: "select", options: [["auto", "backend.auto"], ["ollama", "Ollama"], ["openai_compat", "backend.openai"]] },
       { key: "model.backend_url", type: "text", placeholder: "http://127.0.0.1:11434" },
       { key: "model.api_key", type: "password", advanced: true },
+      { key: "privacy.third_party_models", type: "list", showIf: (c) => c.model?.backend === "openai_compat" },
+      { key: "privacy.third_party_passages", type: "bool", showIf: (c) => c.model?.backend === "openai_compat" },
       { key: "model.model_name", type: "model" },
       { key: "model.multi_model", type: "bool" },
       { key: "model.local_models", type: "models", showIf: (c) => c.model?.multi_model },
@@ -190,8 +192,10 @@ const Settings = (() => {
       control.addEventListener("change", () =>
         save(control.value.split(/\n|,/).map((s) => s.trim()).filter(Boolean)));
     } else {
+      const stored = f.type === "password" && (App.state.config?._secrets || {})[f.key];
       control = h("input", { type: f.type === "password" ? "password" : "text",
-        placeholder: f.placeholder || "", "aria-label": label, autocomplete: "off" });
+        placeholder: stored ? t(`settings.secretStored.${stored}`) : (f.placeholder || ""),
+        "aria-label": label, autocomplete: "off" });
       control.value = value ?? "";
       control.addEventListener("change", () => save(control.value.trim() || null));
     }

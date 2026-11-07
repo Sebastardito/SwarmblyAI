@@ -13,6 +13,11 @@ class IncompleteSettings(RuntimeError):
     """The configured backend needs a URL / model the user has not set."""
 
 
+def endpoint(backend: StreamBackend | None) -> str:
+    """The address a backend sends to ("" if unknown)."""
+    return str(getattr(backend, "url", "") or getattr(backend, "base_url", "") or "")
+
+
 class BackendRegistry:
     """Builds backends from config and remembers the last working choice."""
 
@@ -27,8 +32,9 @@ class BackendRegistry:
         if backend == "openai_compat":
             if not url:
                 raise IncompleteSettings("OpenAI-compatible backend needs a URL")
+            from ..keystore import get_secret
             candidate: StreamBackend = OpenAICompatBackend(
-                url, api_key=model_cfg.get("api_key", ""))
+                url, api_key=get_secret("model.api_key") or model_cfg.get("api_key", ""))
             self._last_backend = candidate
             return candidate
 

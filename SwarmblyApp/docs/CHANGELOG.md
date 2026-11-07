@@ -1,5 +1,55 @@
 # Changelog
 
+## 0.3.1 — Destinations and privacy receipts (unreleased)
+
+From the review of 4 November 2026 and the sealed-bank baseline of
+7 November 2026 (Swarmbly AI 3.0.1).
+
+- **Where each call goes.** Every model server, public source and peer is
+  classified from its address: `local` (this computer), `red_propia` (the
+  user's own network: private and link-local addresses, `.local`,
+  single-label names) or `terceros` (an organisation outside the user's
+  control). An "OpenAI-compatible" server is not local for that reason.
+  `SWARMBLY_LOCAL_HOSTS` names hosts that are this computer in a given
+  installation (the Docker services).
+- **Outbound policy before every call** (`swarmbly_app/egress.py`), at the
+  point where the bytes leave: answers, query expansion, embeddings, the
+  orchestrator's local steps, worker execution, retries and fallbacks. A
+  third-party model receives nothing unless its host is listed in
+  `privacy.third_party_models`; passages of the user's documents need
+  `privacy.third_party_passages` as well (otherwise the question goes alone
+  and the answer says the documents were not sent). A failure never changes
+  the destination.
+  - Fixed: with an OpenAI-compatible server configured, the "local" path sent
+    LCE passages to it and recorded `executed: local` (found in the review of
+    4 November 2026).
+  - Fixed: embeddings of the user's documents went to `backend_url` even when
+    it was not local.
+  - Fixed: a node serving the swarm used the configured backend, so other
+    nodes' fragments could reach a third-party service. A node whose model is
+    a third-party service now never serves the swarm (`E_POLICY`) and
+    advertises no task kinds.
+- **Privacy receipt per answer** (`meta.receipt`, schema
+  `swarmbly.privacy_receipt/1.0`): lane (personal, sensible, público, also in
+  local mode), route, where the answer was computed, consent, every send with
+  destination, class, kind and bytes, blocked attempts, passages and personal
+  names sent, fragments created, and the answer's hash. Sends are recorded
+  where they happen, so a public lookup shows the query actually sent (the
+  baseline found extra terms that the evidence metadata did not report).
+  "Explore processing" shows it as "What left this computer".
+- **API keys out of `config.json`.** Keys go to the system keychain
+  (`keyring`), or to a protected file (0600) where there is none or with
+  `SWARMBLY_KEYRING=off`; existing keys are moved on start-up. `GET
+  /api/config` never returns them, only whether and where one is stored.
+- The OpenAI-compatible adapter sends the key when listing models and
+  checking availability (authenticated providers showed no models).
+- Local SearXNG with Docker: current images bind to IPv6 by default and fail
+  where Docker has no IPv6; the container now listens on IPv4.
+- `docs/LIMITATIONS.md` no longer says that C1 does not feed the chat.
+- Tests: `tests/test_egress.py` (synthetic leak test with a marker in a
+  source and a mocked third-party transport; worker, embeddings, receipt,
+  keys).
+
 ## 0.3.0 — Composition planner (unreleased)
 
 **Heterogeneous swarms** (21 October 2026, from P3b on four machines: macOS,

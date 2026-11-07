@@ -88,8 +88,15 @@ class WorkerService:
         return shared
 
     def policy(self) -> dict[str, Any]:
-        cfg = self.config.all()["swarm"]
-        enabled = bool(cfg.get("worker_enabled")) and bool(self.shared_models())
+        from .. import egress
+        full = self.config.all()
+        cfg = full["swarm"]
+        # 3.0.1: a node whose model is a third-party service never serves the
+        # swarm: other nodes' fragments would go to an organisation they never
+        # chose, and the key's owner would pay for them.
+        third_party = egress.model_destination(full)["clase"] == egress.THIRD_PARTY
+        enabled = bool(cfg.get("worker_enabled")) and bool(self.shared_models()) \
+            and not third_party
         return {
             "enabled": enabled,
             "allow_lan": bool(cfg.get("worker_allow_lan", True)),
@@ -103,6 +110,7 @@ class WorkerService:
             "idle_only": bool(cfg.get("worker_only_idle", False)),
             "only_plugged": bool(cfg.get("worker_only_plugged", False)),
             "paused": bool(cfg.get("worker_paused", False)),
+            "third_party_backend": third_party,
         }
 
     # -- handler -------------------------------------------------------------------
@@ -111,6 +119,9 @@ class WorkerService:
         received = time.monotonic()
         policy = self.policy()
         attempt_id = message.get("attempt_id")
+        if policy["third_party_backend"]:
+            return error("E_POLICY", "this node's model is a third-party service; it never "
+                         "serves the swarm", attempt_id)
         if not policy["enabled"]:
             return error("E_POLICY", "worker role disabled", attempt_id)
         if policy["paused"]:
@@ -242,7 +253,11 @@ class WorkerService:
             stream, model_name,
             interrupt=lambda: (time.monotonic() > hard_deadline
                                or (cancel_event is not None and cancel_event.is_set())))
+        from .. import egress
         try:
+            # what this call carries, for the destinations policy (3.0.1)
+            purpose = egress.purpose(egress.FOREIGN if serving_others else egress.FRAGMENT)
+            purpose.__enter__()
             guard = self.lce.worker_guard(model_name)
             if guard is not None:
                 guard.forbid_sink(self._forbidden_sink)
@@ -257,6 +272,8 @@ class WorkerService:
         except Exception as exc:
             return error("E_EXECUTION", f"execution failed: {str(exc)[:160]}",
                          attempt_id)
+        finally:
+            purpose.__exit__(None, None, None)
         gen_ms = int((time.monotonic() - started) * 1000)
         info = self.model_info(model_name) or {}
         tokens_out = (backend.last.completion_tokens
