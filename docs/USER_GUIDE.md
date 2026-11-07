@@ -52,6 +52,42 @@ correctness.
 *Export* saves one as Markdown, JSON or HTML; *Delete* removes it from this
 computer.
 
+**Projects** (above the conversation). Choose *Personal* or a project, or
+create one. A project is a folder of yours, by default
+`Documents/Swarmbly/<Project>`:
+
+| Folder | What goes there |
+|---|---|
+| `sources/` | the project's documents (text, Markdown, Word, HTML, PDF) |
+| `memory/` | the project's memory: a glossary (`glosario.md`: `term = equivalent`) and notes |
+| `chats/` | the project's conversations, one file each, kept up to date by the app |
+| `exports/` | `.swarmbly` packages of the project |
+
+- A conversation in a project reads only that project's documents and
+  memory. Your personal sources are added only if you tick *Include my
+  personal sources*; a personal conversation never reads a project.
+- *Export .swarmbly* writes one file with the documents, memory and chats,
+  and the SHA-256 of each file. It never contains API keys: if a file holds
+  one of your keys, the export stops and names it.
+- *Restore a .swarmbly package* checks every hash before writing anything and
+  restores into a new folder. On another computer, the chats come back and
+  their citations still point to the right paragraph (a citation names a
+  file by the hash of its content, not by its path). If that project is
+  already open here, it is restored as a copy.
+- *Close project* removes it from this app; the folder stays, and *Open a
+  project folder* brings it back with its chats.
+- If the folder is synced by iCloud, Dropbox, OneDrive or Google Drive, the
+  app warns you: those services can move files to the cloud to free space or
+  create duplicates ("chat 2.json"). Prefer a folder that is not synced, or
+  keep this one always on this computer.
+
+**Public lookups need your yes when the question is about you.** If a
+question is personal or sensitive, or your documents answer it, and it would
+also need a public source, the answer is written without the lookup and
+offers *Also search public sources*, with the names that would be sent. The
+yes covers that question only. *Explore processing → What left this
+computer* shows the scope (personal or project) and the consent.
+
 ## 2. Explore processing
 
 *Explore processing* under an answer opens **How this answer was made**:
@@ -208,9 +244,26 @@ simultáneas, tokens y segundos por tarea, solo inactivo o conectado a la
 corriente, y puedes pausar. Los workers sirven solo el modelo base; tu
 memoria y tus archivos nunca se usan.
 
-**Memory.** C0 activa; C1 seleccionable (la carpeta de fuentes está lista,
-la recuperación en las respuestas viene después); C2–C4 en fases
-posteriores.
+**Memory.** C0 activa; C1 recupera pasajes de tus fuentes para las
+respuestas hechas en este equipo; C2–C4 en fases posteriores.
+
+**Proyectos** (sobre la conversación). Un proyecto es una carpeta tuya, por
+defecto `Documentos/Swarmbly/<Proyecto>`, con `sources/` (documentos),
+`memory/` (glosario y notas), `chats/` (las conversaciones, una por archivo)
+y `exports/` (paquetes `.swarmbly`). Una conversación del proyecto solo lee
+sus documentos y su memoria; tus fuentes personales se añaden solo si marcas
+*Incluir mis fuentes personales*, y una conversación personal nunca lee un
+proyecto. *Exportar .swarmbly* guarda documentos, memoria y chats con el
+SHA-256 de cada archivo y nunca lleva claves API. *Restaurar* comprueba cada
+hash antes de escribir y restaura en una carpeta nueva; en otra computadora
+vuelven los chats y sus citas siguen apuntando al párrafo correcto. *Cerrar
+proyecto* lo quita de la app y deja la carpeta. Si la carpeta está
+sincronizada (iCloud, Dropbox, OneDrive, Google Drive), la app te avisa.
+
+**Consultas públicas con tu sí.** Si la pregunta trata de ti o de tus
+documentos y además pediría una fuente pública, la respuesta se escribe sin
+consultarla y ofrece *Buscar también en fuentes públicas*, con los nombres
+que se enviarían; el sí vale solo para esa pregunta.
 
 **Settings.** Perfiles *Automatic*, *Custom* y *Advanced*; pestañas
 Recommended, General, Models, Swarm, Privacy, Results, Permissions y System.

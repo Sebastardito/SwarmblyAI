@@ -443,3 +443,16 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   .unit { grid-template-columns: 60px 1fr; }
   .unit-text { grid-column: 1 / -1; }
 }
+
+/* 3.1 projects */
+.project-strip { padding: 10px 22px 0; display: flex; flex-direction: column; gap: 4px; }
+.project-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.project-label { color: var(--muted, inherit); }
+.project-select { max-width: 280px; }
+.project-path { margin: 0; font-size: 12px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.project-warning { margin: 2px 0 0; }
+.form-stack { display: flex; flex-direction: column; gap: 10px; min-width: min(420px, 80vw); }
+.form-stack .stack { display: flex; flex-direction: column; gap: 4px; }
+.form-stack input.text { width: 100%; }
+code.cite { font-size: 11px; opacity: .75; }
+@media (max-width: 760px) { .project-strip { padding: 8px 16px 0; } .project-select { max-width: 60vw; } }

@@ -276,16 +276,20 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
 
     # ---- conversations -----------------------------------------------------------
     @app.get("/api/conversations")
-    def list_conversations() -> list[dict]:
-        return state.chat.list_conversations()
+    def list_conversations(project: str | None = None) -> list[dict]:
+        """All conversations, or one project's (``?project=<id>``; empty = personal)."""
+        return state.chat.list_conversations(project)
 
     @app.post("/api/conversations")
     def create_conversation(body: dict[str, Any] | None = None) -> dict:
         body = body or {}
+        project_id = str(body.get("project_id") or "")
+        if project_id and state.projects.get(project_id) is None:
+            raise HTTPException(status_code=404, detail="unknown or unavailable project")
         return state.chat.create_conversation(
             title=body.get("title", ""),
             mode=body.get("mode", ""),
-            model=body.get("model", ""))
+            model=body.get("model", ""), project_id=project_id)
 
     @app.get("/api/conversations/{conv_id}")
     def get_conversation(conv_id: str) -> dict:
@@ -314,14 +318,17 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             user_msg, assistant_msg = state.chat.send(
                 conv_id, text,
                 mode=body.get("mode") or None,
-                model=body.get("model") or None)
+                model=body.get("model") or None,
+                allow_public=bool(body.get("allow_public")))
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"user_message": user_msg, "assistant_message": assistant_msg}
 
     @app.post("/api/conversations/{conv_id}/messages/{message_id}/retry")
-    def retry_message(conv_id: str, message_id: str) -> dict:
-        result = state.chat.retry(conv_id, message_id)
+    def retry_message(conv_id: str, message_id: str,
+                      body: dict[str, Any] | None = None) -> dict:
+        result = state.chat.retry(conv_id, message_id,
+                                  allow_public=bool((body or {}).get("allow_public")))
         if result is None:
             raise HTTPException(status_code=400, detail="nothing to retry")
         user_msg, assistant_msg = result
@@ -356,6 +363,10 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             content=content, media_type=media,
             headers={"Content-Disposition":
                      f'attachment; filename="conversation-{conv_id}.{format if format != "markdown" else "md"}"'})
+
+    # ---- projects (3.1) ---------------------------------------------------------------
+    from .projects import register as _register_projects
+    _register_projects(app, state)
 
     # ---- LCE ----------------------------------------------------------------------
     @app.get("/api/lce/status")

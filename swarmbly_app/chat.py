@@ -39,6 +39,10 @@ class ActiveRequest:
     # 3.0.1: what left this computer for this request, and what the receipt needs
     ledger: Any = None
     receipt_ctx: dict[str, Any] = field(default_factory=dict)
+    # 3.1: the conversation's project ("" = personal) and the user's yes to a
+    # public lookup for this one question
+    project_id: str = ""
+    allow_public: bool = False
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -69,26 +73,39 @@ class ChatService:
         # LCE C1: local retrieval over the user's sources (set by AppState);
         # used only for answers produced on this device.
         self.retriever: Callable[..., list[dict[str, Any]]] | None = None
-        self.retrieval_active: Callable[[], bool] = lambda: self.retriever is not None
+        self.retrieval_active: Callable[..., bool] = lambda project_id="": self.retriever is not None
         # P2e: the public provider for local answers (injectable for tests).
         self.public_provider: Any = None
         self.glossary: Callable[[str], str] | None = None
         self.glossary_entries: Callable[[], list] | None = None
         self.retrieval_candidates: Callable[[], list] | None = None
         self.self_node: str = ""          # this node's id prefix (set by AppState)
+        # 3.1: called after a conversation changes (its project folder keeps a copy)
+        self.on_conversation_changed: Callable[[str], None] | None = None
+        self.on_conversation_deleted: Callable[[dict[str, Any]], None] | None = None
+        self.project_name: Callable[[str], str] = lambda project_id: ""
         self._lock = threading.Lock()
 
+    def _changed(self, conversation_id: str) -> None:
+        if self.on_conversation_changed is not None:
+            try:
+                self.on_conversation_changed(conversation_id)
+            except Exception:
+                pass          # the project copy never blocks an answer
+
     # -- conversations -------------------------------------------------------
-    def list_conversations(self) -> list[dict[str, Any]]:
-        return self.db.list_conversations()
+    def list_conversations(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        return self.db.list_conversations(project_id)
 
     def create_conversation(self, title: str = "", mode: str = "",
-                            model: str = "") -> dict[str, Any]:
+                            model: str = "", project_id: str = "") -> dict[str, Any]:
         cfg = self.config()
-        return self.db.create_conversation(
+        conv = self.db.create_conversation(
             title=title or "New conversation",
             mode=mode or cfg["swarm"]["mode"] or "local",
-            model=model or cfg["model"]["model_name"] or "")
+            model=model or cfg["model"]["model_name"] or "", project_id=project_id)
+        self._changed(conv["id"])
+        return conv
 
     def get_conversation(self, conv_id: str) -> dict[str, Any] | None:
         return self.db.get_conversation(conv_id)
@@ -97,12 +114,19 @@ class ChatService:
         return self.db.get_messages(conv_id)
 
     def delete_conversation(self, conv_id: str) -> None:
+        conv = self.db.get_conversation(conv_id)
         self.db.delete_conversation(conv_id)
+        if conv and self.on_conversation_deleted is not None:
+            try:
+                self.on_conversation_deleted(conv)
+            except Exception:
+                pass
 
     # -- sending -------------------------------------------------------------
     def send(self, conversation_id: str, text: str, *,
              mode: str | None = None, model: str | None = None,
-             run_async: bool = True) -> tuple[dict[str, Any], dict[str, Any]]:
+             run_async: bool = True,
+             allow_public: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
         """Store the user message and start generation.
 
         Returns ``(user_message, assistant_message)``; when ``run_async`` the
@@ -130,7 +154,8 @@ class ChatService:
             request_id=uuid.uuid4().hex[:16],
             conversation_id=conversation_id,
             message_id=assistant_msg["id"],
-            mode=mode, model=model)
+            mode=mode, model=model, project_id=str(conv.get("project_id") or ""),
+            allow_public=bool(allow_public))
         with self._lock:
             self._active[request.request_id] = request
         self.db.add_request(request.request_id, conversation_id,
@@ -138,6 +163,7 @@ class ChatService:
         self.bus.publish("request.started", request_id=request.request_id,
                          conversation_id=conversation_id,
                          message_id=assistant_msg["id"], mode=mode, model=model)
+        self._changed(conversation_id)
 
         if run_async:
             thread = threading.Thread(
@@ -148,7 +174,7 @@ class ChatService:
             self._run_generation(request, mode, model)
         return user_msg, assistant_msg
 
-    def _personal_request(self, text: str) -> bool:
+    def _personal_request(self, text: str, project_id: str = "") -> bool:
         """A first-person request about the user's own material ("mi carrera",
         "mis artículos", "my thesis") while C1 has sources for it. Such a request
         goes to the swarm without the user's passages, which never leave this
@@ -163,10 +189,10 @@ class ChatService:
         # request went to the swarm again with the user's name in it)
         if _PERSONAL_TOPIC.search(text):
             return True
-        if self.retriever is None or not self.retrieval_active():
+        if self.retriever is None or not self.retrieval_active(project_id):
             return False
         try:
-            return bool(self.retriever(text, ""))
+            return bool(self.retriever(text, "", project_id))
         except Exception:
             return False
 
@@ -194,7 +220,7 @@ class ChatService:
             routing_stages: list[dict[str, Any]] | None = None
             routing_meta: dict[str, Any] = {}
             multi_local = mode == "local" and bool(self.config()["model"].get("multi_model"))
-            personal = mode in ("lan", "internet", "auto") and self._personal_request(user_text)
+            personal = mode in ("lan", "internet", "auto") and self._personal_request(user_text, request.project_id)
             if personal:
                 local_reason = ("about you and your documents: answered on this device "
                                 "with your sources (nothing sent to the swarm)")
@@ -271,7 +297,7 @@ class ChatService:
             from .local_context import wants_public
             want_public = (bool(ev_cfg.get("enabled")) and bool(ev_cfg.get("local_answers", True))
                            and wants_public(user_text))
-            lce_on = self.retriever is not None and self.retrieval_active()
+            lce_on = self.retriever is not None and self.retrieval_active(request.project_id)
             if lce_on and not passages_allowed:
                 # authorised for questions only: the documents stay out of the call
                 lce_on = False
@@ -288,7 +314,8 @@ class ChatService:
             if lce_on:
                 try:
                     sources = self.retriever(
-                        user_text, expansion.keywords if expansion else "") or []
+                        user_text, expansion.keywords if expansion else "",
+                        request.project_id) or []
                 except Exception:
                     sources = []
             public_hits: list[dict[str, Any]] = []
@@ -298,12 +325,23 @@ class ChatService:
                 known, pairs = "", []
                 if self.glossary is not None:
                     try:
-                        known = self.glossary(f"{user_text} {expansion.keywords}")
-                        pairs = self.glossary_entries() if self.glossary_entries else []
+                        known = self.glossary(f"{user_text} {expansion.keywords}",
+                                              request.project_id)
+                        pairs = (self.glossary_entries(request.project_id)
+                                 if self.glossary_entries else [])
                     except Exception:
                         known, pairs = "", []
                 entities = public_entities(user_text, expansion, sources,
                                            int(ev_cfg.get("local_max_entities", 3)), pairs)
+                # 3.1: about you (your documents, a personal or sensitive
+                # question) → a public lookup needs your yes for this question.
+                lane_now = request.receipt_ctx.get("lane")
+                needs_yes = bool(sources) or lane_now in ("personal", "sensible")
+                consent_mode = str((cfg.get("privacy") or {}).get("public_lookup_consent", "ask"))
+                request.receipt_ctx["consent_required"] = bool(entities) and needs_yes
+                if entities and needs_yes and consent_mode == "ask" and not request.allow_public:
+                    request.receipt_ctx["public_offer"] = [e.get("name", "") for e in entities]
+                    entities = []
                 if entities:
                     provider = self.public_provider
                     if provider is None:
@@ -387,7 +425,10 @@ class ChatService:
             if sources:
                 extra["lce"] = {"level": "C1", "sources": [
                     {"n": i, "source": s["source"], "start": s["start"], "end": s["end"],
-                     "score": s.get("score")} for i, s in enumerate(sources, 1)]}
+                     "score": s.get("score"), "rel": s.get("rel", ""),
+                     # 3.1: stable citation (content hash + paragraph), resolves
+                     # after the folder is moved or restored elsewhere
+                     "cite": s.get("cite", "")} for i, s in enumerate(sources, 1)]}
                 if self.retrieval_candidates is not None:
                     try:
                         extra["lce"]["candidates"] = self.retrieval_candidates()
@@ -395,6 +436,9 @@ class ChatService:
                         pass
             if expansion is not None:
                 extra.setdefault("lce", {})["expansion"] = expansion.to_dict()
+            if request.receipt_ctx.get("public_offer"):
+                # nothing was looked up: the answer offers to repeat it with a lookup
+                extra["public_offer"] = {"entities": request.receipt_ctx["public_offer"]}
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:
@@ -441,6 +485,7 @@ class ChatService:
                 self.report_sink(request.request_id)
             except Exception:
                 pass  # a report failure never affects the answer
+        self._changed(request.conversation_id)
         self.bus.publish("chat.done", request_id=request.request_id,
                          conversation_id=request.conversation_id,
                          message_id=request.message_id, status="done",
@@ -471,6 +516,7 @@ class ChatService:
             pass
         with self._lock:
             self._active.pop(request.request_id, None)
+        self._changed(request.conversation_id)
         self.bus.publish("chat.done", request_id=request.request_id,
                          conversation_id=request.conversation_id,
                          message_id=request.message_id, status=status,
@@ -495,6 +541,7 @@ class ChatService:
             pass
         with self._lock:
             self._active.pop(request.request_id, None)
+        self._changed(request.conversation_id)
         self.bus.publish("chat.done", request_id=request.request_id,
                          conversation_id=request.conversation_id,
                          message_id=request.message_id, status="failed",
@@ -520,11 +567,23 @@ class ChatService:
             public = any(e.get("tipo") == egress.PUBLIC_QUERY and not e.get("bloqueado")
                          for e in (ledger.events if ledger else []))
             route = "fragmentada" if distributed else ("local+consulta_publica" if public else "local")
-            consent: dict[str, Any] = {"requerido": False, "otorgado": None, "alcance": ""}
-            if public:
-                consent = {"requerido": ctx.get("lane") == "personal", "otorgado": True,
+            # 3.1: consent is always a yes/no, and says on what it rests
+            required = bool(ctx.get("consent_required"))
+            consent: dict[str, Any] = {"requerido": required, "otorgado": False, "alcance": "",
+                                       "base": "no hubo consulta pública"}
+            if ctx.get("public_offer"):
+                consent.update(base="no se pidió en esta pregunta: no se consultó nada público",
+                               alcance="")
+            if public or ctx.get("public_lookup"):
+                if request.allow_public:
+                    base = "lo pediste en esta pregunta"
+                elif required:
+                    base = "ajuste «consultas públicas sin preguntar» (public_lookup_consent=always)"
+                else:
+                    base = "pregunta sin datos tuyos; evidencia pública activada"
+                consent = {"requerido": required, "otorgado": True,
                            "alcance": "nombres de entidades públicas de la pregunta o de tus fuentes",
-                           "base": "evidencia pública activada y la pregunta pide datos públicos"}
+                           "base": base}
             if dest.get("clase") == egress.THIRD_PARTY:
                 consent["modelo_terceros"] = {
                     "host": dest.get("host", ""), "autorizado": True,
@@ -534,6 +593,11 @@ class ChatService:
                 ledger, lane=ctx.get("lane", "no_informado"), route=route, answer=answer,
                 consent=consent, passages=ctx.get("passages") or [],
                 fragments=fragments, extra_sends=extra_sends, model_destination=dest)
+            # 3.1: whose documents this answer could read
+            meta["receipt"]["ambito"] = (
+                {"tipo": "proyecto", "id": request.project_id,
+                 "nombre": self.project_name(request.project_id)}
+                if request.project_id else {"tipo": "personal"})
             if dest.get("clase") != egress.LOCAL and meta.get("executed") == "local":
                 meta["computed_at"] = dest.get("host", "")
         except Exception as exc:          # a receipt problem never loses the answer
@@ -562,7 +626,8 @@ class ChatService:
                      "message_id": r.message_id, "started_at": r.started_at}
                     for r in self._active.values()]
 
-    def retry(self, conversation_id: str, message_id: str) -> tuple[dict, dict] | None:
+    def retry(self, conversation_id: str, message_id: str,
+              allow_public: bool = False) -> tuple[dict, dict] | None:
         """Re-send the last user message before ``message_id`` (spec: retry)."""
         messages = self.db.get_messages(conversation_id)
         index = next((i for i, m in enumerate(messages) if m["id"] == message_id), None)
@@ -571,7 +636,7 @@ class ChatService:
         user_msg = messages[index - 1]
         if user_msg["role"] != "user":
             return None
-        return self.send(conversation_id, user_msg["content"])
+        return self.send(conversation_id, user_msg["content"], allow_public=allow_public)
 
     # -- export ---------------------------------------------------------------
     def export(self, conversation_id: str, fmt: str = "markdown",

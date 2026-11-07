@@ -154,7 +154,9 @@
   "evidenceChip": "Fuentes públicas · {n}",
   "evidenceTitle": "Se añadió contexto público de Wikipedia a {n} elementos; solo se enviaron los textos de esos elementos.",
   "lceChip": "Fuentes locales · {n}",
-  "lceTitle": "La respuesta usó pasajes de tus fuentes (LCE C1); no salieron del equipo."
+  "lceTitle": "La respuesta usó pasajes de tus fuentes (LCE C1); no salieron del equipo.",
+  "publicOffer": "Buscar también en fuentes públicas",
+  "publicOfferTitle": "Tu pregunta trata de ti o de tus documentos, así que no se consultó nada público. Si aceptas, solo se enviarán estos nombres: {names}"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
@@ -253,8 +255,17 @@
     "nombre_personal": "tu nombre",
     "fragmento": "fragmento de una petición pública",
     "desconocido": "contenido sin clasificar"
-   }
-  }
+   },
+   "scope": "Ámbito",
+   "project": "proyecto",
+   "personal": "personal",
+   "consent": "Consentimiento",
+   "consentYes": "pedido y dado",
+   "consentNo": "hacía falta y no se dio: no se consultó nada",
+   "consentNotNeeded": "no hacía falta",
+   "consentBase": "Base:"
+  },
+  "citeTitle": "Cita estable: el hash del archivo y el párrafo. Sigue valiendo si el proyecto se mueve o se restaura en otra computadora."
  },
  "monitor": {
   "title": "Enjambre",
@@ -841,5 +852,37 @@
   "title": "Apoya el proyecto",
   "body": "Swarmbly se desarrolla de forma independiente, sin financiación institucional, como un bien público digital con licencia AGPL. Si te resulta útil, puedes apoyar su desarrollo en estas primeras etapas. El apoyo nunca compra influencia sobre la hoja de ruta, la licencia ni la gobernanza.",
   "link": "buymeacoffee.com/swarmbly"
+ },
+ "project": {
+  "label": "Proyecto",
+  "personal": "Personal (sin proyecto)",
+  "unavailable": "carpeta no disponible",
+  "new": "Nuevo proyecto",
+  "open": "Abrir una carpeta de proyecto…",
+  "restore": "Restaurar un paquete .swarmbly…",
+  "name": "Nombre",
+  "namePlaceholder": "p. ej., Tesis de quinua",
+  "where": "Dónde se crea la carpeta",
+  "newHint": "El proyecto es una carpeta tuya: sources/ (documentos), memory/ (glosario y notas), chats/ (las conversaciones) y exports/. Las conversaciones del proyecto solo leen sus documentos.",
+  "create": "Crear",
+  "created": "Proyecto creado en {path}",
+  "folder": "Carpeta del proyecto",
+  "openHint": "La carpeta debe contener swarmbly-project.json. Sus chats se añaden a esta app.",
+  "openAction": "Abrir",
+  "opened": "Proyecto abierto · {n} conversaciones añadidas",
+  "badPackage": "Paquete rechazado:",
+  "restoreSummary": "{files} archivos verificados por su hash · {chats} conversaciones · {sources} documentos.",
+  "restoreHint": "Se restaura en una carpeta nueva dentro de {path}; nada existente se sobrescribe.",
+  "restoreAction": "Restaurar",
+  "restored": "Proyecto restaurado en {path} · {n} conversaciones",
+  "restoredCopy": "Ese proyecto ya estaba abierto aquí: se restauró como copia en {path} · {n} conversaciones",
+  "export": "Exportar .swarmbly",
+  "exported": "Paquete guardado en {path}",
+  "includePersonal": "Incluir mis fuentes personales",
+  "includePersonalHint": "Si lo activas, las respuestas de este proyecto también leen tus fuentes personales (siguen sin salir de esta computadora).",
+  "close": "Cerrar proyecto",
+  "closeTitle": "Cerrar el proyecto en esta app",
+  "closeBody": "El proyecto deja de aparecer aquí. Su carpeta y todos sus archivos, chats incluidos, se quedan en {path}; puedes volver a abrirla cuando quieras.",
+  "cloudWarning": "Esta carpeta está sincronizada con un servicio en la nube. El servicio puede subir los archivos a la nube para liberar espacio o crear copias duplicadas («nombre 2»), y un proyecto abierto puede dañarse. Mejor usa una carpeta sin sincronizar, o marca esta para que se quede siempre en esta computadora."
  }
 }

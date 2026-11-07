@@ -84,6 +84,16 @@ Limitations are documented, never hidden. *[Español](#español) below.*
 23. **The Windows launcher is the least tested.** `launch.bat` and the
     Windows paths of `scripts/launch.py` have not run on a real Windows
     machine yet; continuous integration covers Linux and macOS.
+24. **Projects are folders, not accounts.** Two apps that open the same
+    project folder at the same time can overwrite each other's copy of a
+    chat; there is no locking or merging. The cloud-sync warning is detected
+    from the folder's path (and, on macOS, iCloud's Desktop and Documents),
+    so a sync service mounted elsewhere is not detected. A citation stops
+    resolving when its file changes; the app says so and does not guess.
+25. **Consent is asked after the answer, not before.** A personal or
+    sensitive question that would need a public lookup is answered without
+    it, and the answer offers to repeat it with the lookup; the yes covers
+    that question only.
 
 ## Upstream (audited repositories)
 
@@ -123,3 +133,11 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    se describen. 22. La vista
    previa de la interfaz es ficticia y solo usa loopback. 23. El lanzador de
    Windows es el menos probado (la integración continua cubre Linux y macOS).
+   24. Los proyectos son carpetas, no cuentas: dos apps que abren la misma
+   carpeta a la vez pueden pisarse la copia de un chat (no hay bloqueo ni
+   fusión); el aviso de nube se detecta por la ruta (y en macOS, por
+   Escritorio y Documentos en iCloud); una cita deja de resolverse si su
+   archivo cambia, y se dice. 25. El consentimiento se pide después de la
+   respuesta: una pregunta personal o sensible que necesitaría una consulta
+   pública se responde sin ella y ofrece repetirla con la consulta; el sí
+   vale solo para esa pregunta.
