@@ -26,11 +26,11 @@
       "folder": "SwarmblyApp",
       "source": "mirror",
       "package": "swarmbly-app",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "repository": "https://github.com/Sebastardito/SwarmblyApp",
       "ref": "main",
-      "commit": "e6af928406fbe185b60476dfbfbe4ee77ecae1db",
-      "tree": "b7c51e13aa8995a4d88ea6703b9a93ba5127964b",
+      "commit": "9f60aab0407ea31e5cbf0a14030ae95102483e85",
+      "tree": "9845098c75aa6d63fe2c74d7e1c833323eebe811",
       "doi": "10.5281/zenodo.23322638"
     }
   }
