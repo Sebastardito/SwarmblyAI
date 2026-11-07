@@ -37,6 +37,14 @@ From the review of 4 November 2026 and the sealed-bank baseline of
   where they happen, so a public lookup shows the query actually sent (the
   baseline found extra terms that the evidence metadata did not report).
   "Explore processing" shows it as "What left this computer".
+  - Fixed before release: lookups and model calls made from worker threads
+    (parallel public lookups, the orchestrator's local steps, the local
+    worker) left the computer without reaching the receipt, because context
+    variables do not cross into thread pools. `egress.carry()` binds those
+    calls to their request. Found by the sealed-bank measurement of 3.0.1:
+    one public query observed on the network was missing from the app's
+    receipt. The policy itself was not bypassed: in a worker thread an
+    unknown purpose is treated as the strictest one (passages).
 - **API keys out of `config.json`.** Keys go to the system keychain
   (`keyring`), or to a protected file (0600) where there is none or with
   `SWARMBLY_KEYRING=off`; existing keys are moved on start-up. `GET

@@ -198,6 +198,23 @@ def current_ledger() -> Ledger | None:
     return _ledger.get()
 
 
+def carry(fn: Callable[..., Any]) -> Callable[..., Any]:
+    """``fn`` bound to the caller's request (ledger and purpose).
+
+    Context variables do not cross into ``ThreadPoolExecutor`` workers or
+    ``loop.run_in_executor``; without this, a public query or a model call made
+    from a worker thread would leave the computer without reaching the
+    request's receipt. Call ``carry`` in the requesting thread and hand the
+    result to the pool; each call runs in its own copy of that context.
+    """
+    captured = contextvars.copy_context()
+
+    def run(*args: Any, **kwargs: Any) -> Any:
+        return captured.copy().run(fn, *args, **kwargs)
+
+    return run
+
+
 @contextlib.contextmanager
 def purpose(kind: str) -> Iterator[None]:
     """What the calls inside this block carry (question, passages, …)."""

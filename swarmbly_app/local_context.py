@@ -28,6 +28,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from . import egress
+
 BINOMIAL = re.compile(r"\b([A-Z][a-z]{3,})\s([a-z]{4,})\b")
 # The fusion template (P2e round 4): local passages and public evidence in the
 # user's turn, under explicit labels, with a three-part answer.
@@ -271,7 +273,7 @@ def public_evidence(entities: list[dict[str, str]], expansion: Expansion, provid
     if entities:
         with ThreadPoolExecutor(max_workers=min(3, len(entities))) as pool:
             titles: set[str] = set()
-            for ent, (got, err) in zip(entities, pool.map(one, entities)):
+            for ent, (got, err) in zip(entities, pool.map(egress.carry(one), entities)):
                 for hit in (got if isinstance(got, list) else [got] if got else []):
                     if hit["title"] in titles:          # two names, one article
                         continue

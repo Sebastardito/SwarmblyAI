@@ -550,8 +550,9 @@ def gather(items: dict[int, str], provider: WikipediaEvidence,
             return n, None, f"{type(exc).__name__}"
 
     if wanted:
+        from .. import egress
         with ThreadPoolExecutor(max_workers=min(6, len(wanted))) as pool:
-            for n, hit, err in pool.map(one, wanted):
+            for n, hit, err in pool.map(egress.carry(one), wanted):
                 if hit:
                     found[n] = hit
                 if err:
