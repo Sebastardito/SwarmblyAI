@@ -55,7 +55,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.0.0"
+HARNESS_VERSION = "1.1.0"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -743,8 +743,10 @@ def main(argv: list[str] | None = None) -> int:
             app_receipt = (record.get("meta") or {}).get("receipt")
             if app_receipt:
                 # From 3.0.1 the app writes its own receipt; keep both and compare
+                # The app does not know the bank's case ID; the harness adds it, marked
+                saved = {"caso": case.case_id, "caso_anadido_por": "arnés", **app_receipt}
                 (run_dir / "casos" / f"{case.case_id}_recibo_app.json").write_text(
-                    json.dumps(app_receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+                    json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
                 record["recibo_app_coincide"] = compare_app_receipt(app_receipt, receipt)
             record["fin_utc"] = utc_now()
             (run_dir / "casos" / f"{case.case_id}.json").write_text(

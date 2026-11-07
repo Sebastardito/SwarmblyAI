@@ -14,7 +14,7 @@ The source of truth is [`components.lock`](../components.lock). Distribution **3
 |---|---|---|---|---|
 | SwarmblyCore | `swarmbly-v0` 0.1.0 | in this repository | — | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
 | SwarmblyLCE | 0.2.0.dev0 | mirror of [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `5fb70b9` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
-| SwarmblyApp | 0.3.1 (not yet released) | mirror of [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `9f60aab` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
+| SwarmblyApp | 0.3.1 (not yet released) | mirror of [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `de5d342` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
 
 ### Rules
 
@@ -60,7 +60,7 @@ La fuente de verdad es [`components.lock`](../components.lock). Distribución **
 |---|---|---|---|---|
 | SwarmblyCore | `swarmbly-v0` 0.1.0 | en este repositorio | — | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
 | SwarmblyLCE | 0.2.0.dev0 | espejo de [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `5fb70b9` | [10.5281/zenodo.23289041](https://doi.org/10.5281/zenodo.23289041) |
-| SwarmblyApp | 0.3.1 (aún sin publicar) | espejo de [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `9f60aab` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
+| SwarmblyApp | 0.3.1 (aún sin publicar) | espejo de [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `de5d342` | [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638) |
 
 ### Reglas
 
