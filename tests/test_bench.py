@@ -143,3 +143,14 @@ def test_v1_receipt_rows_and_regeneration(tmp_path):
     (run / "logs" / "red.jsonl").write_text("", encoding="utf-8")
     assert rb.main(["--regenerate-receipts", str(run)]) == 0
     assert (run / "casos" / "S2-01_recibo_v1.json").is_file()
+
+
+def test_app_receipt_is_compared_on_queries_only():
+    app = {"envios": [{"tipo": "entidad_publica", "valor": "Orestias ficticia"},
+                      {"tipo": "pregunta", "valor": "(pregunta)", "destino": "127.0.0.1"}],
+           "pasajes_enviados": 0}
+    observed = {"envios": [{"valor": "Orestias ficticia"}], "pasajes_enviados": 0}
+    out = rb.compare_app_receipt(app, observed)
+    assert out["coincide"] and out["consultas_app"] == ["Orestias ficticia"]
+    observed["envios"].append({"valor": "Orestias ficticia estado"})
+    assert not rb.compare_app_receipt(app, observed)["coincide"]

@@ -490,6 +490,21 @@ def build_receipt(case_id: str, answer: str, meta: dict[str, Any], registry_even
     }
 
 
+def compare_app_receipt(app_receipt: dict[str, Any], observed: dict[str, Any]) -> dict[str, Any]:
+    """Compare the queries the app says it sent with the ones the network saw.
+
+    The app's receipt also lists local model calls; only outgoing queries are
+    comparable with the observed network log, so the comparison is limited to them.
+    """
+    app_queries = sorted(str(e.get("valor", "")) for e in app_receipt.get("envios") or []
+                         if not str(e.get("valor", "")).startswith("("))
+    seen = sorted(str(e.get("valor", "")) for e in observed.get("envios") or [])
+    return {"consultas_app": app_queries, "consultas_observadas": seen,
+            "coincide": app_queries == seen,
+            "pasajes_app": app_receipt.get("pasajes_enviados", 0),
+            "pasajes_observados": observed.get("pasajes_enviados", 0)}
+
+
 def build_receipt_v1(case_id: str, registry_events: list[dict], proxy_events: list[dict],
                      public_fixtures: list[str]) -> dict[str, Any]:
     """Receipt in the v1 bank's row schema (protocol.md): one immutable row per
@@ -725,6 +740,12 @@ def main(argv: list[str] | None = None) -> int:
             receipt = build_receipt(case.case_id, record.get("respuesta", ""), record.get("meta") or {},
                                     reg_ev, prx_ev, passages, persona)
             record["recibo"] = receipt
+            app_receipt = (record.get("meta") or {}).get("receipt")
+            if app_receipt:
+                # From 3.0.1 the app writes its own receipt; keep both and compare
+                (run_dir / "casos" / f"{case.case_id}_recibo_app.json").write_text(
+                    json.dumps(app_receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+                record["recibo_app_coincide"] = compare_app_receipt(app_receipt, receipt)
             record["fin_utc"] = utc_now()
             (run_dir / "casos" / f"{case.case_id}.json").write_text(
                 json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -742,6 +763,7 @@ def main(argv: list[str] | None = None) -> int:
             row = {"caso": case.case_id, "estado": status, "latencia_s": record.get("latencia_s"),
                    "envios": len(receipt["envios"]), "intentos_bloqueados": len(receipt["intentos_bloqueados"]),
                    "pasajes": receipt["pasajes_enviados"], "nombres": receipt["nombres_personales_enviados"],
+                   "recibo_app": bool(app_receipt),
                    "ejecutado": (record.get("meta") or {}).get("executed", "")}
             summary.append(row)
             print(f"      {case.case_id:6} {status:8} {str(row['latencia_s']):>7} s · envíos {row['envios']} · "

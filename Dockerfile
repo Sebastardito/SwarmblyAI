@@ -18,6 +18,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     SWARMBLY_DATA_DIR=/data
 
+# No keychain inside a container: API keys go to /data/secrets.json (0600).
+# The compose services (and the computer that runs Docker) count as this
+# computer in the privacy receipt, not as third parties.
+ENV SWARMBLY_KEYRING=off \
+    SWARMBLY_LOCAL_HOSTS=ollama,searxng,host.docker.internal
+
 # pdftotext reads PDF sources; tini forwards signals so the app stops cleanly.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends poppler-utils tini \

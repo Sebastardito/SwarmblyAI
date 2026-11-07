@@ -4,6 +4,17 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 
 ## Unreleased
 
+- **SwarmblyApp 0.3.1** (mirror at `9f60aab`, not yet released in its own repository). It adds:
+  - **Destinations policy.** Every call that leaves the app (model, embeddings, public queries, swarm fragments) is classified as this computer, your own network or a third party. A model run by a third-party service is used only if you list its host in *Settings*, and your document passages go to it only if you also allow that. Fragments of other people's questions never go to a third party: a node whose model is a third-party service does not serve the swarm.
+  - **A privacy receipt with every answer** («Qué salió de esta computadora»). It is built from what was actually sent, recorded at the moment of sending, not from what the app intended to send.
+  - **API keys in the system keychain**, or in `secrets.json` (0600) where there is none. They are no longer in `config.json`, and the configuration API never returns them. Existing keys are moved on first start.
+- **Docker image:** `SWARMBLY_KEYRING=off` (keys in `/data/secrets.json`) and `SWARMBLY_LOCAL_HOSTS=ollama,searxng,host.docker.internal`, so the compose services count as this computer in the receipt.
+- **Blind benchmark harness** ([`bench/README.md`](bench/README.md)) for sealed S2/S3 banks:
+  - it verifies the seal before and after, and reads only each case's ID, question and documents;
+  - it starts a fresh app per case, blocks and logs all internet traffic, and serves public sources from a frozen local snapshot;
+  - it writes the receipt observed on the network (v2 schema, and v1 row schema for v1 banks), with `--regenerate-receipts` for finished runs;
+  - from App 0.3.1 it also keeps the app's own receipt and compares its queries with the observed ones.
+
 - **Docker distribution** ([`docs/DOCKER.md`](docs/DOCKER.md)). It adds:
   - `Dockerfile`, a non-root image with the three components, pdftotext and a health check.
   - `compose.yaml`, which runs the app with Ollama, a one-off model download and optional local web search (`--profile search`).
