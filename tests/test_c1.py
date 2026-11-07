@@ -134,3 +134,13 @@ def test_dense_fusion_leaves_out_unrelated_passages(tmp_path):
     index = SourceIndex()
     hits = index.retrieve([root], "¿Qué aplicaciones necesito?", k=4, embed=embed)
     assert hits and {h["source"] for h in hits} == {"manual.md"}
+
+
+def test_any_equivalent_brings_the_term(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "glosario.md").write_text("cucujo = cucuyo, Pyrophorus, Elateridae\n", encoding="utf-8")
+    index = SourceIndex()
+    assert index.glossary_terms("¿Qué es un cucuyo?", [root]) == "cucuyo, Pyrophorus, Elateridae cucujo"
+    assert index.glossary_terms("el cucujo brilla", [root]) == "cucuyo, Pyrophorus, Elateridae"
+    assert index.glossary_terms("un pez", [root]) == ""

@@ -270,9 +270,16 @@ class SourceIndex:
             return len(tok) >= 5 and tok[-1] in "oa" and any(
                 len(h) == len(tok) and h[:-1] == tok[:-1] and h[-1] in "oa" for h in have)
         added: list[str] = []
+
+        def matches(phrase: str) -> bool:
+            toks = P.tokens(phrase)
+            return bool(toks) and all(present(t) for t in toks)
         for side_a, side_b in entries:
-            for left, right in ((side_a, side_b), (side_b, side_a)):
-                toks = P.tokens(left)
-                if toks and all(present(t) for t in toks) and right not in added:
-                    added.append(right)
+            # "cucujo = cucuyo, Pyrophorus, Elateridae": the term brings its
+            # equivalents, and any one equivalent brings the term (and the rest)
+            equivalents = [e.strip() for e in side_b.split(",") if e.strip()]
+            if matches(side_a) or matches(side_b) or any(matches(e) for e in equivalents):
+                for out in (side_b, side_a):
+                    if not matches(out) and out not in added:
+                        added.append(out)
         return " ".join(added)

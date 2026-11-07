@@ -11,4 +11,5 @@ Earlier versions are described in their release notes (v0.1.0, v0.1.1) and in `d
 - **Stable citations.** Every paragraph carries `doc:<sha12>#p<n>`: the first 12 hex digits of the SHA-256 of the file and the paragraph's position. A citation does not depend on where the folder lives, so a project moved or restored on another computer still resolves its old citations (`SourceIndex.resolve`). If the file changes, its old citations stop resolving, and that is reported.
 - **PDF without poppler.** Where `pdftotext` is not installed (a Mac without Homebrew), PDFs are read with `pypdf` (extra `pdf`) instead of being left out; `pdftotext` stays the first choice.
 - **Fusion keeps unrelated passages out.** With local embeddings, a passage that shares no word with the question enters only if its meaning is close to the best match (cosine within 0.10); before, fusion always returned *k* passages, related or not.
+- **Glossary equivalents one by one.** In `term = eq1, eq2, eq3`, any single equivalent in a question now brings the term and the others (before, all of them had to appear together).
 - Tests: `tests/test_c1.py`, on fictitious data.
