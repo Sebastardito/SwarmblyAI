@@ -45,7 +45,7 @@ def sync(lock: dict, name: str, ref: str, repo: str | None) -> None:
         sys.exit("the working tree has uncommitted changes; commit or stash them first")
     source = repo or comp["repository"]
     git("fetch", "--quiet", source, ref)
-    commit = git("rev-parse", "FETCH_HEAD")
+    commit = git("rev-parse", "FETCH_HEAD^{commit}")   # a tag object resolves to its commit
     if commit == comp.get("commit"):
         print(f"{name}: already at {commit[:12]}")
         return
