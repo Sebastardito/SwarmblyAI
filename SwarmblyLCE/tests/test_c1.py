@@ -95,3 +95,20 @@ def test_unreadable_files_are_reported(tmp_path):
     entry = index.list_sources([root])[0]
     assert entry["passages"] == 0 and entry.get("unreadable")
     assert citation({"doc_id": "abc", "anchor": "p2"}) == "doc:abc#p2"
+
+
+def test_pdf_without_pdftotext_is_read_with_pypdf(tmp_path, monkeypatch):
+    import pytest
+    pytest.importorskip("pypdf")
+    reportlab = pytest.importorskip("reportlab.pdfgen.canvas")
+    from swarmbly_lce.c1 import readers
+    path = tmp_path / "manual.pdf"
+    c = reportlab.Canvas(str(path))
+    c.drawString(72, 720, "Instrucciones de acceso movil al equipo ficticio AB1.")
+    c.drawString(72, 700, "Descarga la aplicacion de escritorio remoto y usa la clave del laboratorio.")
+    c.save()
+    monkeypatch.setattr(readers, "pdftotext_path", lambda: None)
+    text, reason = readers.read_source(path, path.read_bytes())
+    assert reason == "" and "acceso movil" in text
+    hits = SourceIndex().retrieve([tmp_path], "acceso movil AB1 escritorio remoto", k=1)
+    assert hits and hits[0]["source"] == "manual.pdf"
