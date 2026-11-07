@@ -230,6 +230,36 @@ class AppState:
         return {"scope": "personal", "path": str(path), "full_path": str(path),
                 "read_back": self._personal_c1()}
 
+    def save_memory(self, project_id: str, notes: list[str], glossary: list[dict]) -> dict:
+        """What the user confirmed from a proposal: notes to notas.md, glossary
+        entries to glosario.md (and their definitions as notes)."""
+        from .memory_capture import glossary_line
+        from .projects import save_glossary, save_note
+        if project_id:
+            project = self.projects.require(project_id)
+            folder, base, title = project.memory, project.path, f"del proyecto {project.name}"
+        else:
+            folder, base, title = self.dirs.sources, self.dirs.sources, "personal"
+        written: dict = {"notes": [], "glossary": []}
+        for note in notes or []:
+            if note.strip():
+                path = save_note(folder, note, title=f"Memoria {title}")
+                written["notes"].append(note.strip())
+        lines = []
+        for g in glossary or []:
+            line = glossary_line(g)
+            if line:
+                lines.append(line)
+            if g.get("definition"):
+                save_note(folder, f"{g['term']}: {g['definition']}", title=f"Memoria {title}")
+        if lines:
+            gpath = save_glossary(folder, lines, title=f"Glosario {title}")
+            written["glossary"] = lines
+            written["glossary_path"] = str(gpath.relative_to(base)) if project_id else str(gpath)
+        written["notes_path"] = (str((folder / "notas.md").relative_to(base)) if project_id
+                                 else str(folder / "notas.md"))
+        return written
+
     def sync_projects(self, project_id: str | None = None) -> dict[str, int]:
         """Bring into the app the chats a project folder has and the app does
         not (a restored or copied project). The folder's copy is never

@@ -83,6 +83,24 @@ def save_note(folder: Path, text: str, title: str = "Memoria") -> Path:
     return path
 
 
+GLOSSARY_FILE = "glosario.md"
+
+
+def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Path:
+    """Append ``term = equivalents`` lines to ``folder/glosario.md`` (the
+    format C1 reads), skipping lines already there."""
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / GLOSSARY_FILE
+    have = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+    new = [ln for ln in lines if ln and ln not in have]
+    with open(path, "a", encoding="utf-8") as fh:
+        if not have:
+            fh.write(f"# {title}\n\n")
+        for ln in new:
+            fh.write(ln + "\n")
+    return path
+
+
 class ProjectError(ValueError):
     """A request about projects that cannot be done; the message says why."""
 

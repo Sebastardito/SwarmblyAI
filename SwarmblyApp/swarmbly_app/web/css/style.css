@@ -456,3 +456,10 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 .form-stack input.text { width: 100%; }
 code.cite { font-size: 11px; opacity: .75; }
 @media (max-width: 760px) { .project-strip { padding: 8px 16px 0; } .project-select { max-width: 60vw; } }
+.memory-card { margin: 8px 0 4px 34px; padding: 10px 12px; border: 1px dashed var(--chlorophyll, #4ade80); border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
+.memory-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.memory-row input.text { flex: 1 1 180px; min-width: 120px; }
+.memory-row input.memory-term { flex: 0 1 140px; }
+.memory-done { margin: 6px 0 0 34px; }
+.web-results { margin: 6px 0 0 34px; }
+.web-results ul { margin: 4px 0; }

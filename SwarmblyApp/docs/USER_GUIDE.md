@@ -89,6 +89,22 @@ It stays on this computer and such a message never goes to the swarm.
 *Documents* in the project bar shows what the project can read, and why a
 file gave nothing (for example a scanned PDF).
 
+**Memory and glossary proposals.** If you ask in a message to remember
+something or to add it to the glossary, or you define or correct a term
+("TRU significa Trial Rearing Unit", "los cucujos, también conocidos como
+cucuyos…"), a card under the answer proposes notes and glossary entries.
+Edit them, untick what you do not want, and press *Save to memory*; nothing
+is saved otherwise. The glossary (`term = synonyms, translations`) widens
+later searches: any one of the equivalents finds the term.
+
+**Searching online.** Swarmbly never sends your question to a search engine
+on its own. If you ask for online or recent references, the answer says no
+search was made and offers *Search online*: you see the exact text that
+would be sent, edit it, and approve it. Results from PubMed, Wikipedia (and
+your SearXNG, if configured) are listed under the new answer as [W1], [W2]…
+with their links. A label in an answer that matches no passage or result is
+flagged as *citation without a source*.
+
 **Public lookups need your yes when the question is about you.** If a
 question is personal or sensitive, or your documents answer it, and it would
 also need a public source, the answer is written without the lookup and
@@ -270,7 +286,13 @@ sincronizada (iCloud, Dropbox, OneDrive, Google Drive), la app te avisa. Para qu
 *Memoriza*: la app lo guarda, con fecha, en `memory/notas.md` antes de
 responder (en una conversación personal, en `notas.md` de tus fuentes), y las
 siguientes respuestas lo encuentran. *Documentos* muestra qué puede leer el
-proyecto y por qué un archivo no dio nada.
+proyecto y por qué un archivo no dio nada. Si pides recordar algo en medio
+de un mensaje, o defines o corriges un término, aparece una propuesta de
+memoria y glosario bajo la respuesta: la editas y la confirmas con *Guardar
+en memoria*. Para buscar en internet, la respuesta ofrece *Buscar en línea*
+con el texto exacto que se enviaría a PubMed y Wikipedia; lo revisas y lo
+apruebas. Una etiqueta que no corresponde a ninguna fuente se marca como
+*cita sin fuente*.
 
 **Consultas públicas con tu sí.** Si la pregunta trata de ti o de tus
 documentos y además pediría una fuente pública, la respuesta se escribe sin

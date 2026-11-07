@@ -527,7 +527,11 @@ const Chat = (() => {
     const article = h(`article.msg.assistant${meta.status === "failed" ? ".failed" : ""}`,
       h("div.msg-gutter", { "aria-hidden": "true" }), body);
     if (meta.local_reason) setNote(article, meta.local_reason);
-    if (!streaming) article.appendChild(footer(m));
+    if (!streaming) {
+      if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
+      if (meta.memory_proposals) article.appendChild(memoryCard(m));
+      article.appendChild(footer(m));
+    }
     return article;
   }
 
@@ -558,6 +562,9 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.citations?.unknown?.length) chips.push(chip(
+      t("chat.citeUnknown").replace("{n}", meta.citations.unknown.length), "warn",
+      t("chat.citeUnknownTitle").replace("{labels}", meta.citations.unknown.join(", "))));
     if (meta.memory_saved?.path) chips.push(chip(t("chat.memorySaved"), "ok",
       t("chat.memorySavedTitle").replace("{path}", meta.memory_saved.full_path || meta.memory_saved.path)));
     if (meta.model) chips.push(chip(meta.model));
@@ -571,20 +578,94 @@ const Chat = (() => {
     if (meta.status === "failed" || meta.status === "stopped") {
       actions.push(button(t("chat.retry"), () => retry(m.id), "ghost small"));
     }
+    if (meta.web_offer) {
+      actions.push(button(t("chat.webOffer"), () => searchOnline(m), "small",
+        { title: t("chat.webOfferTitle") }));
+    }
     if (meta.public_offer?.entities?.length) {
       // 3.1: nothing public was looked up; your yes is asked for this question only
       const names = meta.public_offer.entities.join(", ");
-      actions.push(button(t("chat.publicOffer"), () => retry(m.id, true), "small",
+      actions.push(button(t("chat.publicOffer"), () => retry(m.id, { allow_public: true }), "small",
         { title: t("chat.publicOfferTitle").replace("{names}", names) }));
     }
     return h("footer.msg-foot", h("div.chips", chips), h("div.msg-actions", actions));
   }
 
-  async function retry(messageId, allowPublic = false) {
+  /* 3.1: online search only with the user's yes, the query in view and editable. */
+  async function searchOnline(m) {
+    const q = h("input.text", { type: "text", value: m.meta.web_offer.query || "",
+      "aria-label": t("chat.webQuery") });
+    setTimeout(() => q.focus(), 50);
+    const ok = await UI.modal(t("chat.webOffer"), h("div.form-stack",
+      h("label.stack", h("span", t("chat.webQuery")), q),
+      h("p.muted", t("chat.webHint"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.webSend"), value: true, kind: "primary" }]);
+    if (ok && q.value.trim()) retry(m.id, { web_query: q.value.trim() });
+  }
+
+  function webResults(found) {
+    return h("div.web-results", h("p.muted", t("chat.webResults").replace("{q}", found.query)),
+      h("ul.sources", found.results.map((r) => h("li",
+        h("strong", `[${r.label}] `),
+        h("a", { href: r.url, target: "_blank", rel: "noopener noreferrer" }, r.title),
+        h("span.muted", [r.authors, r.year, r.source].filter(Boolean).length
+          ? ` — ${[r.authors, r.year, r.source].filter(Boolean).join(" · ")}` : "")))));
+  }
+
+  /* 3.1: what the user asked to remember (or defined), proposed for a yes. */
+  function memoryCard(m) {
+    const prop = m.meta.memory_proposals;
+    if (prop.status === "saved") {
+      const where = [prop.saved?.notes_path, prop.saved?.glossary_path].filter(Boolean).join(" · ");
+      return h("p.note.memory-done", `${t("chat.memorySaved")}: ${where}`);
+    }
+    if (prop.status === "discarded") return h("p.muted.memory-done", t("chat.memoryDiscarded"));
+    const rows = [];
+    const notes = (prop.notes || []).map((n) => {
+      const box = h("input", { type: "checkbox" }); box.checked = true;
+      const input = h("input.text", { type: "text", value: n });
+      rows.push(h("label.memory-row", box, input));
+      return { box, input };
+    });
+    const terms = (prop.glossary || []).map((g) => {
+      const box = h("input", { type: "checkbox" }); box.checked = true;
+      const term = h("input.text.memory-term", { type: "text", value: g.term });
+      const eq = h("input.text", { type: "text", value: (g.equivalents || []).join(", "),
+        placeholder: t("chat.memoryEquivalents") });
+      const def = h("input.text", { type: "text", value: g.definition || "",
+        placeholder: t("chat.memoryDefinition") });
+      rows.push(h("div.memory-row", box, h("span.chip", t("chat.memoryGlossary")), term, h("span", "="), eq, def));
+      return { box, term, eq, def };
+    });
+    const save = async (discard) => {
+      const body = discard ? { discard: true } : {
+        notes: notes.filter((n) => n.box.checked).map((n) => n.input.value.trim()).filter(Boolean),
+        glossary: terms.filter((g) => g.box.checked && g.term.value.trim()).map((g) => ({
+          term: g.term.value.trim(),
+          equivalents: g.eq.value.split(",").map((x) => x.trim()).filter(Boolean),
+          definition: g.def.value.trim() })) };
+      try {
+        await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(m.id)}/memory`, body);
+        const messages = await Api.get(`/api/conversations/${encodeURIComponent(active)}/messages`);
+        const fresh = messages.find((x) => x.id === m.id);
+        const el = [...els.thread.querySelectorAll(".memory-card")].find((x) => x.dataset.mid === m.id);
+        if (fresh && el) el.closest("article").replaceWith(messageEl(fresh));
+        if (!discard) UI.toast(t("chat.memorySaved"), "ok");
+      } catch (e) { UI.toast(e.message, "error"); }
+    };
+    return h("div.memory-card", { dataset: { mid: m.id } },
+      h("p", h("strong", t(prop.asked ? "chat.memoryAsked" : "chat.memoryNoticed"))),
+      rows,
+      h("div.msg-actions", button(t("chat.memorySave"), () => save(false), "primary small"),
+        button(t("chat.memoryDiscard"), () => save(true), "ghost small")));
+  }
+
+  async function retry(messageId, opts = {}) {
     if (!active) return;
     try {
       track(await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(messageId)}/retry`,
-        allowPublic ? { allow_public: true } : {}));
+        opts));
     } catch (err) { UI.toast(err.message, "error"); }
   }
 

@@ -319,7 +319,8 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
                 conv_id, text,
                 mode=body.get("mode") or None,
                 model=body.get("model") or None,
-                allow_public=bool(body.get("allow_public")))
+                allow_public=bool(body.get("allow_public")),
+                web_query=str(body.get("web_query") or ""))
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"user_message": user_msg, "assistant_message": assistant_msg}
@@ -328,7 +329,8 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
     def retry_message(conv_id: str, message_id: str,
                       body: dict[str, Any] | None = None) -> dict:
         result = state.chat.retry(conv_id, message_id,
-                                  allow_public=bool((body or {}).get("allow_public")))
+                                  allow_public=bool((body or {}).get("allow_public")),
+                                  web_query=str((body or {}).get("web_query") or ""))
         if result is None:
             raise HTTPException(status_code=400, detail="nothing to retry")
         user_msg, assistant_msg = result
@@ -363,6 +365,29 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             content=content, media_type=media,
             headers={"Content-Disposition":
                      f'attachment; filename="conversation-{conv_id}.{format if format != "markdown" else "md"}"'})
+
+    @app.post("/api/conversations/{conv_id}/messages/{message_id}/memory")
+    def save_memory(conv_id: str, message_id: str, body: dict[str, Any]) -> dict:
+        """Save (or discard) what the user confirmed of a memory proposal (3.1)."""
+        conv = state.chat.get_conversation(conv_id)
+        msg = next((m for m in (state.chat.get_messages(conv_id) if conv else [])
+                    if m["id"] == message_id), None)
+        if msg is None or not (msg.get("meta") or {}).get("memory_proposals"):
+            raise HTTPException(status_code=404, detail="no memory proposal in that message")
+        meta = msg["meta"]
+        if body.get("discard"):
+            meta["memory_proposals"]["status"] = "discarded"
+        else:
+            notes = [str(n) for n in body.get("notes") or []][:10]
+            glossary = [g for g in body.get("glossary") or [] if isinstance(g, dict)][:10]
+            try:
+                written = state.save_memory(str(conv.get("project_id") or ""), notes, glossary)
+            except Exception as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            meta["memory_proposals"].update(status="saved", saved=written)
+        state.db.update_message(message_id, meta=meta)
+        state.chat._changed(conv_id)
+        return meta["memory_proposals"]
 
     # ---- projects (3.1) ---------------------------------------------------------------
     from .projects import register as _register_projects

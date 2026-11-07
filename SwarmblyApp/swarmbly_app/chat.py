@@ -44,6 +44,7 @@ class ActiveRequest:
     project_id: str = ""
     allow_public: bool = False
     memory_saved: dict[str, Any] | None = None     # "Recuerda: …" saved before answering
+    web_query: str = ""            # an online search the user approved for this question
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -133,7 +134,8 @@ class ChatService:
     def send(self, conversation_id: str, text: str, *,
              mode: str | None = None, model: str | None = None,
              run_async: bool = True,
-             allow_public: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+             allow_public: bool = False,
+             web_query: str = "") -> tuple[dict[str, Any], dict[str, Any]]:
         """Store the user message and start generation.
 
         Returns ``(user_message, assistant_message)``; when ``run_async`` the
@@ -168,7 +170,8 @@ class ChatService:
             conversation_id=conversation_id,
             message_id=assistant_msg["id"],
             mode=mode, model=model, project_id=str(conv.get("project_id") or ""),
-            allow_public=bool(allow_public), memory_saved=memory_saved)
+            allow_public=bool(allow_public), memory_saved=memory_saved,
+            web_query=" ".join((web_query or "").split())[:200])
         with self._lock:
             self._active[request.request_id] = request
         self.db.add_request(request.request_id, conversation_id,
@@ -189,6 +192,19 @@ class ChatService:
 
     def _whole_small_documents(self, sources: list[dict[str, Any]],
                                project_id: str) -> list[dict[str, Any]]:
+        if not sources:
+            return sources
+        # Only the document of the best passage, or one with two passages or
+        # more: a short manual that matched weakly was added whole to answers
+        # about something else (3.1 test).
+        counts: dict[str, int] = {}
+        for s in sources:
+            counts[s.get("doc_id", "")] = counts.get(s.get("doc_id", ""), 0) + 1
+        eligible = {sources[0].get("doc_id", "")} | {d for d, c in counts.items() if c >= 2}
+        return self._whole_docs(sources, project_id, eligible)
+
+    def _whole_docs(self, sources: list[dict[str, Any]], project_id: str,
+                    eligible: set[str]) -> list[dict[str, Any]]:
         """A short document that answered is given whole, in order (3.1).
 
         "Describe the manual step by step" over a three-page manual got four
@@ -206,7 +222,7 @@ class ChatService:
             if doc in done:
                 continue
             spans = []
-            if doc and budget > 0:
+            if doc and budget > 0 and doc in eligible:
                 try:
                     spans = self.document_spans(project_id, doc)
                 except Exception:
@@ -267,8 +283,10 @@ class ChatService:
             routing_stages: list[dict[str, Any]] | None = None
             routing_meta: dict[str, Any] = {}
             multi_local = mode == "local" and bool(self.config()["model"].get("multi_model"))
+            from . import memory_capture
+            capture = memory_capture.needs_capture(user_text)
             personal = mode in ("lan", "internet", "auto") and (
-                request.memory_saved is not None
+                request.memory_saved is not None or capture or bool(request.web_query)
                 or self._personal_request(user_text, request.project_id))
             if personal:
                 local_reason = ("about you and your documents: answered on this device "
@@ -358,8 +376,13 @@ class ChatService:
                 # returned nothing in 90 tokens (P2e round 6).
                 exp_model = ((cfg.get("lce") or {}).get("expansion_model")
                              or (cfg.get("model") or {}).get("model_name") or model)
+                # a short follow-up ("¿puedes extenderlo?") is expanded with the
+                # previous question; alone it gave unrelated keywords (3.1 test)
+                prev_q = _previous_user_turn(context)
+                exp_text = (f"{prev_q}\n{user_text}" if prev_q and _is_follow_up(user_text)
+                            else user_text)
                 with egress.purpose(egress.QUESTION):
-                    expansion = expand_query(backend, exp_model, user_text)
+                    expansion = expand_query(backend, exp_model, exp_text)
             if lce_on:
                 # 3.1: a short follow-up ("¿qué aplicaciones necesita este
                 # proceso?") is searched with the previous question as well
@@ -425,6 +448,31 @@ class ChatService:
                     block, batch_report = "", None
                 if block:
                     context = [{"role": "system", "content": block}, *context]
+            # 3.1: the blocks about this question go right before it, not at the
+            # top of a long history (the model followed the history instead)
+            blocks: list[str] = []
+            lang_now = _lang(user_text)
+            web_found = None
+            from . import web_search
+            if request.web_query:
+                with egress.purpose(egress.PUBLIC_QUERY):
+                    web_found = web_search.search(request.web_query, ev_cfg, lang_now,
+                                                  recent=web_search.wants_recent(user_text))
+                blocks.append(web_search.results_block(web_found, lang_now))
+            elif want_public or _ASKS_REFERENCES.search(user_text):
+                blocks.append(web_search.NO_SEARCH.get(lang_now, web_search.NO_SEARCH["en"]))
+                request.receipt_ctx["web_offer"] = web_search.propose_query(
+                    user_text, expansion.keywords if expansion else "")
+            proposals = None
+            if capture and not request.memory_saved:
+                exp_model2 = ((cfg.get("lce") or {}).get("expansion_model")
+                              or (cfg.get("model") or {}).get("model_name") or model)
+                proposals = memory_capture.propose(user_text, backend, exp_model2)
+                if not (proposals["notes"] or proposals["glossary"]):
+                    proposals = None
+                if proposals and proposals["asked"]:
+                    blocks.append(memory_capture.MODEL_NOTE.get(lang_now,
+                                                                memory_capture.MODEL_NOTE["en"]))
             answer_model = model
             if public_hits and ev_cfg.get("fusion_model"):
                 # P2e: a larger local model writes only the answers that fuse the
@@ -440,8 +488,7 @@ class ChatService:
                            {"role": "user", "content": fusion_prompt(
                                sources, public_hits, user_text, detect_language(user_text))}]
             elif sources:
-                context = [{"role": "system", "content": _sources_block(sources, user_text)},
-                           *context]
+                blocks.append(_sources_block(sources, user_text))
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
                 # only), so "which sources do you have?" is not invented
@@ -452,12 +499,13 @@ class ChatService:
                 block = _documents_block(docs, user_text, _doc_labels(history, sources))
                 if not sources:
                     block += "\n" + _NOTHING_FOUND.get(_lang(user_text), _NOTHING_FOUND["en"])
-                context = [{"role": "system", "content": block}, *context]
+                blocks.insert(0, block)
             if request.memory_saved and not request.memory_saved.get("error"):
-                context = [{"role": "system", "content": _MEMORY_DONE.get(
-                    _lang(user_text),
-                    _MEMORY_DONE["en"]).format(path=request.memory_saved.get("path", ""))},
-                           *context]
+                blocks.append(_MEMORY_DONE.get(_lang(user_text), _MEMORY_DONE["en"]).format(
+                    path=request.memory_saved.get("path", "")))
+            if blocks:
+                context = [*context[:-1], *({"role": "system", "content": b} for b in blocks),
+                           context[-1]]
             request.receipt_ctx["passages"] = [str(s.get("text", "")) for s in sources]
             if sources:
                 request.receipt_ctx["lane"] = "personal" if request.receipt_ctx.get("lane") != "sensible" \
@@ -512,6 +560,14 @@ class ChatService:
             if request.receipt_ctx.get("public_offer"):
                 # nothing was looked up: the answer offers to repeat it with a lookup
                 extra["public_offer"] = {"entities": request.receipt_ctx["public_offer"]}
+            if web_found is not None:
+                extra["web_search"] = web_found
+            elif request.receipt_ctx.get("web_offer") is not None:
+                extra["web_offer"] = {"query": request.receipt_ctx["web_offer"]}
+            if proposals:
+                extra["memory_proposals"] = proposals
+            answer_text = getattr(result, "text", "") or ""
+            extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:
@@ -702,7 +758,7 @@ class ChatService:
                     for r in self._active.values()]
 
     def retry(self, conversation_id: str, message_id: str,
-              allow_public: bool = False) -> tuple[dict, dict] | None:
+              allow_public: bool = False, web_query: str = "") -> tuple[dict, dict] | None:
         """Re-send the last user message before ``message_id`` (spec: retry)."""
         messages = self.db.get_messages(conversation_id)
         index = next((i for i, m in enumerate(messages) if m["id"] == message_id), None)
@@ -711,7 +767,8 @@ class ChatService:
         user_msg = messages[index - 1]
         if user_msg["role"] != "user":
             return None
-        return self.send(conversation_id, user_msg["content"], allow_public=allow_public)
+        return self.send(conversation_id, user_msg["content"], allow_public=allow_public,
+                         web_query=web_query)
 
     # -- export ---------------------------------------------------------------
     def export(self, conversation_id: str, fmt: str = "markdown",
@@ -785,6 +842,27 @@ _SOURCES_HEAD = {
 
 
 WHOLE_DOC_CHARS = 6000          # a document this short is given whole (3.1)
+_ASKS_REFERENCES = re.compile(r"\b(referencias?|art[ií]culos?|estudios|bibliograf[ií]a|"
+                              r"publicaciones|papers?|references?|articles|studies|"
+                              r"literature)\b", re.I)
+_CITE = re.compile(r"\b(D\d+\s+p\d+|W\d+)\b")
+
+
+def _check_citations(answer: str, sources: list[dict[str, Any]],
+                     history: list[dict[str, Any]], web: dict[str, Any] | None) -> dict[str, Any]:
+    """Labels in the answer that name no passage given in this conversation
+    (a first check; the full verifier is 3.2). The 3.1 test had "[D3 p19]" for
+    a document with 12 paragraphs."""
+    known = {" ".join(str(s.get("label", "")).split()) for s in sources}
+    for m in history:
+        meta = m.get("meta") or {}
+        known |= {" ".join(str(s.get("label", "")).split())
+                  for s in (meta.get("lce") or {}).get("sources") or []}
+        known |= {str(h.get("label", "")) for h in (meta.get("web_search") or {}).get("results") or []}
+    known |= {str(h.get("label", "")) for h in (web or {}).get("results") or []}
+    found = [" ".join(c.split()) for c in _CITE.findall(answer or "")]
+    unknown = sorted({c for c in found if c not in known})
+    return {"cited": len(set(found)), "unknown": unknown}
 _FOLLOW_UP = re.compile(r"\b(este|esta|esto|ese|esa|eso|estos|estas|anterior|lo mismo|"
                         r"this|that|these|those|it|previous|above|isso|isto)\b", re.I)
 
