@@ -6,13 +6,14 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 
 On the `edge` branch; `main` keeps the last release.
 
-- **SwarmblyApp 0.4.0** (mirror of `main`, `243574e`):
+- **SwarmblyApp 0.4.0** (mirror of `main`, `ff38eb9`):
   - **Projects**: a folder of its own for each piece of work (default `Documents/Swarmbly/<Project>`) with its documents, its memory (glossary, notes) and its chats; conversations of a project read only that project; export and restore as `.swarmbly` packages with the SHA-256 of every file and never an API key; a warning when the folder is synced by a cloud service.
   - **Stable citations** (`doc:<sha12>#p<n>`) that still resolve after a project is restored on another computer.
   - **"Recuerda: …" saves to memory** (the project's `memory/notas.md`), and *Documents* shows what a project can read and why a file gave nothing (found in the first hands-on test).
   - **Citations that keep their meaning** (`[D1 p3]`, the same document number for the whole conversation), answers held to the sources (no expanded acronyms, no invented rows; "the sources do not say"), short documents given whole, follow-ups searched with the previous question (second hands-on test).
+  - **Memory and glossary with your yes** (proposals under the answer, from requests to remember and from definitions you give), **online search with the query in view** (PubMed, Wikipedia, your SearXNG; nothing sent without your approval), and a check that flags citations without a source (third hands-on test).
   - **Consent per question**: a question about you or your documents gets no public lookup without your yes for that question; the receipt states the consent and its scope (personal or project).
-- **SwarmblyLCE** (mirror of `main`, `592681a`): level C1 moves into the package (`swarmbly_lce.c1`), with the stable citations; PDFs are read with `pypdf` where `pdftotext` is missing; with local embeddings, unrelated passages stay out.
+- **SwarmblyLCE** (mirror of `main`, `6eb60dd`): level C1 moves into the package (`swarmbly_lce.c1`), with the stable citations; PDFs are read with `pypdf` where `pdftotext` is missing; with local embeddings, unrelated passages stay out; any one glossary equivalent brings the term.
 - **Docker:** projects live in the data volume (`SWARMBLY_PROJECTS_DIR=/data/projects`).
 
 ## 3.0.1 — Destinations, privacy receipts and Docker (2026-11-07)
