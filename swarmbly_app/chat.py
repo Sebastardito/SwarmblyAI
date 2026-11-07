@@ -43,6 +43,7 @@ class ActiveRequest:
     # public lookup for this one question
     project_id: str = ""
     allow_public: bool = False
+    memory_saved: dict[str, Any] | None = None     # "Recuerda: …" saved before answering
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -84,6 +85,10 @@ class ChatService:
         self.on_conversation_changed: Callable[[str], None] | None = None
         self.on_conversation_deleted: Callable[[dict[str, Any]], None] | None = None
         self.project_name: Callable[[str], str] = lambda project_id: ""
+        # 3.1: an explicit "remember …" is written to memory (project or personal)
+        self.remember: Callable[[str, str], dict[str, Any] | None] | None = None
+        # 3.1: the documents a project conversation can read (names and status)
+        self.document_list: Callable[[str], list[dict[str, Any]]] | None = None
         self._lock = threading.Lock()
 
     def _changed(self, conversation_id: str) -> None:
@@ -139,6 +144,12 @@ class ChatService:
         mode = mode or conv["mode"] or cfg["swarm"]["mode"]
         model = model or conv["model"] or cfg["model"]["model_name"] or ""
 
+        memory_saved = None
+        if self.remember is not None and wants_memory(text):
+            try:
+                memory_saved = self.remember(str(conv.get("project_id") or ""), text)
+            except Exception as exc:
+                memory_saved = {"error": str(exc)[:200]}
         user_msg = self.db.add_message(conversation_id, "user", text)
         if conv.get("title") in ("", "New conversation"):
             first_line = " ".join(text.strip().split())
@@ -155,7 +166,7 @@ class ChatService:
             conversation_id=conversation_id,
             message_id=assistant_msg["id"],
             mode=mode, model=model, project_id=str(conv.get("project_id") or ""),
-            allow_public=bool(allow_public))
+            allow_public=bool(allow_public), memory_saved=memory_saved)
         with self._lock:
             self._active[request.request_id] = request
         self.db.add_request(request.request_id, conversation_id,
@@ -220,7 +231,9 @@ class ChatService:
             routing_stages: list[dict[str, Any]] | None = None
             routing_meta: dict[str, Any] = {}
             multi_local = mode == "local" and bool(self.config()["model"].get("multi_model"))
-            personal = mode in ("lan", "internet", "auto") and self._personal_request(user_text, request.project_id)
+            personal = mode in ("lan", "internet", "auto") and (
+                request.memory_saved is not None
+                or self._personal_request(user_text, request.project_id))
             if personal:
                 local_reason = ("about you and your documents: answered on this device "
                                 "with your sources (nothing sent to the swarm)")
@@ -387,6 +400,20 @@ class ChatService:
             elif sources:
                 context = [{"role": "system", "content": _sources_block(sources, user_text)},
                            *context]
+            if lce_on and request.project_id and self.document_list is not None:
+                # 3.1: the model knows which documents this project has (names
+                # only), so "which sources do you have?" is not invented
+                try:
+                    docs = self.document_list(request.project_id)
+                except Exception:
+                    docs = []
+                context = [{"role": "system", "content": _documents_block(docs, user_text)},
+                           *context]
+            if request.memory_saved and not request.memory_saved.get("error"):
+                context = [{"role": "system", "content": _MEMORY_DONE.get(
+                    _lang(user_text),
+                    _MEMORY_DONE["en"]).format(path=request.memory_saved.get("path", ""))},
+                           *context]
             request.receipt_ctx["passages"] = [str(s.get("text", "")) for s in sources]
             if sources:
                 request.receipt_ctx["lane"] = "personal" if request.receipt_ctx.get("lane") != "sensible" \
@@ -500,6 +527,8 @@ class ChatService:
                                 "request_id": request.request_id,
                                 "executed": "local"}
         meta.update(extra or {})
+        if request.memory_saved:
+            meta["memory_saved"] = request.memory_saved
         content = ""
         if result is not None:
             content = result.text
@@ -698,6 +727,53 @@ _SOURCES_HEAD = {
     "en": ("The user's local sources (they never leave this device). Use them only if "
            "relevant and cite the one you use as [1], [2]…:"),
 }
+
+
+_MEMORY_VERB = re.compile(
+    r"^\s*(?:por\s+favor[,\s]+)?(?:memoriza|memorice|recuerda|recuerde|anota|apunta|"
+    r"guarda(?:\s+esto)?\s+en\s+(?:la\s+|tu\s+)?memoria|remember|memori[sz]e|note\s+down|"
+    r"keep\s+in\s+mind|lembre|memorize|anote)\b", re.I)
+
+
+def wants_memory(text: str) -> bool:
+    """An explicit request to remember ("Recuerda: …", "Memoriza …",
+    "Remember that …"). A question ("¿recuerdas…?") is not one."""
+    t = (text or "").strip()
+    return bool(_MEMORY_VERB.match(t)) and not t.endswith("?")
+
+
+def _lang(text: str) -> str:
+    from .lang import detect_language
+    return detect_language(text)
+
+
+_MEMORY_DONE = {
+    "es": ("La app ya guardó el mensaje del usuario en su memoria local ({path}); "
+           "confírmalo en una frase y no digas que no puedes recordar."),
+    "en": ("The app has saved the user's message in local memory ({path}); confirm it in one "
+           "sentence and do not say you cannot remember."),
+}
+
+_DOCS_HEAD = {
+    "es": ("Documentos de este proyecto (solo nombres; si te preguntan qué fuentes hay, "
+           "responde con esta lista y no inventes otras):"),
+    "en": ("Documents of this project (names only; if asked which sources there are, answer "
+           "with this list and invent none):"),
+}
+
+
+def _documents_block(docs: list[dict[str, Any]], user_text: str) -> str:
+    lang = _lang(user_text)
+    lines = [_DOCS_HEAD.get(lang, _DOCS_HEAD["en"])]
+    for d in docs[:60]:
+        name = d.get("rel") or d.get("name", "")
+        if d.get("unreadable"):
+            lines.append(f"- {name} ({'sin texto legible' if lang == 'es' else 'no readable text'})")
+        else:
+            lines.append(f"- {name}")
+    if len(lines) == 1:
+        lines.append("- (ninguno)" if lang == "es" else "- (none)")
+    return "\n".join(lines)
 
 
 def _sources_block(sources: list[dict[str, Any]], user_text: str) -> str:

@@ -60,8 +60,10 @@ class LCEAdapter:
     def __init__(self, dirs: DataDirs):
         self.dirs = dirs
         # The README the app writes into its own source folder is not a document
+        from .projects import is_app_note
         self.index = SourceIndex(
-            skip=lambda root, path: path.name == "README.md" and path.parent == self.dirs.sources)
+            skip=lambda root, path: (path.name == "README.md" and path.parent == self.dirs.sources)
+            or is_app_note(path))
 
     # -- package availability -------------------------------------------------
     def package_info(self) -> dict[str, Any]:

@@ -59,7 +59,7 @@ create one. A project is a folder of yours, by default
 | Folder | What goes there |
 |---|---|
 | `sources/` | the project's documents (text, Markdown, Word, HTML, PDF) |
-| `memory/` | the project's memory: a glossary (`glosario.md`: `term = equivalent`) and notes |
+| `memory/` | the project's memory: notes saved from the chat (`notas.md`), a glossary (`glosario.md`: `term = equivalent`), and any notes of yours |
 | `chats/` | the project's conversations, one file each, kept up to date by the app |
 | `exports/` | `.swarmbly` packages of the project |
 
@@ -80,6 +80,14 @@ create one. A project is a folder of yours, by default
   app warns you: those services can move files to the cloud to free space or
   create duplicates ("chat 2.json"). Prefer a folder that is not synced, or
   keep this one always on this computer.
+
+**Remember something.** Start a message with *Recuerda:*, *Memoriza* or
+*Remember*: before answering, the app writes it, dated, to the project's
+`memory/notas.md` (in a personal conversation, to `notas.md` in your sources
+folder). A *Saved to memory* label says where, and the next answers find it.
+It stays on this computer and such a message never goes to the swarm.
+*Documents* in the project bar shows what the project can read, and why a
+file gave nothing (for example a scanned PDF).
 
 **Public lookups need your yes when the question is about you.** If a
 question is personal or sensitive, or your documents answer it, and it would
@@ -258,7 +266,11 @@ SHA-256 de cada archivo y nunca lleva claves API. *Restaurar* comprueba cada
 hash antes de escribir y restaura en una carpeta nueva; en otra computadora
 vuelven los chats y sus citas siguen apuntando al párrafo correcto. *Cerrar
 proyecto* lo quita de la app y deja la carpeta. Si la carpeta está
-sincronizada (iCloud, Dropbox, OneDrive, Google Drive), la app te avisa.
+sincronizada (iCloud, Dropbox, OneDrive, Google Drive), la app te avisa. Para que el proyecto recuerde algo, empieza el mensaje con *Recuerda:* o
+*Memoriza*: la app lo guarda, con fecha, en `memory/notas.md` antes de
+responder (en una conversación personal, en `notas.md` de tus fuentes), y las
+siguientes respuestas lo encuentran. *Documentos* muestra qué puede leer el
+proyecto y por qué un archivo no dio nada.
 
 **Consultas públicas con tu sí.** Si la pregunta trata de ti o de tus
 documentos y además pediría una fuente pública, la respuesta se escribe sin

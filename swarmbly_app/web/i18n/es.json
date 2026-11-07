@@ -156,7 +156,9 @@
   "lceChip": "Fuentes locales · {n}",
   "lceTitle": "La respuesta usó pasajes de tus fuentes (LCE C1); no salieron del equipo.",
   "publicOffer": "Buscar también en fuentes públicas",
-  "publicOfferTitle": "Tu pregunta trata de ti o de tus documentos, así que no se consultó nada público. Si aceptas, solo se enviarán estos nombres: {names}"
+  "publicOfferTitle": "Tu pregunta trata de ti o de tus documentos, así que no se consultó nada público. Si aceptas, solo se enviarán estos nombres: {names}",
+  "memorySaved": "Guardado en memoria",
+  "memorySavedTitle": "Se guardó en {path}. Solo en esta computadora; se usa en las próximas respuestas."
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
@@ -863,7 +865,7 @@
   "name": "Nombre",
   "namePlaceholder": "p. ej., Tesis de quinua",
   "where": "Dónde se crea la carpeta",
-  "newHint": "El proyecto es una carpeta tuya: sources/ (documentos), memory/ (glosario y notas), chats/ (las conversaciones) y exports/. Las conversaciones del proyecto solo leen sus documentos.",
+  "newHint": "El proyecto es una carpeta tuya: sources/ (documentos), memory/ (lo que el proyecto recuerda: escribe «Recuerda: …» en el chat; y un glosario), chats/ (las conversaciones) y exports/. Las conversaciones del proyecto solo leen sus documentos y su memoria.",
   "create": "Crear",
   "created": "Proyecto creado en {path}",
   "folder": "Carpeta del proyecto",
@@ -883,6 +885,12 @@
   "close": "Cerrar proyecto",
   "closeTitle": "Cerrar el proyecto en esta app",
   "closeBody": "El proyecto deja de aparecer aquí. Su carpeta y todos sus archivos, chats incluidos, se quedan en {path}; puedes volver a abrirla cuando quieras.",
-  "cloudWarning": "Esta carpeta está sincronizada con un servicio en la nube. El servicio puede subir los archivos a la nube para liberar espacio o crear copias duplicadas («nombre 2»), y un proyecto abierto puede dañarse. Mejor usa una carpeta sin sincronizar, o marca esta para que se quede siempre en esta computadora."
+  "cloudWarning": "Esta carpeta está sincronizada con un servicio en la nube. El servicio puede subir los archivos a la nube para liberar espacio o crear copias duplicadas («nombre 2»), y un proyecto abierto puede dañarse. Mejor usa una carpeta sin sincronizar, o marca esta para que se quede siempre en esta computadora.",
+  "documents": "Documentos",
+  "documentsHint": "Lo que esta conversación puede leer. Pon los documentos en {path}; la memoria está en memory/.",
+  "noDocuments": "Todavía no hay documentos.",
+  "docPassages": "{n} párrafos",
+  "docUnreadable": "sin leer",
+  "docGlossary": "glosario"
  }
 }

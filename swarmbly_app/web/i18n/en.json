@@ -156,7 +156,9 @@
   "lceChip": "Local sources · {n}",
   "lceTitle": "The answer used passages from your sources (LCE C1); they did not leave this device.",
   "publicOffer": "Also search public sources",
-  "publicOfferTitle": "Your question is about you or your documents, so nothing public was looked up. If you accept, only these names are sent: {names}"
+  "publicOfferTitle": "Your question is about you or your documents, so nothing public was looked up. If you accept, only these names are sent: {names}",
+  "memorySaved": "Saved to memory",
+  "memorySavedTitle": "Saved in {path}. On this computer only; used in the next answers."
  },
  "explore": {
   "title": "How this answer was made",
@@ -863,7 +865,7 @@
   "name": "Name",
   "namePlaceholder": "e.g. Quinoa thesis",
   "where": "Where the folder is created",
-  "newHint": "A project is a folder of yours: sources/ (documents), memory/ (glossary and notes), chats/ (the conversations) and exports/. The project's conversations read only its documents.",
+  "newHint": "A project is a folder of yours: sources/ (documents), memory/ (what the project remembers: write \"Remember: …\" in the chat; and a glossary), chats/ (the conversations) and exports/. The project's conversations read only its documents and memory.",
   "create": "Create",
   "created": "Project created in {path}",
   "folder": "Project folder",
@@ -883,6 +885,12 @@
   "close": "Close project",
   "closeTitle": "Close the project in this app",
   "closeBody": "The project stops showing here. Its folder and all its files, chats included, stay in {path}; you can open it again at any time.",
-  "cloudWarning": "This folder is synced with a cloud service. The service may move files to the cloud to free space or create duplicate copies (\"name 2\"), and an open project can break. Prefer a folder that is not synced, or set this one to always stay on this computer."
+  "cloudWarning": "This folder is synced with a cloud service. The service may move files to the cloud to free space or create duplicate copies (\"name 2\"), and an open project can break. Prefer a folder that is not synced, or set this one to always stay on this computer.",
+  "documents": "Documents",
+  "documentsHint": "What this conversation can read. Put documents in {path}; memory is in memory/.",
+  "noDocuments": "No documents yet.",
+  "docPassages": "{n} passages",
+  "docUnreadable": "not read",
+  "docGlossary": "glossary"
  }
 }
