@@ -62,6 +62,25 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
   Found in the first hands-on test of a project (7 November 2026): a project
   with one PDF answered from its instructions file only, and "memoriza…" was
   answered by the model without saving anything.
+- **Citations that keep their meaning, and answers held to the sources**
+  (second hands-on test, 7 November 2026: a VPN note cited as the memory
+  file, "TRU" expanded from nowhere, invented species and table rows):
+  - each passage is labelled `[D<n> p<k>]`: `D<n>` is the document's number
+    in this conversation and stays the same on later turns, so a label copied
+    from an earlier answer still names the same paragraph (before, `[1]`
+    meant a different passage on every turn);
+  - the instruction with the passages now says to answer only with what
+    they say, to say when the sources do not say something, and not to
+    expand acronyms or add names, figures, places or table rows; when a
+    project question finds nothing, the model is told so;
+  - a short document (up to 6,000 characters) that answers is given whole,
+    in order, instead of four scattered paragraphs;
+  - a short follow-up ("¿qué aplicaciones necesita este proceso?") is
+    searched together with the previous question;
+  - with local embeddings, a passage that shares no word with the question
+    enters only if it is close in meaning (SwarmblyLCE).
+  Small models still invent: these rules reduce it, and grounded composition
+  (fact sheet, tables built by code, a verifier) is version 3.2.
 
 ## 0.3.1 — Destinations and privacy receipts (2026-11-07)
 

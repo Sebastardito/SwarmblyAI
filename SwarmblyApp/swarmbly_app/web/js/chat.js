@@ -613,7 +613,7 @@ const Explore = (() => {
     }
     if (lce && lce.sources?.length) {
       parts.push(h("p.muted", t("explore.lceNote")),
-        h("ul.sources", lce.sources.map((s) => h("li", `[${s.n}] ${s.rel || s.source}`,
+        h("ul.sources", lce.sources.map((s) => h("li", `[${s.label || s.n}] ${s.rel || s.source}`,
           s.cite ? h("code.cite", { title: t("explore.citeTitle") }, ` ${s.cite}`) : null))));
     }
     return parts.length ? h("div", parts) : null;

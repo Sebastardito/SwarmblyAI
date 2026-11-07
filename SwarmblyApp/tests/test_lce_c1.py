@@ -29,6 +29,6 @@ def test_local_answer_gets_sources_only_with_c1(app_state, fake_chat):
     chat.send(conv["id"], "¿El piquero de patas azules es un ave?", mode="local",
               run_async=False)
     system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
-    assert system and "Fuentes locales" in system[0] and "[1] (notas.md)" in system[0]
+    assert system and "Fuentes locales" in system[0] and "[D1 p1] (notas.md)" in system[0]
     final = chat.get_messages(conv["id"])[-1]
     assert final["meta"]["lce"]["sources"][0]["source"] == "notas.md"

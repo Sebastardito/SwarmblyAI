@@ -94,6 +94,14 @@ Limitations are documented, never hidden. *[Español](#español) below.*
     sensitive question that would need a public lookup is answered without
     it, and the answer offers to repeat it with the lookup; the yes covers
     that question only.
+26. **Answers about documents can still contain invented details.** The
+    passages come with an instruction to answer only from them, a short
+    document is given whole, and labels keep their meaning across turns;
+    a small model (3B) still adds facts, names and table rows that are not in
+    the sources. Long documents are read as their best paragraphs, never
+    whole. Grounded composition (a fact sheet, tables built by code, a
+    verifier) is planned for 3.2; until then, check the labels in *Explore
+    processing*.
 
 ## Upstream (audited repositories)
 
@@ -140,4 +148,10 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    archivo cambia, y se dice. 25. El consentimiento se pide después de la
    respuesta: una pregunta personal o sensible que necesitaría una consulta
    pública se responde sin ella y ofrece repetirla con la consulta; el sí
-   vale solo para esa pregunta.
+   vale solo para esa pregunta. 26. Las respuestas sobre documentos aún pueden
+   contener detalles inventados: los párrafos llegan con la instrucción de
+   responder solo con ellos, un documento corto va completo y las etiquetas
+   conservan su sentido entre turnos, pero un modelo pequeño (3B) sigue
+   añadiendo datos, nombres y filas que no están en las fuentes; los
+   documentos largos se leen por sus mejores párrafos. La composición
+   fundamentada llega en 3.2.

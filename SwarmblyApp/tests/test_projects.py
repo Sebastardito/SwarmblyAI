@@ -84,7 +84,7 @@ def test_chats_are_kept_in_the_project_folder(app_state, tmp_path):
     assert cited["rel"] == "doc.md" and cited["cite"].startswith("doc:")
     assert answer["meta"]["receipt"]["ambito"] == {"tipo": "proyecto", "id": a.id, "nombre": "A"}
     system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
-    assert any("quinua" in c for c in system) and any("- doc.md" in c for c in system)
+    assert any("quinua" in c for c in system) and any("doc.md" in c and "Documents" in c or "Documentos" in c for c in system)
     assert app_state.chat.list_conversations(a.id)[0]["id"] == conv["id"]
     assert app_state.chat.list_conversations("") == []
     app_state.chat.delete_conversation(conv["id"])
@@ -246,7 +246,7 @@ def test_remember_writes_project_memory_and_the_next_answer_reads_it(app_state, 
     meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
     assert any(s["rel"] == "notas.md" for s in meta["lce"]["sources"])
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
-    assert "naranja" in system and "- doc.md" in system and "- notas.md" in system
+    assert "naranja" in system and "doc.md" in system and "D1: notas.md" in system
 
 
 def test_personal_memory_goes_to_the_personal_sources(app_state):
@@ -266,3 +266,43 @@ def test_the_apps_own_note_is_not_a_document(app_state, tmp_path):
                    encoding="utf-8")
     names = {d["rel"] for d in app_state.lce.list_sources(roots=a.roots())}
     assert names == {"doc.md"}
+
+
+MANUAL = ("# Acceso móvil a la unidad AB1\n\nDescarga la app Easy Access y un visor VNC.\n\n"
+          "Abre Easy Access e inicia sesión con el dominio AcmeLabs.\n\n"
+          "Selecciona la unidad AB1 y activa la conexión con el icono de flechas.\n\n"
+          "Desactiva la VPN del móvil cuando no uses la unidad AB1.\n")
+
+
+def test_labels_stay_the_same_across_turns_and_short_documents_go_whole(app_state, tmp_path):
+    fake = _fake(app_state)
+    a = _project(app_state, "A", DOC_A, tmp_path)
+    (a.sources / "manual_ab1.md").write_text(MANUAL, encoding="utf-8")
+    conv = app_state.chat.create_conversation(mode="local", project_id=a.id)
+    app_state.chat.send(conv["id"], "Describe paso a paso el manual de acceso móvil de la unidad AB1",
+                        mode="local", run_async=False)
+    first = app_state.chat.get_messages(conv["id"])[-1]["meta"]["lce"]["sources"]
+    manual = [s for s in first if s["rel"] == "manual_ab1.md"]
+    assert len(manual) == 4 and all(s["whole_document"] for s in manual)   # every paragraph
+    label = manual[0]["label"].split()[0]
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    assert "VPN" in system and f"[{label} p4]" in system and ("No expandas siglas" in system or "Do not expand acronyms" in system)
+    # a follow-up: the manual keeps its label, and "este proceso" is searched with the
+    # previous question
+    app_state.chat.send(conv["id"], "¿Qué aplicaciones necesita este proceso?", mode="local",
+                        run_async=False)
+    second = app_state.chat.get_messages(conv["id"])[-1]["meta"]["lce"]["sources"]
+    assert {s["label"].split()[0] for s in second if s["rel"] == "manual_ab1.md"} == {label}
+    other = [s for s in second if s["rel"] == "doc.md"]
+    assert all(s["label"].split()[0] != label for s in other)
+
+
+def test_nothing_found_in_the_project_is_said(app_state, tmp_path):
+    fake = _fake(app_state)
+    a = _project(app_state, "A", DOC_A, tmp_path)
+    conv = app_state.chat.create_conversation(mode="local", project_id=a.id)
+    app_state.chat.send(conv["id"], "¿Qué dice el informe sobre las ballenas jorobadas del Pacífico?",
+                        mode="local", run_async=False)
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    if not app_state.chat.get_messages(conv["id"])[-1]["meta"].get("lce", {}).get("sources"):
+        assert "no se encontró nada" in system or "Nothing was found" in system

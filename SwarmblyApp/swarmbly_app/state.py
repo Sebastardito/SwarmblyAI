@@ -151,6 +151,8 @@ class AppState:
                                               if pid else "")
         self.chat.remember = self.remember
         self.chat.document_list = lambda pid: self.lce.list_sources(roots=self.c1_roots(pid))
+        self.chat.document_spans = lambda pid, doc: self.lce.document_spans(
+            doc, roots=self.c1_roots(pid))
         self.sync_projects()
         from .doctor import Installer
         from .model_manager import OllamaModels

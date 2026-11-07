@@ -89,6 +89,8 @@ class ChatService:
         self.remember: Callable[[str, str], dict[str, Any] | None] | None = None
         # 3.1: the documents a project conversation can read (names and status)
         self.document_list: Callable[[str], list[dict[str, Any]]] | None = None
+        # 3.1: every paragraph of one document (project_id, doc_id), in order
+        self.document_spans: Callable[[str, str], list[dict[str, Any]]] | None = None
         self._lock = threading.Lock()
 
     def _changed(self, conversation_id: str) -> None:
@@ -184,6 +186,40 @@ class ChatService:
         else:
             self._run_generation(request, mode, model)
         return user_msg, assistant_msg
+
+    def _whole_small_documents(self, sources: list[dict[str, Any]],
+                               project_id: str) -> list[dict[str, Any]]:
+        """A short document that answered is given whole, in order (3.1).
+
+        "Describe the manual step by step" over a three-page manual got four
+        scattered paragraphs and the model filled the gaps. A document of up
+        to WHOLE_DOC_CHARS characters replaces its retrieved paragraphs with
+        all of them; long documents keep the retrieved ones.
+        """
+        if not sources or self.document_spans is None:
+            return sources
+        out: list[dict[str, Any]] = []
+        done: set[str] = set()
+        budget = WHOLE_DOC_CHARS * 2
+        for s in sources:
+            doc = s.get("doc_id", "")
+            if doc in done:
+                continue
+            spans = []
+            if doc and budget > 0:
+                try:
+                    spans = self.document_spans(project_id, doc)
+                except Exception:
+                    spans = []
+            size = sum(len(x.get("text", "")) for x in spans)
+            if spans and size <= min(WHOLE_DOC_CHARS, budget):
+                budget -= size
+                done.add(doc)
+                out.extend({**x, "score": s.get("score"), "cite": f"doc:{doc}#{x['anchor']}",
+                            "whole_document": True} for x in spans)
+            else:
+                out.append(s)
+        return out
 
     def _personal_request(self, text: str, project_id: str = "") -> bool:
         """A first-person request about the user's own material ("mi carrera",
@@ -325,12 +361,18 @@ class ChatService:
                 with egress.purpose(egress.QUESTION):
                     expansion = expand_query(backend, exp_model, user_text)
             if lce_on:
+                # 3.1: a short follow-up ("¿qué aplicaciones necesita este
+                # proceso?") is searched with the previous question as well
+                extra_terms = expansion.keywords if expansion else ""
+                prev_user = _previous_user_turn(context)
+                if prev_user and _is_follow_up(user_text):
+                    extra_terms = f"{extra_terms} {prev_user}"
                 try:
-                    sources = self.retriever(
-                        user_text, expansion.keywords if expansion else "",
-                        request.project_id) or []
+                    sources = self.retriever(user_text, extra_terms, request.project_id) or []
                 except Exception:
                     sources = []
+                sources = self._whole_small_documents(sources, request.project_id)
+                _label_sources(sources, history)
             public_hits: list[dict[str, Any]] = []
             public_report: dict[str, Any] | None = None
             if want_public and expansion is not None:
@@ -407,8 +449,10 @@ class ChatService:
                     docs = self.document_list(request.project_id)
                 except Exception:
                     docs = []
-                context = [{"role": "system", "content": _documents_block(docs, user_text)},
-                           *context]
+                block = _documents_block(docs, user_text, _doc_labels(history, sources))
+                if not sources:
+                    block += "\n" + _NOTHING_FOUND.get(_lang(user_text), _NOTHING_FOUND["en"])
+                context = [{"role": "system", "content": block}, *context]
             if request.memory_saved and not request.memory_saved.get("error"):
                 context = [{"role": "system", "content": _MEMORY_DONE.get(
                     _lang(user_text),
@@ -453,6 +497,8 @@ class ChatService:
                 extra["lce"] = {"level": "C1", "sources": [
                     {"n": i, "source": s["source"], "start": s["start"], "end": s["end"],
                      "score": s.get("score"), "rel": s.get("rel", ""),
+                     "label": s.get("label", ""), "doc_id": s.get("doc_id", ""),
+                     "whole_document": bool(s.get("whole_document")),
                      # 3.1: stable citation (content hash + paragraph), resolves
                      # after the folder is moved or restored elsewhere
                      "cite": s.get("cite", "")} for i, s in enumerate(sources, 1)]}
@@ -722,12 +768,74 @@ class ChatService:
 
 
 _SOURCES_HEAD = {
-    "es": ("Fuentes locales del usuario (no salen de este equipo). Úsalas solo si son "
-           "pertinentes y cita la que uses como [1], [2]…:"),
-    "en": ("The user's local sources (they never leave this device). Use them only if "
-           "relevant and cite the one you use as [1], [2]…:"),
+    # 3.1: grounded. The first project test showed acronyms expanded from
+    # nowhere ("TRU (Terminal Remote User)"), invented species and table rows.
+    "es": ("Fuentes locales del usuario (no salen de este equipo). Responde solo con lo que "
+           "dicen estos párrafos: si algo no está en ellos, di que las fuentes no lo dicen en "
+           "vez de suponerlo. No expandas siglas ni añadas nombres, cifras, lugares o filas de "
+           "tabla que no aparezcan aquí. Cita cada dato con la etiqueta de su párrafo, por "
+           "ejemplo [D1 p3]; la etiqueta de una respuesta anterior sigue nombrando el mismo "
+           "párrafo:"),
+    "en": ("The user's local sources (they never leave this device). Answer only with what "
+           "these paragraphs say: if something is not in them, say the sources do not say it "
+           "instead of guessing. Do not expand acronyms or add names, figures, places or table "
+           "rows that do not appear here. Cite each fact with its paragraph's label, e.g. "
+           "[D1 p3]; a label from an earlier answer still names the same paragraph:"),
 }
 
+
+WHOLE_DOC_CHARS = 6000          # a document this short is given whole (3.1)
+_FOLLOW_UP = re.compile(r"\b(este|esta|esto|ese|esa|eso|estos|estas|anterior|lo mismo|"
+                        r"this|that|these|those|it|previous|above|isso|isto)\b", re.I)
+
+
+def _previous_user_turn(context: list[dict[str, Any]]) -> str:
+    users = [m["content"] for m in context if m.get("role") == "user"]
+    return users[-2][:400] if len(users) >= 2 else ""
+
+
+def _is_follow_up(text: str) -> bool:
+    return len((text or "").split()) <= 12 or bool(_FOLLOW_UP.search(text or ""))
+
+
+def _doc_labels(history: list[dict[str, Any]], sources: list[dict[str, Any]] = ()
+                ) -> dict[str, tuple[str, str]]:
+    """doc_id -> (label "D1", file) for this conversation: earlier answers'
+    labels are kept, so a citation in an old answer still means the same
+    document (3.1; before, [1] meant a different passage on every turn)."""
+    labels: dict[str, tuple[str, str]] = {}
+    for m in history:
+        for s in ((m.get("meta") or {}).get("lce") or {}).get("sources") or []:
+            doc, label = s.get("doc_id"), str(s.get("label") or "")
+            if doc and label and doc not in labels:
+                labels[doc] = (label.split()[0], s.get("rel") or s.get("source", ""))
+    for s in sources:
+        doc, label = s.get("doc_id"), str(s.get("label") or "")
+        if doc and label and doc not in labels:
+            labels[doc] = (label.split()[0], s.get("rel") or s.get("source", ""))
+    return labels
+
+
+def _label_sources(sources: list[dict[str, Any]], history: list[dict[str, Any]]) -> None:
+    """Give each passage a label "D<n> p<k>": D<n> is the document's number in
+    this conversation, p<k> the paragraph in that document."""
+    labels = _doc_labels(history)
+    used = {lab for lab, _ in labels.values()}
+    n = max([int(lab[1:]) for lab in used if lab[1:].isdigit()] or [0])
+    for s in sources:
+        doc = s.get("doc_id") or s.get("source", "")
+        if doc not in labels:
+            n += 1
+            labels[doc] = (f"D{n}", s.get("rel") or s.get("source", ""))
+        s["label"] = f"{labels[doc][0]} {s.get('anchor', '')}".strip()
+
+
+_NOTHING_FOUND = {
+    "es": ("En esta pregunta no se encontró nada en los documentos del proyecto. Si la pregunta "
+           "trata de ellos, dilo así en vez de responder de memoria."),
+    "en": ("Nothing was found in the project's documents for this question. If the question is "
+           "about them, say so instead of answering from memory."),
+}
 
 _MEMORY_VERB = re.compile(
     r"^\s*(?:por\s+favor[,\s]+)?(?:memoriza|memorice|recuerda|recuerde|anota|apunta|"
@@ -762,11 +870,15 @@ _DOCS_HEAD = {
 }
 
 
-def _documents_block(docs: list[dict[str, Any]], user_text: str) -> str:
+def _documents_block(docs: list[dict[str, Any]], user_text: str,
+                     labels: dict[str, tuple[str, str]] | None = None) -> str:
     lang = _lang(user_text)
     lines = [_DOCS_HEAD.get(lang, _DOCS_HEAD["en"])]
+    labels = labels or {}
     for d in docs[:60]:
         name = d.get("rel") or d.get("name", "")
+        if d.get("doc_id") in labels:
+            name = f"{labels[d['doc_id']][0]}: {name}"
         if d.get("unreadable"):
             lines.append(f"- {name} ({'sin texto legible' if lang == 'es' else 'no readable text'})")
         else:
@@ -782,7 +894,8 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str) -> str:
     head = _SOURCES_HEAD.get(detect_language(user_text), _SOURCES_HEAD["en"])
     lines = [head]
     for i, s in enumerate(sources, 1):
-        lines.append(f"[{i}] ({s['source']}) {s['text']}")
+        label = s.get("label") or str(i)
+        lines.append(f"[{label}] ({s.get('rel') or s['source']}) {s['text']}")
     return "\n".join(lines)
 
 
