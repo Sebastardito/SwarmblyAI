@@ -81,6 +81,38 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     enters only if it is close in meaning (SwarmblyLCE).
   Small models still invent: these rules reduce it, and grounded composition
   (fact sheet, tables built by code, a verifier) is version 3.2.
+- **Memory and glossary with the user's yes** (third hands-on test: "…,
+  memorízalo" in the middle of a message saved nothing, "agrégalo a tu
+  glosario" neither, and the model said it had done both;
+  `swarmbly_app/memory_capture.py`):
+  - a request to remember or to add to the glossary anywhere in a message,
+    or a definition or correction the user gives ("X significa Y", "X,
+    también conocidos como Y", "X no es Y sino Z"), makes the local model
+    propose notes and glossary entries; they appear under the answer, editable,
+    with *Save to memory* and *Discard*; nothing is written without that yes
+    (a message that starts with "Recuerda:" is still saved at once);
+  - the model is told it cannot save anything and must not say it did;
+  - saved entries go to `memory/glosario.md` (`term = equivalents`) and
+    `memory/notas.md`; any one equivalent now brings the term in a search
+    (SwarmblyLCE), so the glossary widens later questions.
+- **Online search with the user's yes, query in view**
+  (`swarmbly_app/web_search.py`): public evidence sends only names of
+  species, so "search for recent articles" sent nothing and the model
+  invented references with authors and journals. Now:
+  - when a question asks for online or recent references and no search was
+    made, the model is told so and must not invent any, and the answer offers
+    *Search online* with a proposed query (no first-person words) that the user
+    edits and approves;
+  - only that text is sent, to PubMed (real articles: authors, journal, year,
+    link; newest first when "recent" is asked), Wikipedia and the user's
+    SearXNG if configured; results are the only online references the model
+    may cite ([W1]…), are listed under the answer, and are in the receipt.
+- **Citation check**: labels in an answer that name no passage or result of
+  the conversation are flagged under it ("1 citation without a source").
+- **Retrieval**: a short document is given whole only if it holds the best
+  passage or two of them (a manual matched weakly was added to unrelated
+  answers); a follow-up is expanded with the previous question; the blocks
+  about the question go right before it, not at the top of the history.
 
 ## 0.3.1 — Destinations and privacy receipts (2026-11-07)
 
