@@ -207,10 +207,14 @@ class SourceIndex:
                 v = cache[s["text"]] = tuple(norm(v))
             sims.append((sum(a * b for a, b in zip(qv, v)), i))
         sims.sort(reverse=True)
+        lexical = {i for i, _ in bm25}
+        best = sims[0][0] if sims else 0.0
         score: dict[int, float] = {}
         for rank, (i, _) in enumerate(bm25):
             score[i] = score.get(i, 0.0) + 1.0 / (P.RRF_K + rank + 1)
-        for rank, (_, i) in enumerate(sims[:P.DENSE_CANDIDATES]):
+        for rank, (sim, i) in enumerate(sims[:P.DENSE_CANDIDATES]):
+            if i not in lexical and sim < best - P.DENSE_MARGIN:
+                continue          # no word in common and not close in meaning
             score[i] = score.get(i, 0.0) + 1.0 / (P.RRF_K + rank + 1)
         return sorted(score.items(), key=lambda x: -x[1])
 

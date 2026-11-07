@@ -21,6 +21,9 @@ TITLE_LINE_CHARS = 160   # longer title lines with dashes count too (see _title_
 EXTRA_WEIGHT = 0.5       # weight of added query terms (model keywords, glossary)
 RRF_K = 60               # reciprocal-rank fusion constant
 DENSE_CANDIDATES = 40    # dense ranks that enter the fusion
+DENSE_MARGIN = 0.10      # a passage with no word in common must be this close to the best
+#                          dense match (cosine) to enter; otherwise fusion always returned k
+#                          passages, related or not (a memory note in every answer, 3.1 test)
 CANDIDATES_KEPT = 15     # ranked candidates kept for the metadata
 MAX_PER_FILE = 3         # passages per file, at least (2 cut a needed third, round 4);
 #                          two thirds of k when larger (round 10c: the Ne paragraph was
