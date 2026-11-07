@@ -165,6 +165,13 @@ class LCEAdapter:
         return self.index.retrieve(self._roots(extra_dirs, roots), query, k=k,
                                    expansion=expansion, embed=embed)
 
+    def document_spans(self, doc_id: str, extra_dirs: list[str] | tuple[str, ...] = (),
+                       roots: list[Path] | None = None) -> list[dict[str, Any]]:
+        """Every paragraph of one document (by content hash), in order."""
+        return [{k: v for k, v in s.items() if k != "index"}
+                for s in self.index.spans(self._roots(extra_dirs, roots))
+                if s.get("doc_id") == doc_id]
+
     def resolve(self, cite: str, extra_dirs: list[str] | tuple[str, ...] = (),
                 roots: list[Path] | None = None) -> dict[str, Any] | None:
         return self.index.resolve(self._roots(extra_dirs, roots), cite)
