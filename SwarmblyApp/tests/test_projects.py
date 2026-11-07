@@ -83,7 +83,8 @@ def test_chats_are_kept_in_the_project_folder(app_state, tmp_path):
     cited = answer["meta"]["lce"]["sources"][0]
     assert cited["rel"] == "doc.md" and cited["cite"].startswith("doc:")
     assert answer["meta"]["receipt"]["ambito"] == {"tipo": "proyecto", "id": a.id, "nombre": "A"}
-    assert "quinua" in fake.calls[-1]["messages"][0]["content"]
+    system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
+    assert any("quinua" in c for c in system) and any("- doc.md" in c for c in system)
     assert app_state.chat.list_conversations(a.id)[0]["id"] == conv["id"]
     assert app_state.chat.list_conversations("") == []
     app_state.chat.delete_conversation(conv["id"])
@@ -216,3 +217,52 @@ def test_projects_api(app_state, tmp_path):
     assert restored["restored_as_copy"] and restored["chats_added"] == 1
     assert client.put("/api/config", json={"projects": {"active": ""}},
                       headers=h).status_code == 400
+
+
+def test_wants_memory_only_for_an_explicit_request():
+    from swarmbly_app.chat import wants_memory
+    assert wants_memory("Memoriza mi nombre y mi color favorito. Soy Ana y me gusta el naranja.")
+    assert wants_memory("Recuerda: la reunión de AcmeLabs es los jueves")
+    assert wants_memory("Remember that the AB1 batch ships in March")
+    assert not wants_memory("¿Recuerdas mi color favorito?")
+    assert not wants_memory("¿Recuerda la app lo que dije?")
+    assert not wants_memory("Cuál es mi color favorito")
+
+
+def test_remember_writes_project_memory_and_the_next_answer_reads_it(app_state, tmp_path):
+    fake = _fake(app_state)
+    a = _project(app_state, "A", DOC_A, tmp_path)
+    conv = app_state.chat.create_conversation(mode="lan", project_id=a.id)
+    app_state.chat.send(conv["id"], "Memoriza mi nombre y mi color favorito. Soy Ana y me gusta "
+                        "el color naranja.", mode="lan", run_async=False)
+    notes = (a.memory / "notas.md").read_text(encoding="utf-8")
+    assert "Soy Ana y me gusta el color naranja." in notes
+    saved = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    assert saved["memory_saved"]["path"] == "memory/notas.md" and saved["executed"] == "local"
+    assert any("guardó el mensaje" in m["content"] for m in fake.calls[-1]["messages"]
+               if m["role"] == "system")
+    app_state.chat.send(conv["id"], "¿Qué color resulta si mezclo verde con mi color favorito?",
+                        mode="local", run_async=False)
+    meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    assert any(s["rel"] == "notas.md" for s in meta["lce"]["sources"])
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    assert "naranja" in system and "- doc.md" in system and "- notas.md" in system
+
+
+def test_personal_memory_goes_to_the_personal_sources(app_state):
+    _fake(app_state)
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], "Recuerda: mi laboratorio es AcmeLabs", mode="local",
+                        run_async=False)
+    assert "mi laboratorio es AcmeLabs." in (app_state.dirs.sources / "notas.md").read_text(
+        encoding="utf-8")
+
+
+def test_the_apps_own_note_is_not_a_document(app_state, tmp_path):
+    a = _project(app_state, "A", DOC_A, tmp_path)
+    assert (a.path / "LEEME.txt").is_file() and not (a.sources / "LEEME.txt").exists()
+    old = a.sources / "LEEME.txt"                  # where 0.4.0 development builds wrote it
+    old.write_text("Put this project's documents here (text, Markdown, Word, HTML, PDF).\n",
+                   encoding="utf-8")
+    names = {d["rel"] for d in app_state.lce.list_sources(roots=a.roots())}
+    assert names == {"doc.md"}

@@ -31,11 +31,12 @@ classifiers = [
 ]
 dependencies = [
   "swarmbly-v0 @ git+https://github.com/Sebastardito/SwarmblyAI.git@51eb44e8e471757f8abe2f90e60023633719fd0b",
-  "swarmbly-lce @ git+https://github.com/Sebastardito/SwarmblyLCE.git@f053d77b890310a3ed82fc954b65c438e735cd80",
+  "swarmbly-lce @ git+https://github.com/Sebastardito/SwarmblyLCE.git@b260d8841b679186ee8f0f80efe679bdb839ebf5",
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",
   "httpx>=0.27",
   "keyring>=24",
+  "pypdf>=4",            # C1 reads PDFs where pdftotext (poppler) is missing
   "psutil>=5.9",
   "cryptography>=41",
   "zeroconf>=0.132",

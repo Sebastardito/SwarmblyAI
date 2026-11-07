@@ -39,9 +39,29 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
   3.0.x behaviour. In the receipt, `consentimiento.otorgado` is now always
   true or false and `base` says what it rests on; the receipt also says its
   scope (`ambito`: personal or the project).
+- **"Remember: …" saves to memory.** A message that starts with an explicit
+  request to remember ("Recuerda: …", "Memoriza …", "Remember that …"; not a
+  question) is written, before the answer, to the project's
+  `memory/notas.md` (or `notas.md` in the personal sources folder), dated,
+  on this computer only; the answer confirms it, a chip says where, and the
+  following answers find it like any document. Such a message never goes to
+  the swarm.
+- **The project's documents, visible.** *Documents* in the project bar lists
+  every file, how many passages it gave and why a file gave none; the model
+  receives the list of names, so "which sources do you have?" is not
+  invented.
+- **PDFs without poppler** are read with `pypdf` (new dependency) through
+  SwarmblyLCE; before, a Mac without Homebrew left every PDF out.
+- The instructions file the app writes into a new project is now at the
+  project root, not in `sources/`: it was retrieved for every question.
 - Tests: `tests/test_projects.py` (isolation of two projects and the personal
   space, chats in the folder, export and restore on a second app with its
-  citations, damaged and unsafe packages, keys never exported, the API).
+  citations, damaged and unsafe packages, keys never exported, the API,
+  memory notes, the app's own note, the document list).
+
+  Found in the first hands-on test of a project (7 November 2026): a project
+  with one PDF answered from its instructions file only, and "memoriza…" was
+  answered by the model without saving anything.
 
 ## 0.3.1 — Destinations and privacy receipts (2026-11-07)
 

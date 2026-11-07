@@ -149,6 +149,8 @@ class AppState:
         self.chat.on_conversation_deleted = self._remove_chat_from_project
         self.chat.project_name = lambda pid: (getattr(self.projects.get(pid), "name", "")
                                               if pid else "")
+        self.chat.remember = self.remember
+        self.chat.document_list = lambda pid: self.lce.list_sources(roots=self.c1_roots(pid))
         self.sync_projects()
         from .doctor import Installer
         from .model_manager import OllamaModels
@@ -211,6 +213,20 @@ class AppState:
         project = self.projects.get(conv.get("project_id") or "")
         if project is not None:
             project.chat_file(conv["id"]).unlink(missing_ok=True)
+
+    def remember(self, project_id: str, text: str) -> dict:
+        """An explicit "remember …" from the chat, written to local memory:
+        the project's ``memory/notas.md``, or ``notas.md`` in the personal
+        sources folder. Nothing is sent anywhere; C1 reads it back."""
+        from .projects import save_note
+        if project_id:
+            project = self.projects.require(project_id)
+            path = save_note(project.memory, text, title=f"Memoria del proyecto {project.name}")
+            return {"scope": "project", "path": str(path.relative_to(project.path)),
+                    "full_path": str(path)}
+        path = save_note(self.dirs.sources, text, title="Memoria personal")
+        return {"scope": "personal", "path": str(path), "full_path": str(path),
+                "read_back": self._personal_c1()}
 
     def sync_projects(self, project_id: str | None = None) -> dict[str, int]:
         """Bring into the app the chats a project folder has and the app does

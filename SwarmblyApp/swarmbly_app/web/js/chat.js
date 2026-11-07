@@ -111,6 +111,7 @@ const Chat = (() => {
       });
       actions.push(h("label.inline.small", { title: t("project.includePersonalHint") }, incl,
         h("span", t("project.includePersonal"))));
+      actions.push(button(t("project.documents"), showDocuments, "ghost small"));
       actions.push(button(t("project.export"), exportProject, "ghost small"));
       actions.push(button(t("project.close"), closeProject, "ghost small"));
     }
@@ -211,6 +212,26 @@ const Chat = (() => {
     });
     document.body.appendChild(input);
     input.click();
+  }
+
+  /* What C1 can read in this project: every file, how many passages it gave,
+     and why a file gave none (e.g. a PDF without a text layer). */
+  async function showDocuments() {
+    const p = activeProject();
+    if (!p) return;
+    let docs = [];
+    try { docs = await Api.get(`/api/projects/${encodeURIComponent(p.id)}/sources`); } catch (e) {
+      UI.toast(e.message, "error"); return;
+    }
+    const rows = docs.map((d) => h("li",
+      h("span", d.rel || d.name), " ",
+      d.glossary ? chip(t("project.docGlossary"))
+        : d.unreadable ? chip(`${t("project.docUnreadable")}: ${d.unreadable}`, "warn")
+        : chip(t("project.docPassages").replace("{n}", d.passages))));
+    await UI.modal(t("project.documents"), h("div.form-stack",
+      h("p.muted", t("project.documentsHint").replace("{path}", `${p.path}/sources`)),
+      docs.length ? h("ul.sources", rows) : h("p", t("project.noDocuments"))),
+      [{ label: t("common.close"), value: null, kind: "primary" }]);
   }
 
   async function exportProject() {
@@ -537,6 +558,8 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.memory_saved?.path) chips.push(chip(t("chat.memorySaved"), "ok",
+      t("chat.memorySavedTitle").replace("{path}", meta.memory_saved.full_path || meta.memory_saved.path)));
     if (meta.model) chips.push(chip(meta.model));
     const ms = sw.total_ms ?? meta.total_ms;
     if (ms) chips.push(chip(UI.fmtMs(ms)));

@@ -47,6 +47,42 @@ PACKED = ("sources", "memory", "chats")          # exports/ never goes into a pa
 MAX_PACKAGE_BYTES = 2 * 1024 ** 3
 
 
+APP_NOTE = (
+    "Put this project's documents in sources/ (text, Markdown, Word, HTML, PDF).\n"
+    "memory/ holds what the project remembers: notes saved from the chat, and a glossary.\n"
+    "Pon los documentos de este proyecto en sources/ (texto, Markdown, Word, HTML, PDF).\n"
+    "memory/ guarda lo que el proyecto recuerda: notas guardadas desde el chat y un glosario.\n")
+MEMORY_NOTES = "notas.md"            # memory/notas.md: notes saved from the chat
+
+
+def is_app_note(path: Path) -> bool:
+    """The instructions file the app wrote into sources/ in 0.4.0 dev builds:
+    not one of the user's documents (it was retrieved for every question)."""
+    if path.name != "LEEME.txt" or path.parent.name != "sources":
+        return False
+    try:
+        head = path.read_text(encoding="utf-8", errors="replace")[:80]
+    except OSError:
+        return False
+    return head.startswith(("Put this project's documents here", "Put this project's documents in"))
+
+
+def save_note(folder: Path, text: str, title: str = "Memoria") -> Path:
+    """Append one note to ``folder/notas.md`` as its own paragraph, dated.
+    Written locally only; C1 reads it back like any other document."""
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / MEMORY_NOTES
+    note = " ".join(text.split())
+    if note and note[-1] not in ".!?…":
+        note += "."
+    stamp = time.strftime("%Y-%m-%d")
+    with open(path, "a", encoding="utf-8") as fh:
+        if path.stat().st_size == 0:
+            fh.write(f"# {title}\n\n")
+        fh.write(f"{stamp} · {note}\n\n")
+    return path
+
+
 class ProjectError(ValueError):
     """A request about projects that cannot be done; the message says why."""
 
@@ -305,10 +341,7 @@ class ProjectRegistry:
         project = Project(id=uuid.uuid4().hex[:16], name=name, path=path,
                           include_personal=include_personal)
         project.save()
-        (project.sources / "LEEME.txt").write_text(
-            "Put this project's documents here (text, Markdown, Word, HTML, PDF).\n"
-            "Pon aquí los documentos de este proyecto (texto, Markdown, Word, HTML, PDF).\n",
-            encoding="utf-8")
+        (project.path / "LEEME.txt").write_text(APP_NOTE, encoding="utf-8")
         return self.register(project)
 
     def open(self, path: str | Path) -> Project:
