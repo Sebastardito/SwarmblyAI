@@ -50,7 +50,7 @@ def read_source(path: Path, data: bytes) -> tuple[str | None, str]:
         if suffix == ".pdf":
             exe = pdftotext_path()
             if not exe:
-                return None, PDF_HINT
+                return pdf_text_pypdf(data)
             proc = subprocess.run([exe, "-enc", "UTF-8", "-", "-"], input=data,
                                   capture_output=True, timeout=120)
             if proc.returncode != 0:
@@ -60,6 +60,26 @@ def read_source(path: Path, data: bytes) -> tuple[str | None, str]:
     except Exception as exc:          # a broken file must not break retrieval
         return None, str(exc)[:200]
     return None, "unsupported format"
+
+
+def pdf_text_pypdf(data: bytes) -> tuple[str | None, str]:
+    """PDF text without poppler, with ``pypdf`` (pure Python) when installed.
+
+    pdftotext keeps the layout better and stays the first choice; this
+    fallback means a PDF is read on a computer without poppler (a Mac
+    without Homebrew) instead of being left out.
+    """
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None, PDF_HINT
+    try:
+        reader = PdfReader(BytesIO(data))
+        pages = [(page.extract_text() or "") for page in reader.pages]
+    except Exception as exc:
+        return None, f"{PDF_HINT}; pypdf could not read it either ({str(exc)[:120]})"
+    text = reflow("\f".join(pages))
+    return (text, "") if text.strip() else (None, "no text layer (scanned PDF?)")
 
 
 def reflow(raw: str) -> str:

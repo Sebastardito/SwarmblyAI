@@ -30,6 +30,7 @@ dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
 crypto = ["cryptography>=41"]
+pdf = ["pypdf>=4"]          # C1: read PDFs where pdftotext (poppler) is missing
 yaml = ["PyYAML>=6"]
 mlx = ["mlx-lm>=0.18"]
 dev = ["pytest>=8.0", "cryptography>=41", "PyYAML>=6"]
