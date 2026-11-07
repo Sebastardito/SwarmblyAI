@@ -24,6 +24,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 ENV SWARMBLY_KEYRING=off \
     SWARMBLY_LOCAL_HOSTS=ollama,searxng,host.docker.internal
 
+# Projects (3.1) live in the data volume, so they survive the container.
+ENV SWARMBLY_PROJECTS_DIR=/data/projects
+
 # pdftotext reads PDF sources; tini forwards signals so the app stops cleanly.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends poppler-utils tini \

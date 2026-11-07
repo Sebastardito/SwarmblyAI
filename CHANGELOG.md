@@ -2,6 +2,17 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## Unreleased (3.1 — Projects)
+
+On the `edge` branch; `main` keeps the last release.
+
+- **SwarmblyApp 0.4.0** (mirror of `main`, `ddb6f55`):
+  - **Projects**: a folder of its own for each piece of work (default `Documents/Swarmbly/<Project>`) with its documents, its memory (glossary, notes) and its chats; conversations of a project read only that project; export and restore as `.swarmbly` packages with the SHA-256 of every file and never an API key; a warning when the folder is synced by a cloud service.
+  - **Stable citations** (`doc:<sha12>#p<n>`) that still resolve after a project is restored on another computer.
+  - **Consent per question**: a question about you or your documents gets no public lookup without your yes for that question; the receipt states the consent and its scope (personal or project).
+- **SwarmblyLCE** (mirror of `main`, `f053d77`): level C1 moves into the package (`swarmbly_lce.c1`), with the stable citations.
+- **Docker:** projects live in the data volume (`SWARMBLY_PROJECTS_DIR=/data/projects`).
+
 ## 3.0.1 — Destinations, privacy receipts and Docker (2026-11-07)
 
 Release notes: [`docs/releases/v3.0.1.md`](docs/releases/v3.0.1.md).

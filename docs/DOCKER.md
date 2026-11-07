@@ -66,6 +66,8 @@ Set them in the shell or in a `.env` file next to `compose.yaml`.
 
 Only the server addresses are reapplied on every start; everything else you change in the interface is kept in the `swarmbly-data` volume.
 
+Projects (3.1) are created inside the volume, in `/data/projects`. To keep them in a folder of this computer instead, mount one there, for example `-v "$HOME/Swarmbly-projects:/data/projects"`, and prefer a folder that no cloud service syncs.
+
 ### If you already run Ollama
 
 You do not need the bundled Ollama (its image takes several GB). Use the one you already have, on this computer or on another one; only the Swarmbly image is downloaded (about 110 MB compressed).
@@ -194,6 +196,8 @@ Se definen en la terminal o en un archivo `.env` junto a `compose.yaml`.
 | `SWARMBLY_OLLAMA_URL` | `auto` | `auto` usa el Ollama incluido si está en marcha y, si no, el de esta computadora; o cualquier dirección, p. ej. `http://192.168.1.20:11434` |
 
 En cada arranque solo se vuelven a aplicar las direcciones de los servidores; lo demás que cambies en la interfaz se conserva en el volumen `swarmbly-data`.
+
+Los proyectos (3.1) se crean dentro del volumen, en `/data/projects`. Para tenerlos en una carpeta de esta computadora, monta una ahí, por ejemplo `-v "$HOME/Swarmbly-proyectos:/data/projects"`, y mejor una carpeta que ningún servicio en la nube sincronice.
 
 ### Si ya tienes Ollama
 
