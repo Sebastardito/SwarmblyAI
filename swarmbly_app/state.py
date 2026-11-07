@@ -103,6 +103,15 @@ class AppState:
         self.dirs.ensure()
         if str(self.dirs.root) != str(boot_dirs.root):
             self.config = Config(self.dirs)  # re-read from the effective location
+        # 3.0.1: API keys live in the keystore, and every outbound call is
+        # checked against the user's destinations policy.
+        from . import egress, keystore
+        keystore.configure(self.dirs.root)
+        try:
+            keystore.migrate(self.config)
+        except Exception:
+            pass                          # a keychain problem never blocks start-up
+        egress.configure(self.config.all)
         self.db = Database(self.dirs.db_path())
         self.bus = EventBus()
         self.identity_manager = IdentityManager(self.dirs.identity_key_path())
@@ -123,6 +132,7 @@ class AppState:
         self.chat = ChatService(self.db, self.bus, self.backends,
                                 self.config.all, self.get_orchestrator)
         self.chat.report_sink = self._auto_report
+        self.chat.self_node = self.identity.node_id[:12]
         self.chat.retriever = self._lce_retrieve
         self.chat.retrieval_active = self._lce_active
         self.chat.retrieval_candidates = lambda: list(getattr(self.lce, "last_candidates", []))
@@ -171,9 +181,14 @@ class AppState:
             prefix = "search_query: " if kind == "query" else "search_document: "
         url = (model_cfg.get("backend_url") or self._ollama_url()).rstrip("/")
         url = url[:-3] if url.endswith("/v1") else url
+        body = _json.dumps({"model": name, "input": [prefix + t for t in texts]}).encode()
+        # Documents' text is passages; a query is the question. A server that is
+        # not on this computer only gets them under the destinations policy.
+        from . import egress
+        egress.check_call(url, len(body), reason=f"embeddings {name}",
+                          kind=egress.QUESTION if kind == "query" else egress.PASSAGES)
         req = urllib.request.Request(
-            url + "/api/embed",
-            data=_json.dumps({"model": name, "input": [prefix + t for t in texts]}).encode(),
+            url + "/api/embed", data=body,
             headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as resp:   # noqa: S310 (local server)
             return _json.loads(resp.read().decode())["embeddings"]

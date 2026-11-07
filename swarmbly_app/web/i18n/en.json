@@ -224,7 +224,37 @@
   "evidenceNote": "Public context (Wikidata, Wikipedia CC BY-SA 4.0, PubMed…) added. Only these names were sent:",
   "evidenceErrors": "Failed lookups:",
   "evidenceSkipped": "Public evidence not applied:",
-  "lceNote": "Passages from your sources used in this answer (they did not leave this device):"
+  "lceNote": "Passages from your sources used in this answer (they did not leave this device):",
+  "receipt": {
+   "title": "What left this computer",
+   "lane": "Lane",
+   "model": "Where it was computed",
+   "modelLocal": "on this computer",
+   "sends": "Sends",
+   "bytes": "Bytes sent",
+   "passages": "Passages of your documents sent",
+   "nothing": "Nothing left this computer for this answer.",
+   "blocked": "Blocked attempts (nothing left):",
+   "lanes": {
+    "personal": "personal",
+    "sensible": "sensitive",
+    "público": "public",
+    "no_informado": "not reported"
+   },
+   "class": {
+    "local": "local",
+    "red_propia": "your network",
+    "terceros": "third party"
+   },
+   "kind": {
+    "pregunta": "the question",
+    "pasaje": "passages of your documents",
+    "entidad_publica": "name looked up",
+    "nombre_personal": "your name",
+    "fragmento": "fragment of a public request",
+    "desconocido": "unclassified content"
+   }
+  }
  },
  "monitor": {
   "title": "Swarm",
@@ -357,7 +387,11 @@
    "permissions": "Permissions",
    "system": "System"
   },
-  "sameModel": "Same as the conversation"
+  "sameModel": "Same as the conversation",
+  "secretStored": {
+   "keychain": "stored in the system keychain",
+   "file": "stored in a protected file on this computer"
+  }
  },
  "profile": {
   "automatic": "Automatic",
@@ -417,7 +451,7 @@
   },
   "model__api_key": {
    "label": "API key",
-   "help": "Only for servers that require one. Stored on this computer."
+   "help": "Only for servers that ask for one. Stored in the system keychain (or a protected file when there is none), never in the configuration."
   },
   "model__model_name": {
    "label": "Chat model",
@@ -602,6 +636,14 @@
   "evidence__google_cse_cx": {
    "label": "Google engine id",
    "help": "The \"cx\" of your Programmable Search Engine."
+  },
+  "privacy__third_party_models": {
+   "label": "Authorised third-party model services",
+   "help": "A server outside this computer and your network belongs to another organisation. Swarmbly sends it nothing unless you write its address here (one per line). Every answer shows what was sent to it."
+  },
+  "privacy__third_party_passages": {
+   "label": "Allow sending passages of my documents to those services",
+   "help": "Off: the service only gets your question and answers without your documents. Turn it on only if you accept that organisation receiving parts of your files."
   }
  },
  "models": {

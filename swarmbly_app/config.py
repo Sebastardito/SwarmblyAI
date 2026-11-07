@@ -89,6 +89,11 @@ DEFAULTS: dict[str, Any] = {
         "manual_tier": None,          # authoritative manual override, never downgraded
         "trusted_nodes": [],          # node_id whitelist for TRUSTED
         "trusted_networks": [],       # CIDR list (informational; LAN != trust)
+        # 3.0.1: third-party model services (hosts outside this computer and
+        # the user's own network) receive nothing unless listed here; passages
+        # of the user's documents need the second switch as well.
+        "third_party_models": [],
+        "third_party_passages": False,
     },
     "lce": {
         "enabled": False,

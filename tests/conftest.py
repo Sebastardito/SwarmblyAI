@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
+
+# Tests never touch the developer's real keychain (3.0.1 keystore).
+os.environ["SWARMBLY_KEYRING"] = "off"
 
 import pytest
 

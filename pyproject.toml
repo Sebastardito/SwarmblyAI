@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmbly-app"
-version = "0.3.0"
+version = "0.3.1"
 description = "Swarmbly App — integrated decentralized AI client and network dashboard for SwarmblyAI + SwarmblyLCE. Fragments the problem, not the model."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -35,6 +35,7 @@ dependencies = [
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",
   "httpx>=0.27",
+  "keyring>=24",
   "psutil>=5.9",
   "cryptography>=41",
   "zeroconf>=0.132",

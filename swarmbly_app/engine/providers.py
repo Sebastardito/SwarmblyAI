@@ -40,6 +40,8 @@ def _get(url: str, timeout_s: float, user_agent: str) -> Any:
     """JSON, or the raw text for XML answers (PubMed efetch)."""
     req = urllib.request.Request(url, headers={"User-Agent": user_agent,
                                                "Accept": "application/json, text/xml"})
+    from .. import egress
+    egress.record_public_query(url, provider=urllib.parse.urlsplit(url).hostname or "")
     with urllib.request.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed hosts)
         body = resp.read().decode("utf-8", "replace")
     return body if "retmode=xml" in url else json.loads(body)
@@ -366,7 +368,7 @@ def web_check(ev_cfg: dict[str, Any], query: str = "Galápagos Islands",
     can see the web source works before relying on it. No user data is sent.
     """
     url = str(ev_cfg.get("searxng_url") or "")
-    key, cx = str(ev_cfg.get("google_cse_key") or ""), str(ev_cfg.get("google_cse_cx") or "")
+    key, cx = _cse_key(ev_cfg), str(ev_cfg.get("google_cse_cx") or "")
     fetch = fetch or _get
     enabled = "web" in (ev_cfg.get("providers") or [])
     try:
@@ -393,14 +395,23 @@ def web_check(ev_cfg: dict[str, Any], query: str = "Galápagos Islands",
             "error": "no web search configured"}
 
 
+def _cse_key(ev_cfg: dict[str, Any]) -> str:
+    """The Google CSE key from the keystore (3.0.1), or a legacy config value."""
+    try:
+        from ..keystore import get_secret
+        return get_secret("evidence.google_cse_key") or str(ev_cfg.get("google_cse_key") or "")
+    except Exception:
+        return str(ev_cfg.get("google_cse_key") or "")
+
+
 def build(lang: str, ev_cfg: dict[str, Any], wikipedia: Any) -> MultiProvider:
     enabled = set(ev_cfg.get("providers") or ["wikidata", "wikipedia", "pubmed"])
     timeout = float(ev_cfg.get("timeout_s", 4.0))
     web = None
     if "web" in enabled and (ev_cfg.get("searxng_url") or
-                             (ev_cfg.get("google_cse_key") and ev_cfg.get("google_cse_cx"))):
+                             (_cse_key(ev_cfg) and ev_cfg.get("google_cse_cx"))):
         web = WebSearchProvider(url=str(ev_cfg.get("searxng_url") or ""),
-                                key=str(ev_cfg.get("google_cse_key") or ""),
+                                key=_cse_key(ev_cfg),
                                 cx=str(ev_cfg.get("google_cse_cx") or ""), lang=lang,
                                 timeout_s=max(timeout, 6.0),
                                 skip_hosts=tuple(h for p, h in (("wikipedia", "wikipedia.org"),

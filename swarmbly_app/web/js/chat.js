@@ -431,6 +431,8 @@ const Explore = (() => {
       readout(t("explore.coverage"), sw.coverage ? sw.coverage.c_eff : null, "estimated"),
       readout(t("explore.embedder"), sw.embedder, null))];
     if (meta.local_reason) sections.push(h("p.note", meta.local_reason));
+    if (meta.passages_withheld) sections.push(h("p.note", meta.passages_withheld));
+    if (meta.receipt) sections.push(h("h3", t("explore.receipt.title")), receiptView(meta.receipt));
     sections.push(h("h3", t("explore.pipeline")), Helix.render(m.stages || []));
     const sources = sourcesView(sw.evidence, meta.lce);
     if (sources) sections.push(h("h3", t("explore.sources")), sources);
@@ -463,6 +465,27 @@ const Explore = (() => {
     }
     UI.modal(t("explore.title"), h("div.explore", sections),
       [{ label: t("common.close"), value: null, kind: "primary" }]);
+  }
+
+  // What left this computer for this answer, as recorded where it was sent (3.0.1).
+  function receiptView(r) {
+    const where = r.destino_modelo || {};
+    const model = where.clase === "local" ? t("explore.receipt.modelLocal")
+      : `${where.host} (${t(`explore.receipt.class.${where.clase}`, where.clase)})`;
+    const parts = [h("div.readouts",
+      readout(t("explore.receipt.lane"), t(`explore.receipt.lanes.${r.carril}`, r.carril), "measured"),
+      readout(t("explore.receipt.model"), model, "measured"),
+      readout(t("explore.receipt.sends"), String((r.envios || []).length), "measured"),
+      readout(t("explore.receipt.bytes"), UI.fmtBytes ? UI.fmtBytes(r.bytes_salientes || 0) : r.bytes_salientes, "measured"),
+      readout(t("explore.receipt.passages"), String(r.pasajes_enviados || 0), "measured"))];
+    if (!(r.envios || []).length) parts.push(h("p.muted", t("explore.receipt.nothing")));
+    else parts.push(h("ul.sources", r.envios.map((e) => h("li",
+      chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),
+      h("span", ` ${e.destino} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)}`),
+      e.tipo === "entidad_publica" ? h("code", ` ${e.valor}`) : null))));
+    if ((r.bloqueados || []).length) parts.push(h("p.note",
+      `${t("explore.receipt.blocked")} ${r.bloqueados.map((b) => b.destino).join(", ")}`));
+    return h("div", parts);
   }
 
   function attemptsTable(attempts) {

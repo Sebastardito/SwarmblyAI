@@ -285,6 +285,9 @@ class SearxngManager:
                     "-p", f"127.0.0.1:{port}:8080",
                     "-v", f"{self.dir}:/etc/searxng:rw",
                     "-e", "SEARXNG_BIND_ADDRESS=0.0.0.0", "-e", "SEARXNG_PORT=8080",
+                    # current images serve with granian on "::", which fails where
+                    # Docker has no IPv6 (found while testing the Docker distribution)
+                    "-e", "GRANIAN_HOST=0.0.0.0", "-e", "GRANIAN_PORT=8080",
                     IMAGE], 120)
         if run.returncode != 0:
             raise RuntimeError((run.stderr or run.stdout).strip()[-400:])

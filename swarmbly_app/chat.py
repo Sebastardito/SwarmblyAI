@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from . import egress
 from .db import Database
 from .events import EventBus
 from .inference.base import BackendError, GenerationResult, Interrupted
@@ -35,6 +36,9 @@ class ActiveRequest:
     model: str = ""
     stop_event: threading.Event = field(default_factory=threading.Event)
     started_at: float = field(default_factory=time.time)
+    # 3.0.1: what left this computer for this request, and what the receipt needs
+    ledger: Any = None
+    receipt_ctx: dict[str, Any] = field(default_factory=dict)
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -71,6 +75,7 @@ class ChatService:
         self.glossary: Callable[[str], str] | None = None
         self.glossary_entries: Callable[[], list] | None = None
         self.retrieval_candidates: Callable[[], list] | None = None
+        self.self_node: str = ""          # this node's id prefix (set by AppState)
         self._lock = threading.Lock()
 
     # -- conversations -------------------------------------------------------
@@ -166,6 +171,12 @@ class ChatService:
             return False
 
     def _run_generation(self, request: ActiveRequest, mode: str, model: str) -> None:
+        """Every outbound call of this request is checked and recorded (3.0.1)."""
+        with egress.request_ledger(request.request_id) as ledger:
+            request.ledger = ledger
+            self._run_generation_inner(request, mode, model)
+
+    def _run_generation_inner(self, request: ActiveRequest, mode: str, model: str) -> None:
         conv_id = request.conversation_id
         try:
             history = self.db.get_messages(conv_id)
@@ -176,6 +187,7 @@ class ChatService:
             if not context:
                 return self._fail(request, "no user message in context")
             user_text = context[-1]["content"]
+            request.receipt_ctx.update(_lane_for_receipt(user_text))
 
             # Distributed modes route through the swarm engine.
             local_reason = ""
@@ -197,9 +209,10 @@ class ChatService:
                 try:
                     # The conversation stays on this device: the orchestrator
                     # rewrites a follow-up locally into a standalone request.
-                    outcome = self.orchestrator().run(
-                        user_text, mode=mode, request_id=request.request_id,
-                        cancel=request.stop_event, history=context[:-1])
+                    with egress.purpose(egress.QUESTION):
+                        outcome = self.orchestrator().run(
+                            user_text, mode=mode, request_id=request.request_id,
+                            cancel=request.stop_event, history=context[:-1])
                 except Exception as exc:
                     return self._fail(request, f"swarm execution failed: {exc}")
                 routed = outcome.get("routed")
@@ -225,6 +238,22 @@ class ChatService:
                                  note=local_reason)
 
             backend = self.registry.resolve(self.config())
+            # 3.0.1: where the model runs decides what it may receive.
+            from .inference.registry import endpoint
+            dest_cls, dest_host = egress.classify_url(endpoint(backend) or "http://127.0.0.1")
+            request.receipt_ctx["model_destination"] = {"clase": dest_cls, "host": dest_host}
+            passages_allowed = True
+            if dest_cls == egress.THIRD_PARTY:
+                pol = egress.policy()
+                if not pol.authorised(dest_host):
+                    egress.record(destino=dest_host, clase=dest_cls, tipo=egress.QUESTION,
+                                  bytes=0, motivo="modelo", bloqueado=True)
+                    return self._fail(request, (
+                        f"The configured model runs at {dest_host}, a third-party service you "
+                        "have not authorised. Nothing was sent. Authorise it in Settings → "
+                        "Models (third-party model services), or choose a model on this "
+                        "computer."))
+                passages_allowed = pol.third_party_passages
             model = model or (backend.list_models() or [""])[0]
             if not model:
                 raise IncompleteSettings("no model selected")
@@ -243,6 +272,10 @@ class ChatService:
             want_public = (bool(ev_cfg.get("enabled")) and bool(ev_cfg.get("local_answers", True))
                            and wants_public(user_text))
             lce_on = self.retriever is not None and self.retrieval_active()
+            if lce_on and not passages_allowed:
+                # authorised for questions only: the documents stay out of the call
+                lce_on = False
+                request.receipt_ctx["passages_withheld"] = dest_host
             if (lce_on and (cfg.get("lce") or {}).get("query_expansion", True)) or want_public:
                 from .local_context import expand_query
                 # Keywords come from the small default model even when the
@@ -250,7 +283,8 @@ class ChatService:
                 # returned nothing in 90 tokens (P2e round 6).
                 exp_model = ((cfg.get("lce") or {}).get("expansion_model")
                              or (cfg.get("model") or {}).get("model_name") or model)
-                expansion = expand_query(backend, exp_model, user_text)
+                with egress.purpose(egress.QUESTION):
+                    expansion = expand_query(backend, exp_model, user_text)
             if lce_on:
                 try:
                     sources = self.retriever(
@@ -315,25 +349,38 @@ class ChatService:
             elif sources:
                 context = [{"role": "system", "content": _sources_block(sources, user_text)},
                            *context]
+            request.receipt_ctx["passages"] = [str(s.get("text", "")) for s in sources]
+            if sources:
+                request.receipt_ctx["lane"] = "personal" if request.receipt_ctx.get("lane") != "sensible" \
+                    else "sensible"
+            if public_report is not None:
+                request.receipt_ctx["public_lookup"] = True
             budget = answer_budget(user_text, int(self.config()["model"].get("max_tokens", 1024)))
+            answer_kind = egress.PASSAGES if sources else egress.QUESTION
             if answer_model != model:
                 budget *= 2          # a reasoning model spends tokens before it answers
-            result = backend.stream_chat(
-                context, model=answer_model, max_tokens=budget,
-                temperature=float(self.config()["model"].get("temperature", 0.2)),
-                on_delta=on_delta,
-                interrupt=request.stop_event.is_set)
+            with egress.purpose(answer_kind):
+                result = backend.stream_chat(
+                    context, model=answer_model, max_tokens=budget,
+                    temperature=float(self.config()["model"].get("temperature", 0.2)),
+                    on_delta=on_delta,
+                    interrupt=request.stop_event.is_set)
             fusion_fallback = ""
             if answer_model != model and not (getattr(result, "text", "") or "").strip():
                 # The fusion model returned nothing (P2e round 9c: one empty answer
                 # out of 18): the conversation's model answers the same prompt.
                 fusion_fallback = f"{answer_model} returned an empty answer"
                 answer_model = model
-                result = backend.stream_chat(
-                    context, model=model, max_tokens=budget // 2,
-                    temperature=float(self.config()["model"].get("temperature", 0.2)),
-                    on_delta=on_delta, interrupt=request.stop_event.is_set)
+                with egress.purpose(answer_kind):
+                    result = backend.stream_chat(
+                        context, model=model, max_tokens=budget // 2,
+                        temperature=float(self.config()["model"].get("temperature", 0.2)),
+                        on_delta=on_delta, interrupt=request.stop_event.is_set)
             extra = {}
+            if request.receipt_ctx.get("passages_withheld"):
+                extra["passages_withheld"] = (
+                    f"your documents were not sent to {request.receipt_ctx['passages_withheld']} "
+                    "(authorised for questions only)")
             if local_reason:
                 extra = {"executed": "local", "local_reason": local_reason,
                          "swarm": routing_meta}
@@ -361,6 +408,8 @@ class ChatService:
         except Interrupted:
             self._finish(request, None, status="stopped",
                          note="interrupted by user")
+        except egress.EgressDenied as exc:
+            self._fail(request, str(exc))
         except (BackendError, IncompleteSettings, KeyError) as exc:
             self._fail(request, str(exc))
         except Exception as exc:  # never leave a request hanging in "running"
@@ -377,6 +426,7 @@ class ChatService:
                                 "mode": request.mode, "model": request.model,
                                 "request_id": request.request_id,
                                 "executed": "distributed", "swarm": metadata}
+        self._attach_receipt(request, meta, text, distributed=metadata)
         try:
             self.db.update_message(request.message_id, content=text,
                                    meta=meta, stages=stages)
@@ -409,6 +459,7 @@ class ChatService:
         if result is not None:
             content = result.text
             meta.update(result.to_dict())
+        self._attach_receipt(request, meta, content)
         try:
             if result is not None:
                 self._record_stats(result)
@@ -433,6 +484,7 @@ class ChatService:
                                 "request_id": request.request_id}
         if swarm:
             meta["swarm"] = swarm
+        self._attach_receipt(request, meta, "")
         try:
             self.db.update_message(request.message_id,
                                    content=f"[Error] {error}", meta=meta,
@@ -447,6 +499,45 @@ class ChatService:
                          conversation_id=request.conversation_id,
                          message_id=request.message_id, status="failed",
                          error=error, meta=meta)
+
+    def _attach_receipt(self, request: ActiveRequest, meta: dict[str, Any], answer: str,
+                        distributed: dict[str, Any] | None = None) -> None:
+        """The privacy receipt: what actually left, built from the ledger (3.0.1)."""
+        try:
+            ctx = request.receipt_ctx
+            dest = ctx.get("model_destination") or egress.model_destination(self.config())
+            extra_sends, fragments = [], 0
+            if distributed:
+                fragments = int(distributed.get("n_tasks") or 0)
+                for att in distributed.get("attempts") or []:
+                    node = str(att.get("node", ""))
+                    if self.self_node and node == self.self_node[:len(node)]:
+                        continue          # this device's own models (local pool)
+                    extra_sends.append({"destino": f"nodo {node}", "clase": egress.OWN_NETWORK,
+                                        "tipo": egress.FRAGMENT, "bytes": att.get("bytes_out") or 0,
+                                        "motivo": f"fragmento {att.get('task', '')}"})
+            ledger = request.ledger
+            public = any(e.get("tipo") == egress.PUBLIC_QUERY and not e.get("bloqueado")
+                         for e in (ledger.events if ledger else []))
+            route = "fragmentada" if distributed else ("local+consulta_publica" if public else "local")
+            consent: dict[str, Any] = {"requerido": False, "otorgado": None, "alcance": ""}
+            if public:
+                consent = {"requerido": ctx.get("lane") == "personal", "otorgado": True,
+                           "alcance": "nombres de entidades públicas de la pregunta o de tus fuentes",
+                           "base": "evidencia pública activada y la pregunta pide datos públicos"}
+            if dest.get("clase") == egress.THIRD_PARTY:
+                consent["modelo_terceros"] = {
+                    "host": dest.get("host", ""), "autorizado": True,
+                    "pasajes": not bool(ctx.get("passages_withheld"))}
+            meta["model_destination"] = dest
+            meta["receipt"] = egress.build_receipt(
+                ledger, lane=ctx.get("lane", "no_informado"), route=route, answer=answer,
+                consent=consent, passages=ctx.get("passages") or [],
+                fragments=fragments, extra_sends=extra_sends, model_destination=dest)
+            if dest.get("clase") != egress.LOCAL and meta.get("executed") == "local":
+                meta["computed_at"] = dest.get("host", "")
+        except Exception as exc:          # a receipt problem never loses the answer
+            meta["receipt_error"] = str(exc)[:200]
 
     def _record_stats(self, result: GenerationResult) -> None:
         import datetime
@@ -552,3 +643,18 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str) -> str:
     for i, s in enumerate(sources, 1):
         lines.append(f"[{i}] ({s['source']}) {s['text']}")
     return "\n".join(lines)
+
+
+def _lane_for_receipt(text: str) -> dict[str, Any]:
+    """The receipt's lane: sensible (strong or first-person sensitive terms),
+    personal (about the user), or público. Classification only, local."""
+    try:
+        from .engine.lane import classify
+        lane = classify(text or "")
+    except Exception:
+        lane = "SENSITIVE"
+    if lane == "SENSITIVE":
+        return {"lane": "sensible"}
+    if _PERSONAL_TOPIC.search(text or "") or _FIRST_PERSON.search(text or ""):
+        return {"lane": "personal"}
+    return {"lane": "público"}

@@ -12,6 +12,7 @@ from typing import Any, Callable
 
 import httpx
 
+from .. import egress
 from .base import BackendError, GenerationResult, Interrupted
 
 
@@ -24,17 +25,20 @@ class OpenAICompatBackend:
         self.api_key = api_key
         self.timeout = timeout
 
+    def _auth(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+
     def available(self) -> bool:
         try:
             with httpx.Client(timeout=2.0) as client:
-                return client.get(f"{self.base_url}/models").status_code == 200
+                return client.get(f"{self.base_url}/models", headers=self._auth()).status_code == 200
         except Exception:
             return False
 
     def list_models(self) -> list[str]:
         try:
             with httpx.Client(timeout=3.0) as client:
-                resp = client.get(f"{self.base_url}/models")
+                resp = client.get(f"{self.base_url}/models", headers=self._auth())
                 resp.raise_for_status()
                 return [m.get("id", "") for m in resp.json().get("data", [])]
         except Exception:
@@ -55,9 +59,9 @@ class OpenAICompatBackend:
             "max_tokens": max_tokens,
             "temperature": temperature,
         }
-        headers = {"Content-Type": "application/json"}
-        if self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
+        headers = {"Content-Type": "application/json", **self._auth()}
+        egress.check_call(self.base_url, len(json.dumps(payload).encode("utf-8")),
+                          reason=f"modelo {model}")
         started = time.monotonic()
         text_parts: list[str] = []
         prompt_tokens = completion_tokens = None

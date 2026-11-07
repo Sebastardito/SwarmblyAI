@@ -73,9 +73,12 @@ Limitations are documented, never hidden. *[Español](#español) below.*
     Ollama or system software; it shows the official instructions.
 20. **Downloads need a running Ollama.** Cancelling stops the stream; partial
     files are Ollama's to clean up.
-21. **Memory: C1 is selectable, not yet used by chat.** The sources folder and
-    level can be set; retrieval over sources feeding answers arrives with the
-    LCE integration phase. C2–C4 are described, not selectable.
+21. **Memory: C1 feeds answers made on this device; C2–C4 are described, not
+    selectable.** Retrieval over your sources (hybrid: keywords and local
+    embeddings) is used only for answers computed on this computer, or on a
+    third-party model service you authorised for passages. It has been measured
+    on one person's material and on two sealed benchmark banks (baseline of
+    7 November 2026), not across many users.
 22. **The interface preview is fake.** `scripts/ui_preview.py` serves canned
     answers from loopback-only workers; it measures nothing.
 23. **The Windows launcher is the least tested.** `launch.bat` and the
@@ -114,7 +117,9 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    acuerdo. 18. La configuración recomendada es una estimación (catálogo
    verificado el 2026-10-12). 19. Solo se instalan paquetes Python conocidos en
    el entorno de la app; nunca Ollama ni software del sistema. 20. Las
-   descargas requieren Ollama en ejecución. 21. C1 se puede elegir pero aún no
-   alimenta las respuestas del chat; C2–C4 solo se describen. 22. La vista
+   descargas requieren Ollama en ejecución. 21. C1 alimenta las respuestas hechas en
+   este equipo (o en un servicio de terceros autorizado para pasajes); se ha
+   medido con el material de una persona y con dos bancos sellados; C2–C4 solo
+   se describen. 22. La vista
    previa de la interfaz es ficticia y solo usa loopback. 23. El lanzador de
    Windows es el menos probado (la integración continua cubre Linux y macOS).
