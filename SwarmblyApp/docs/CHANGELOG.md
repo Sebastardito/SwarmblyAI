@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.3.1 — Destinations and privacy receipts (unreleased)
+## 0.3.1 — Destinations and privacy receipts (2026-11-07)
+
+First release since 0.2.0. It also contains 0.2.1 and 0.3.0 below, which
+were not released on their own. Measured with the sealed S2/S3 banks of
+Swarmbly AI on commit `9f60aab` (one run per bank); the receipt fix of
+`de5d342` came after that measurement and is verified by tests and by the
+harness on a fictitious bank, not by the sealed banks.
 
 From the review of 4 November 2026 and the sealed-bank baseline of
 7 November 2026 (Swarmbly AI 3.0.1).
