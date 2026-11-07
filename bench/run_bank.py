@@ -173,7 +173,11 @@ def case_documents(bank: Bank, case: Case) -> tuple[list[Path], list[Path]]:
     user, public = [], []
     if bank.kind == "v2":
         assert bank.corpus_dir is not None
-        user = sorted(p for p in bank.corpus_dir.iterdir() if p.is_file() and not p.name.startswith("."))
+        # The corpus folder's own readme (LEEME/README) describes the corpus for the
+        # bank's authors; it is not one of the user's documents.
+        user = sorted(p for p in bank.corpus_dir.iterdir()
+                      if p.is_file() and not p.name.startswith(".")
+                      and not p.name.upper().startswith(("LEEME", "README")))
         for ref in case.documents:
             if is_public_fixture(ref):
                 cand = bank.root / ref if "/" in ref else bank.root / "01_MATERIALES" / "fixtures_publicos" / ref
