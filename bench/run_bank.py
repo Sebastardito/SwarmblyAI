@@ -490,6 +490,66 @@ def build_receipt(case_id: str, answer: str, meta: dict[str, Any], registry_even
     }
 
 
+def build_receipt_v1(case_id: str, registry_events: list[dict], proxy_events: list[dict],
+                     public_fixtures: list[str]) -> dict[str, Any]:
+    """Receipt in the v1 bank's row schema (protocol.md): one immutable row per
+    egress attempt; no rows when nothing tried to leave. The payload itself is
+    not stored, only its SHA-256 and its terms in order."""
+    fixture_code = next((m.group(1) for name in public_fixtures
+                         if (m := re.match(r"(\d\d)_", name))), "")
+    rows = []
+    for ev in registry_events:
+        q = ev.get("q") or ""
+        rows.append({
+            "case_id": case_id, "timestamp_utc": ev.get("t", ""),
+            "destination_class": "simulated-public-registry",
+            "payload_sha256": hashlib.sha256(q.encode("utf-8")).hexdigest(),
+            "payload_terms": [w for w in _WORD.findall(q)],
+            "approved": None,
+            "reason": "consulta de la app a la fuente pública; Swarmbly App 3.0.x no registra aprobación",
+            "response_fixture": f"F{fixture_code}" if fixture_code and ev.get("resultados") else "none",
+        })
+    for ev in proxy_events:
+        visible = " ".join(x for x in (ev.get("ruta", ""), ev.get("consulta", "")) if x)
+        rows.append({
+            "case_id": case_id, "timestamp_utc": ev.get("t", ""),
+            "destination_class": f"blocked-external:{ev.get('destino')}",
+            "payload_sha256": hashlib.sha256(visible.encode("utf-8")).hexdigest() if visible else "",
+            "payload_terms": _WORD.findall(urllib.parse.unquote_plus(visible)) if visible else [],
+            "approved": False,
+            "reason": "intento de salida a internet bloqueado por el arnés; no salió",
+            "response_fixture": "none",
+        })
+    return {"schema": "swarmbly.bench.v1.egress_receipt", "case_id": case_id, "rows": rows,
+            "events": len(rows),
+            "origen": "observado por el arnés bench/run_bank.py (la app 3.0.x no emite recibo propio)"}
+
+
+def regenerate_receipts(run_dir: Path) -> int:
+    """Rebuild the v1-schema receipts of a finished run from its records and
+    network log, without running anything again."""
+    events: dict[str, list[dict]] = {}
+    log = run_dir / "logs" / "red.jsonl"
+    if log.is_file():
+        for line in log.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                ev = json.loads(line)
+                events.setdefault(ev.get("caso", ""), []).append(ev)
+    n = 0
+    for case_file in sorted((run_dir / "casos").glob("S?-??.json")):
+        record = json.loads(case_file.read_text(encoding="utf-8"))
+        cid = record["caso"]
+        evs = events.get(cid, [])
+        receipt = build_receipt_v1(cid, [e for e in evs if e.get("tipo_evento") == "consulta_registro"],
+                                   [e for e in evs if e.get("tipo_evento") == "salida_bloqueada"],
+                                   record.get("fixtures_publicos") or [])
+        (case_file.parent / f"{cid}_recibo_v1.json").write_text(
+            json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+        n += 1
+    print(f"recibos v1 regenerados: {n} en {run_dir / 'casos'}")
+    return 0
+
+
 # --------------------------------------------------------------------------------------
 # Run
 # --------------------------------------------------------------------------------------
@@ -542,6 +602,10 @@ def ollama_check(url: str, models: list[str]) -> tuple[str, list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Blind run of a sealed S2/S3 bank against Swarmbly AI")
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv[:1] == ["--regenerate-receipts"]:
+        return regenerate_receipts(Path(argv[1]).expanduser())
     ap.add_argument("--bank", required=True, help="bank root (v2: the folder with 05_SELLO; v1: the folder with SEALED_MANIFEST.sha256)")
     ap.add_argument("--model", required=True, help="chat model served by Ollama, e.g. qwen2.5:7b")
     ap.add_argument("--embed-model", default="nomic-embed-text")
@@ -666,6 +730,10 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
             (run_dir / "casos" / f"{case.case_id}_recibo.json").write_text(
                 json.dumps(receipt, ensure_ascii=False, indent=2), encoding="utf-8")
+            if bank.kind == "v1":
+                receipt_v1 = build_receipt_v1(case.case_id, reg_ev, prx_ev, [p.name for p in public_docs])
+                (run_dir / "casos" / f"{case.case_id}_recibo_v1.json").write_text(
+                    json.dumps(receipt_v1, ensure_ascii=False, indent=2), encoding="utf-8")
             with open(run_dir / "logs" / "red.jsonl", "a", encoding="utf-8") as fh:
                 for ev in reg_ev + prx_ev:
                     fh.write(json.dumps({"caso": case.case_id, **ev}, ensure_ascii=False) + "\n")

@@ -122,3 +122,24 @@ def test_v1_bank_uses_listed_fixtures_and_serves_the_public_one(tmp_path):
     user, public = rb.case_documents(bank, case)
     assert [p.name for p in user] == ["02_nota.md"]
     assert [p.name for p in public] == ["07_registro_publico_simulado.md"]
+
+
+def test_v1_receipt_rows_and_regeneration(tmp_path):
+    rows = rb.build_receipt_v1(
+        "S3-02", [{"q": "Orestias ficticia estado", "resultados": 1, "t": "2026-11-07T00:00:00Z"}],
+        [{"metodo": "CONNECT", "destino": "www.wikidata.org", "puerto": 443}],
+        ["07_registro_publico_simulado.md"])
+    assert rows["events"] == 2
+    first, second = rows["rows"]
+    assert first["destination_class"] == "simulated-public-registry"
+    assert first["payload_terms"] == ["Orestias", "ficticia", "estado"]
+    assert first["response_fixture"] == "F07" and len(first["payload_sha256"]) == 64
+    assert second["approved"] is False and second["destination_class"].startswith("blocked-external")
+    assert rb.build_receipt_v1("S2-01", [], [], [])["rows"] == []
+    run = tmp_path / "run"
+    (run / "casos").mkdir(parents=True)
+    (run / "logs").mkdir()
+    (run / "casos" / "S2-01.json").write_text('{"caso": "S2-01", "fixtures_publicos": []}', encoding="utf-8")
+    (run / "logs" / "red.jsonl").write_text("", encoding="utf-8")
+    assert rb.main(["--regenerate-receipts", str(run)]) == 0
+    assert (run / "casos" / "S2-01_recibo_v1.json").is_file()
