@@ -15,6 +15,7 @@ import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
+from .. import egress
 from ..p2p.node import PeerError
 
 
@@ -50,7 +51,7 @@ class LocalPool:
         loop = asyncio.get_running_loop()
         try:
             reply = await asyncio.wait_for(
-                loop.run_in_executor(None, self.worker.execute_local, message,
+                loop.run_in_executor(None, egress.carry(self.worker.execute_local), message,
                                      self.models, timeout_s), timeout_s + 5)
         except asyncio.TimeoutError:
             raise PeerError("E_DEADLINE", "local model timeout") from None

@@ -25,6 +25,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from .. import egress
 from ..events import EventBus
 from ..inference.base import StreamBackend
 from ..p2p.messages import new_session_id
@@ -477,7 +478,7 @@ class Orchestrator:
             last = None
             for variant in (message, {"task": message.get("task") or {}}):
                 replica = await loop.run_in_executor(
-                    None, self._local_fallback, task_id, variant,
+                    None, egress.carry(self._local_fallback), task_id, variant,
                     self._clamp(budgets[task_id], []), reason)
                 if replica is None:
                     break
@@ -542,7 +543,7 @@ class Orchestrator:
                         replicas = replicas + extra[:1]
                         tie_breaks.append({"task": task_id, "items": split})
             outcome = await loop.run_in_executor(
-                None, functools.partial(
+                None, egress.carry(functools.partial(
                     self._resolve, task_id, replicas, contract, embedder,
                     policy="items" if path == "enumerated" else "whole",
                     lang=lang, budget=self._clamp(budgets[task_id], workers),
@@ -553,7 +554,7 @@ class Orchestrator:
                     target_words=(outline.sections[_order(task_id)].words
                                   if outline is not None
                                   and outline.sections[_order(task_id)].kind != "table"
-                                  else None)))
+                                  else None))))
             resolved[task_id] = outcome
             carries[task_id] = planner.summarize_fragment(outcome["text"], typed=True)
             return outcome

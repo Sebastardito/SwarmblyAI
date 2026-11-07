@@ -247,3 +247,61 @@ def test_list_models_sends_the_key(capture):
     backend = openai_compat.OpenAICompatBackend(PROVIDER, api_key="sk-x")
     assert backend.list_models() == ["remote-model"]
     assert capture.requests[-1].headers.get("authorization") == "Bearer sk-x"
+
+
+# -- the receipt sees what leaves from worker threads (3.0.1 fix) -------------
+
+class _QueryingProvider:
+    """Looks things up from a worker thread, as the real providers do."""
+    names = ["web"]
+    lang = "es"
+
+    def _send(self, term: str) -> None:
+        egress.record_public_query("http://127.0.0.1:8888/search?q=" + term.replace(" ", "+"),
+                                   provider="searxng")
+
+    def lookup(self, text, profile=None):
+        self._send(text)
+        return None
+
+    def passages(self, name, focus=None):
+        self._send(name)
+        return []
+
+
+def test_carry_keeps_the_ledger_in_pool_threads():
+    from concurrent.futures import ThreadPoolExecutor
+    with egress.request_ledger("r1") as ledger, egress.purpose(egress.QUESTION):
+        def one(i):
+            egress.record(tipo=egress.current_purpose(), valor=str(i))
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            list(pool.map(one, range(3)))                 # plain: lost
+            assert ledger.events == []
+            list(pool.map(egress.carry(one), range(3)))   # carried: recorded
+    assert sorted(e["valor"] for e in ledger.events) == ["0", "1", "2"]
+    assert {e["tipo"] for e in ledger.events} == {egress.QUESTION}
+
+
+def test_carry_reaches_run_in_executor():
+    async def main():
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, egress.carry(lambda: egress.record(valor="x")))
+    with egress.request_ledger("r2") as ledger:
+        asyncio.run(main())
+    assert [e["valor"] for e in ledger.events] == ["x"]
+
+
+def test_public_lookups_from_worker_threads_reach_the_receipt():
+    from swarmbly_app import local_context
+    from swarmbly_app.engine import evidence
+    provider = _QueryingProvider()
+    with egress.request_ledger("r3") as ledger:
+        evidence.gather({1: "Orestias ficticia", 2: "Lontra ficticia"}, provider)
+        local_context.public_evidence(
+            [{"name": "Puma ficticio", "from": "pregunta"}],
+            local_context.parse_expansion(""), provider)
+    sent = sorted(e["valor"] for e in ledger.events if e["tipo"] == egress.PUBLIC_QUERY)
+    assert "Puma ficticio" in sent
+    receipt = egress.build_receipt(ledger, lane="local", route="local+consulta_publica",
+                                   answer="", consent={}, passages=[])
+    assert len(receipt["envios"]) == len(ledger.events) >= 1
