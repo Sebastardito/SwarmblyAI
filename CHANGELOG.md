@@ -12,4 +12,5 @@ Earlier versions are described in their release notes (v0.1.0, v0.1.1) and in `d
 - **PDF without poppler.** Where `pdftotext` is not installed (a Mac without Homebrew), PDFs are read with `pypdf` (extra `pdf`) instead of being left out; `pdftotext` stays the first choice.
 - **Fusion keeps unrelated passages out.** With local embeddings, a passage that shares no word with the question enters only if its meaning is close to the best match (cosine within 0.10); before, fusion always returned *k* passages, related or not.
 - **Glossary equivalents one by one.** In `term = eq1, eq2, eq3`, any single equivalent in a question now brings the term and the others (before, all of them had to appear together).
+- **Corrected forms.** A glossary line `term = equivalents | no: wrong, wrong` lists forms the user corrected: they are never equivalents (they do not widen a search) and `SourceIndex.glossary_avoid` returns them as `{wrong: right}` for the application to enforce.
 - Tests: `tests/test_c1.py`, on fictitious data.
