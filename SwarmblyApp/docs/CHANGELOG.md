@@ -266,6 +266,18 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
       receipt; an approved search says what was approved ("el texto de
       búsqueda que aprobaste: «…»") and labels its sends as the approved text
       or as result identifiers, not as "public names".
+  - Fifth run: "endogamia en los cucuves" was answered affirmatively and cited
+    ("han experimentado endogamia (inbreeding)…"). Remaining:
+    - the browser reused an old `es.json` after an update (no Cache-Control,
+      so heuristic caching): the web UI's files are now revalidated on every
+      load and the page itself is never cached;
+    - a spelling correction mid-conversation got "Lo siento por el error" and
+      the previous answer again: the model is told to acknowledge it in one
+      sentence; a glossary definition the local model wrote that is not in
+      the user's words is dropped;
+    - the receipt labels shortened variants of the approved text as "part of
+      the text you approved"; the local-answer note is translated in the
+      processing explorer and the activity panel.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

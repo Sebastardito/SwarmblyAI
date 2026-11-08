@@ -787,7 +787,7 @@ const Explore = (() => {
       readout(t("explore.total"), UI.fmtMs(sw.total_ms ?? meta.total_ms), "measured"),
       readout(t("explore.coverage"), sw.coverage ? sw.coverage.c_eff : null, "estimated"),
       readout(t("explore.embedder"), sw.embedder, null))];
-    if (meta.local_reason) sections.push(h("p.note", meta.local_reason));
+    if (meta.local_reason) sections.push(h("p.note", I18n.reason(meta.local_reason)));
     if (meta.passages_withheld) sections.push(h("p.note", meta.passages_withheld));
     if (meta.receipt) sections.push(h("h3", t("explore.receipt.title")), receiptView(meta.receipt));
     if (meta.citations && meta.citations.sentences) sections.push(h("h3", t("explore.anchor.title")),
@@ -852,7 +852,7 @@ const Explore = (() => {
     else parts.push(h("ul.sources", r.envios.map((e) => h("li",
       chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),
       h("span", ` ${e.destino} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)}`),
-      ["entidad_publica", "consulta_aprobada", "palabra_suelta", "id_resultado"].includes(e.tipo)
+      ["entidad_publica", "consulta_aprobada", "parte_consulta", "palabra_suelta", "id_resultado"].includes(e.tipo)
         ? h("code", ` ${e.valor}`) : null))));
     if (r.consentimiento?.alcance) parts.splice(1, 0, h("p.muted",
       `${t("explore.receipt.consentScope")} ${r.consentimiento.alcance}`));

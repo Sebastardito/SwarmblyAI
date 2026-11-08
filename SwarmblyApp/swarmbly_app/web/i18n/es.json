@@ -294,7 +294,8 @@
     "desconocido": "contenido sin clasificar",
     "consulta_aprobada": "texto de búsqueda que aprobaste",
     "palabra_suelta": "palabra suelta (revisar términos)",
-    "id_resultado": "identificador de un resultado"
+    "id_resultado": "identificador de un resultado",
+    "parte_consulta": "parte del texto que aprobaste"
    },
    "scope": "Ámbito",
    "project": "proyecto",

@@ -24,6 +24,17 @@ REPORT_FORMATS = {"json": "application/json", "markdown": "text/markdown",
                   "html": "text/html"}
 
 
+class _RevalidatedStatic(StaticFiles):
+    """The web UI's files are revalidated on every load (``no-cache`` keeps the
+    ETag check): without a Cache-Control header the browser reused an old
+    ``es.json`` after an update, and new labels showed as keys."""
+
+    def file_response(self, *args: Any, **kwargs: Any) -> Response:
+        resp = super().file_response(*args, **kwargs)
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
+
 def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -48,7 +59,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
 
     def _index() -> HTMLResponse:
         html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
-        return HTMLResponse(guard.inject(html))
+        return HTMLResponse(guard.inject(html), headers={"Cache-Control": "no-store"})
 
     app.add_api_route("/", _index, methods=["GET"], include_in_schema=False)
     app.add_api_route("/index.html", _index, methods=["GET"], include_in_schema=False)
@@ -618,7 +629,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
 
     # ---- static web UI ---------------------------------------------------------------
     if WEB_DIR.exists():
-        app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
+        app.mount("/", _RevalidatedStatic(directory=str(WEB_DIR), html=True), name="web")
 
     return app
 

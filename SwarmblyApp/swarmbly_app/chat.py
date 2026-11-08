@@ -513,6 +513,19 @@ class ChatService:
                 if proposals and proposals["asked"]:
                     blocks.append(memory_capture.MODEL_NOTE.get(lang_now,
                                                                 memory_capture.MODEL_NOTE["en"]))
+                fixes_now = memory_capture.clear_corrections(user_text)
+                if fixes_now:
+                    # "Ojo: se escribe hibridación, no hibridización" got "Lo siento
+                    # por el error" and the previous answer again (fifth run)
+                    pairs_txt = "; ".join(f"«{r}», no «{w}»" for w, r in fixes_now)
+                    blocks.append(
+                        f"El usuario corrige un término: {pairs_txt}. Reconócelo en una frase, "
+                        "usa la forma correcta desde ahora y no repitas tu respuesta anterior; "
+                        "puede guardarlo en su glosario con «Guardar en memoria»."
+                        if lang_now == "es" else
+                        f"The user corrects a term: {pairs_txt}. Acknowledge it in one sentence, "
+                        "use the right form from now on and do not repeat your previous answer; "
+                        "they can keep it in their glossary with \"Save to memory\".")
             elif request.memory_saved and not request.memory_saved.get("error"):
                 # the note is already saved; what the glossary can keep from it
                 # (concepts kept apart, corrections, "term (equivalent)") is
@@ -823,8 +836,10 @@ class ChatService:
             if request.web_query:
                 for e in meta["receipt"].get("envios") or []:
                     if e.get("tipo") == "entidad_publica":
-                        e["tipo"] = ("id_resultado" if re.fullmatch(r"[\dQ|,]+", str(e.get("valor", "")))
-                                     else "consulta_aprobada")
+                        v = str(e.get("valor", ""))
+                        e["tipo"] = ("id_resultado" if re.fullmatch(r"[\dQ|,]+", v)
+                                     else "consulta_aprobada" if v.strip() == request.web_query.strip()
+                                     else "parte_consulta")
             # 3.1: whose documents this answer could read
             meta["receipt"]["ambito"] = (
                 {"tipo": "proyecto", "id": request.project_id,
