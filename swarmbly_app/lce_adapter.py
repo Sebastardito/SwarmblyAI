@@ -180,6 +180,12 @@ class LCEAdapter:
                        roots: list[Path] | None = None) -> str:
         return self.index.glossary_terms(text, self._roots(extra_dirs, roots))
 
+    def glossary_avoid(self, extra_dirs: list[str] | tuple[str, ...] = (),
+                       roots: list[Path] | None = None) -> dict[str, str]:
+        """Forms the user corrected, ``{wrong: right}`` (glossary ``| no:``)."""
+        getter = getattr(self.index, "glossary_avoid", None)
+        return getter(self._roots(extra_dirs, roots)) if getter else {}
+
     def glossary_entries(self, extra_dirs: list[str] | tuple[str, ...] = (),
                          roots: list[Path] | None = None) -> list[tuple[str, str]]:
         return self.index.glossary_entries(self._roots(extra_dirs, roots))

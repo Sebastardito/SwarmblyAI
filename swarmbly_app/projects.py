@@ -76,6 +76,8 @@ def save_note(folder: Path, text: str, title: str = "Memoria") -> Path:
     if note and note[-1] not in ".!?…":
         note += "."
     stamp = time.strftime("%Y-%m-%d")
+    if path.is_file() and f" · {note}\n" in path.read_text(encoding="utf-8"):
+        return path                   # the same note is not saved twice (4th test: refs x2)
     with open(path, "a", encoding="utf-8") as fh:
         if path.stat().st_size == 0:
             fh.write(f"# {title}\n\n")
@@ -93,6 +95,25 @@ def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Pa
     path = folder / GLOSSARY_FILE
     have = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
     new = [ln for ln in lines if ln and ln not in have]
+    # a correction replaces an older line that equated the wrong form with the term
+    # ("introgresión = introgradión" before "| no:" existed, 4th test)
+    fixed = []
+    for ln in have:
+        stale = False
+        for nl in new:
+            if " | no: " not in nl:
+                continue
+            term = nl.split(" = ", 1)[0].strip().lower()
+            wrong = {w.strip().lower() for w in nl.split(" | no: ", 1)[1].split(",")}
+            left, _, right = ln.partition(" = ")
+            if left.strip().lower() == term and " | no: " not in ln and \
+                    {w.strip().lower() for w in right.split(",")} & wrong:
+                stale = True
+        if not stale:
+            fixed.append(ln)
+    if fixed != have:
+        path.write_text("\n".join(fixed) + "\n", encoding="utf-8")
+        have = fixed
     with open(path, "a", encoding="utf-8") as fh:
         if not have:
             fh.write(f"# {title}\n\n")

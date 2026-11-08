@@ -35,12 +35,62 @@ _FILLER = re.compile(
     r"en\s+l[ií]nea|online|internet|referencias?|art[ií]culos?|estudios?|recientes?|"
     r"de\s+los\s+[uú]ltimos\s+a[nñ]os|[uú]ltimos|a[nñ]os|please|search|find|for|about|recent|"
     r"articles?|studies|references?|el|la|los|las|un|una|de|del|y|o|en|a|the|of|and|or|in|"
-    r"that|this|esto|eso|este|esta|con|para|por|se|lo|le|les|es|son|no|est[eé]n)\b", re.I)
+    r"that|this|esto|eso|este|esta|con|para|por|se|lo|le|les|es|son|no|est[eé]n|"
+    r"papers?|latest|new|nuevos?|review|reviews|publicaciones|trabajos|investigaci[oó]n(?:es)?|"
+    r"literature|literatura|bibliograf[ií]a|informaci[oó]n|information|some|any|algunos?|"
+    r"sobre|acerca|related|relacionad[oa]s?|tema|topic|me|show|give|list|lista)\b", re.I)
+# Words that say nothing about the topic: a result must share something more
+# specific with the query (4th test: "cucujos recent papers" returned papers on
+# biosensors, and "Charles Darwin" for mockingbirds)
+_GENERIC = frozenset("""
+study studies analysis analyses genomic genomics genetic genetics population populations species
+data effect effects impact evolution evolutionary ecology ecological review recent new approach
+method methods model models role case report reports research science biology insights based
+estudio estudios análisis genómica genética población poblaciones especie especies efecto
+""".split())
 _RECENT = re.compile(r"\b(reciente|recientes|[uú]ltimos\s+a[nñ]os|recent|latest|new)\b", re.I)
 
 
+def _fold(w: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", w.lower()) if not unicodedata.combining(c))
+
+
+_LATIN = re.compile(r"\b([A-Z][a-z]{3,}(?:idae|inae|aceae|ales)|[A-Z][a-z]{3,}\s[a-z]{4,}|"
+                    r"[A-Z][a-z]{4,}(?:us|um|is|es|a))\b")
+
+
+def topic_terms(query: str) -> list[str]:
+    """The query's specific words: not filler, not generic science words."""
+    out = []
+    for w in re.findall(r"[\wÁÉÍÓÚÑáéíóúñ'-]+", query or ""):
+        f = _fold(w).strip("'")
+        if len(f) >= 4 and f not in _GENERIC and not _FILLER.fullmatch(w) \
+                and not _FIRST_PERSON.fullmatch(w) and f not in (_fold(x) for x in out):
+            out.append(w)
+    return out
+
+
+def relevant(hit: dict[str, Any], terms: list[str]) -> bool:
+    """A result is kept only if its title (or, for an encyclopaedia, its
+    snippet) carries one of the query's specific words."""
+    if not terms:
+        return True
+    title = _fold(hit.get("title", ""))
+    snippet = _fold(hit.get("snippet", ""))
+
+    def has(t: str, text: str) -> bool:
+        stem = _fold(t)[:max(4, len(t) - 2)]
+        return stem in text
+    if any(has(t, title) for t in terms):
+        return True
+    return hit.get("provider", "").startswith("wikipedia") and \
+        sum(has(t, snippet) for t in terms) >= min(2, len(terms))
+
+
 def propose_query(question: str, keywords: str = "",
-                  glossary: list[tuple[str, str]] | None = None) -> str:
+                  glossary: list[tuple[str, str]] | None = None,
+                  passages: list[str] | None = None) -> str:
     """A short query without first-person words; the user edits it before
     anything is sent.
 
@@ -62,26 +112,53 @@ def propose_query(question: str, keywords: str = "",
     rest = _FILLER.sub(" ", rest)
     rest = re.sub(r"[¿?¡!.,;:()\"]", " ", rest)
     words = [w for w in rest.split() if len(w) > 2][:6]
-    known = " ".join([*words, *translated]).lower()
+    # The topic, defined from the user's own material: scientific names that
+    # appear next to a word of the question in the retrieved passages or notes
+    # ("cucujos (cucuyos) son el género Pyrophorus de la familia Elateridae").
+    defined: list[str] = []
+    anchors = [_fold(w)[:5] for w in words + translated if len(w) >= 4]
+    for text in passages or []:
+        for sentence in re.split(r"(?<=[.;!?])\s+", text or ""):
+            if any(a in _fold(sentence) for a in anchors):
+                defined += [m for m in _LATIN.findall(sentence) if " " not in m or True]
+    defined = defined[:3]
+    known = _fold(" ".join([*words, *translated, *defined]))
     kw = [k.strip() for k in re.split(r"[,;]", keywords or "") if k.strip()]
-    kw = [k for k in kw if not _FIRST_PERSON.search(k)
-          and any(w.lower()[:5] in known for w in k.split() if len(w) >= 4)][:3]
-    query = " ".join(dict.fromkeys([*translated, *kw, *words]))
-    return query[:160].strip()
+    kw = [k for k in kw if not _FIRST_PERSON.search(k) and not _FILLER.fullmatch(k)
+          and any(_fold(w)[:5] in known for w in k.split() if len(w) >= 4)][:3]
+    out: list[str] = []
+    for piece in [*translated, *defined, *kw, *words]:
+        for w in _FILLER.sub(" ", piece).split():
+            if len(w) > 2 and not any(_same_word(w, x) for x in out):
+                out.append(w)
+    return " ".join(out)[:160].strip()
+
+
+def _same_word(a: str, b: str) -> bool:
+    """The same word, or the same word in two languages ("endogamy" /
+    "endogamia", "mockingbird" / "mockingbirds"): the first one stays."""
+    fa, fb = _fold(a), _fold(b)
+    return fa == fb or (min(len(fa), len(fb)) >= 6 and fa[:6] == fb[:6])
 
 
 def _variants(query: str) -> list[str]:
-    """The approved text, then shorter subsets of it: PubMed ANDs every word,
-    so one untranslated or rare word returned nothing (third test). Only
-    words of the approved text are ever sent."""
-    words = query.split()
-    out = [query]
+    """The approved text without filler words, then shorter subsets of it:
+    PubMed ANDs every word, so one untranslated or rare word returned nothing
+    (third test). Subsets keep the specific words; only words of the approved
+    text are ever sent."""
+    cleaned = " ".join(w for w in query.split() if not _FILLER.fullmatch(w)) or query
+    words = []
+    for w in cleaned.split():
+        if not any(_same_word(w, x) for x in words):
+            words.append(w)
+    out = [" ".join(words)]
     ascii_words = [w for w in words if w.isascii()]
     if ascii_words and len(ascii_words) < len(words):
         out.append(" ".join(ascii_words))
-    ranked = sorted(dict.fromkeys(ascii_words or words), key=len, reverse=True)
+    specific = [w for w in (ascii_words or words) if w in topic_terms(" ".join(words))]
+    ranked = sorted(dict.fromkeys(specific or ascii_words or words), key=len, reverse=True)
     for n in (3, 2):
-        if len(ranked) > n:
+        if len(ranked) >= n and len(ranked) > 1:
             out.append(" ".join(w for w in words if w in ranked[:n]))
     return list(dict.fromkeys(v for v in out if v))
 
@@ -101,7 +178,9 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
     errors: list[str] = []
     if not query:
         return {"query": query, "results": [], "errors": ["empty query"]}
+    terms = topic_terms(" ".join(w for w in query.split() if not _FILLER.fullmatch(w)))
     tried: list[str] = []
+    dropped = 0
     if "pubmed" in providers:
         for variant in _variants(query):
             tried.append(variant)
@@ -110,8 +189,10 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
             except Exception as exc:
                 errors.append(f"pubmed: {type(exc).__name__}")
                 break
-            if found:
-                hits += found
+            kept = [h for h in found if relevant(h, terms)]
+            dropped += len(found) - len(kept)
+            if kept:
+                hits += kept
                 break
     if "wikipedia" in providers:
         for wl in dict.fromkeys([lang, "en"]):
@@ -121,13 +202,18 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
                 except Exception as exc:
                     errors.append(f"wikipedia-{wl}: {type(exc).__name__}")
                     break
-                if found:
-                    hits += found
+                kept = [h for h in found if relevant(h, terms)]
+                dropped += len(found) - len(kept)
+                if kept:
+                    hits += kept
                     break
     url = str(ev_cfg.get("searxng_url") or "")
     if "web" in providers and url and _reachable(url):
         try:
-            hits += _searxng(query, url, lang, fetch, timeout)
+            found = _searxng(query, url, lang, fetch, timeout)
+            kept = [h for h in found if relevant(h, terms)]
+            dropped += len(found) - len(kept)
+            hits += kept
         except Exception as exc:
             errors.append(f"searxng: {type(exc).__name__}")
     seen, out = set(), []
@@ -139,6 +225,7 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
     for i, h in enumerate(out[:limit], 1):
         h["label"] = f"W{i}"
     return {"query": query, "results": out[:limit], "errors": errors, "variants": tried,
+            "topic": terms, "dropped_unrelated": dropped,
             "providers": sorted(p for p in providers if p in ("pubmed", "wikipedia", "web"))}
 
 
@@ -158,10 +245,16 @@ def _reachable(url: str) -> bool:
 
 def _pubmed(query: str, recent: bool, fetch: Fetch, timeout: float) -> list[dict[str, Any]]:
     base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
-    ids = ((fetch(base + "esearch.fcgi?" + urllib.parse.urlencode(
-        {"db": "pubmed", "term": query, "retmode": "json", "retmax": "4",
-         "sort": "pub_date" if recent else "relevance", "tool": "SwarmblyApp"}),
-        timeout, USER_AGENT) or {}).get("esearchresult") or {}).get("idlist") or []
+    params = {"db": "pubmed", "term": query, "retmode": "json", "retmax": "6",
+              "sort": "relevance", "tool": "SwarmblyApp"}
+    if recent:
+        # "recent" = the last five years, still by relevance: sorting by date
+        # brought the newest papers on anything (4th test)
+        import datetime
+        year = datetime.date.today().year
+        params.update(datetype="pdat", mindate=str(year - 5), maxdate=str(year + 1))
+    ids = ((fetch(base + "esearch.fcgi?" + urllib.parse.urlencode(params),
+                  timeout, USER_AGENT) or {}).get("esearchresult") or {}).get("idlist") or []
     if not ids:
         return []
     data = fetch(base + "esummary.fcgi?" + urllib.parse.urlencode(

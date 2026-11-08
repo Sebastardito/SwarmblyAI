@@ -179,7 +179,10 @@
   "webAgain": "Search again",
   "citeMismatch": "{n} citation with the wrong file",
   "citeMismatchTitle": "These labels exist but the model gave them another file: {labels}.",
-  "memoryReferences": "References found online. Save them to memory?"
+  "memoryReferences": "References found online. Save them to memory?",
+  "memoryAvoid": "wrong forms (never use)",
+  "memoryAvoidLabel": "not:",
+  "glossaryFixed": "{n} term(s) corrected by your glossary"
  },
  "explore": {
   "title": "How this answer was made",

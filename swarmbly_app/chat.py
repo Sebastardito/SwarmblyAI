@@ -92,6 +92,8 @@ class ChatService:
         self.document_list: Callable[[str], list[dict[str, Any]]] | None = None
         # 3.1: every paragraph of one document (project_id, doc_id), in order
         self.document_spans: Callable[[str, str], list[dict[str, Any]]] | None = None
+        # 3.1: corrected forms {wrong: right} from the glossary ("| no:")
+        self.glossary_avoid: Callable[[str], dict[str, str]] | None = None
         self._lock = threading.Lock()
 
     def _changed(self, conversation_id: str) -> None:
@@ -201,6 +203,10 @@ class ChatService:
         for s in sources:
             counts[s.get("doc_id", "")] = counts.get(s.get("doc_id", ""), 0) + 1
         eligible = {sources[0].get("doc_id", "")} | {d for d, c in counts.items() if c >= 2}
+        # the memory notes file is a list of unrelated notes: only the matching
+        # ones go (it was added whole to every answer, fourth test)
+        eligible -= {s.get("doc_id", "") for s in sources
+                     if s.get("source") in ("notas.md", "glosario.md")}
         return self._whole_docs(sources, project_id, eligible)
 
     def _whole_docs(self, sources: list[dict[str, Any]], project_id: str,
@@ -452,6 +458,23 @@ class ChatService:
             # top of a long history (the model followed the history instead)
             blocks: list[str] = []
             lang_now = _lang(user_text)
+            # 3.1: the user's glossary reaches the model, not only the search
+            # ("introgresión" corrected and saved, then explained again as
+            # "introgradión", fourth test)
+            gloss_pairs, avoid = [], {}
+            try:
+                gloss_pairs = (self.glossary_entries(request.project_id)
+                               if self.glossary_entries else [])
+                avoid = self.glossary_avoid(request.project_id) if self.glossary_avoid else {}
+            except Exception:
+                gloss_pairs, avoid = [], {}
+            last_answer = next((m["content"] for m in reversed(prior) if m["role"] == "assistant"), "")
+            gblock = _glossary_block(gloss_pairs, avoid,
+                                     " ".join([user_text, last_answer,
+                                               *[str(x.get("text", "")) for x in sources]]),
+                                     lang_now)
+            if gblock:
+                blocks.append(gblock)
             web_found = None
             from . import web_search
             if request.web_query:
@@ -595,6 +618,15 @@ class ChatService:
                            "consent_required": bool(request.receipt_ctx.get("consent_required"))},
                 "route": "local", "model": answer_model}
             answer_text = getattr(result, "text", "") or ""
+            fixed_text, fixes = _apply_avoid(answer_text, avoid)
+            if fixes:
+                # the corrected term is enforced by code, not left to the model
+                try:
+                    result.text = fixed_text
+                except Exception:
+                    pass
+                answer_text = fixed_text
+                extra["glossary_fixes"] = fixes
             extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if public_report is not None:
                 extra["evidence"] = public_report
@@ -882,6 +914,69 @@ _SOURCES_HEAD = {
 
 
 WHOLE_DOC_CHARS = 6000          # a document this short is given whole (3.1)
+def _fold_word(w: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", w.lower())
+                   if not unicodedata.combining(c))
+
+
+def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context: str,
+                    lang: str) -> str:
+    """Glossary entries that concern this answer (their term, an equivalent or
+    a corrected form appears in the question, the last answer or the passages)."""
+    words = {_fold_word(w) for w in re.findall(r"\w+", context or "")}
+
+    def present(phrase: str) -> bool:
+        toks = [_fold_word(t) for t in re.findall(r"\w+", phrase) if len(t) >= 3]
+        return bool(toks) and all(t in words or any(w.startswith(t[:max(5, len(t) - 2)])
+                                                     for w in words) for t in toks)
+    lines = []
+    wrong_for: dict[str, list[str]] = {}
+    for wrong, right in avoid.items():
+        wrong_for.setdefault(_fold_word(right), []).append(wrong)
+    seen = set()
+    for term, eq in pairs:
+        eqs = [e.strip() for e in eq.split(",") if e.strip()]
+        wrongs = wrong_for.get(_fold_word(term), [])
+        if not (present(term) or any(present(e) for e in eqs) or any(present(w) for w in wrongs)):
+            continue
+        key = _fold_word(term)
+        if key in seen:
+            continue
+        seen.add(key)
+        same = [e for e in eqs if _fold_word(e) != key]
+        line = f"- {term}" + (f" = {', '.join(same)}" if same else "")
+        if wrongs:
+            es_list = "», «".join(wrongs)
+            en_list = '", "'.join(wrongs)
+            line += f" (nunca «{es_list}»)" if lang == "es" else f' (never "{en_list}")'
+        lines.append(line)
+    if not lines:
+        return ""
+    head = ("Glosario del usuario: usa estos términos tal cual y nunca las formas marcadas como "
+            "incorrectas:" if lang == "es" else
+            "The user's glossary: use these terms as written and never the forms marked wrong:")
+    return "\n".join([head, *lines[:20]])
+
+
+def _apply_avoid(text: str, avoid: dict[str, str]) -> tuple[str, list[dict[str, Any]]]:
+    """Replace forms the user corrected with the right term (whole words, any
+    case; the first letter keeps its case)."""
+    fixes = []
+    for wrong, right in avoid.items():
+        pattern = re.compile(r"(?<!\w)" + re.escape(wrong) + r"(?!\w)", re.I)
+        count = len(pattern.findall(text or ""))
+        if not count:
+            continue
+
+        def repl(m, right=right):
+            w = m.group(0)
+            return right[:1].upper() + right[1:] if w[:1].isupper() else right
+        text = pattern.sub(repl, text)
+        fixes.append({"wrong": wrong, "right": right, "count": count})
+    return text, fixes
+
+
 def _reference_note(h: dict[str, Any]) -> str:
     meta = " · ".join(x for x in (h.get("authors"), h.get("year"), h.get("source")) if x)
     return f"Referencia: {h.get('title', '')}" + (f" ({meta})" if meta else "") + f" — {h.get('url', '')}"
