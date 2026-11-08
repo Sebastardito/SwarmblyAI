@@ -175,6 +175,33 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
   - The memory notes file is never given whole (it is a list of unrelated
     notes), the same note is not saved twice, and discourse fillers ("Bueno,
     debo corregirte") are not kept in notes.
+- **After the sixth hands-on test** (8 November 2026): *search terms as
+  concepts, chosen by the user.*
+  - "Endogamia en cucuves" was sent as "endogamy cucuves": "endogamy" is
+    marriage within a group (the biological term is "inbreeding") and
+    "cucuves" is unknown to search engines, so the results were about
+    sociology. Translating words, by the model or by rules, cannot tell
+    homonyms apart and does not scale to other languages.
+  - The search dialog has a **"Review terms"** step. Each word of the query
+    (at most six, four letters or more) is looked up as a *concept*: the
+    user's glossary first (nothing sent), then Wikidata (labels in the user's
+    language and in English, a description that tells homonyms apart, the
+    scientific name of a taxon, the MeSH heading) and GBIF vernacular names
+    for organisms. The user picks one concept per word or keeps the word; the
+    query is rebuilt from the chosen concepts (English label, scientific
+    name). Only those single words are sent, on click, and each request is
+    in the receipt (`meta.term_lookups`).
+  - A choice can be saved to the glossary with its Wikidata id
+    (`term = inbreeding | wd: Q38978`), so the next search, in any language,
+    starts from the concept.
+  - A rate-limited service (HTTP 429, as Wikimedia does on shared addresses)
+    is retried once; a service that does not answer is named in the dialog.
+  - *Concepts kept apart.* "X no es un nombre de Y" / "X y Y son distintos"
+    is proposed as `| distinto:` on both entries; the model is told not to
+    give one the traits of the other, and an answer that still does (a
+    sentence naming both without a negation) gets a visible warning
+    (`term_conflicts`).
+  - Pin: SwarmblyLCE 9a80a64 (glossary metadata is never an equivalent).
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

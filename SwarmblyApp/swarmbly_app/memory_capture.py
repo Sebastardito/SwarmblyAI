@@ -116,6 +116,29 @@ _CORRECTION = re.compile(
     r",?\s*no\s+[«\"']?(?P<wrong3>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})", re.I)
 
 
+_DISTINCT = re.compile(
+    r"\b(?P<a>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+no\s+(?:es|son)\s+(?:un|una|el|la)?\s*"
+    r"(?:nombre|t[eé]rmino|sin[oó]nimo)s?\s+(?:com[uú]n(?:es)?\s+)?(?:de|para)\s+(?:l[oa]s?\s+)?"
+    r"(?P<b>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})|"
+    r"\b(?P<c>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+y\s+(?P<d>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+son\s+"
+    r"(?:cosas\s+|t[eé]rminos\s+)?(?:distint[oa]s|diferentes)|"
+    r"\b(?P<e>[\w-]{3,40})\s+is\s+not\s+(?:a|the)\s+name\s+(?:of|for)\s+(?:the\s+)?(?P<f>[\w-]{3,40})",
+    re.I)
+
+
+def distinctions(text: str) -> list[tuple[str, str]]:
+    """Pairs the user says are different things ("cucujo no es un nombre de
+    los cucuves", "cucujos y cucuves son distintos"): the model mixed them
+    ("cucuves, que pertenecen a la familia Elateridae", fifth test)."""
+    out = []
+    for m in _DISTINCT.finditer(text or ""):
+        a = m.group("a") or m.group("c") or m.group("e")
+        b = m.group("b") or m.group("d") or m.group("f")
+        if a and b and a.lower() != b.lower():
+            out.append((a, b))
+    return out
+
+
 def corrections(text: str) -> list[tuple[str, str]]:
     """``(wrong, right)`` pairs the user states: "no es introgradión, el término
     correcto es introgresión", "es X, no Y", "it's not X but Y". A question
@@ -222,14 +245,27 @@ def propose(text: str, backend: Any = None, model: str = "", lang: str = "es") -
         for g in list(extracted["glossary"]):           # the wrong form is never a term
             if any(g["term"].lower() == w.lower() for w, _ in fixes):
                 extracted["glossary"].remove(g)
+    for a, b in distinctions(text):
+        for term, other in ((a, b), (b, a)):
+            g = next((x for x in extracted["glossary"]
+                      if x["term"].lower().rstrip("s") == term.lower().rstrip("s")), None)
+            if g is None:
+                g = {"term": term, "equivalents": guess_equivalents(term, text), "definition": ""}
+                extracted["glossary"].append(g)
+            g["distinct"] = sorted({*g.get("distinct", []), other})
     if own:
         extracted["notes"] = [" ".join(own)]      # the user's words, one note, not a paraphrase
-    if not extracted["glossary"] and (glossary_intent(text) or definition_hint(text)
-                                      or remember_intent(text)):
+    if glossary_intent(text) or definition_hint(text) or remember_intent(text):
         for m in re.finditer(r"\b([\wÁÉÍÓÚÑáéíóúñ]{3,30})\s*\(([^)]{2,60})\)", text or ""):
             term = m.group(1)
-            extracted["glossary"].append({"term": term, "equivalents": guess_equivalents(term, text),
-                                          "definition": ""})
+            stem = term.lower().rstrip("s")
+            same = next((g for g in extracted["glossary"]
+                         if g["term"].lower().rstrip("s") == stem), None)
+            eqs = guess_equivalents(term, text)
+            if same is None:
+                extracted["glossary"].append({"term": term, "equivalents": eqs, "definition": ""})
+            else:
+                same["equivalents"] = list(dict.fromkeys([*same["equivalents"], *eqs]))
     elif not extracted["notes"] and not extracted["glossary"] and remember_intent(text):
         extracted["notes"] = [" ".join(text.split())[:600]]
     for g in extracted["glossary"]:
@@ -254,14 +290,22 @@ def _similar(a: str, b: str) -> bool:
 
 
 def glossary_line(entry: dict[str, Any]) -> str:
-    """``term = eq1, eq2 | no: wrong`` (the format C1 reads: equivalents widen
-    the search; the forms after ``| no:`` are corrections, never equivalents)."""
-    eq = [e for e in entry.get("equivalents") or [] if e and "|" not in e]
-    avoid = [a for a in entry.get("avoid") or [] if a and "|" not in a]
-    if not eq and not avoid:
+    """``term = eq1, eq2 | no: wrong | distinto: other | wd: Q…`` (the format C1
+    reads: equivalents widen the search; segments after ``|`` never do)."""
+    clean = lambda xs: [x for x in xs or [] if x and "|" not in x and "=" not in x]  # noqa: E731
+    eq, avoid, distinct = clean(entry.get("equivalents")), clean(entry.get("avoid")), \
+        clean(entry.get("distinct"))
+    wd = str(entry.get("wd") or "").strip()
+    if not (eq or avoid or distinct or wd):
         return ""
     line = f"{entry['term']} = {', '.join(eq) if eq else entry['term']}"
-    return line + (f" | no: {', '.join(avoid)}" if avoid else "")
+    if avoid:
+        line += f" | no: {', '.join(avoid)}"
+    if distinct:
+        line += f" | distinto: {', '.join(distinct)}"
+    if wd and wd.startswith("Q") and wd[1:].isdigit():
+        line += f" | wd: {wd}"
+    return line
 
 
 MODEL_NOTE = {

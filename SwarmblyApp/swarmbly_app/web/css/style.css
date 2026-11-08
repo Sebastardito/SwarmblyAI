@@ -463,3 +463,5 @@ code.cite { font-size: 11px; opacity: .75; }
 .memory-done { margin: 6px 0 0 34px; }
 .web-results { margin: 6px 0 0 34px; }
 .web-results ul { margin: 4px 0; }
+.terms-box { display: flex; flex-direction: column; gap: 6px; }
+.terms-box select { max-width: 100%; }

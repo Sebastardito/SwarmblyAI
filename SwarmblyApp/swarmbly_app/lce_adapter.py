@@ -186,6 +186,11 @@ class LCEAdapter:
         getter = getattr(self.index, "glossary_avoid", None)
         return getter(self._roots(extra_dirs, roots)) if getter else {}
 
+    def glossary_meta(self, extra_dirs: list[str] | tuple[str, ...] = (),
+                      roots: list[Path] | None = None) -> dict[str, dict[str, list[str]]]:
+        getter = getattr(self.index, "glossary_meta", None)
+        return getter(self._roots(extra_dirs, roots)) if getter else {}
+
     def glossary_entries(self, extra_dirs: list[str] | tuple[str, ...] = (),
                          roots: list[Path] | None = None) -> list[tuple[str, str]]:
         return self.index.glossary_entries(self._roots(extra_dirs, roots))

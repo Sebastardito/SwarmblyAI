@@ -182,7 +182,16 @@
   "memoryReferences": "References found online. Save them to memory?",
   "memoryAvoid": "wrong forms (never use)",
   "memoryAvoidLabel": "not:",
-  "glossaryFixed": "{n} term(s) corrected by your glossary"
+  "glossaryFixed": "{n} term(s) corrected by your glossary",
+  "termsReview": "Review terms",
+  "termsHint": "Looks each word up as a concept in your glossary, Wikidata and GBIF (only those words are sent).",
+  "termsLoading": "Looking up concepts…",
+  "termsAsIs": "keep the word as it is",
+  "termsKeep": "Save these equivalents to the glossary",
+  "termsSent": "{n} single words were looked up (recorded in the receipt).",
+  "termConflict": "{n} possible mix-up of terms",
+  "termConflictTitle": "\"{concept}\" is given traits of \"{other}\" ({traits}), and your glossary says they are different things.",
+  "termsErrors": "Did not answer:"
  },
  "explore": {
   "title": "How this answer was made",

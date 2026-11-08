@@ -137,8 +137,8 @@ def test_notes_keep_the_users_words_and_glossary_comes_from_the_message():
     prop = M.propose(t)                                   # no model: heuristics only
     assert prop["notes"] == ["Cucujo no es un nombre de los cucuves. Los cucujos (cucuyos) son "
                              "Elateridae, género Pyrophorus. Escarabajos, no aves."]
-    entry = prop["glossary"][0]
-    assert entry["term"] == "cucujos" and entry["equivalents"][:1] == ["cucuyos"]
+    entry = next(g for g in prop["glossary"] if g["term"].lower().startswith("cucujo"))
+    assert entry["equivalents"][:1] == ["cucuyos"] and entry["distinct"] == ["cucuves"]
     assert {"Elateridae", "Pyrophorus"} <= set(entry["equivalents"])
 
 

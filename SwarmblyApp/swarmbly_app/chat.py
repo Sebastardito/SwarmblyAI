@@ -94,6 +94,8 @@ class ChatService:
         self.document_spans: Callable[[str, str], list[dict[str, Any]]] | None = None
         # 3.1: corrected forms {wrong: right} from the glossary ("| no:")
         self.glossary_avoid: Callable[[str], dict[str, str]] | None = None
+        # 3.1: per-term glossary metadata (distinct concepts, Wikidata ids)
+        self.glossary_meta: Callable[[str], dict[str, dict[str, list[str]]]] | None = None
         self._lock = threading.Lock()
 
     def _changed(self, conversation_id: str) -> None:
@@ -461,18 +463,19 @@ class ChatService:
             # 3.1: the user's glossary reaches the model, not only the search
             # ("introgresión" corrected and saved, then explained again as
             # "introgradión", fourth test)
-            gloss_pairs, avoid = [], {}
+            gloss_pairs, avoid, gmeta = [], {}, {}
             try:
                 gloss_pairs = (self.glossary_entries(request.project_id)
                                if self.glossary_entries else [])
                 avoid = self.glossary_avoid(request.project_id) if self.glossary_avoid else {}
+                gmeta = self.glossary_meta(request.project_id) if self.glossary_meta else {}
             except Exception:
-                gloss_pairs, avoid = [], {}
+                gloss_pairs, avoid, gmeta = [], {}, {}
             last_answer = next((m["content"] for m in reversed(prior) if m["role"] == "assistant"), "")
             gblock = _glossary_block(gloss_pairs, avoid,
                                      " ".join([user_text, last_answer,
                                                *[str(x.get("text", "")) for x in sources]]),
-                                     lang_now)
+                                     lang_now, gmeta)
             if gblock:
                 blocks.append(gblock)
             web_found = None
@@ -627,6 +630,9 @@ class ChatService:
                     pass
                 answer_text = fixed_text
                 extra["glossary_fixes"] = fixes
+            conflicts = _term_conflicts(answer_text, gloss_pairs, gmeta)
+            if conflicts:
+                extra["term_conflicts"] = conflicts
             extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if public_report is not None:
                 extra["evidence"] = public_report
@@ -921,7 +927,7 @@ def _fold_word(w: str) -> str:
 
 
 def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context: str,
-                    lang: str) -> str:
+                    lang: str, meta: dict[str, dict[str, list[str]]] | None = None) -> str:
     """Glossary entries that concern this answer (their term, an equivalent or
     a corrected form appears in the question, the last answer or the passages)."""
     words = {_fold_word(w) for w in re.findall(r"\w+", context or "")}
@@ -938,7 +944,9 @@ def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context
     for term, eq in pairs:
         eqs = [e.strip() for e in eq.split(",") if e.strip()]
         wrongs = wrong_for.get(_fold_word(term), [])
-        if not (present(term) or any(present(e) for e in eqs) or any(present(w) for w in wrongs)):
+        distinct = (meta or {}).get(term, {}).get("distinct", [])
+        if not (present(term) or any(present(e) for e in eqs) or any(present(w) for w in wrongs)
+                or any(present(d) for d in distinct)):
             continue
         key = _fold_word(term)
         if key in seen:
@@ -950,6 +958,10 @@ def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context
             es_list = "», «".join(wrongs)
             en_list = '", "'.join(wrongs)
             line += f" (nunca «{es_list}»)" if lang == "es" else f' (never "{en_list}")'
+        if distinct:
+            d_es, d_en = "», «".join(distinct), '", "'.join(distinct)
+            line += (f"; es otra cosa que «{d_es}»: no le atribuyas sus rasgos" if lang == "es"
+                     else f'; a different thing from "{d_en}": do not give it its traits')
         lines.append(line)
     if not lines:
         return ""
@@ -957,6 +969,35 @@ def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context
             "incorrectas:" if lang == "es" else
             "The user's glossary: use these terms as written and never the forms marked wrong:")
     return "\n".join([head, *lines[:20]])
+
+
+_NEGATION = re.compile(r"\b(no|not|nunca|never|distint\w*|diferent\w*|different|sino|but)\b", re.I)
+
+
+def _term_conflicts(answer: str, pairs: list[tuple[str, str]],
+                    meta: dict[str, dict[str, list[str]]]) -> list[dict[str, str]]:
+    """Sentences that give one concept the traits of another the user said is
+    different ("cucuves, que pertenecen a la familia Elateridae", where
+    Elateridae belongs to "cucujo = cucuyo, Pyrophorus, Elateridae | distinto:
+    cucuve"). Flagged, not rewritten."""
+    found = []
+    eqs = {term: [term, *[e.strip() for e in eq.split(",") if e.strip()]] for term, eq in pairs}
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", answer or ""):
+        if _NEGATION.search(sentence):
+            continue
+        folded = _fold_word(sentence)
+        for term, m in (meta or {}).items():
+            for other in m.get("distinct", []):
+                o = _fold_word(other).rstrip("s")[:6]
+                if len(o) < 4 or o not in folded:
+                    continue
+                traits = [e for e in eqs.get(term, [term])
+                          if _fold_word(e).rstrip("s")[:6] not in ("", o)
+                          and _fold_word(e).rstrip("s")[:6] in folded]
+                if traits:
+                    found.append({"concept": other, "traits_of": term, "traits": ", ".join(traits),
+                                  "sentence": sentence.strip()[:240]})
+    return found[:5]
 
 
 def _apply_avoid(text: str, avoid: dict[str, str]) -> tuple[str, list[dict[str, Any]]]:

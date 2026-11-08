@@ -397,6 +397,59 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
         state.chat._changed(conv_id)
         return meta["memory_proposals"]
 
+    def _message(conv_id: str, message_id: str) -> tuple[dict, dict]:
+        conv = state.chat.get_conversation(conv_id)
+        msg = next((m for m in (state.chat.get_messages(conv_id) if conv else [])
+                    if m["id"] == message_id), None)
+        if msg is None:
+            raise HTTPException(status_code=404, detail="message not found")
+        return conv, msg
+
+    @app.post("/api/conversations/{conv_id}/messages/{message_id}/terms")
+    def resolve_terms(conv_id: str, message_id: str, body: dict[str, Any]) -> dict:
+        """Concept candidates for the words of a search (3.1): the glossary, and
+        Wikidata and GBIF when the user asks (``online``). The single words sent
+        are recorded with the message."""
+        from .. import egress
+        from ..terms import resolve
+        conv, msg = _message(conv_id, message_id)
+        pid = str(conv.get("project_id") or "")
+        words = [str(w) for w in body.get("words") or []][:6]
+        lang = str(body.get("lang") or "es")[:2]
+        roots = state.c1_roots(pid)
+        with egress.request_ledger(f"terms-{message_id}") as ledger:
+            with egress.purpose(egress.PUBLIC_QUERY):
+                result = resolve(words, lang, state.lce.glossary_entries(roots=roots),
+                                 state.lce.glossary_meta(roots=roots),
+                                 online=bool(body.get("online", True)))
+        sends = [{"destino": e.get("destino", ""), "valor": e.get("valor", ""),
+                  "bytes": e.get("bytes", 0)} for e in ledger.events if not e.get("bloqueado")]
+        if sends:
+            meta = msg.get("meta") or {}
+            meta.setdefault("term_lookups", []).append({"words": words, "sends": sends})
+            state.db.update_message(message_id, meta=meta)
+            state.chat._changed(conv_id)
+        return {"terms": result, "sends": sends}
+
+    @app.post("/api/conversations/{conv_id}/messages/{message_id}/terms/save")
+    def save_terms(conv_id: str, message_id: str, body: dict[str, Any]) -> dict:
+        """Keep chosen concepts in the glossary (``word = label, name | wd: Q…``)."""
+        from ..terms import glossary_entry
+        conv, _msg = _message(conv_id, message_id)
+        pid = str(conv.get("project_id") or "")
+        entries = [glossary_entry(str(x.get("word", "")), x.get("concept") or {})
+                   for x in body.get("choices") or [] if x.get("word") and x.get("concept")]
+        entries = [e for e in entries if e["term"] and (e["equivalents"] or e["wd"])][:6]
+        if not entries:
+            return {"saved": []}
+        for e in entries:
+            e["definition"] = ""            # the description stays in the dialog, not in notes
+        written = state.save_memory(pid, [], entries)
+        state.memory_log(pid, {"conversation": conv_id, "message": message_id,
+                               "decision": "saved", "via": "search terms",
+                               "glossary": written.get("glossary", [])})
+        return {"saved": written.get("glossary", [])}
+
     # ---- projects (3.1) ---------------------------------------------------------------
     from .projects import register as _register_projects
     _register_projects(app, state)
