@@ -142,6 +142,9 @@ class AppState:
         self.chat.glossary_entries = lambda project_id="": (
             self.lce.glossary_entries(roots=self.c1_roots(project_id))
             if self._lce_active(project_id) else [])
+        self.chat.glossary_meta = lambda project_id="": (
+            self.lce.glossary_meta(roots=self.c1_roots(project_id))
+            if self._lce_active(project_id) else {})
         self.chat.glossary_avoid = lambda project_id="": (
             self.lce.glossary_avoid(roots=self.c1_roots(project_id))
             if self._lce_active(project_id) else {})

@@ -564,6 +564,10 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.term_conflicts?.length) chips.push(chip(
+      t("chat.termConflict").replace("{n}", meta.term_conflicts.length), "warn",
+      meta.term_conflicts.map((c) => t("chat.termConflictTitle").replace("{concept}", c.concept)
+        .replace("{other}", c.traits_of).replace("{traits}", c.traits)).join("\n")));
     if (meta.glossary_fixes?.length) chips.push(chip(
       t("chat.glossaryFixed").replace("{n}", meta.glossary_fixes.reduce((a, f) => a + f.count, 0)), "ok",
       meta.glossary_fixes.map((f) => `${f.wrong} → ${f.right}`).join(", ")));
@@ -603,13 +607,65 @@ const Chat = (() => {
   async function searchOnline(m) {
     const q = h("input.text", { type: "text", value: (m.meta.web_offer || m.meta.web_search || {}).query || "",
       "aria-label": t("chat.webQuery") });
+    const termsBox = h("div.terms-box");
+    const keep = h("input", { type: "checkbox" });
+    const keepRow = h("label.inline.small", { hidden: true }, keep, h("span", t("chat.termsKeep")));
+    const choices = {};              // word -> chosen concept
+    const lang = (App.state.config?.language || "es");
+    const rebuild = () => {
+      const parts = [];
+      for (const w of q.dataset.words ? JSON.parse(q.dataset.words) : q.value.split(/\s+/)) {
+        const c = choices[w];
+        const add = c ? [c.label_en, c.scientific] : [w];
+        for (const x of add) if (x && !parts.some((p) => p.toLowerCase() === x.toLowerCase())) parts.push(x);
+      }
+      q.value = parts.join(" ");
+    };
+    const review = button(t("chat.termsReview"), async () => {
+      const words = q.value.split(/\s+/).filter((w) => w.length >= 4).slice(0, 6);
+      if (!words.length) return;
+      q.dataset.words = JSON.stringify(q.value.split(/\s+/).filter(Boolean));
+      review.disabled = true;
+      clear(termsBox).appendChild(h("p.muted", t("chat.termsLoading")));
+      let res;
+      try {
+        res = await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(m.id)}/terms`,
+          { words, lang, online: true });
+      } catch (e) { clear(termsBox).appendChild(h("p.note", e.message)); review.disabled = false; return; }
+      clear(termsBox);
+      for (const item of res.terms) {
+        const sel = h("select", { "aria-label": item.word });
+        sel.appendChild(h("option", { value: "" }, `${item.word} — ${t("chat.termsAsIs")}`));
+        item.candidates.forEach((c, i) => sel.appendChild(h("option", { value: String(i) },
+          `${c.label_en || c.label}${c.scientific && c.scientific !== c.label_en ? ` (${c.scientific})` : ""} — ${c.description || c.source} [${c.source}]`)));
+        sel.addEventListener("change", () => {
+          choices[item.word] = sel.value === "" ? null : item.candidates[Number(sel.value)];
+          rebuild();
+        });
+        termsBox.appendChild(h("label.stack", h("span", item.word), sel));
+        if (item.errors?.length) termsBox.appendChild(h("p.note", `${t("chat.termsErrors")} ${item.errors.join(", ")}`));
+      }
+      keepRow.hidden = false;
+      if (res.sends?.length) termsBox.appendChild(h("p.muted", t("chat.termsSent").replace("{n}", res.sends.length)));
+      review.disabled = false;
+    }, "ghost small");
     setTimeout(() => q.focus(), 50);
     const ok = await UI.modal(t("chat.webOffer"), h("div.form-stack",
       h("label.stack", h("span", t("chat.webQuery")), q),
+      h("div.msg-actions", review, h("span.muted", t("chat.termsHint"))),
+      termsBox, keepRow,
       h("p.muted", t("chat.webHint"))), [
       { label: t("common.cancel"), value: false, kind: "ghost" },
       { label: t("chat.webSend"), value: true, kind: "primary" }]);
-    if (ok && q.value.trim()) retry(m.id, { web_query: q.value.trim() });
+    if (!ok || !q.value.trim()) return;
+    const chosen = Object.entries(choices).filter(([, c]) => c && c.source !== "glossary");
+    if (keep.checked && chosen.length) {
+      try {
+        await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(m.id)}/terms/save`,
+          { choices: chosen.map(([word, concept]) => ({ word, concept })) });
+      } catch (e) { UI.toast(e.message, "error"); }
+    }
+    retry(m.id, { web_query: q.value.trim() });
   }
 
   function webResults(found) {

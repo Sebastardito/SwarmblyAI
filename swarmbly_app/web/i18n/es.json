@@ -182,7 +182,16 @@
   "memoryReferences": "Referencias encontradas en línea. ¿Las guardo en la memoria?",
   "memoryAvoid": "formas incorrectas (no usar)",
   "memoryAvoidLabel": "no:",
-  "glossaryFixed": "{n} término(s) corregido(s) según tu glosario"
+  "glossaryFixed": "{n} término(s) corregido(s) según tu glosario",
+  "termsReview": "Revisar términos",
+  "termsHint": "Busca cada palabra como concepto en tu glosario, Wikidata y GBIF (solo se envían esas palabras).",
+  "termsLoading": "Buscando conceptos…",
+  "termsAsIs": "dejar la palabra tal cual",
+  "termsKeep": "Guardar estas equivalencias en el glosario",
+  "termsSent": "Se consultaron {n} palabras sueltas (quedan registradas en el recibo).",
+  "termConflict": "{n} posible confusión de términos",
+  "termConflictTitle": "Se atribuyen a «{concept}» rasgos de «{other}» ({traits}), y tu glosario dice que son cosas distintas.",
+  "termsErrors": "No respondió:"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
