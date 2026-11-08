@@ -71,29 +71,41 @@ def topic_terms(query: str) -> list[str]:
     return out
 
 
-def relevant(hit: dict[str, Any], terms: list[str]) -> bool:
-    """A result is kept only if its title (or, for an encyclopaedia, its
-    snippet) carries the query's specific words: one in the title of a paper;
-    for an encyclopaedia entry, two when the query has three or more."""
+def relevant(hit: dict[str, Any], terms: list[str],
+             groups: dict[str, str] | None = None) -> bool:
+    """A result is kept only if it is about the query's concepts.
+
+    ``groups`` maps a word to its concept (from the user's glossary: "Mimus"
+    and "mockingbird" are both "cucuve"), so two names of one concept count
+    once. A paper needs one concept in its title; an encyclopaedia entry or a
+    web page needs two concepts (when the query has two) in its title and
+    snippet, a web page at least one in its title. "Mimus inbreeding
+    mockingbird" brought "Cooper's hawk", "Everglades National Park" and
+    "MockingBird: code translation" (sixth test)."""
     if not terms:
         return True
+    groups = groups or {}
     title = _fold(hit.get("title", ""))
     snippet = _fold(hit.get("snippet", ""))
 
-    def has(t: str, text: str) -> bool:
-        stem = _fold(t)[:max(4, len(t) - 2)]
-        return stem in text
-    # with three or more specific words, one is not enough: "inbreeding Mimus
-    # Galapagos" brought "Galápagos tortoise" and "Medium ground finch" (sixth test)
-    # (encyclopaedia entries); a paper with one of them in its title is kept
-    # ("Bioluminescence of Pyrophorus click beetles" for "Pyrophorus Elateridae cucujos")
-    wiki = hit.get("provider", "").startswith("wikipedia")
-    need = 2 if wiki and len(terms) >= 3 else 1
-    in_title = sum(has(t, title) for t in terms)
-    if in_title >= need:
-        return True
-    in_text = sum(has(t, f"{title} {snippet}") for t in terms)
-    return wiki and in_text >= max(need, min(2, len(terms)))
+    def stem(t: str) -> str:
+        return _fold(t)[:max(4, len(t) - 2)]
+
+    def concept(t: str) -> str:
+        f = _fold(t)
+        return groups.get(f) or next((g for w, g in groups.items()
+                                      if len(w) >= 4 and (f.startswith(w[:max(4, len(w) - 2)])
+                                                          or w.startswith(stem(t)))), f)
+    in_title = {concept(t) for t in terms if stem(t) in title}
+    in_text = {concept(t) for t in terms if stem(t) in f"{title} {snippet}"}
+    provider = hit.get("provider", "")
+    if provider == "pubmed" or not provider:
+        return bool(in_title)
+    n = len({concept(t) for t in terms})
+    need = 2 if n >= 2 else 1
+    if provider.startswith("wikipedia"):
+        return len(in_title) >= need or len(in_text) >= need
+    return bool(in_title) and len(in_text) >= need
 
 
 def propose_query(question: str, keywords: str = "",
@@ -176,8 +188,10 @@ def wants_recent(question: str) -> bool:
 
 
 def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = False,
-           limit: int = 6, fetch: Fetch | None = None) -> dict[str, Any]:
-    """Search approved by the user. Fails closed per provider."""
+           limit: int = 6, fetch: Fetch | None = None,
+           groups: dict[str, str] | None = None) -> dict[str, Any]:
+    """Search approved by the user. Fails closed per provider. ``groups`` maps
+    words to concepts (see :func:`relevant`)."""
     fetch = fetch or _get
     query = " ".join((query or "").split())[:200]
     timeout = max(float(ev_cfg.get("timeout_s", 4.0)), 6.0)
@@ -197,7 +211,7 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
             except Exception as exc:
                 errors.append(f"pubmed: {type(exc).__name__}")
                 break
-            kept = [h for h in found if relevant(h, terms)]
+            kept = [h for h in found if relevant(h, terms, groups)]
             dropped += len(found) - len(kept)
             if kept:
                 hits += kept
@@ -210,7 +224,7 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
                 except Exception as exc:
                     errors.append(f"wikipedia-{wl}: {type(exc).__name__}")
                     break
-                kept = [h for h in found if relevant(h, terms)]
+                kept = [h for h in found if relevant(h, terms, groups)]
                 dropped += len(found) - len(kept)
                 if kept:
                     hits += kept
@@ -219,7 +233,7 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
     if "web" in providers and url and _reachable(url):
         try:
             found = _searxng(query, url, lang, fetch, timeout)
-            kept = [h for h in found if relevant(h, terms)]
+            kept = [h for h in found if relevant(h, terms, groups)]
             dropped += len(found) - len(kept)
             hits += kept
         except Exception as exc:

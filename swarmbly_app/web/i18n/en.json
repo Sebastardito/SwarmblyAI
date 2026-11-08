@@ -191,7 +191,9 @@
   "termsSent": "{n} single words were looked up (recorded in the receipt).",
   "termConflict": "{n} possible mix-up of terms",
   "termConflictTitle": "\"{concept}\" is given traits of \"{other}\" ({traits}), and your glossary says they are different things.",
-  "termsErrors": "Did not answer:"
+  "termsErrors": "Did not answer:",
+  "missedSources": "Your sources do cover it",
+  "missedSourcesTitle": "The answer says your sources do not discuss \"{term}\", but they use \"{found}\", which your glossary gives as an equivalent."
  },
  "explore": {
   "title": "How this answer was made",

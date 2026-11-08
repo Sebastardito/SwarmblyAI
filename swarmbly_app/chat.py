@@ -425,7 +425,12 @@ class ChatService:
                 needs_yes = bool(sources) or lane_now in ("personal", "sensible")
                 consent_mode = str((cfg.get("privacy") or {}).get("public_lookup_consent", "ask"))
                 request.receipt_ctx["consent_required"] = bool(entities) and needs_yes
-                if entities and needs_yes and consent_mode == "ask" and not request.allow_public:
+                if request.web_query:
+                    # the user approved one search with its own query: no other
+                    # lookup in the same answer (both were labelled [W1]…, and
+                    # the fusion template answered a Spanish question in English)
+                    entities = []
+                elif entities and needs_yes and consent_mode == "ask" and not request.allow_public:
                     request.receipt_ctx["public_offer"] = [e.get("name", "") for e in entities]
                     entities = []
                 if entities:
@@ -437,7 +442,7 @@ class ChatService:
                         wiki = WikipediaEvidence(
                             lang=str(ev_cfg.get("local_lang", "en")),
                             timeout_s=float(ev_cfg.get("timeout_s", 4.0)))
-                        provider = build(detect_language(user_text), ev_cfg, wiki)
+                        provider = build(_lang(user_text), ev_cfg, wiki)
                     public_hits, public_report = public_evidence(entities, expansion, provider,
                                                                  known, user_text)
             # P2e: an enumerated PUBLIC batch answered here (too small to
@@ -451,7 +456,7 @@ class ChatService:
                 from .engine.evidence import local_batch
                 from .lang import detect_language
                 try:
-                    block, batch_report = local_batch(user_text, cfg, detect_language(user_text))
+                    block, batch_report = local_batch(user_text, cfg, _lang(user_text))
                 except Exception:
                     block, batch_report = "", None
                 if block:
@@ -482,8 +487,11 @@ class ChatService:
             from . import web_search
             if request.web_query:
                 with egress.purpose(egress.PUBLIC_QUERY):
+                    groups = {_fold_word(n): _fold_word(t) for t, eq in gloss_pairs
+                              for n in [t, *[e.strip() for e in eq.split(",") if e.strip()]]}
                     web_found = web_search.search(request.web_query, ev_cfg, lang_now,
-                                                  recent=web_search.wants_recent(user_text))
+                                                  recent=web_search.wants_recent(user_text),
+                                                  groups=groups)
                 blocks.append(web_search.results_block(web_found, lang_now))
             elif want_public or _ASKS_REFERENCES.search(user_text):
                 blocks.append(web_search.NO_SEARCH.get(lang_now, web_search.NO_SEARCH["en"]))
@@ -528,7 +536,7 @@ class ChatService:
                 from .local_context import fusion_prompt
                 context = [*context[:-1],
                            {"role": "user", "content": fusion_prompt(
-                               sources, public_hits, user_text, detect_language(user_text))}]
+                               sources, public_hits, user_text, _lang(user_text))}]
             elif sources:
                 blocks.append(_sources_block(sources, user_text))
             if lce_on and request.project_id and self.document_list is not None:
@@ -643,6 +651,10 @@ class ChatService:
             conflicts = _term_conflicts(answer_text, gloss_pairs, gmeta)
             if conflicts:
                 extra["term_conflicts"] = conflicts
+            missed = _missed_sources(answer_text, user_text, gloss_pairs,
+                                     [str(x.get("text", "")) for x in sources])
+            if missed:
+                extra["missed_sources"] = missed
             extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if public_report is not None:
                 extra["evidence"] = public_report
@@ -975,9 +987,16 @@ def _glossary_block(pairs: list[tuple[str, str]], avoid: dict[str, str], context
         lines.append(line)
     if not lines:
         return ""
-    head = ("Glosario del usuario: usa estos términos tal cual y nunca las formas marcadas como "
-            "incorrectas:" if lang == "es" else
-            "The user's glossary: use these terms as written and never the forms marked wrong:")
+    # the 7B model said the sources did not mention "endogamia en cucuves" while
+    # they discussed inbreeding in Galápagos mockingbirds (sixth test)
+    head = ("Glosario del usuario. Cada línea es un mismo concepto con varios nombres: si una "
+            "fuente usa un equivalente (por ejemplo «inbreeding» por «endogamia»), habla del "
+            "término del usuario; cítala y no digas que tus fuentes no lo mencionan. Usa los "
+            "términos del usuario tal cual y nunca las formas marcadas como incorrectas:"
+            if lang == "es" else
+            "The user's glossary. Each line is one concept with several names: a source that "
+            "uses an equivalent speaks of the user's term; cite it and do not say the sources "
+            "do not mention it. Use the user's terms as written and never the forms marked wrong:")
     return "\n".join([head, *lines[:20]])
 
 
@@ -1008,6 +1027,35 @@ def _term_conflicts(answer: str, pairs: list[tuple[str, str]],
                     found.append({"concept": other, "traits_of": term, "traits": ", ".join(traits),
                                   "sentence": sentence.strip()[:240]})
     return found[:5]
+
+
+_ABSENCE = re.compile(
+    r"\bno\s+(?:se\s+)?(?:menciona\w*|contiene\w*|incluye\w*|habla\w*|trata\w*|aborda\w*|"
+    r"utiliza\w*|encontr\w*)|\bno\s+hay\s+informaci|\bsin\s+informaci|"
+    r"\b(?:do|does|did)\s+not\s+(?:mention|contain|include|discuss|address)|\bno\s+information",
+    re.I)
+
+
+def _missed_sources(answer: str, question: str, pairs: list[tuple[str, str]],
+                    passages: list[str]) -> list[dict[str, str]]:
+    """The answer says the sources do not mention something the question asks,
+    while the passages it was given use one of its glossary equivalents
+    ("no se menciona la endogamia" with passages about "inbreeding"). Flagged."""
+    if not _ABSENCE.search(answer or ""):
+        return []
+    q = _fold_word(question)
+    text = _fold_word(" ".join(passages or []))
+    out = []
+    for term, eq in pairs:
+        stem = _fold_word(term).rstrip("s")[:max(4, len(term) - 2)]
+        if len(stem) < 4 or stem not in q:
+            continue
+        for e in (x.strip() for x in eq.split(",")):
+            f = _fold_word(e).rstrip("s")
+            if len(f) >= 4 and re.search(r"\b" + re.escape(f[:max(4, len(f) - 1)]), text):
+                out.append({"term": term, "found": e})
+                break
+    return out[:5]
 
 
 def _apply_avoid(text: str, avoid: dict[str, str]) -> tuple[str, list[dict[str, Any]]]:
