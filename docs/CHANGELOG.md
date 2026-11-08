@@ -237,6 +237,20 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
       (both were labelled [W1]…), and the fusion template takes the language
       from the same rule as the rest of the answer (a Spanish question got
       English headings).
+  - Third run (and the dialog driven in the browser): answers now cited the
+    mockingbird genomes for "endogamia en cucuves", and searches kept only the
+    relevant papers. Remaining:
+    - "Review terms" offered albums, singles, a TV episode and a 1919 book
+      for "mockingbird" and "inbreeding": creative works and documents
+      (Wikidata P31) are never candidates;
+    - a word that is already a glossary term or equivalent is not looked up
+      again (nothing sent for it);
+    - "la inbreeding" in a Spanish answer becomes "la endogamia" (article
+      agreeing with the term; quotes and titles untouched), reported with the
+      other glossary corrections;
+    - the request pipeline notes ("the router judged the request not
+      decomposable") are shown in Spanish; the "save these equivalences" box
+      appears only after reviewing the terms.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

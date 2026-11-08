@@ -38,5 +38,17 @@ const I18n = (() => {
 
   function current() { return lang; }
 
-  return { load, t, applyAll, current };
+  /* Pipeline notes come from the engine in English ("the router judged the
+     request not decomposable"); known ones are shown in the UI language. */
+  function reason(text) {
+    const s = String(text || "");
+    const table = (dicts[lang] || {}).stageReasons || {};
+    if (table[s]) return table[s];
+    for (const [k, v] of Object.entries(table)) {
+      if (k.endsWith("*") && s.startsWith(k.slice(0, -1))) return v + s.slice(k.length - 1);
+    }
+    return s;
+  }
+
+  return { load, t, applyAll, current, reason };
 })();
