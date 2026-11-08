@@ -107,7 +107,7 @@ def gbif(word: str, fetch: Fetch, timeout: float, limit: int = 3) -> list[dict[s
         names = [v.get("vernacularName", "") for v in r.get("vernacularNames") or []
                  if word.lower()[:5] in v.get("vernacularName", "").lower()]
         out.append({"source": "gbif", "id": str(r.get("key", "")), "label_en": name,
-                    "label": names[0] if names else name,
+                    "label": names[0] if names else name, "common_en": _english(r),
                     "description": " · ".join(x for x in (r.get("rank", "").lower(),
                                                           r.get("family", ""), r.get("kingdom", ""))
                                               if x),
@@ -115,6 +115,42 @@ def gbif(word: str, fetch: Fetch, timeout: float, limit: int = 3) -> list[dict[s
                     "url": f"https://www.gbif.org/species/{r.get('key', '')}"})
         if len(out) >= limit:
             break
+    # several species of one genus for a common name ("cucuve": Mimus parvulus,
+    # M. macdonaldi, M. trifasciatus): the genus is offered first
+    genera: dict[str, dict[str, Any]] = {}
+    for r in data.get("results") or []:
+        if r.get("genus") and (r.get("rank") or "").upper() in ("SPECIES", "SUBSPECIES"):
+            genera.setdefault(r["genus"], r).setdefault("_n", 0)
+            genera[r["genus"]]["_n"] = genera[r["genus"]].get("_n", 0) + 1
+    for genus, r in genera.items():
+        if r.get("_n", 0) >= 2 and genus not in seen:
+            heads = {_english(x).split()[-1].lower() for x in data.get("results") or []
+                     if x.get("genus") == genus and _english(x)}
+            out.insert(0, {"source": "gbif", "id": str(r.get("genusKey", "")), "label_en": genus,
+                           "label": genus, "common_en": heads.pop() if len(heads) == 1 else "",
+                           "description": " · ".join(x for x in ("genus", r.get("family", ""),
+                                                                 r.get("kingdom", "")) if x),
+                           "scientific": genus, "mesh": "",
+                           "url": f"https://www.gbif.org/species/{r.get('genusKey', '')}"})
+    return out[:limit + 1]
+
+
+def _english(r: dict[str, Any]) -> str:
+    """The English common name GBIF gives for a taxon ("Galapagos Mockingbird")."""
+    for v in r.get("vernacularNames") or []:
+        if (v.get("language") or "").lower() in ("eng", "en") and v.get("vernacularName"):
+            return " ".join(v["vernacularName"].split())
+    return ""
+
+
+def _singulars(word: str) -> list[str]:
+    """Singular forms to try when a plural finds nothing ("cucuves" → "cucuve")."""
+    w = word.strip()
+    if len(w) < 5 or " " in w or not w.lower().endswith("s"):
+        return []
+    out = [w[:-1]]
+    if w.lower().endswith("es") and len(w) > 5:
+        out.append(w[:-2])
     return out
 
 
@@ -139,12 +175,18 @@ def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] 
                               "label_en": eq.split(",")[0].strip(), "description": eq,
                               "scientific": "", "mesh": "", "url": ""})
         if online:
-            for name, call in (("wikidata", lambda: wikidata(word, lang, fetch, timeout)),
-                               ("gbif", lambda: gbif(word, fetch, timeout))):
-                try:
-                    cands += call()
-                except Exception as exc:
-                    errors.append(f"{name}: {_reason(exc)}")
+            found: list[dict[str, Any]] = []
+            for form in [word, *_singulars(word)]:
+                errors = []
+                for name, call in (("wikidata", lambda f=form: wikidata(f, lang, fetch, timeout)),
+                                   ("gbif", lambda f=form: gbif(f, fetch, timeout))):
+                    try:
+                        found += call()
+                    except Exception as exc:
+                        errors.append(f"{name}: {_reason(exc)}")
+                if found:
+                    break
+            cands += found
         out.append({"word": word, "candidates": cands[:8], "errors": errors})
     return out
 
@@ -162,7 +204,12 @@ def concept_terms(c: dict[str, Any]) -> list[str]:
 
 def glossary_entry(word: str, c: dict[str, Any]) -> dict[str, Any]:
     """The glossary entry that keeps this choice: ``word = English label,
-    scientific name | wd: Q…``."""
+    scientific name, English common name | wd: Q…``. The common name lets the
+    model match the user's word to the sources ("cucuve" to "Galápagos
+    mockingbirds", which the 7B model rendered as "galgapos de Groenlandia")."""
     eq = [t for t in concept_terms(c) if t.lower() != word.lower()]
+    common = " ".join(str(c.get("common_en") or "").split())
+    if common and common.lower() not in (x.lower() for x in eq):
+        eq.append(common)
     return {"term": word, "equivalents": eq, "definition": c.get("description", "")[:200],
             "wd": c.get("id", "") if c.get("source") == "wikidata" else ""}

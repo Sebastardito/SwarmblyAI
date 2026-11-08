@@ -73,7 +73,8 @@ def topic_terms(query: str) -> list[str]:
 
 def relevant(hit: dict[str, Any], terms: list[str]) -> bool:
     """A result is kept only if its title (or, for an encyclopaedia, its
-    snippet) carries one of the query's specific words."""
+    snippet) carries the query's specific words: one in the title of a paper;
+    for an encyclopaedia entry, two when the query has three or more."""
     if not terms:
         return True
     title = _fold(hit.get("title", ""))
@@ -82,10 +83,17 @@ def relevant(hit: dict[str, Any], terms: list[str]) -> bool:
     def has(t: str, text: str) -> bool:
         stem = _fold(t)[:max(4, len(t) - 2)]
         return stem in text
-    if any(has(t, title) for t in terms):
+    # with three or more specific words, one is not enough: "inbreeding Mimus
+    # Galapagos" brought "Galápagos tortoise" and "Medium ground finch" (sixth test)
+    # (encyclopaedia entries); a paper with one of them in its title is kept
+    # ("Bioluminescence of Pyrophorus click beetles" for "Pyrophorus Elateridae cucujos")
+    wiki = hit.get("provider", "").startswith("wikipedia")
+    need = 2 if wiki and len(terms) >= 3 else 1
+    in_title = sum(has(t, title) for t in terms)
+    if in_title >= need:
         return True
-    return hit.get("provider", "").startswith("wikipedia") and \
-        sum(has(t, snippet) for t in terms) >= min(2, len(terms))
+    in_text = sum(has(t, f"{title} {snippet}") for t in terms)
+    return wiki and in_text >= max(need, min(2, len(terms)))
 
 
 def propose_query(question: str, keywords: str = "",
