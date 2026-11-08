@@ -309,6 +309,11 @@ def propose(text: str, backend: Any = None, model: str = "", lang: str = "es") -
     for g in extracted["glossary"]:
         if not g["equivalents"]:
             g["equivalents"] = guess_equivalents(g["term"], text)
+        # a definition must come from the user's words: the 7B model wrote
+        # "El proceso de mezclar características genéticas…" for a spelling
+        # correction (fifth run)
+        if g.get("definition") and not _from_user(g["definition"], text):
+            g["definition"] = ""
         # a definition that only repeats a note adds a duplicate note on saving
         if any(_similar(g.get("definition", ""), n) for n in extracted["notes"]):
             g["definition"] = ""
@@ -319,6 +324,13 @@ def propose(text: str, backend: Any = None, model: str = "", lang: str = "es") -
                                           "definition": ""})
     return {"id": uuid.uuid4().hex[:12], "status": "proposed", "model": model or "",
             "asked": remember_intent(text) or glossary_intent(text), **extracted}
+
+
+def _from_user(definition: str, text: str) -> bool:
+    """Most content words of a definition appear in the user's message."""
+    words = {w for w in re.findall(r"\w{4,}", (definition or "").lower())}
+    have = {w[:5] for w in re.findall(r"\w{4,}", (text or "").lower())}
+    return bool(words) and sum(w[:5] in have for w in words) / len(words) >= 0.6
 
 
 def _similar(a: str, b: str) -> bool:

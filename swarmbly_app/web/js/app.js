@@ -114,7 +114,7 @@ const App = (() => {
         if (!fin || fin.status === "pending" || fin.status === "skipped") {
           live.stages["FINAL RESPONSE"] = { stage: "FINAL RESPONSE",
             status: p.status === "failed" ? "failed" : "completed",
-            reason: p.meta?.local_reason || (p.status === "failed" ? p.error : t("activity.localAnswer")),
+            reason: p.meta?.local_reason ? I18n.reason(p.meta.local_reason) : (p.status === "failed" ? p.error : t("activity.localAnswer")),
             total_ms: p.meta?.total_ms };
         }
       }

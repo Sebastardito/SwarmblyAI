@@ -319,3 +319,35 @@ def test_an_approved_search_says_what_was_approved_in_the_receipt(app_state, mon
     r = app_state.chat.get_messages(conv["id"])[-1]["meta"]["receipt"]
     assert "inbreeding mockingbird" in r["consentimiento"]["alcance"]
     assert {e["tipo"] for e in r["envios"]} == {"consulta_aprobada", "id_resultado"}
+
+
+def test_the_web_ui_files_are_revalidated_after_an_update(app_state):
+    from fastapi.testclient import TestClient
+
+    from swarmbly_app.api import create_app
+    from swarmbly_app.api.security import ApiGuard
+    c = TestClient(create_app(app_state, ApiGuard()), base_url="http://127.0.0.1:8765")
+    assert c.get("/i18n/es.json").headers["cache-control"] == "no-cache"
+    assert c.get("/").headers["cache-control"] == "no-store"
+
+
+def test_definitions_not_in_the_users_words_are_dropped():
+    class B:
+        def stream_chat(self, *a, **k):
+            class R:
+                text = ('{"notes": [], "glossary": [{"term": "hibridación", "equivalents": [], '
+                        '"definition": "El proceso de mezclar características genéticas de dos organismos."}]}')
+            return R()
+    p = M.propose("Ojo: se escribe hibridación, no hibridización.", B(), "m")
+    g = next(x for x in p["glossary"] if x["term"] == "hibridación")
+    assert g["definition"] == "" and g["avoid"] == ["hibridización"]
+
+
+def test_a_correction_is_acknowledged_not_answered_again(app_state):
+    fake = FakeBackend(reply="Gracias, uso «hibridación».")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], "Ojo: se escribe hibridación, no hibridización.", mode="local",
+                        run_async=False)
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    assert "El usuario corrige un término: «hibridación», no «hibridización»" in system
