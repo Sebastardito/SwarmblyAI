@@ -49,16 +49,31 @@ def parse_citation(cite: str) -> tuple[str, str] | None:
     return (doc, anchor) if doc and anchor else None
 
 
-_AVOID = re.compile(r"\s*\|\s*(?:no|evitar|avoid|not)\s*:\s*(.+)$", re.I)
+_META_KEYS = {"no": "no", "evitar": "no", "avoid": "no", "not": "no",
+              "distinto": "distinct", "distinto de": "distinct", "distinct": "distinct",
+              "wd": "wd", "wikidata": "wd", "en": "en", "es": "es"}
+
+
+def _split_meta(right: str) -> tuple[str, dict[str, list[str]]]:
+    """``"introgression | no: introgradión | wd: Q123"`` → equivalents and
+    metadata. Segments after ``|`` are never equivalents: ``no`` (forms the
+    user corrected), ``distinto`` (a different concept often confused with
+    this one), ``wd`` (Wikidata item), ``en``/``es`` (labels by language)."""
+    parts = [x.strip() for x in right.split("|")]
+    meta: dict[str, list[str]] = {}
+    for seg in parts[1:]:
+        key, _, value = seg.partition(":")
+        key = _META_KEYS.get(key.strip().lower())
+        if key and value.strip():
+            meta.setdefault(key, []).extend(
+                v.strip(" .«»\"'") for v in value.split(",") if v.strip(" .«»\"'"))
+    return parts[0].strip(), meta
 
 
 def _split_avoid(right: str) -> tuple[str, list[str]]:
     """``"introgression | no: introgradión"`` → ``("introgression", ["introgradión"])``."""
-    m = _AVOID.search(right)
-    if not m:
-        return right.strip(), []
-    wrong = [w.strip(" .«»\"'") for w in m.group(1).split(",") if w.strip(" .«»\"'")]
-    return right[:m.start()].strip(), wrong
+    eq, meta = _split_meta(right)
+    return eq, meta.get("no", [])
 
 
 @dataclass
@@ -289,6 +304,24 @@ class SourceIndex:
                 _right, avoid = _split_avoid(m.group(2))
                 for wrong in avoid:
                     out[wrong] = m.group(1).strip()
+        return out
+
+    def glossary_meta(self, roots: Iterable[Path]) -> dict[str, dict[str, list[str]]]:
+        """Metadata of each glossary term (``no``, ``distinct``, ``wd``, ``en``…)."""
+        out: dict[str, dict[str, list[str]]] = {}
+        for _root, path in self._files(roots):
+            if not P.is_glossary(path):
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for line in text.splitlines():
+                m = P.GLOSS_LINE.match(line)
+                if m:
+                    _eq, meta = _split_meta(m.group(2))
+                    if meta:
+                        out.setdefault(m.group(1).strip(), {}).update(meta)
         return out
 
     def glossary_terms(self, text: str, roots: Iterable[Path]) -> str:
