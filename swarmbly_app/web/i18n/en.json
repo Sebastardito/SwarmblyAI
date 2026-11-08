@@ -291,7 +291,10 @@
     "entidad_publica": "name looked up",
     "nombre_personal": "your name",
     "fragmento": "fragment of a public request",
-    "desconocido": "unclassified content"
+    "desconocido": "unclassified content",
+    "consulta_aprobada": "search text you approved",
+    "palabra_suelta": "single word (review terms)",
+    "id_resultado": "identifier of a result"
    },
    "scope": "Scope",
    "project": "project",
@@ -300,7 +303,8 @@
    "consentYes": "asked and given",
    "consentNo": "needed and not given: nothing was looked up",
    "consentNotNeeded": "not needed",
-   "consentBase": "Basis:"
+   "consentBase": "Basis:",
+   "consentScope": "Scope:"
   },
   "citeTitle": "Stable citation: the file's hash and the paragraph. It still holds if the project is moved or restored on another computer.",
   "anchor": {

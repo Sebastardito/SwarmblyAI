@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -427,6 +428,21 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
         if sends:
             meta = msg.get("meta") or {}
             meta.setdefault("term_lookups", []).append({"words": words, "sends": sends})
+            # the message's receipt shows these sends too (they came after it)
+            receipt = meta.get("receipt")
+            if isinstance(receipt, dict):
+                receipt.setdefault("envios", []).extend(
+                    {"destino": x["destino"], "clase": "terceros",
+                     "tipo": ("id_resultado" if re.fullmatch(r"[\dQ|,]+", str(x["valor"]))
+                              else "palabra_suelta"),
+                     "valor": x["valor"], "bytes": x["bytes"],
+                     "motivo": "revisar términos (lo pediste con el botón)"} for x in sends)
+                receipt["bytes_salientes"] = int(receipt.get("bytes_salientes") or 0) + \
+                    sum(int(x["bytes"] or 0) for x in sends)
+                declared = receipt.setdefault("destinos_declarados", [])
+                for host in dict.fromkeys(x["destino"] for x in sends):
+                    if host and host not in declared:
+                        declared.append(host)
             state.db.update_message(message_id, meta=meta)
             state.chat._changed(conv_id)
         return {"terms": result, "sends": sends}
