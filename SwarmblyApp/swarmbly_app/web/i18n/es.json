@@ -291,7 +291,10 @@
     "entidad_publica": "nombre consultado",
     "nombre_personal": "tu nombre",
     "fragmento": "fragmento de una petición pública",
-    "desconocido": "contenido sin clasificar"
+    "desconocido": "contenido sin clasificar",
+    "consulta_aprobada": "texto de búsqueda que aprobaste",
+    "palabra_suelta": "palabra suelta (revisar términos)",
+    "id_resultado": "identificador de un resultado"
    },
    "scope": "Ámbito",
    "project": "proyecto",
@@ -300,7 +303,8 @@
    "consentYes": "pedido y dado",
    "consentNo": "hacía falta y no se dio: no se consultó nada",
    "consentNotNeeded": "no hacía falta",
-   "consentBase": "Base:"
+   "consentBase": "Base:",
+   "consentScope": "Alcance:"
   },
   "citeTitle": "Cita estable: el hash del archivo y el párrafo. Sigue valiendo si el proyecto se mueve o se restaura en otra computadora.",
   "anchor": {

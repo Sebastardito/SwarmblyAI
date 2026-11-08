@@ -852,7 +852,10 @@ const Explore = (() => {
     else parts.push(h("ul.sources", r.envios.map((e) => h("li",
       chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),
       h("span", ` ${e.destino} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)}`),
-      e.tipo === "entidad_publica" ? h("code", ` ${e.valor}`) : null))));
+      ["entidad_publica", "consulta_aprobada", "palabra_suelta", "id_resultado"].includes(e.tipo)
+        ? h("code", ` ${e.valor}`) : null))));
+    if (r.consentimiento?.alcance) parts.splice(1, 0, h("p.muted",
+      `${t("explore.receipt.consentScope")} ${r.consentimiento.alcance}`));
     if ((r.bloqueados || []).length) parts.push(h("p.note",
       `${t("explore.receipt.blocked")} ${r.bloqueados.map((b) => b.destino).join(", ")}`));
     return h("div", parts);

@@ -251,6 +251,21 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     - the request pipeline notes ("the router judged the request not
       decomposable") are shown in Spanish; the "save these equivalences" box
       appears only after reviewing the terms.
+  - Fourth run: English questions, a wrong form in the question
+    ("introgradión", replaced five times in the answer) and the receipts.
+    - The user's term is written next to its equivalent in the passages the
+      model reads ("Inbreeding («endogamia»)"); the 7B model still wrote "no
+      se menciona directamente la endogamia".
+    - The missed-sources warning matched "cucujo" through "cucuves" (a shared
+      prefix); it now needs the question's own word.
+    - A clear correction ("se escribe X, no Y", two spellings of one word)
+      and two concepts kept apart ("los cucujos y los cucuves son distintos")
+      are proposed for the glossary without being asked; "la respuesta es
+      correcta, no hay problema" is not a correction.
+    - Receipts: the words sent by "Review terms" are added to the message's
+      receipt; an approved search says what was approved ("el texto de
+      búsqueda que aprobaste: «…»") and labels its sends as the approved text
+      or as result identifiers, not as "public names".
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

@@ -195,7 +195,7 @@ def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] 
             if any(len(n) >= 3 and (w.startswith(n) or n.startswith(w)) for n in names):
                 m = (meta or {}).get(term, {})
                 cands.append({"source": "glossary", "id": (m.get("wd") or [""])[0], "label": term,
-                              "label_en": eq.split(",")[0].strip(), "description": eq,
+                              "label_en": eq.split(",")[0].strip(), "description": f"{term} = {eq}",
                               "scientific": "", "mesh": "", "url": ""})
         if online and not any(c["source"] == "glossary" for c in cands):
             found: list[dict[str, Any]] = []

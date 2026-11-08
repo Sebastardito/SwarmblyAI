@@ -54,8 +54,27 @@ def definition_hint(text: str) -> bool:
     return bool(_DEFINITION.search(text or "") or _ACRONYM_DEF.search(text or ""))
 
 
+_CUE = re.compile(r"\b(se\s+dice|se\s+escribe|t[eé]rmino\s+correcto|palabra\s+correcta|"
+                  r"te\s+corrijo|corregirte|correcci[oó]n|it'?s\s+spelled|the\s+correct\s+term)\b", re.I)
+
+
+def clear_corrections(text: str) -> list[tuple[str, str]]:
+    """Corrections clear enough to propose without being asked: a cue
+    ("se escribe", "el término correcto es") or two spellings of one word
+    ("introgradión" / "introgresión"). "La respuesta es correcta, no hay
+    problema" is not one."""
+    import difflib
+    cue = bool(_CUE.search(text or ""))
+    return [(w, r) for w, r in corrections(text)
+            if cue or difflib.SequenceMatcher(None, w.lower(), r.lower()).ratio() >= 0.6]
+
+
 def needs_capture(text: str) -> bool:
-    return remember_intent(text) or glossary_intent(text) or definition_hint(text)
+    """A message whose memory could be kept, with the user's yes: an explicit
+    request, a definition, a clear correction mid-conversation or two
+    concepts the user keeps apart."""
+    return (remember_intent(text) or glossary_intent(text) or definition_hint(text)
+            or bool(clear_corrections(text)) or bool(distinctions(text)))
 
 
 EXTRACT_SYSTEM = (
@@ -120,7 +139,7 @@ _DISTINCT = re.compile(
     r"\b(?P<a>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+no\s+(?:es|son)\s+(?:un|una|el|la)?\s*"
     r"(?:nombre|t[eé]rmino|sin[oó]nimo)s?\s+(?:com[uú]n(?:es)?\s+)?(?:de|para)\s+(?:l[oa]s?\s+)?"
     r"(?P<b>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})|"
-    r"\b(?P<c>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+y\s+(?P<d>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+son\s+"
+    r"\b(?P<c>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+y\s+(?:(?:l[oa]s?|el)\s+)?(?P<d>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})\s+son\s+"
     r"(?:cosas\s+|t[eé]rminos\s+)?(?:distint[oa]s|diferentes)|"
     r"\b(?P<e>[\w-]{3,40})\s+is\s+not\s+(?:a|the)\s+name\s+(?:of|for)\s+(?:the\s+)?(?P<f>[\w-]{3,40})",
     re.I)

@@ -538,7 +538,7 @@ class ChatService:
                            {"role": "user", "content": fusion_prompt(
                                sources, public_hits, user_text, _lang(user_text))}]
             elif sources:
-                blocks.append(_sources_block(sources, user_text))
+                blocks.append(_sources_block(sources, user_text, gloss_pairs))
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
                 # only), so "which sources do you have?" is not invented
@@ -806,6 +806,11 @@ class ChatService:
                 consent = {"requerido": required, "otorgado": True,
                            "alcance": "nombres de entidades públicas de la pregunta o de tus fuentes",
                            "base": base}
+                if request.web_query:
+                    # an approved search sends the text the user saw and edited
+                    consent = {"requerido": True, "otorgado": True,
+                               "alcance": f"el texto de búsqueda que aprobaste: «{request.web_query[:160]}»",
+                               "base": "lo aprobaste en el diálogo «Buscar en línea»"}
             if dest.get("clase") == egress.THIRD_PARTY:
                 consent["modelo_terceros"] = {
                     "host": dest.get("host", ""), "autorizado": True,
@@ -815,6 +820,11 @@ class ChatService:
                 ledger, lane=ctx.get("lane", "no_informado"), route=route, answer=answer,
                 consent=consent, passages=ctx.get("passages") or [],
                 fragments=fragments, extra_sends=extra_sends, model_destination=dest)
+            if request.web_query:
+                for e in meta["receipt"].get("envios") or []:
+                    if e.get("tipo") == "entidad_publica":
+                        e["tipo"] = ("id_resultado" if re.fullmatch(r"[\dQ|,]+", str(e.get("valor", "")))
+                                     else "consulta_aprobada")
             # 3.1: whose documents this answer could read
             meta["receipt"]["ambito"] = (
                 {"tipo": "proyecto", "id": request.project_id,
@@ -1046,12 +1056,15 @@ def _missed_sources(answer: str, question: str, pairs: list[tuple[str, str]],
     ("no se menciona la endogamia" with passages about "inbreeding"). Flagged."""
     if not _ABSENCE.search(answer or ""):
         return []
-    q = _fold_word(question)
+    qwords = [_fold_word(w).rstrip("s") for w in re.findall(r"\w+", question or "")]
     text = _fold_word(" ".join(passages or []))
     out = []
     for term, eq in pairs:
-        stem = _fold_word(term).rstrip("s")[:max(4, len(term) - 2)]
-        if len(stem) < 4 or stem not in q:
+        stem = _fold_word(term).rstrip("s")
+        # the question's own word, not a prefix shared with another term
+        # ("cucujo" was matched by "cucuves")
+        if len(stem) < 4 or not any(w == stem or (len(stem) >= 6 and w.startswith(stem[:-1]))
+                                    for w in qwords):
             continue
         for e in (x.strip() for x in eq.split(",")):
             f = _fold_word(e).rstrip("s")
@@ -1266,13 +1279,35 @@ def _documents_block(docs: list[dict[str, Any]], user_text: str,
     return "\n".join(lines)
 
 
-def _sources_block(sources: list[dict[str, Any]], user_text: str) -> str:
-    """LCE C1: retrieved paragraphs for a local answer, with their origin."""
+def _sources_block(sources: list[dict[str, Any]], user_text: str,
+                   pairs: list[tuple[str, str]] | None = None) -> str:
+    """LCE C1: retrieved paragraphs for a local answer, with their origin.
+
+    The user's term is written next to the first equivalent of it in each
+    paragraph ("inbreeding («endogamia»)", "Mimus («cucuves»)"), only in what
+    the model reads: the 7B model kept saying the sources did not mention
+    "endogamia" when they spoke of inbreeding (sixth test, third run)."""
     head = _SOURCES_HEAD.get(_lang(user_text), _SOURCES_HEAD["en"])
     lines = [head]
+    q = _fold_word(user_text)
+    asked = []
+    for term, eq in pairs or []:
+        if any(_fold_word(w).rstrip("s") == _fold_word(term).rstrip("s")
+               for w in re.findall(r"\w+", user_text or "")) or _fold_word(term) in q:
+            asked.append((term, [e.strip() for e in eq.split(",")
+                                 if len(e.strip()) >= 4 and _fold_word(e.strip()) != _fold_word(term)]))
     for i, s in enumerate(sources, 1):
         label = s.get("label") or str(i)
-        lines.append(f"[{label}] ({s.get('rel') or s['source']}) {s['text']}")
+        text = s["text"]
+        for term, eqs in asked:
+            if re.search(r"(?<!\w)" + re.escape(term.rstrip("s")), text, re.I):
+                continue                       # the paragraph already uses the user's word
+            for e in eqs:
+                m = re.search(r"(?<!\w)" + re.escape(e) + r"\w*", text, re.I)
+                if m:
+                    text = f"{text[:m.end()]} («{term}»){text[m.end():]}"
+                    break
+        lines.append(f"[{label}] ({s.get('rel') or s['source']}) {text}")
     return "\n".join(lines)
 
 

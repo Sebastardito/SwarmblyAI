@@ -53,7 +53,7 @@ def test_glossary_concepts_come_first_and_offline_sends_nothing():
     out = T.resolve(["endogamia"], "es", glossary=[("endogamia", "inbreeding")],
                     meta={"endogamia": {"wd": ["Q1"]}}, fetch=fake_fetch(sent), online=False)
     assert out[0]["candidates"][0] == {"source": "glossary", "id": "Q1", "label": "endogamia",
-                                       "label_en": "inbreeding", "description": "inbreeding",
+                                       "label_en": "inbreeding", "description": "endogamia = inbreeding",
                                        "scientific": "", "mesh": "", "url": ""}
     assert sent == []
 
@@ -81,6 +81,9 @@ def test_a_chosen_concept_is_kept_and_the_next_query_uses_it(app_state, tmp_path
     inbreeding = res["terms"][0]["candidates"][0]
     assert inbreeding["label_en"] == "inbreeding" and res["sends"]
     lookups = app_state.chat.get_messages(conv["id"])[-1]["meta"]["term_lookups"]
+    receipt = app_state.chat.get_messages(conv["id"])[-1]["meta"]["receipt"]
+    assert any(e["tipo"] == "palabra_suelta" and e["valor"] == "endogamia" for e in receipt["envios"])
+    assert receipt["bytes_salientes"] > 0 and "www.wikidata.org" in receipt["destinos_declarados"]
     assert lookups[0]["words"] == ["endogamia"]                       # recorded with the message
     saved = c.post(f"/api/conversations/{conv['id']}/messages/{msg['id']}/terms/save",
                    json={"choices": [{"word": "endogamia", "concept": inbreeding}]}, headers=h).json()
@@ -275,3 +278,44 @@ def test_works_are_not_concepts_and_glossary_words_are_not_sent(monkeypatch):
     sent.clear()
     out = T.resolve(["mockingbird"], "es", glossary=[("cucuves", "Mimus, mockingbird")], fetch=fetch)
     assert sent == [] and out[0]["candidates"][0]["source"] == "glossary"
+
+
+def test_the_users_term_is_written_next_to_its_equivalent_in_the_sources():
+    from swarmbly_app.chat import _sources_block, _missed_sources
+    pairs = [("endogamia", "inbreeding"), ("cucuves", "Mimus, mockingbird"), ("cucujo", "Elateridae")]
+    block = _sources_block([{"label": "D1 p81", "source": "x.pdf", "text": "Inbreeding is evident in "
+                             "the smallest populations of Mimus parvulus."}],
+                           "¿Qué se sabe de la endogamia en los cucuves?", pairs)
+    assert "Inbreeding («endogamia») is evident" in block and "Mimus («cucuves») parvulus" in block
+    assert "cucujo" not in block
+    out = _missed_sources("No se menciona directamente la endogamia.", "¿endogamia en los cucuves?",
+                          pairs, ["inbreeding in Mimus; Elateridae elsewhere"])
+    assert [x["term"] for x in out] == ["endogamia", "cucuves"]
+
+
+def test_clear_corrections_and_distinctions_are_proposed_without_being_asked():
+    assert M.needs_capture("Se escribe introgresión, no introgradión")
+    assert M.needs_capture("Los cucujos y los cucuves son distintos")
+    assert not M.needs_capture("La respuesta es correcta, no hay problema.")
+
+
+def test_an_approved_search_says_what_was_approved_in_the_receipt(app_state, monkeypatch):
+    fake = FakeBackend(reply="Según [W1]…")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+
+    def fetch(url, timeout, ua):
+        from swarmbly_app import egress
+        egress.record_public_query(url, provider="eutils.ncbi.nlm.nih.gov")
+        if "esearch" in url:
+            return {"esearchresult": {"idlist": ["1"]}}
+        if "esummary" in url:
+            return {"result": {"1": {"title": "Inbreeding in island mockingbirds", "pubdate": "2025",
+                                     "authors": []}}}
+        return {"query": {"search": []}}
+    monkeypatch.setattr(W, "_get", fetch)
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], "Busca artículos sobre endogamia en cucuves", mode="local",
+                        run_async=False, allow_public=True, web_query="inbreeding mockingbird")
+    r = app_state.chat.get_messages(conv["id"])[-1]["meta"]["receipt"]
+    assert "inbreeding mockingbird" in r["consentimiento"]["alcance"]
+    assert {e["tipo"] for e in r["envios"]} == {"consulta_aprobada", "id_resultado"}
