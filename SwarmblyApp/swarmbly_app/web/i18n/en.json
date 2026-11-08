@@ -174,7 +174,12 @@
   "memoryDiscarded": "Memory proposal discarded.",
   "memoryGlossary": "glossary",
   "memoryEquivalents": "synonyms, translations (comma-separated)",
-  "memoryDefinition": "short definition"
+  "memoryDefinition": "short definition",
+  "webNone": "The approved search found nothing (query: \"{q}\"). Try other terms, for example in English.",
+  "webAgain": "Search again",
+  "citeMismatch": "{n} citation with the wrong file",
+  "citeMismatchTitle": "These labels exist but the model gave them another file: {labels}.",
+  "memoryReferences": "References found online. Save them to memory?"
  },
  "explore": {
   "title": "How this answer was made",
@@ -283,7 +288,15 @@
    "consentNotNeeded": "not needed",
    "consentBase": "Basis:"
   },
-  "citeTitle": "Stable citation: the file's hash and the paragraph. It still holds if the project is moved or restored on another computer."
+  "citeTitle": "Stable citation: the file's hash and the paragraph. It still holds if the project is moved or restored on another computer.",
+  "anchor": {
+   "title": "Anchoring to sources",
+   "coverage": "Sentences with a label",
+   "sentences": "Anchored sentences",
+   "unknown": "Labels without a source",
+   "mismatched": "Labels with another file",
+   "note": "A simple measure: it counts sentences carrying a label; it does not check that the label supports the sentence (that is 3.2's verifier)."
+  }
  },
  "monitor": {
   "title": "Swarm",

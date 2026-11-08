@@ -39,18 +39,51 @@ _FILLER = re.compile(
 _RECENT = re.compile(r"\b(reciente|recientes|[uú]ltimos\s+a[nñ]os|recent|latest|new)\b", re.I)
 
 
-def propose_query(question: str, keywords: str = "") -> str:
+def propose_query(question: str, keywords: str = "",
+                  glossary: list[tuple[str, str]] | None = None) -> str:
     """A short query without first-person words; the user edits it before
-    anything is sent. The local model's English keywords come first (PubMed
-    and Wikipedia answer better in English)."""
-    kw = [k.strip() for k in re.split(r"[,;]", keywords or "") if k.strip()]
-    kw = [k for k in kw if not _FIRST_PERSON.search(k)][:4]
-    rest = _FIRST_PERSON.sub(" ", question or "")
+    anything is sent.
+
+    The user's glossary translates first ("cucuve = mockingbird, Mimus" turns
+    "cucuves" into "mockingbird"); the local model's keywords are used only
+    when they share a word with the question or the glossary (in the third
+    test it offered "galapagos quails" and "Darwin's finches" for cucuves, and
+    PubMed found nothing for the whole string)."""
+    from .lang import detect_language  # noqa: F401  (kept for callers' symmetry)
+    q = question or ""
+    fold = q.lower()
+    translated: list[str] = []
+    for term, equivalents in glossary or []:
+        stem = term.lower().rstrip("s")
+        if len(stem) >= 3 and stem in fold:
+            translated += [e.strip() for e in equivalents.split(",") if e.strip()][:2]
+            q = re.sub(re.escape(term.rstrip("s")) + r"\w*", " ", q, flags=re.I)
+    rest = _FIRST_PERSON.sub(" ", q)
     rest = _FILLER.sub(" ", rest)
     rest = re.sub(r"[¿?¡!.,;:()\"]", " ", rest)
-    words = [w for w in rest.split() if len(w) > 2][:8]
-    query = " ".join(dict.fromkeys([*kw, *words]))
+    words = [w for w in rest.split() if len(w) > 2][:6]
+    known = " ".join([*words, *translated]).lower()
+    kw = [k.strip() for k in re.split(r"[,;]", keywords or "") if k.strip()]
+    kw = [k for k in kw if not _FIRST_PERSON.search(k)
+          and any(w.lower()[:5] in known for w in k.split() if len(w) >= 4)][:3]
+    query = " ".join(dict.fromkeys([*translated, *kw, *words]))
     return query[:160].strip()
+
+
+def _variants(query: str) -> list[str]:
+    """The approved text, then shorter subsets of it: PubMed ANDs every word,
+    so one untranslated or rare word returned nothing (third test). Only
+    words of the approved text are ever sent."""
+    words = query.split()
+    out = [query]
+    ascii_words = [w for w in words if w.isascii()]
+    if ascii_words and len(ascii_words) < len(words):
+        out.append(" ".join(ascii_words))
+    ranked = sorted(dict.fromkeys(ascii_words or words), key=len, reverse=True)
+    for n in (3, 2):
+        if len(ranked) > n:
+            out.append(" ".join(w for w in words if w in ranked[:n]))
+    return list(dict.fromkeys(v for v in out if v))
 
 
 def wants_recent(question: str) -> bool:
@@ -68,19 +101,31 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
     errors: list[str] = []
     if not query:
         return {"query": query, "results": [], "errors": ["empty query"]}
+    tried: list[str] = []
     if "pubmed" in providers:
-        try:
-            hits += _pubmed(query, recent, fetch, timeout)
-        except Exception as exc:
-            errors.append(f"pubmed: {type(exc).__name__}")
+        for variant in _variants(query):
+            tried.append(variant)
+            try:
+                found = _pubmed(variant, recent, fetch, timeout)
+            except Exception as exc:
+                errors.append(f"pubmed: {type(exc).__name__}")
+                break
+            if found:
+                hits += found
+                break
     if "wikipedia" in providers:
         for wl in dict.fromkeys([lang, "en"]):
-            try:
-                hits += _wikipedia(query, wl, fetch, timeout)
-            except Exception as exc:
-                errors.append(f"wikipedia-{wl}: {type(exc).__name__}")
+            for variant in _variants(query):
+                try:
+                    found = _wikipedia(variant, wl, fetch, timeout)
+                except Exception as exc:
+                    errors.append(f"wikipedia-{wl}: {type(exc).__name__}")
+                    break
+                if found:
+                    hits += found
+                    break
     url = str(ev_cfg.get("searxng_url") or "")
-    if "web" in providers and url:
+    if "web" in providers and url and _reachable(url):
         try:
             hits += _searxng(query, url, lang, fetch, timeout)
         except Exception as exc:
@@ -93,8 +138,22 @@ def search(query: str, ev_cfg: dict[str, Any], lang: str = "es", recent: bool = 
         out.append(h)
     for i, h in enumerate(out[:limit], 1):
         h["label"] = f"W{i}"
-    return {"query": query, "results": out[:limit], "errors": errors,
+    return {"query": query, "results": out[:limit], "errors": errors, "variants": tried,
             "providers": sorted(p for p in providers if p in ("pubmed", "wikipedia", "web"))}
+
+
+def _reachable(url: str) -> bool:
+    """A configured SearXNG that is not running is skipped (the third test
+    logged "searxng: URLError" on every search)."""
+    import socket
+    parts = urllib.parse.urlsplit(url)
+    try:
+        with socket.create_connection((parts.hostname or "127.0.0.1",
+                                       parts.port or (443 if parts.scheme == "https" else 80)),
+                                      timeout=1.0):
+            return True
+    except OSError:
+        return False
 
 
 def _pubmed(query: str, recent: bool, fetch: Fetch, timeout: float) -> list[dict[str, Any]]:

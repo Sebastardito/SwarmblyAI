@@ -99,29 +99,110 @@ def parse_extraction(raw: str) -> dict[str, Any]:
     return {"notes": _clean_list(data.get("notes")), "glossary": entries}
 
 
-def propose(text: str, backend: Any = None, model: str = "") -> dict[str, Any]:
+_REQUEST_CLAUSE = re.compile(
+    r"\b(memor[ií]za\w*|recu[eé]rda\w*|gu[aá]rda\w*|actualiza\w*|agr[eé]ga\w*|a[nñ]ade\w*|"
+    r"incluye\w*|busca\w*|lista\w*|dime|puedes|podr[ií]as|necesito|quiero|remember|memori[sz]e|"
+    r"add|update|search|list|tell me|please|por favor|glosario|glossary)\b", re.I)
+_LANG_NAME = {"es": "Spanish", "en": "English", "pt": "Portuguese", "fr": "French"}
+
+
+def user_statements(text: str) -> list[str]:
+    """The user's own statements in the message, without the requests around
+    them ("…, memorízalo", "agrégalo a tu glosario") and without questions.
+    Notes keep the user's words and language (the 3B model wrote them in
+    English and paraphrased them, third hands-on test)."""
+    parts = re.split(r"(?<=[.;!?])\s+|;\s*|,\s*(?=(?:memor|recu[eé]rd|agr[eé]g|a[nñ]ad|gu[aá]rd)\w*)",
+                     " ".join((text or "").split()))
+    out = []
+    for part in parts:
+        part = part.strip(" ,;")
+        if not part or part.endswith("?") or part.startswith("¿"):
+            continue
+        if _REQUEST_CLAUSE.search(part) and len(_REQUEST_CLAUSE.sub("", part).split()) <= 3:
+            continue                      # only a request ("memorízalo", "agrégalo al glosario")
+        part = re.sub(r"[,;]?\s*\b(memor[ií]zalo|memor[ií]zala|recu[eé]rdalo|agr[eé]galo\s+a\s+tu\s+"
+                      r"(?:memoria|glosario))\b\.?", "", part, flags=re.I).strip(" ,;")
+        part = re.sub(r"^(?:recu[eé]rda(?:me)?|recuerde|memoriza|remember|note)\s+(?:que\s+|that\s+)?",
+                      "", part, flags=re.I).strip()
+        part = part[:1].upper() + part[1:] if part else part
+        if len(part.split()) >= 2:
+            out.append(part if part[-1] in ".!…" else part + ".")
+    return out[:6]
+
+
+_PAREN = re.compile(r"\(([^)]{2,60})\)")
+_KNOWN_AS = re.compile(r"(?:tambi[eé]n\s+)?(?:conocid[oa]s?|llamad[oa]s?)\s+como\s+([\w\s-]{2,40})|"
+                       r"also known as\s+([\w\s-]{2,40})", re.I)
+_LATIN = re.compile(r"\b([A-Z][a-z]{3,}(?:idae|inae|ini|aceae)|[A-Z][a-z]{4,}us|[A-Z][a-z]{4,}is)\b")
+
+
+def guess_equivalents(term: str, text: str) -> list[str]:
+    """Equivalents the user gave around a term: words in parentheses ("(cucuyos)"),
+    "también conocidos como …", and scientific names (genus, family) in the
+    same sentence. The user edits them before saving."""
+    out: list[str] = []
+    low = term.lower()
+    for sentence in re.split(r"(?<=[.;!?])\s+", text or ""):
+        if low[:5] not in sentence.lower():
+            continue
+        for m in _PAREN.finditer(sentence):
+            out += [x.strip() for x in m.group(1).split(",")]
+        for m in _KNOWN_AS.finditer(sentence):
+            out.append((m.group(1) or m.group(2) or "").strip())
+        out += _LATIN.findall(sentence)
+    clean = []
+    for e in out:
+        e = e.strip(" .,")
+        if e and e.lower() != low and e.lower().rstrip("s") != low.rstrip("s") and e not in clean:
+            clean.append(e)
+    return clean[:6]
+
+
+def propose(text: str, backend: Any = None, model: str = "", lang: str = "es") -> dict[str, Any]:
     """Proposals for this message: notes and glossary entries, for the user
-    to confirm. Without a model (or if it fails), the message itself is the
-    note when the user asked to remember."""
+    to confirm. Notes are the user's own statements; the local model only
+    names glossary terms (and fills in what the user's words do not give)."""
     extracted: dict[str, Any] = {"notes": [], "glossary": []}
     if backend is not None and model:
         try:
+            system = EXTRACT_SYSTEM + f" Write notes and definitions in {_LANG_NAME.get(lang, 'the user language')}."
             result = backend.stream_chat(
-                [{"role": "system", "content": EXTRACT_SYSTEM},
+                [{"role": "system", "content": system},
                  {"role": "user", "content": text.strip()[:2000]}],
                 model=model, max_tokens=400, temperature=0.0)
             extracted = parse_extraction(getattr(result, "text", "") or "")
         except Exception:
             pass
-    if not extracted["notes"] and not extracted["glossary"] and remember_intent(text):
+    own = user_statements(text)
+    if own:
+        extracted["notes"] = [" ".join(own)]      # the user's words, one note, not a paraphrase
+    if not extracted["glossary"] and (glossary_intent(text) or definition_hint(text)
+                                      or remember_intent(text)):
+        for m in re.finditer(r"\b([\wÁÉÍÓÚÑáéíóúñ]{3,30})\s*\(([^)]{2,60})\)", text or ""):
+            term = m.group(1)
+            extracted["glossary"].append({"term": term, "equivalents": guess_equivalents(term, text),
+                                          "definition": ""})
+    elif not extracted["notes"] and not extracted["glossary"] and remember_intent(text):
         extracted["notes"] = [" ".join(text.split())[:600]]
+    for g in extracted["glossary"]:
+        if not g["equivalents"]:
+            g["equivalents"] = guess_equivalents(g["term"], text)
+        # a definition that only repeats a note adds a duplicate note on saving
+        if any(_similar(g.get("definition", ""), n) for n in extracted["notes"]):
+            g["definition"] = ""
     for m in _ACRONYM_DEF.finditer(text or ""):
         term, meaning = m.group(1), m.group(2).strip()
         if not any(g["term"] == term for g in extracted["glossary"]):
             extracted["glossary"].append({"term": term, "equivalents": [meaning],
                                           "definition": ""})
-    return {"id": uuid.uuid4().hex[:12], "status": "proposed",
+    return {"id": uuid.uuid4().hex[:12], "status": "proposed", "model": model or "",
             "asked": remember_intent(text) or glossary_intent(text), **extracted}
+
+
+def _similar(a: str, b: str) -> bool:
+    wa = {w for w in re.findall(r"\w{4,}", (a or "").lower())}
+    wb = {w for w in re.findall(r"\w{4,}", (b or "").lower())}
+    return bool(wa) and len(wa & wb) / len(wa) >= 0.6
 
 
 def glossary_line(entry: dict[str, Any]) -> str:

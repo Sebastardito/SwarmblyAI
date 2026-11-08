@@ -529,6 +529,8 @@ const Chat = (() => {
     if (meta.local_reason) setNote(article, meta.local_reason);
     if (!streaming) {
       if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
+      else if (meta.web_search) article.appendChild(h("p.note.web-results",
+        t("chat.webNone").replace("{q}", meta.web_search.query || "")));
       if (meta.memory_proposals) article.appendChild(memoryCard(m));
       article.appendChild(footer(m));
     }
@@ -562,6 +564,9 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.citations?.mismatched?.length) chips.push(chip(
+      t("chat.citeMismatch").replace("{n}", meta.citations.mismatched.length), "warn",
+      t("chat.citeMismatchTitle").replace("{labels}", meta.citations.mismatched.join(", "))));
     if (meta.citations?.unknown?.length) chips.push(chip(
       t("chat.citeUnknown").replace("{n}", meta.citations.unknown.length), "warn",
       t("chat.citeUnknownTitle").replace("{labels}", meta.citations.unknown.join(", "))));
@@ -578,8 +583,8 @@ const Chat = (() => {
     if (meta.status === "failed" || meta.status === "stopped") {
       actions.push(button(t("chat.retry"), () => retry(m.id), "ghost small"));
     }
-    if (meta.web_offer) {
-      actions.push(button(t("chat.webOffer"), () => searchOnline(m), "small",
+    if (meta.web_offer || (meta.web_search && !meta.web_search.results?.length)) {
+      actions.push(button(t(meta.web_offer ? "chat.webOffer" : "chat.webAgain"), () => searchOnline(m), "small",
         { title: t("chat.webOfferTitle") }));
     }
     if (meta.public_offer?.entities?.length) {
@@ -593,7 +598,7 @@ const Chat = (() => {
 
   /* 3.1: online search only with the user's yes, the query in view and editable. */
   async function searchOnline(m) {
-    const q = h("input.text", { type: "text", value: m.meta.web_offer.query || "",
+    const q = h("input.text", { type: "text", value: (m.meta.web_offer || m.meta.web_search || {}).query || "",
       "aria-label": t("chat.webQuery") });
     setTimeout(() => q.focus(), 50);
     const ok = await UI.modal(t("chat.webOffer"), h("div.form-stack",
@@ -655,7 +660,8 @@ const Chat = (() => {
       } catch (e) { UI.toast(e.message, "error"); }
     };
     return h("div.memory-card", { dataset: { mid: m.id } },
-      h("p", h("strong", t(prop.asked ? "chat.memoryAsked" : "chat.memoryNoticed"))),
+      h("p", h("strong", t(prop.kind === "references" ? "chat.memoryReferences"
+        : prop.asked ? "chat.memoryAsked" : "chat.memoryNoticed"))),
       rows,
       h("div.msg-actions", button(t("chat.memorySave"), () => save(false), "primary small"),
         button(t("chat.memoryDiscard"), () => save(true), "ghost small")));
@@ -716,6 +722,13 @@ const Explore = (() => {
     if (meta.local_reason) sections.push(h("p.note", meta.local_reason));
     if (meta.passages_withheld) sections.push(h("p.note", meta.passages_withheld));
     if (meta.receipt) sections.push(h("h3", t("explore.receipt.title")), receiptView(meta.receipt));
+    if (meta.citations && meta.citations.sentences) sections.push(h("h3", t("explore.anchor.title")),
+      h("div.readouts",
+        readout(t("explore.anchor.coverage"), `${Math.round((meta.citations.coverage || 0) * 100)} %`, "measured"),
+        readout(t("explore.anchor.sentences"), `${meta.citations.anchored}/${meta.citations.sentences}`, "measured"),
+        readout(t("explore.anchor.unknown"), String((meta.citations.unknown || []).length), "measured"),
+        readout(t("explore.anchor.mismatched"), String((meta.citations.mismatched || []).length), "measured")),
+      h("p.muted", t("explore.anchor.note")));
     sections.push(h("h3", t("explore.pipeline")), Helix.render(m.stages || []));
     const sources = sourcesView(sw.evidence, meta.lce);
     if (sources) sections.push(h("h3", t("explore.sources")), sources);

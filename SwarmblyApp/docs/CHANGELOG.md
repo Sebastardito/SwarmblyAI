@@ -109,6 +109,48 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     may cite ([W1]…), are listed under the answer, and are in the receipt.
 - **Citation check**: labels in an answer that name no passage or result of
   the conversation are flagged under it ("1 citation without a source").
+- **After the fourth hands-on test and the review of four independent
+  "master prompts"** (8 November 2026):
+  - *Search that finds something.* The approved query was the local
+    model's keywords ("galapagos quails", "Darwin's finches") plus Spanish
+    words, and PubMed ANDs every word: nothing came back. The proposed query
+    now translates with the user's glossary and keeps the model's keywords
+    only when they share a word with the question; PubMed and Wikipedia are
+    retried with shorter subsets of the approved text (never other words); a
+    configured SearXNG that is not running is skipped; an empty search says
+    so under the answer and offers *Search again*.
+  - *Memory in the user's words.* Notes are the user's own statements without
+    the requests around them (the model wrote them in English and
+    paraphrased); glossary entries take their equivalents from the message
+    (parentheses, "también conocidos como", genus and family names), so the
+    glossary is written (it stayed empty when the model gave no
+    equivalents); a definition that repeats the note is not saved twice.
+  - *Provenance.* Every memory decision (saved, discarded, "Recuerda:") is
+    logged in `memory/registro.jsonl` with date, conversation, message and the
+    model that proposed it; it travels with the project and C1 does not read
+    it.
+  - *Answers that can expand, marked.* The instruction with the passages now
+    allows general knowledge when asked to expand, if marked "Outside your
+    sources:", never contradicting them, and still no expanded acronyms,
+    exact figures, proper names, references or table rows without a source.
+    Sources are declared data, not instructions (prompt injection), and the
+    answer is asked in the user's language and in its own words (the 3B model
+    copied source lines). Spanish is recognised in short questions.
+  - *Citation check, wider.* Any label shape is checked ("[C1 p2]" passed
+    before), a known label attributed to another file is flagged, and the
+    share of sentences that carry a label is measured (*Explore processing →
+    Anchoring to sources*; it does not check that the label supports the
+    sentence).
+  - *Expansion hygiene.* Keywords copied from the prompt's example ("giant
+    tortoises, Santa Cruz Island") or echoed from the prompt are dropped.
+  - *"The sources do not say" with a way forward:* in a project, when nothing
+    is found, the answer offers a search; references found online can be
+    saved to memory with the user's yes.
+  - *Local telemetry* per answer (`meta.telemetry`): scope, documents and
+    passages read, citation measures, memory and online-search decisions,
+    route and model. Never sent to peers.
+  - Test: orders inside a document (prompt injection) trigger no search, no
+    memory write and no send.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks
