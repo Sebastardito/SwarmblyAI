@@ -224,11 +224,30 @@ class AppState:
         if project_id:
             project = self.projects.require(project_id)
             path = save_note(project.memory, text, title=f"Memoria del proyecto {project.name}")
+            self.memory_log(project_id, {"decision": "saved", "via": "Recuerda:", "notes": [text]})
             return {"scope": "project", "path": str(path.relative_to(project.path)),
                     "full_path": str(path)}
         path = save_note(self.dirs.sources, text, title="Memoria personal")
         return {"scope": "personal", "path": str(path), "full_path": str(path),
                 "read_back": self._personal_c1()}
+
+    def memory_log(self, project_id: str, event: dict) -> None:
+        """Provenance of every memory decision (saved or discarded): date,
+        scope, conversation, message, model that proposed it. Kept as
+        ``memory/registro.jsonl`` (a project's travels with it); C1 does not
+        read it."""
+        import json as _json
+        import time as _time
+        try:
+            folder = (self.projects.require(project_id).memory if project_id
+                      else self.dirs.sources)
+            folder.mkdir(parents=True, exist_ok=True)
+            with open(folder / "registro.jsonl", "a", encoding="utf-8") as fh:
+                fh.write(_json.dumps({"t": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+                                      "scope": project_id or "personal", **event},
+                                     ensure_ascii=False) + "\n")
+        except Exception:
+            pass
 
     def save_memory(self, project_id: str, notes: list[str], glossary: list[dict]) -> dict:
         """What the user confirmed from a proposal: notes to notas.md, glossary
@@ -250,7 +269,9 @@ class AppState:
             line = glossary_line(g)
             if line:
                 lines.append(line)
-            if g.get("definition"):
+            elif g.get("term") and not g.get("definition"):
+                written.setdefault("skipped", []).append(g["term"])   # nothing to save
+            if g.get("definition") and not any(g["definition"] in n for n in notes or []):
                 save_note(folder, f"{g['term']}: {g['definition']}", title=f"Memoria {title}")
         if lines:
             gpath = save_glossary(folder, lines, title=f"Glosario {title}")

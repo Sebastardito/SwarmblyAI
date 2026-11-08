@@ -132,9 +132,36 @@ def expand_query(backend: Any, model: str, question: str,
             [{"role": "system", "content": EXPAND_SYSTEM},
              {"role": "user", "content": EXPAND_USER.format(q=question.strip()[:800])}],
             model=model, max_tokens=timeout_tokens, temperature=0.0)
-        return parse_expansion(getattr(result, "text", "") or "")
+        return clean_expansion(parse_expansion(getattr(result, "text", "") or ""), question)
     except Exception as exc:          # the answer must not depend on this step
         return Expansion(error=type(exc).__name__)
+
+
+_EXAMPLE_WORDS = {"giant", "tortoise", "tortoises", "age", "santa", "cruz", "field", "report",
+                  "chelonoidis", "galapagos", "island", "islands", "what", "are", "is", "the",
+                  "of", "and", "a", "an"}
+
+
+def clean_expansion(exp: Expansion, question: str) -> Expansion:
+    """Drop what a small model copied from the prompt's example or echoed
+    from the prompt itself ("search_keywords: …", "Question: …"): in the
+    third test a follow-up got "giant tortoises, Santa Cruz Island" as
+    keywords. A keyword survives only if it is not the example's or shares a
+    word with the question."""
+    q = {_fold(w) for w in re.findall(r"\w+", question or "")}
+    raw = re.split(r"\b(?:Question|Pregunta)\s*:", exp.keywords, maxsplit=1)[0]
+    raw = re.sub(r"\b\w*keywords?\w*\s*:", " ", raw, flags=re.I).replace("+", " ")
+    kept = []
+    for k in [x.strip() for x in raw.split(",") if x.strip()]:
+        words = [w for w in re.findall(r"\w+", k)]
+        own = [w for w in words if _fold(w) not in _EXAMPLE_WORDS or _fold(w) in q]
+        if not own:
+            continue                      # only the example's words
+        kept.append(k)
+    ents = [e for e in exp.entities
+            if not ({_fold(w) for w in re.findall(r"\w+", e)} <= _EXAMPLE_WORDS
+                    and not ({_fold(w) for w in re.findall(r"\w+", e)} & q))]
+    return Expansion(keywords=", ".join(kept)[:400], entities=ents, raw=exp.raw, error=exp.error)
 
 
 def binomials(text: str) -> list[str]:

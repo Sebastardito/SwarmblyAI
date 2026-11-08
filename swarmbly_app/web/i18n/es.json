@@ -174,7 +174,12 @@
   "memoryDiscarded": "Propuesta de memoria descartada.",
   "memoryGlossary": "glosario",
   "memoryEquivalents": "sinónimos, traducciones (separados por comas)",
-  "memoryDefinition": "definición breve"
+  "memoryDefinition": "definición breve",
+  "webNone": "La búsqueda aprobada no encontró resultados (consulta: «{q}»). Puedes probar con otros términos, por ejemplo en inglés.",
+  "webAgain": "Buscar de nuevo",
+  "citeMismatch": "{n} cita con archivo equivocado",
+  "citeMismatchTitle": "Estas etiquetas existen pero el modelo les atribuyó otro archivo: {labels}.",
+  "memoryReferences": "Referencias encontradas en línea. ¿Las guardo en la memoria?"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
@@ -283,7 +288,15 @@
    "consentNotNeeded": "no hacía falta",
    "consentBase": "Base:"
   },
-  "citeTitle": "Cita estable: el hash del archivo y el párrafo. Sigue valiendo si el proyecto se mueve o se restaura en otra computadora."
+  "citeTitle": "Cita estable: el hash del archivo y el párrafo. Sigue valiendo si el proyecto se mueve o se restaura en otra computadora.",
+  "anchor": {
+   "title": "Anclaje a fuentes",
+   "coverage": "Frases con etiqueta",
+   "sentences": "Frases ancladas",
+   "unknown": "Etiquetas sin fuente",
+   "mismatched": "Etiquetas con otro archivo",
+   "note": "Medida simple: cuenta frases con una etiqueta; no comprueba que la etiqueta respalde la frase (eso es la verificación de 3.2)."
+  }
  },
  "monitor": {
   "title": "Enjambre",

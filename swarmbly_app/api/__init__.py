@@ -375,8 +375,13 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
         if msg is None or not (msg.get("meta") or {}).get("memory_proposals"):
             raise HTTPException(status_code=404, detail="no memory proposal in that message")
         meta = msg["meta"]
+        prop = meta["memory_proposals"]
+        provenance = {"conversation": conv_id, "message": message_id,
+                      "proposal": prop.get("id", ""), "model": prop.get("model", "")}
         if body.get("discard"):
             meta["memory_proposals"]["status"] = "discarded"
+            state.memory_log(str(conv.get("project_id") or ""),
+                             {**provenance, "decision": "discarded"})
         else:
             notes = [str(n) for n in body.get("notes") or []][:10]
             glossary = [g for g in body.get("glossary") or [] if isinstance(g, dict)][:10]
@@ -385,6 +390,9 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             except Exception as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
             meta["memory_proposals"].update(status="saved", saved=written)
+            state.memory_log(str(conv.get("project_id") or ""),
+                             {**provenance, "decision": "saved", "notes": written["notes"],
+                              "glossary": written["glossary"]})
         state.db.update_message(message_id, meta=meta)
         state.chat._changed(conv_id)
         return meta["memory_proposals"]

@@ -286,7 +286,7 @@ def test_labels_stay_the_same_across_turns_and_short_documents_go_whole(app_stat
     assert len(manual) == 4 and all(s["whole_document"] for s in manual)   # every paragraph
     label = manual[0]["label"].split()[0]
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
-    assert "VPN" in system and f"[{label} p4]" in system and ("No expandas siglas" in system or "Do not expand acronyms" in system)
+    assert "VPN" in system and f"[{label} p4]" in system and ("Fuera de tus fuentes" in system and "no des siglas expandidas" in system)
     # a follow-up: the manual keeps its label, and "este proceso" is searched with the
     # previous question
     app_state.chat.send(conv["id"], "¿Qué aplicaciones necesita este proceso?", mode="local",
