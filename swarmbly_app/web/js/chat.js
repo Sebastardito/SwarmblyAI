@@ -637,7 +637,7 @@ const Chat = (() => {
         const sel = h("select", { "aria-label": item.word });
         sel.appendChild(h("option", { value: "" }, `${item.word} — ${t("chat.termsAsIs")}`));
         item.candidates.forEach((c, i) => sel.appendChild(h("option", { value: String(i) },
-          `${c.label_en || c.label}${c.scientific && c.scientific !== c.label_en ? ` (${c.scientific})` : ""} — ${c.description || c.source} [${c.source}]`)));
+          `${c.label_en || c.label}${c.scientific && c.scientific !== c.label_en ? ` (${c.scientific})` : ""}${c.common_en ? ` · ${c.common_en}` : ""} — ${c.description || c.source} [${c.source}]`)));
         sel.addEventListener("change", () => {
           choices[item.word] = sel.value === "" ? null : item.candidates[Number(sel.value)];
           rebuild();

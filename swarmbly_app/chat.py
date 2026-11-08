@@ -505,6 +505,16 @@ class ChatService:
                 if proposals and proposals["asked"]:
                     blocks.append(memory_capture.MODEL_NOTE.get(lang_now,
                                                                 memory_capture.MODEL_NOTE["en"]))
+            elif request.memory_saved and not request.memory_saved.get("error"):
+                # the note is already saved; what the glossary can keep from it
+                # (concepts kept apart, corrections, "term (equivalent)") is
+                # proposed for the user's yes (sixth test: "el cucujo no es un
+                # nombre de los cucuves…" became a note and nothing else)
+                det = memory_capture.propose(user_text, None, "", lang=lang_now)
+                det["glossary"] = [g for g in det["glossary"]
+                                   if g.get("distinct") or g.get("avoid") or g.get("equivalents")]
+                if det["glossary"]:
+                    proposals = {**det, "notes": [], "asked": False}
             answer_model = model
             if public_hits and ev_cfg.get("fusion_model"):
                 # P2e: a larger local model writes only the answers that fuse the

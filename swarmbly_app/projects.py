@@ -81,6 +81,8 @@ def save_note(folder: Path, text: str, title: str = "Memoria") -> Path:
     with open(path, "a", encoding="utf-8") as fh:
         if path.stat().st_size == 0:
             fh.write(f"# {title}\n\n")
+        elif not path.read_text(encoding="utf-8").endswith("\n"):
+            fh.write("\n\n")        # a file edited by hand may end without a newline
         fh.write(f"{stamp} · {note}\n\n")
     return path
 
@@ -117,6 +119,8 @@ def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Pa
     with open(path, "a", encoding="utf-8") as fh:
         if not have:
             fh.write(f"# {title}\n\n")
+        elif new and not path.read_text(encoding="utf-8").endswith("\n"):
+            fh.write("\n")
         for ln in new:
             fh.write(ln + "\n")
     return path

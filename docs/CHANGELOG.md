@@ -202,6 +202,25 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     sentence naming both without a negation) gets a visible warning
     (`term_conflicts`).
   - Pin: SwarmblyLCE 9a80a64 (glossary metadata is never an equivalent).
+- **From the first automated test run on the user's computer** (8 November 2026,
+  qwen2.5:7b, project Testing):
+  - "cucuves" (plural) found nothing in Wikidata or GBIF; a plural now falls
+    back to its singular. When several species share a genus for one common
+    name (cucuve: *Mimus parvulus*, *M. macdonaldi*, *M. trifasciatus*), the
+    genus is offered first, with its English common name ("mockingbird"),
+    which is saved to the glossary too: the model rendered "Galápagos
+    mockingbirds" as "galgapos de Groenlandia" and said the sources did not
+    mention cucuves.
+  - "Recuerda que el cucujo no es un nombre de los cucuves: …" was saved as a
+    note and nothing else; it now also proposes the glossary entries
+    (`| distinto:` both ways). Scientific names go to the term of their own
+    clause ("cucujos … Elateridae y cucuves … género Mimus" gave Elateridae to
+    both before; "género Mimus" was not recognised).
+  - An encyclopaedia entry needs two of the query's specific words when the
+    query has three or more ("inbreeding Mimus Galapagos" brought "Galápagos
+    tortoise").
+  - "Agrega a tu glosario: …" is not kept in the note; a note is not glued to
+    a notes file edited by hand without a final newline.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

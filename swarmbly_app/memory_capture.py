@@ -175,6 +175,11 @@ def user_statements(text: str) -> list[str]:
                       r"(?:memoria|glosario))\b\.?", "", part, flags=re.I).strip(" ,;")
         part = re.sub(r"^(?:recu[eé]rda(?:me)?|recuerde|memoriza|remember|note)\s+(?:que\s+|that\s+)?",
                       "", part, flags=re.I).strip()
+        # "Agrega a tu glosario: ROH (…) son …" keeps only what follows (sixth test)
+        part = re.sub(r"^(?:agr[eé]ga|a[nñ]ade|incluye|guarda|anota|add|save)\s+(?:esto\s+|this\s+)?"
+                      r"(?:a|en|to|in)\s+(?:tu|mi|el|la|your|my|the)\s+(?:glosario|memoria|"
+                      r"glossary|memory)(?:\s+(?:y|and)\s+(?:tu|mi|tu\s+)?(?:glosario|memoria|"
+                      r"glossary|memory))?\s*[:,]?\s*", "", part, flags=re.I).strip()
         for _ in range(3):              # "Bueno, debo corregirte, …"
             part = _DISCOURSE.sub("", part).strip(" ,;")
         part = part[:1].upper() + part[1:] if part else part
@@ -190,20 +195,34 @@ _KNOWN_AS = re.compile(r"(?:tambi[eé]n\s+)?(?:conocid[oa]s?|llamad[oa]s?)\s+com
 _LATIN = re.compile(r"\b([A-Z][a-z]{3,}(?:idae|inae|ini|aceae)|[A-Z][a-z]{4,}us|[A-Z][a-z]{4,}is)\b")
 
 
+_RANKED = re.compile(r"\b(?:g[eé]nero|genus|familia|family|especie|species|orden|order|subfamilia|subfamily)"
+                     r"\s+([A-Z][a-z]{2,}(?:\s[a-z]{3,})?)")
+_CLAUSE = re.compile(r"[:;]\s*|\s+(?:y|e|pero|mientras\s+que|and|but|while|whereas)\s+", re.I)
+
+
 def guess_equivalents(term: str, text: str) -> list[str]:
-    """Equivalents the user gave around a term: words in parentheses ("(cucuyos)"),
-    "también conocidos como …", and scientific names (genus, family) in the
-    same sentence. The user edits them before saving."""
+    """Equivalents the user gave for a term: words in parentheses right after
+    it ("cucujos (cucuyos)"), "también conocidos como …", and scientific names
+    (genus, family) in the same clause. "Los cucujos son escarabajos de la
+    familia Elateridae y los cucuves son aves del género Mimus" gives
+    Elateridae to cucujo and Mimus to cucuve, not both to each (sixth test).
+    The user edits them before saving."""
     out: list[str] = []
     low = term.lower()
+    stem = re.escape(low.rstrip("s")[:max(3, len(low) - 2)])
+    for m in re.finditer(stem + r"\w*\s*\(([^)]{2,60})\)", text or "", re.I):
+        out += [x.strip() for x in m.group(1).split(",")]
     for sentence in re.split(r"(?<=[.;!?])\s+", text or ""):
         if low[:5] not in sentence.lower():
             continue
-        for m in _PAREN.finditer(sentence):
-            out += [x.strip() for x in m.group(1).split(",")]
-        for m in _KNOWN_AS.finditer(sentence):
-            out.append((m.group(1) or m.group(2) or "").strip())
-        out += _LATIN.findall(sentence)
+        for clause in _CLAUSE.split(_PAREN.sub(" ", sentence)):
+            if low[:5] not in clause.lower():
+                continue
+            for m in _KNOWN_AS.finditer(clause):
+                out.append((m.group(1) or m.group(2) or "").strip())
+            names = [(m.start(1), m.group(1)) for m in _RANKED.finditer(clause)]
+            names += [(m.start(1), m.group(1)) for m in _LATIN.finditer(clause)]
+            out += [n for _, n in sorted(names)]       # in the order the user wrote them
     clean = []
     for e in out:
         e = e.strip(" .,")
@@ -311,8 +330,8 @@ def glossary_line(entry: dict[str, Any]) -> str:
 MODEL_NOTE = {
     "es": ("El usuario pidió guardar algo en la memoria o el glosario. Tú no puedes guardar "
            "nada: la app le muestra debajo de tu respuesta una propuesta para que la confirme. "
-           "No digas que lo memorizaste ni que lo agregaste; di que puede confirmarlo con "
-           "«Guardar en memoria»."),
+           "No digas que lo memorizaste ni que lo agregaste; dile, tuteándolo, que puede "
+           "confirmarlo con «Guardar en memoria» debajo de esta respuesta."),
     "en": ("The user asked to save something to memory or the glossary. You cannot save "
            "anything: the app shows the user a proposal under your answer to confirm. Do not "
            "say you memorised or added it; say they can confirm it with \"Save to memory\"."),

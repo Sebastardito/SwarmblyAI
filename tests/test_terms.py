@@ -135,3 +135,72 @@ def test_a_rate_limited_service_is_retried_once_and_named_when_it_fails(monkeypa
 
     out = T.resolve(["endogamia"], "es", fetch=always_busy)
     assert out[0]["candidates"] == [] and out[0]["errors"] == ["wikidata: 429", "gbif: 429"]
+
+
+def test_each_term_gets_the_scientific_name_of_its_own_clause():
+    t = ("Recuerda que el cucujo no es un nombre de los cucuves: los cucujos son escarabajos de "
+         "la familia Elateridae y los cucuves son aves del género Mimus.")
+    lines = sorted(M.glossary_line(g) for g in M.propose(t)["glossary"])
+    assert lines == ["cucujo = Elateridae | distinto: cucuves", "cucuves = Mimus | distinto: cucujo"]
+
+
+def test_an_explicit_remember_also_proposes_the_glossary_and_notes_stay_apart(app_state, tmp_path):
+    fake = FakeBackend(reply="Entendido.")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("B", parent=tmp_path / "p")
+    (p.memory).mkdir(parents=True, exist_ok=True)
+    (p.memory / "notas.md").write_text("# Memoria\n\n2026-11-07 · Nota editada a mano.", encoding="utf-8")
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Recuerda que el cucujo no es un nombre de los cucuves: los "
+                        "cucujos son escarabajos de la familia Elateridae y los cucuves son aves "
+                        "del género Mimus.", mode="local", run_async=False)
+    meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    assert meta["memory_saved"]["scope"] == "project"
+    prop = meta["memory_proposals"]
+    assert prop["notes"] == [] and {g["term"] for g in prop["glossary"]} == {"cucujo", "cucuves"}
+    notes = (p.memory / "notas.md").read_text(encoding="utf-8")
+    assert "a mano.\n\n20" in notes                              # not glued to the edited line
+
+
+def test_a_plural_falls_back_to_the_singular_and_a_shared_genus_comes_first():
+    from swarmbly_app import terms as T
+    seen = []
+
+    def fetch(url, timeout, ua):
+        seen.append(url)
+        if "wikidata" in url:
+            return {"search": []}
+        if "q=cucuves" in url:
+            return {"results": []}
+        return {"results": [
+            {"key": 1, "canonicalName": "Mimus parvulus", "rank": "SPECIES", "genus": "Mimus",
+             "genusKey": 9, "family": "Mimidae", "kingdom": "Animalia",
+             "vernacularNames": [{"vernacularName": "Cucuve de Galápagos"}]},
+            {"key": 2, "canonicalName": "Mimus trifasciatus", "rank": "SPECIES", "genus": "Mimus",
+             "genusKey": 9, "family": "Mimidae", "kingdom": "Animalia", "vernacularNames": []}]}
+
+    out = T.resolve(["cucuves"], "es", fetch=fetch)
+    cands = out[0]["candidates"]
+    assert cands[0]["label_en"] == "Mimus" and cands[0]["description"].startswith("genus")
+    assert any("q=cucuve&" in u for u in seen)
+
+
+def test_a_long_query_needs_two_of_its_words_in_a_result():
+    terms = W.topic_terms("inbreeding Mimus Galapagos")
+    assert not W.relevant({"title": "Galápagos tortoise", "provider": "wikipedia-en",
+                           "snippet": "The Galápagos tortoise is the largest living tortoise."}, terms)
+    assert W.relevant({"title": "Genomes of Galápagos Mockingbirds Reveal the Impact of Island "
+                                "Size and Past Demography on Inbreeding", "provider": "pubmed"}, terms)
+    assert W.relevant({"title": "Cucujos", "provider": "pubmed"}, W.topic_terms("cucujos"))
+
+
+def test_the_english_common_name_of_a_genus_reaches_the_glossary():
+    c = {"source": "gbif", "id": "9", "label_en": "Mimus", "scientific": "Mimus",
+         "common_en": "mockingbird", "description": "genus · Mimidae · Animalia"}
+    assert T.glossary_entry("cucuve", c)["equivalents"] == ["Mimus", "mockingbird"]
+
+
+def test_a_glossary_request_is_not_kept_in_the_note():
+    p = M.propose("Agrega a tu glosario: ROH (runs of homozygosity) son segmentos largos de homocigosis.")
+    assert p["notes"] == ["ROH (runs of homozygosity) son segmentos largos de homocigosis."]
+    assert p["glossary"][0]["equivalents"] == ["runs of homozygosity"]
