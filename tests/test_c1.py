@@ -156,3 +156,16 @@ def test_corrected_forms_are_never_equivalents(tmp_path):
     assert ("introgresión", "introgression") in index.glossary_entries([root])
     assert "introgradión" not in index.glossary_terms("¿Qué es la introgresión?", [root])
     assert index.glossary_terms("¿Qué es la introgresión?", [root]) == "introgression"
+
+
+def test_glossary_metadata_is_never_an_equivalent(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "glosario.md").write_text(
+        "cucujo = cucuyo, Pyrophorus, Elateridae | distinto: cucuve | wd: Q1\n"
+        "endogamia = inbreeding | wd: Q2\n", encoding="utf-8")
+    index = SourceIndex()
+    assert ("cucujo", "cucuyo, Pyrophorus, Elateridae") in index.glossary_entries([root])
+    meta = index.glossary_meta([root])
+    assert meta["cucujo"] == {"distinct": ["cucuve"], "wd": ["Q1"]} and meta["endogamia"] == {"wd": ["Q2"]}
+    assert "cucuve" not in index.glossary_terms("¿qué es un cucujo?", [root])
