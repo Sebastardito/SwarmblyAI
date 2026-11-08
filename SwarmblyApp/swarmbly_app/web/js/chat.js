@@ -564,6 +564,9 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.glossary_fixes?.length) chips.push(chip(
+      t("chat.glossaryFixed").replace("{n}", meta.glossary_fixes.reduce((a, f) => a + f.count, 0)), "ok",
+      meta.glossary_fixes.map((f) => `${f.wrong} → ${f.right}`).join(", ")));
     if (meta.citations?.mismatched?.length) chips.push(chip(
       t("chat.citeMismatch").replace("{n}", meta.citations.mismatched.length), "warn",
       t("chat.citeMismatchTitle").replace("{labels}", meta.citations.mismatched.join(", "))));
@@ -640,8 +643,11 @@ const Chat = (() => {
         placeholder: t("chat.memoryEquivalents") });
       const def = h("input.text", { type: "text", value: g.definition || "",
         placeholder: t("chat.memoryDefinition") });
-      rows.push(h("div.memory-row", box, h("span.chip", t("chat.memoryGlossary")), term, h("span", "="), eq, def));
-      return { box, term, eq, def };
+      const avoid = h("input.text", { type: "text", value: (g.avoid || []).join(", "),
+        placeholder: t("chat.memoryAvoid") });
+      rows.push(h("div.memory-row", box, h("span.chip", t("chat.memoryGlossary")), term, h("span", "="), eq,
+        h("span.muted", t("chat.memoryAvoidLabel")), avoid, def));
+      return { box, term, eq, def, avoid };
     });
     const save = async (discard) => {
       const body = discard ? { discard: true } : {
@@ -649,6 +655,7 @@ const Chat = (() => {
         glossary: terms.filter((g) => g.box.checked && g.term.value.trim()).map((g) => ({
           term: g.term.value.trim(),
           equivalents: g.eq.value.split(",").map((x) => x.trim()).filter(Boolean),
+          avoid: g.avoid.value.split(",").map((x) => x.trim()).filter(Boolean),
           definition: g.def.value.trim() })) };
       try {
         await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(m.id)}/memory`, body);

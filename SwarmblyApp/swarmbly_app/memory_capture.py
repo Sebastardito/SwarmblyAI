@@ -106,6 +106,34 @@ _REQUEST_CLAUSE = re.compile(
 _LANG_NAME = {"es": "Spanish", "en": "English", "pt": "Portuguese", "fr": "French"}
 
 
+_CORRECTION = re.compile(
+    r"\bno\s+es\s+[«\"']?(?P<wrong>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})[»\"']?\s*[,;:]?\s*"
+    r"(?:(?:el|la)\s+(?:t[eé]rmino|palabra|nombre)\s+correct[oa]\s+es|sino(?:\s+que\s+es)?|es)\s+"
+    r"[«\"']?(?P<right>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})[»\"']?|"
+    r"\bit(?:'s| is)\s+not\s+[\"']?(?P<wrong2>[\w-]{3,40})[\"']?\s*[,;]?\s*(?:but|it(?:'s| is))\s+"
+    r"[\"']?(?P<right2>[\w-]{3,40})|"
+    r"\b(?:se\s+dice|se\s+escribe|es)\s+[«\"']?(?P<right3>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})[»\"']?\s*"
+    r",?\s*no\s+[«\"']?(?P<wrong3>[\wÁÉÍÓÚÑáéíóúñ-]{3,40})", re.I)
+
+
+def corrections(text: str) -> list[tuple[str, str]]:
+    """``(wrong, right)`` pairs the user states: "no es introgradión, el término
+    correcto es introgresión", "es X, no Y", "it's not X but Y". A question
+    ("¿o te refieres a Y?") is not one."""
+    out = []
+    for m in _CORRECTION.finditer(text or ""):
+        wrong = m.group("wrong") or m.group("wrong2") or m.group("wrong3")
+        right = m.group("right") or m.group("right2") or m.group("right3")
+        if wrong and right and wrong.lower() != right.lower():
+            out.append((wrong, right))
+    return out
+
+
+_DISCOURSE = re.compile(r"^(?:bueno|ok(?:ay)?|vale|mira|oye|por cierto|perd[oó]n|disculpa|"
+                        r"(?:te\s+)?debo\s+corregirte|te\s+corrijo|correcci[oó]n|well|so|actually)"
+                        r"\s*[,:]?\s*", re.I)
+
+
 def user_statements(text: str) -> list[str]:
     """The user's own statements in the message, without the requests around
     them ("…, memorízalo", "agrégalo a tu glosario") and without questions.
@@ -124,8 +152,11 @@ def user_statements(text: str) -> list[str]:
                       r"(?:memoria|glosario))\b\.?", "", part, flags=re.I).strip(" ,;")
         part = re.sub(r"^(?:recu[eé]rda(?:me)?|recuerde|memoriza|remember|note)\s+(?:que\s+|that\s+)?",
                       "", part, flags=re.I).strip()
+        for _ in range(3):              # "Bueno, debo corregirte, …"
+            part = _DISCOURSE.sub("", part).strip(" ,;")
         part = part[:1].upper() + part[1:] if part else part
-        if len(part.split()) >= 2:
+        if len(part.split()) >= 3 or (len(part.split()) == 2 and not _REQUEST_CLAUSE.search(part)
+                                      and not part.lower().startswith(("y ", "and "))):
             out.append(part if part[-1] in ".!…" else part + ".")
     return out[:6]
 
@@ -174,6 +205,23 @@ def propose(text: str, backend: Any = None, model: str = "", lang: str = "es") -
         except Exception:
             pass
     own = user_statements(text)
+    fixes = corrections(text)
+    if fixes:
+        # a correction is a glossary entry with the wrong form to avoid, and a
+        # clean note: the chatter around it ("Bueno, debo corregirte") is not kept
+        lang_es = lang == "es" or re.search(r"[áéíóúñ¿]|\b(es|el|no)\b", text or "", re.I)
+        own = [(f"El término correcto es «{right}», no «{wrong}»." if lang_es
+                else f"The correct term is \"{right}\", not \"{wrong}\".") for wrong, right in fixes]
+        for wrong, right in fixes:
+            g = next((x for x in extracted["glossary"] if x["term"].lower() == right.lower()), None)
+            if g is None:
+                g = {"term": right, "equivalents": [], "definition": ""}
+                extracted["glossary"].append(g)
+            g["equivalents"] = [e for e in g["equivalents"] if e.lower() != wrong.lower()]
+            g["avoid"] = sorted({*g.get("avoid", []), wrong})
+        for g in list(extracted["glossary"]):           # the wrong form is never a term
+            if any(g["term"].lower() == w.lower() for w, _ in fixes):
+                extracted["glossary"].remove(g)
     if own:
         extracted["notes"] = [" ".join(own)]      # the user's words, one note, not a paraphrase
     if not extracted["glossary"] and (glossary_intent(text) or definition_hint(text)
@@ -206,9 +254,14 @@ def _similar(a: str, b: str) -> bool:
 
 
 def glossary_line(entry: dict[str, Any]) -> str:
-    """``term = eq1, eq2`` (the format C1 reads; equivalents widen the search)."""
-    eq = [e for e in entry.get("equivalents") or [] if e]
-    return f"{entry['term']} = {', '.join(eq)}" if eq else ""
+    """``term = eq1, eq2 | no: wrong`` (the format C1 reads: equivalents widen
+    the search; the forms after ``| no:`` are corrections, never equivalents)."""
+    eq = [e for e in entry.get("equivalents") or [] if e and "|" not in e]
+    avoid = [a for a in entry.get("avoid") or [] if a and "|" not in a]
+    if not eq and not avoid:
+        return ""
+    line = f"{entry['term']} = {', '.join(eq) if eq else entry['term']}"
+    return line + (f" | no: {', '.join(avoid)}" if avoid else "")
 
 
 MODEL_NOTE = {

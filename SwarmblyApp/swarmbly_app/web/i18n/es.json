@@ -179,7 +179,10 @@
   "webAgain": "Buscar de nuevo",
   "citeMismatch": "{n} cita con archivo equivocado",
   "citeMismatchTitle": "Estas etiquetas existen pero el modelo les atribuyó otro archivo: {labels}.",
-  "memoryReferences": "Referencias encontradas en línea. ¿Las guardo en la memoria?"
+  "memoryReferences": "Referencias encontradas en línea. ¿Las guardo en la memoria?",
+  "memoryAvoid": "formas incorrectas (no usar)",
+  "memoryAvoidLabel": "no:",
+  "glossaryFixed": "{n} término(s) corregido(s) según tu glosario"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",

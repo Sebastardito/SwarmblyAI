@@ -151,6 +151,30 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     route and model. Never sent to peers.
   - Test: orders inside a document (prompt injection) trigger no search, no
     memory write and no send.
+- **After the fifth hands-on test** (8 November 2026):
+  - *Search terms that define the topic.* "Search for recent paper about
+    cucujos" sent "cucujos recent papers paper": PubMed ignored the unknown
+    word and returned the newest papers on biosensors, which were then saved
+    to memory. Now the proposed query drops intent words (paper, recent,
+    review, artículos…), merges the same word in two languages (endogamy /
+    endogamia), and defines the topic from the user's own material: the
+    scientific names next to the topic word in the retrieved passages or notes
+    ("Pyrophorus Elateridae cucujos"). "Recent" is the last five years by
+    relevance, not the newest first. A result is kept only if its title (or
+    an encyclopaedia snippet) carries one of the query's specific words;
+    variants never drop those words.
+  - *Corrections the model follows.* "No es introgradión, el término correcto
+    es introgresión" was saved as "introgresión = introgradión", which made
+    the wrong form an equivalent, and the model kept saying "introgradión". A
+    correction is now detected as such: the glossary line becomes
+    `introgresión = … | no: introgradión` (an older line equating both is
+    replaced), the note is clean ("El término correcto es «introgresión», no
+    «introgradión»."), the relevant glossary entries go to the model with the
+    forms to avoid, and the answer is corrected by code if the wrong form
+    still appears ("1 term corrected by your glossary").
+  - The memory notes file is never given whole (it is a list of unrelated
+    notes), the same note is not saved twice, and discourse fillers ("Bueno,
+    debo corregirte") are not kept in notes.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

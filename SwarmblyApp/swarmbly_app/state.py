@@ -142,6 +142,9 @@ class AppState:
         self.chat.glossary_entries = lambda project_id="": (
             self.lce.glossary_entries(roots=self.c1_roots(project_id))
             if self._lce_active(project_id) else [])
+        self.chat.glossary_avoid = lambda project_id="": (
+            self.lce.glossary_avoid(roots=self.c1_roots(project_id))
+            if self._lce_active(project_id) else {})
         # 3.1: projects — folders of their own, with their chats kept in them
         from .projects import ProjectRegistry
         self.projects = ProjectRegistry(self.config.all, self.config.update)
