@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import re
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -46,6 +47,18 @@ def parse_citation(cite: str) -> tuple[str, str] | None:
         return None
     doc, anchor = cite[4:].split("#", 1)
     return (doc, anchor) if doc and anchor else None
+
+
+_AVOID = re.compile(r"\s*\|\s*(?:no|evitar|avoid|not)\s*:\s*(.+)$", re.I)
+
+
+def _split_avoid(right: str) -> tuple[str, list[str]]:
+    """``"introgression | no: introgradión"`` → ``("introgression", ["introgradión"])``."""
+    m = _AVOID.search(right)
+    if not m:
+        return right.strip(), []
+    wrong = [w.strip(" .«»\"'") for w in m.group(1).split(",") if w.strip(" .«»\"'")]
+    return right[:m.start()].strip(), wrong
 
 
 @dataclass
@@ -249,9 +262,33 @@ class SourceIndex:
                 for line in data.decode("utf-8", "replace").splitlines():
                     m = P.GLOSS_LINE.match(line)
                     if m:
-                        pairs.append((m.group(1).strip(), m.group(2).strip()))
+                        right, _avoid = _split_avoid(m.group(2))
+                        if right:
+                            pairs.append((m.group(1).strip(), right))
                 self._cache.glossary[key] = pairs
             out.extend(self._cache.glossary[key])
+        return out
+
+    def glossary_avoid(self, roots: Iterable[Path]) -> dict[str, str]:
+        """Wrong forms the user corrected, as ``{wrong: right}``: a glossary line
+        ``introgresión = introgression | no: introgradión`` says that
+        "introgradión" must not be used (it is not an equivalent and never
+        widens a search)."""
+        out: dict[str, str] = {}
+        for _root, path in self._files(roots):
+            if not P.is_glossary(path):
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            for line in text.splitlines():
+                m = P.GLOSS_LINE.match(line)
+                if not m:
+                    continue
+                _right, avoid = _split_avoid(m.group(2))
+                for wrong in avoid:
+                    out[wrong] = m.group(1).strip()
         return out
 
     def glossary_terms(self, text: str, roots: Iterable[Path]) -> str:

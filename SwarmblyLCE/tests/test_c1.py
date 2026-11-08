@@ -144,3 +144,15 @@ def test_any_equivalent_brings_the_term(tmp_path):
     assert index.glossary_terms("¿Qué es un cucuyo?", [root]) == "cucuyo, Pyrophorus, Elateridae cucujo"
     assert index.glossary_terms("el cucujo brilla", [root]) == "cucuyo, Pyrophorus, Elateridae"
     assert index.glossary_terms("un pez", [root]) == ""
+
+
+def test_corrected_forms_are_never_equivalents(tmp_path):
+    root = tmp_path / "docs"
+    root.mkdir()
+    (root / "glosario.md").write_text("introgresión = introgression | no: introgradión, introgracion\n"
+                                      "TRU = Trial Rearing Unit\n", encoding="utf-8")
+    index = SourceIndex()
+    assert index.glossary_avoid([root]) == {"introgradión": "introgresión", "introgracion": "introgresión"}
+    assert ("introgresión", "introgression") in index.glossary_entries([root])
+    assert "introgradión" not in index.glossary_terms("¿Qué es la introgresión?", [root])
+    assert index.glossary_terms("¿Qué es la introgresión?", [root]) == "introgression"
