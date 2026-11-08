@@ -188,7 +188,7 @@
   "termsLoading": "Buscando conceptos…",
   "termsAsIs": "dejar la palabra tal cual",
   "termsKeep": "Guardar estas equivalencias en el glosario",
-  "termsSent": "Se consultaron {n} palabras sueltas (quedan registradas en el recibo).",
+  "termsSent": "Se hicieron {n} consultas de palabras sueltas (quedan registradas en el recibo).",
   "termConflict": "{n} posible confusión de términos",
   "termConflictTitle": "Se atribuyen a «{concept}» rasgos de «{other}» ({traits}), y tu glosario dice que son cosas distintas.",
   "termsErrors": "No respondió:",
@@ -935,5 +935,16 @@
   "docPassages": "{n} párrafos",
   "docUnreadable": "sin leer",
   "docGlossary": "glosario"
+ },
+ "stageReasons": {
+  "the router judged the request not decomposable": "el enrutador consideró que la solicitud no se puede dividir",
+  "answered by the local model": "respondida por el modelo local",
+  "not reached": "no se llegó a esta etapa",
+  "no connected worker is available": "no hay ningún trabajador conectado",
+  "follow-up answered with the conversation": "seguimiento respondido con la conversación",
+  "about you and your documents: answered on this device with your sources (nothing sent to the swarm)": "sobre ti y tus documentos: respondida en este equipo con tus fuentes (no se envió nada al enjambre)",
+  "this message refers to earlier turns and no local model could rewrite it as a self-contained request; answered locally with the conversation": "este mensaje se refiere a turnos anteriores y ningún modelo local pudo reescribirlo como una solicitud independiente; se respondió localmente con la conversación",
+  "not fragmented: *": "no se fragmentó: ",
+  "mode local: no network dispatch": "modo local: no se envía nada por la red"
  }
 }

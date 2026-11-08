@@ -640,6 +640,9 @@ class ChatService:
                 "route": "local", "model": answer_model}
             answer_text = getattr(result, "text", "") or ""
             fixed_text, fixes = _apply_avoid(answer_text, avoid)
+            if lang_now == "es":
+                fixed_text, more = _spanish_terms(fixed_text, gloss_pairs)
+                fixes += more
             if fixes:
                 # the corrected term is enforced by code, not left to the model
                 try:
@@ -1073,6 +1076,34 @@ def _apply_avoid(text: str, avoid: dict[str, str]) -> tuple[str, list[dict[str, 
             return right[:1].upper() + right[1:] if w[:1].isupper() else right
         text = pattern.sub(repl, text)
         fixes.append({"wrong": wrong, "right": right, "count": count})
+    return text, fixes
+
+
+_FEM = r"(?:la|una|esta|esa|de\s+la|a\s+la|por\s+la|con\s+la)"
+_MASC = r"(?:el|un|este|ese|del|al|por\s+el|con\s+el)"
+
+
+def _spanish_terms(text: str, pairs: list[tuple[str, str]]) -> tuple[str, list[dict[str, Any]]]:
+    """In a Spanish answer, an English equivalent used as a Spanish noun ("la
+    inbreeding") becomes the user's term ("la endogamia"), when the article
+    agrees with the term (-a feminine, -o masculine). Names, quotes and titles
+    are left alone: only "article + lowercase English word" is replaced."""
+    fixes = []
+    for term, eq in pairs:
+        t = term.strip()
+        if not t or " " in t or not re.fullmatch(r"[a-záéíóúñü]+", t):
+            continue
+        art = _FEM if t.endswith("a") else _MASC if t.endswith("o") else ""
+        if not art:
+            continue
+        for e in (x.strip() for x in eq.split(",")):
+            if not re.fullmatch(r"[a-z]{4,}", e) or e == t:
+                continue                       # scientific names, phrases, the term itself
+            pattern = re.compile(r"\b(" + art + r")\s+" + re.escape(e) + r"s?\b(?![\"»”])", re.I)
+            count = len(pattern.findall(text or ""))
+            if count:
+                text = pattern.sub(lambda m, t=t: f"{m.group(1)} {t}", text)
+                fixes.append({"wrong": e, "right": t, "count": count})
     return text, fixes
 
 

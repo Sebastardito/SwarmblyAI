@@ -62,6 +62,24 @@ def _reason(exc: Exception) -> str:
     return type(exc).__name__
 
 
+# Creative works and documents are never the concept of a search word
+# ("mockingbird": an album, a single, a TV episode; "inbreeding": a book).
+_WORKS = frozenset({
+    "Q482994", "Q134556", "Q7366", "Q105543609", "Q2188189", "Q21191270", "Q1259759", "Q11424",
+    "Q24856", "Q5398426", "Q7725634", "Q571", "Q47461344", "Q13442814", "Q732577", "Q3305213",
+    "Q7889", "Q215380", "Q169930", "Q17537576", "Q3331189", "Q1004", "Q87167", "Q49084",
+})
+
+
+def _instances(entity: dict[str, Any]) -> set[str]:
+    out = set()
+    for c in (entity.get("claims") or {}).get("P31") or []:
+        v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
+        if isinstance(v, dict) and v.get("id"):
+            out.add(v["id"])
+    return out
+
+
 def _claim(entity: dict[str, Any], prop: str) -> str:
     for c in (entity.get("claims") or {}).get(prop) or []:
         v = ((c.get("mainsnak") or {}).get("datavalue") or {}).get("value")
@@ -86,7 +104,7 @@ def wikidata(word: str, lang: str, fetch: Fetch, timeout: float, limit: int = 4)
         labels, descs = e.get("labels") or {}, e.get("descriptions") or {}
         en = (labels.get("en") or {}).get("value", "")
         local = (labels.get(lang) or {}).get("value", "")
-        if not (en or local):
+        if not (en or local) or _instances(e) & _WORKS:
             continue
         out.append({"source": "wikidata", "id": qid, "label_en": en, "label": local or en,
                     "description": (descs.get(lang) or descs.get("en") or {}).get("value", ""),
@@ -157,8 +175,9 @@ def _singulars(word: str) -> list[str]:
 def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] | None = None,
             meta: dict[str, dict[str, list[str]]] | None = None, fetch: Fetch | None = None,
             timeout: float = 6.0, online: bool = True) -> list[dict[str, Any]]:
-    """Concept candidates for each word: the glossary's entry (if any) first,
-    then Wikidata and GBIF when ``online``. Fails closed per source."""
+    """Concept candidates for each word: the glossary's entry, if the word is a
+    glossary term or one of its equivalents (then nothing is sent for it), or
+    else Wikidata and GBIF when ``online``. Fails closed per source."""
     fetch = fetch or _get
     out = []
     for word in words[:6]:
@@ -169,12 +188,16 @@ def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] 
         errors: list[str] = []
         for term, eq in glossary or []:
             stem = term.lower().rstrip("s")
-            if len(stem) >= 3 and (word.lower().startswith(stem) or stem.startswith(word.lower().rstrip("s"))):
+            names = [stem, *[e.strip().lower().rstrip("s") for e in eq.split(",") if e.strip()]]
+            w = word.lower().rstrip("s")
+            # the word is the glossary term or one of its equivalents ("Mimus",
+            # "mockingbird" after "cucuves = Mimus, mockingbird"): already chosen
+            if any(len(n) >= 3 and (w.startswith(n) or n.startswith(w)) for n in names):
                 m = (meta or {}).get(term, {})
                 cands.append({"source": "glossary", "id": (m.get("wd") or [""])[0], "label": term,
                               "label_en": eq.split(",")[0].strip(), "description": eq,
                               "scientific": "", "mesh": "", "url": ""})
-        if online:
+        if online and not any(c["source"] == "glossary" for c in cands):
             found: list[dict[str, Any]] = []
             for form in [word, *_singulars(word)]:
                 errors = []

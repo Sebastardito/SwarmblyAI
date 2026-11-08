@@ -188,7 +188,7 @@
   "termsLoading": "Looking up concepts…",
   "termsAsIs": "keep the word as it is",
   "termsKeep": "Save these equivalents to the glossary",
-  "termsSent": "{n} single words were looked up (recorded in the receipt).",
+  "termsSent": "{n} single-word lookups were made (recorded in the receipt).",
   "termConflict": "{n} possible mix-up of terms",
   "termConflictTitle": "\"{concept}\" is given traits of \"{other}\" ({traits}), and your glossary says they are different things.",
   "termsErrors": "Did not answer:",

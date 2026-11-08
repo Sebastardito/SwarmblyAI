@@ -63,7 +63,7 @@ const Helix = (() => {
             h(`span.status-word.${status}`, I18n.t(`status.${status}`, status)),
             s.elapsed_ms !== undefined && s.elapsed_ms !== null
               ? h("span.rung-time", UI.fmtMs(s.elapsed_ms)) : null),
-          reason && !compact ? h("div.rung-reason", String(reason)) : null,
+          reason && !compact ? h("div.rung-reason", I18n.reason(reason)) : null,
           fields.length ? h("div.rung-fields", fields) : null)));
     });
     return list;

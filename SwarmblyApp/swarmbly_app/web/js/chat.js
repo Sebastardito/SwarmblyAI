@@ -541,7 +541,7 @@ const Chat = (() => {
     if (!note) return;
     let n = article.querySelector(".msg-note");
     if (!n) { n = h("p.msg-note"); article.insertBefore(n, article.querySelector(".md")); }
-    n.textContent = note;
+    n.textContent = I18n.reason(note);
   }
 
   function footer(m) {
@@ -613,7 +613,8 @@ const Chat = (() => {
       "aria-label": t("chat.webQuery") });
     const termsBox = h("div.terms-box");
     const keep = h("input", { type: "checkbox" });
-    const keepRow = h("label.inline.small", { hidden: true }, keep, h("span", t("chat.termsKeep")));
+    const keepRow = h("label.inline.small", keep, h("span", t("chat.termsKeep")));
+    keepRow.style.display = "none";          // the .inline class overrides [hidden]
     const choices = {};              // word -> chosen concept
     const lang = (App.state.config?.language || "es");
     const rebuild = () => {
@@ -649,7 +650,7 @@ const Chat = (() => {
         termsBox.appendChild(h("label.stack", h("span", item.word), sel));
         if (item.errors?.length) termsBox.appendChild(h("p.note", `${t("chat.termsErrors")} ${item.errors.join(", ")}`));
       }
-      keepRow.hidden = false;
+      keepRow.style.display = "";
       if (res.sends?.length) termsBox.appendChild(h("p.muted", t("chat.termsSent").replace("{n}", res.sends.length)));
       review.disabled = false;
     }, "ghost small");

@@ -245,3 +245,33 @@ def test_two_names_of_one_concept_count_once_and_web_pages_need_the_concepts():
 def test_spanish_fusion_answers_get_the_spanish_template():
     from swarmbly_app.chat import _lang
     assert _lang("Busca artículos recientes sobre endogamia en cucuves") == "es"
+
+
+def test_english_equivalents_used_as_spanish_nouns_become_the_users_term():
+    from swarmbly_app.chat import _spanish_terms
+    text, fixes = _spanish_terms("Hay signos de la inbreeding en Pinta. El artículo «Inbreeding in "
+                                 "mockingbirds» trata de inbreeding.",
+                                 [("endogamia", "inbreeding"), ("cucuves", "Mimus, mockingbird")])
+    assert text.startswith("Hay signos de la endogamia en Pinta.") and "«Inbreeding in mockingbirds»" in text
+    assert fixes == [{"wrong": "inbreeding", "right": "endogamia", "count": 1}]
+
+
+def test_works_are_not_concepts_and_glossary_words_are_not_sent(monkeypatch):
+    sent = []
+
+    def fetch(url, timeout, ua):
+        sent.append(url)
+        if "wbsearchentities" in url:
+            return {"search": [{"id": "Q1"}, {"id": "Q2"}]}
+        if "wbgetentities" in url:
+            return {"entities": {
+                "Q1": {"labels": {"en": {"value": "Mockingbird"}}, "descriptions": {"es": {"value": "álbum"}},
+                       "claims": {"P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q482994"}}}}]}},
+                "Q2": {"labels": {"en": {"value": "Mimus"}}, "descriptions": {"es": {"value": "género de aves"}},
+                       "claims": {"P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q16521"}}}}]}}}}
+        return {"results": []}
+    out = T.resolve(["mockingbird"], "es", fetch=fetch)
+    assert [c["label_en"] for c in out[0]["candidates"]] == ["Mimus"]
+    sent.clear()
+    out = T.resolve(["mockingbird"], "es", glossary=[("cucuves", "Mimus, mockingbird")], fetch=fetch)
+    assert sent == [] and out[0]["candidates"][0]["source"] == "glossary"
