@@ -191,7 +191,9 @@
   "termsSent": "Se consultaron {n} palabras sueltas (quedan registradas en el recibo).",
   "termConflict": "{n} posible confusión de términos",
   "termConflictTitle": "Se atribuyen a «{concept}» rasgos de «{other}» ({traits}), y tu glosario dice que son cosas distintas.",
-  "termsErrors": "No respondió:"
+  "termsErrors": "No respondió:",
+  "missedSources": "Tus fuentes sí lo tratan",
+  "missedSourcesTitle": "La respuesta dice que tus fuentes no hablan de «{term}», pero usan «{found}», que tu glosario da como equivalente."
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",

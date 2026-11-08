@@ -221,6 +221,22 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     tortoise").
   - "Agrega a tu glosario: …" is not kept in the note; a note is not glued to
     a notes file edited by hand without a final newline.
+  - Second run, with the glossary in place: "galgapos" and the Elateridae mix-up
+    were gone and the proposed queries were built from concepts ("Mimus
+    inbreeding mockingbird", "Elateridae inbreeding"). Remaining:
+    - the model said the sources did not mention "endogamia" while they
+      discussed *inbreeding*: the glossary block now says each line is one
+      concept and a source using an equivalent speaks of the user's term; an
+      answer that still says so gets a visible warning (`missed_sources`);
+    - a second glossary line for the same concept ("cucuve" after "cucuves")
+      is merged into the first;
+    - results: two names of one concept count once (glossary groups); a web
+      page needs a concept in its title and both concepts in title and
+      snippet ("MockingBird: code translation", "Cooper's hawk" dropped);
+    - an approved search makes no other public lookup in the same answer
+      (both were labelled [W1]…), and the fusion template takes the language
+      from the same rule as the rest of the answer (a Spanish question got
+      English headings).
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

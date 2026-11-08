@@ -204,3 +204,44 @@ def test_a_glossary_request_is_not_kept_in_the_note():
     p = M.propose("Agrega a tu glosario: ROH (runs of homozygosity) son segmentos largos de homocigosis.")
     assert p["notes"] == ["ROH (runs of homozygosity) son segmentos largos de homocigosis."]
     assert p["glossary"][0]["equivalents"] == ["runs of homozygosity"]
+
+
+def test_one_glossary_line_per_concept(tmp_path):
+    from swarmbly_app.projects import save_glossary
+    save_glossary(tmp_path, ["cucuves = Mimus | distinto: cucujo"])
+    path = save_glossary(tmp_path, ["cucuve = Mimus, mockingbird", "endogamia = inbreeding | wd: Q38978"])
+    lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if " = " in ln]
+    assert lines == ["cucuves = Mimus, mockingbird | distinto: cucujo",
+                     "endogamia = inbreeding | wd: Q38978"]
+
+
+def test_an_answer_that_misses_an_equivalent_in_the_sources_is_flagged(app_state, tmp_path):
+    from swarmbly_app.chat import _missed_sources
+    pairs = [("endogamia", "inbreeding | wd: Q38978".split(" | ")[0]), ("cucuve", "Mimus, mockingbird")]
+    passages = ["Island size shapes inbreeding in Galápagos mockingbirds (Mimus)."]
+    out = _missed_sources("Las fuentes no mencionan la endogamia en cucuves.",
+                          "¿Qué se sabe de la endogamia en cucuves?", pairs, passages)
+    assert [x["found"] for x in out] == ["inbreeding", "Mimus"]
+    assert _missed_sources("La endogamia es alta en Pinta.", "¿endogamia?", pairs, passages) == []
+
+
+def test_two_names_of_one_concept_count_once_and_web_pages_need_the_concepts():
+    groups = {"mimus": "cucuve", "mockingbird": "cucuve", "cucuve": "cucuve",
+              "inbreeding": "endogamia", "endogamia": "endogamia"}
+    terms = W.topic_terms("Mimus inbreeding mockingbird")
+    assert not W.relevant({"title": "MockingBird: Context-aware Repository-level Code Translation",
+                           "provider": "searxng", "snippet": "LLM code translation"}, terms, groups)
+    assert not W.relevant({"title": "Cooper's hawk", "provider": "wikipedia-en",
+                           "snippet": "It preys on the northern mockingbird (Mimus polyglottos)."},
+                          terms, groups)
+    assert W.relevant({"title": "Microsatellite primers for the four Galápagos mockingbird species",
+                       "provider": "searxng",
+                       "snippet": "useful to study levels of inbreeding in island populations"},
+                      terms, groups)
+    assert W.relevant({"title": "Genomes of Galápagos Mockingbirds … Inbreeding", "provider": "pubmed"},
+                      terms, groups)
+
+
+def test_spanish_fusion_answers_get_the_spanish_template():
+    from swarmbly_app.chat import _lang
+    assert _lang("Busca artículos recientes sobre endogamia en cucuves") == "es"

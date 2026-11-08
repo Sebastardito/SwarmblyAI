@@ -564,6 +564,10 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.missed_sources?.length) chips.push(chip(
+      t("chat.missedSources"), "warn",
+      meta.missed_sources.map((x) => t("chat.missedSourcesTitle").replace("{term}", x.term)
+        .replace("{found}", x.found)).join("\n")));
     if (meta.term_conflicts?.length) chips.push(chip(
       t("chat.termConflict").replace("{n}", meta.term_conflicts.length), "warn",
       meta.term_conflicts.map((c) => t("chat.termConflictTitle").replace("{concept}", c.concept)

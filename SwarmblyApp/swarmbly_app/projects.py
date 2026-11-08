@@ -90,6 +90,46 @@ def save_note(folder: Path, text: str, title: str = "Memoria") -> Path:
 GLOSSARY_FILE = "glosario.md"
 
 
+def _gloss_key(line: str) -> str:
+    """The concept a glossary line is about: its term, without accents, case
+    or a plural ending."""
+    import unicodedata
+    if " = " not in line or line.lstrip().startswith("#"):
+        return ""
+    term = line.split(" = ", 1)[0].strip().lower()
+    term = "".join(c for c in unicodedata.normalize("NFKD", term) if not unicodedata.combining(c))
+    return term[:-1] if len(term) > 4 and term.endswith("s") else term
+
+
+def _parse_gloss(line: str) -> tuple[str, list[str], dict[str, list[str]]]:
+    term, _, right = line.partition(" = ")
+    parts = [x.strip() for x in right.split("|")]
+    eqs = [e.strip() for e in parts[0].split(",") if e.strip()]
+    meta: dict[str, list[str]] = {}
+    for seg in parts[1:]:
+        key, _, val = seg.partition(":")
+        meta.setdefault(key.strip(), [])
+        meta[key.strip()] += [v.strip() for v in val.split(",") if v.strip()]
+    return term.strip(), eqs, meta
+
+
+def _merge_gloss(old: str, new: str) -> str:
+    """Both lines' equivalents and metadata, under the older line's term."""
+    term, eqs, meta = _parse_gloss(old)
+    _, eqs2, meta2 = _parse_gloss(new)
+    key = _gloss_key(old)
+    out = [e for e in dict.fromkeys([*eqs, *eqs2]) if _gloss_key(f"{e} = x") != key] or [term]
+    for k, vals in meta2.items():
+        if k == "wd" and meta.get("wd"):
+            continue                       # the first chosen item stays
+        meta[k] = list(dict.fromkeys([*meta.get(k, []), *vals]))
+    line = f"{term} = {', '.join(out)}"
+    for k, vals in meta.items():
+        if vals:
+            line += f" | {k}: {', '.join(vals)}"
+    return line
+
+
 def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Path:
     """Append ``term = equivalents`` lines to ``folder/glosario.md`` (the
     format C1 reads), skipping lines already there."""
@@ -113,6 +153,17 @@ def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Pa
                 stale = True
         if not stale:
             fixed.append(ln)
+    # one line per concept: "cucuve = Mimus, mockingbird" joins "cucuves = Mimus |
+    # distinto: cucujo" instead of becoming a second line (sixth test)
+    rest = []
+    for nl in new:
+        key = _gloss_key(nl)
+        at = next((i for i, ln in enumerate(fixed) if key and _gloss_key(ln) == key), None)
+        if at is None:
+            rest.append(nl)
+        else:
+            fixed[at] = _merge_gloss(fixed[at], nl)
+    new = rest
     if fixed != have:
         path.write_text("\n".join(fixed) + "\n", encoding="utf-8")
         have = fixed
