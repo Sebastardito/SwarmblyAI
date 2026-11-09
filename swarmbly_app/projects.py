@@ -130,18 +130,35 @@ def _merge_gloss(old: str, new: str) -> str:
     return line
 
 
+_BULLET = re.compile(r"^\s*[-*]\s+")
+
+
+def _is_entry(line: str) -> bool:
+    return " = " in line and not line.lstrip().startswith("#")
+
+
 def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Path:
-    """Append ``term = equivalents`` lines to ``folder/glosario.md`` (the
-    format C1 reads), skipping lines already there."""
+    """Add ``term = equivalents`` entries to ``folder/glosario.md`` (the format
+    C1 reads), one Markdown list item per entry.
+
+    Plain lines one under another are a single paragraph in Markdown, so a
+    viewer (Finder, Obsidian, GitHub) showed the whole glossary run together
+    (sixth test); "- term = …" keeps one entry per line everywhere, and C1
+    reads both. Older plain lines are rewritten as list items."""
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / GLOSSARY_FILE
-    have = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
-    new = [ln for ln in lines if ln and ln not in have]
+    raw = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+    # every line, with entries kept bare ("term = …") while they are compared
+    doc = [(_BULLET.sub("", ln).strip(), True) if _is_entry(ln) else (ln, False) for ln in raw]
+    have = [ln for ln, entry in doc if entry]
+    new = []
+    for ln in lines:
+        bare = _BULLET.sub("", ln or "").strip()
+        if bare and bare not in have and bare not in new:
+            new.append(bare)
     # a correction replaces an older line that equated the wrong form with the term
     # ("introgresión = introgradión" before "| no:" existed, 4th test)
-    fixed = []
-    for ln in have:
-        stale = False
+    def stale(ln: str) -> bool:
         for nl in new:
             if " | no: " not in nl:
                 continue
@@ -150,30 +167,23 @@ def save_glossary(folder: Path, lines: list[str], title: str = "Glosario") -> Pa
             left, _, right = ln.partition(" = ")
             if left.strip().lower() == term and " | no: " not in ln and \
                     {w.strip().lower() for w in right.split(",")} & wrong:
-                stale = True
-        if not stale:
-            fixed.append(ln)
+                return True
+        return False
+    doc = [(ln, entry) for ln, entry in doc if not (entry and stale(ln))]
     # one line per concept: "cucuve = Mimus, mockingbird" joins "cucuves = Mimus |
     # distinto: cucujo" instead of becoming a second line (sixth test)
-    rest = []
     for nl in new:
         key = _gloss_key(nl)
-        at = next((i for i, ln in enumerate(fixed) if key and _gloss_key(ln) == key), None)
+        at = next((i for i, (ln, entry) in enumerate(doc)
+                   if entry and key and _gloss_key(ln) == key), None)
         if at is None:
-            rest.append(nl)
+            doc.append((nl, True))
         else:
-            fixed[at] = _merge_gloss(fixed[at], nl)
-    new = rest
-    if fixed != have:
-        path.write_text("\n".join(fixed) + "\n", encoding="utf-8")
-        have = fixed
-    with open(path, "a", encoding="utf-8") as fh:
-        if not have:
-            fh.write(f"# {title}\n\n")
-        elif new and not path.read_text(encoding="utf-8").endswith("\n"):
-            fh.write("\n")
-        for ln in new:
-            fh.write(ln + "\n")
+            doc[at] = (_merge_gloss(doc[at][0], nl), True)
+    if not any(ln.lstrip().startswith("#") for ln, entry in doc if not entry):
+        doc = [(f"# {title}", False), ("", False), *doc]
+    out = [f"- {ln}" if entry else ln for ln, entry in doc]
+    path.write_text("\n".join(out).rstrip("\n") + "\n", encoding="utf-8")
     return path
 
 
