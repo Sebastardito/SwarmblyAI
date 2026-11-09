@@ -513,6 +513,15 @@ class ChatService:
                 if proposals and proposals["asked"]:
                     blocks.append(memory_capture.MODEL_NOTE.get(lang_now,
                                                                 memory_capture.MODEL_NOTE["en"]))
+                if memory_capture.distinctions(user_text):
+                    # "Los cucuves y los sinsontes son distintos" (false: they are
+                    # synonyms) got "Sí, tienes razón" (sixth run)
+                    blocks.append(
+                        "El usuario afirma que dos términos nombran cosas distintas. No le des la "
+                        "razón por cortesía: di lo que dicen tus fuentes; si no lo tratan, dilo."
+                        if lang_now == "es" else
+                        "The user states that two terms name different things. Do not agree out "
+                        "of politeness: say what your sources say; if they do not cover it, say so.")
                 fixes_now = memory_capture.clear_corrections(user_text)
                 if fixes_now:
                     # "Ojo: se escribe hibridación, no hibridización" got "Lo siento
@@ -652,7 +661,10 @@ class ChatService:
                            "consent_required": bool(request.receipt_ctx.get("consent_required"))},
                 "route": "local", "model": answer_model}
             answer_text = getattr(result, "text", "") or ""
-            fixed_text, fixes = _apply_avoid(answer_text, avoid)
+            # a correction made in this very message applies to this answer too
+            # ("Gracias por la corrección" and then "hibridización" three times)
+            avoid_now = {**avoid, **{w: r for w, r in memory_capture.clear_corrections(user_text)}}
+            fixed_text, fixes = _apply_avoid(answer_text, avoid_now)
             if lang_now == "es":
                 fixed_text, more = _spanish_terms(fixed_text, gloss_pairs)
                 fixes += more
@@ -1177,8 +1189,50 @@ def _check_citations(answer: str, sources: list[dict[str, Any]],
                  if len(x.split()) >= 6 and not x.strip().startswith(("#", "|"))]
     anchored = sum(1 for x in sentences if _CITE.search(x))
     coverage = round(anchored / len(sentences), 2) if sentences else None
-    return {"cited": len(set(found)), "unknown": unknown, "mismatched": mismatched,
-            "sentences": len(sentences), "anchored": anchored, "coverage": coverage}
+    out = {"cited": len(set(found)), "unknown": unknown, "mismatched": mismatched,
+           "sentences": len(sentences), "anchored": anchored, "coverage": coverage}
+    if sources or (web or {}).get("results"):
+        given = [str(x.get("text", "")) for x in sources]
+        given += [f"{h.get('title', '')} {h.get('snippet', '')}" for h in (web or {}).get("results") or []]
+        out["unsupported"] = _unsupported(answer, given)
+    return out
+
+
+_OUTSIDE = re.compile(r"^\W*(fuera\s+de\s+tus\s+fuentes|outside\s+your\s+sources)\b", re.I)
+_ABOUT_SOURCES = re.compile(r"\b(fuentes?|documentos?|sources?|documents?|guardar\s+en\s+memoria|"
+                            r"save\s+to\s+memory|buscar\s+en\s+l[ií]nea|search\s+online)\b", re.I)
+
+
+def _stems(text: str) -> set[str]:
+    return {_fold_word(w)[:5] for w in re.findall(r"\w{4,}", text or "")}
+
+
+def _unsupported(answer: str, given: list[str] | None = None) -> list[str]:
+    """Sentences presented as if they came from the user's sources: no citation,
+    not under "Fuera de tus fuentes:", not about the sources themselves. They
+    may be true ("cucuves… en otras partes de América del Sur", sixth test):
+    the app shows where a claim comes from, not whether it is right."""
+    out: list[str] = []
+    passages = [_stems(g) for g in given or []]
+    for para in re.split(r"\n\s*\n", answer or ""):
+        outside = False
+        for line in para.split("\n"):
+            if _OUTSIDE.search(line):
+                outside = True
+            if outside:
+                continue
+            for x in re.split(r"(?<=[.!?])\s+", line):
+                x = x.strip()
+                if (len(x.split()) < 6 or x.startswith(("#", "|", ">")) or x.endswith("?")
+                        or _CITE.search(x) or _ABOUT_SOURCES.search(x)):
+                    continue
+                # uncited but taken from a passage it was given ("La cosecha… la
+                # segunda semana de junio de 2026"): not flagged
+                words = _stems(x)
+                if words and any(len(words & st) / len(words) >= 0.6 for st in passages):
+                    continue
+                out.append(x[:300])
+    return out[:12]
 _FOLLOW_UP = re.compile(r"\b(este|esta|esto|ese|esa|eso|estos|estas|anterior|lo mismo|"
                         r"this|that|these|those|it|previous|above|isso|isto)\b", re.I)
 

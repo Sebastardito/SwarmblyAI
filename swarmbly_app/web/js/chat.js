@@ -527,6 +527,10 @@ const Chat = (() => {
     const article = h(`article.msg.assistant${meta.status === "failed" ? ".failed" : ""}`,
       h("div.msg-gutter", { "aria-hidden": "true" }), body);
     if (meta.local_reason) setNote(article, meta.local_reason);
+    if (!streaming && meta.citations?.unsupported?.length) {
+      // after the article is in the page (ranges need laid-out text)
+      requestAnimationFrame(() => markUnsupported(body, meta.citations.unsupported));
+    }
     if (!streaming) {
       if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
       else if (meta.web_search) article.appendChild(h("p.note.web-results",
@@ -535,6 +539,41 @@ const Chat = (() => {
       article.appendChild(footer(m));
     }
     return article;
+  }
+
+  /* Provenance (3.1): sentences with no citation and not under "Fuera de tus
+     fuentes:" are underlined. They may be true; they do not come from the
+     user's documents or an approved search. CSS Custom Highlights leave the
+     rendered Markdown untouched; without them only the chip says it. */
+  const unsupportedHL = (window.CSS && CSS.highlights && window.Highlight) ? new Highlight() : null;
+  if (unsupportedHL) CSS.highlights.set("unsupported", unsupportedHL);
+
+  function markUnsupported(root, sentences) {
+    if (!unsupportedHL || !root || !root.isConnected) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const map = []; let flat = ""; let prevSpace = true;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      for (let i = 0; i < node.nodeValue.length; i++) {
+        const ch = node.nodeValue[i];
+        const space = /\s/.test(ch);
+        if (space && prevSpace) continue;
+        flat += space ? " " : ch; map.push([node, i]); prevSpace = space;
+      }
+    }
+    const plain = (x) => x.replace(/\*\*|__|[*_`]/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/\s+/g, " ").trim();
+    for (const sentence of sentences) {
+      const target = plain(sentence);
+      if (target.length < 12) continue;
+      let at = flat.indexOf(target), len = target.length;
+      if (at < 0) { at = flat.indexOf(target.slice(0, 40)); len = Math.min(target.length, flat.length - at); }
+      if (at < 0 || !map[at] || !map[at + len - 1]) continue;
+      const range = document.createRange();
+      range.setStart(map[at][0], map[at][1]);
+      range.setEnd(map[at + len - 1][0], map[at + len - 1][1] + 1);
+      unsupportedHL.add(range);
+    }
   }
 
   function setNote(article, note) {
@@ -572,6 +611,9 @@ const Chat = (() => {
       t("chat.termConflict").replace("{n}", meta.term_conflicts.length), "warn",
       meta.term_conflicts.map((c) => t("chat.termConflictTitle").replace("{concept}", c.concept)
         .replace("{other}", c.traits_of).replace("{traits}", c.traits)).join("\n")));
+    if (meta.citations?.unsupported?.length) chips.push(chip(
+      t("chat.unsupported").replace("{n}", meta.citations.unsupported.length), "warn",
+      t("chat.unsupportedTitle")));
     if (meta.glossary_fixes?.length) chips.push(chip(
       t("chat.glossaryFixed").replace("{n}", meta.glossary_fixes.reduce((a, f) => a + f.count, 0)), "ok",
       meta.glossary_fixes.map((f) => `${f.wrong} → ${f.right}`).join(", ")));

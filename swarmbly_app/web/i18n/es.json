@@ -193,7 +193,9 @@
   "termConflictTitle": "Se atribuyen a «{concept}» rasgos de «{other}» ({traits}), y tu glosario dice que son cosas distintas.",
   "termsErrors": "No respondió:",
   "missedSources": "Tus fuentes sí lo tratan",
-  "missedSourcesTitle": "La respuesta dice que tus fuentes no hablan de «{term}», pero usan «{found}», que tu glosario da como equivalente."
+  "missedSourcesTitle": "La respuesta dice que tus fuentes no hablan de «{term}», pero usan «{found}», que tu glosario da como equivalente.",
+  "unsupported": "{n} frases sin respaldo en tus fuentes",
+  "unsupportedTitle": "Subrayadas en la respuesta: no llevan cita ni el aviso «Fuera de tus fuentes:». Pueden ser ciertas, pero no salen de tus documentos ni de una búsqueda que aprobaste; compruébalas antes de usarlas."
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
