@@ -484,6 +484,7 @@ class ChatService:
             if gblock:
                 blocks.append(gblock)
             web_found = None
+            late_blocks: list[str] = []
             from . import web_search
             if request.web_query:
                 with egress.purpose(egress.PUBLIC_QUERY):
@@ -494,7 +495,11 @@ class ChatService:
                                                   groups=groups)
                 blocks.append(web_search.results_block(web_found, lang_now))
             elif want_public or _ASKS_REFERENCES.search(user_text):
-                blocks.append(web_search.NO_SEARCH.get(lang_now, web_search.NO_SEARCH["en"]))
+                # placed after the sources, next to the question: before a long
+                # sources block it was forgotten and an answer said it had
+                # consulted a public source that was never consulted (sealed
+                # bank, 9 November 2026)
+                late_blocks.append(web_search.NO_SEARCH.get(lang_now, web_search.NO_SEARCH["en"]))
                 pairs_now = []
                 if self.glossary_entries is not None:
                     try:
@@ -579,6 +584,7 @@ class ChatService:
             if request.memory_saved and not request.memory_saved.get("error"):
                 blocks.append(_MEMORY_DONE.get(_lang(user_text), _MEMORY_DONE["en"]).format(
                     path=request.memory_saved.get("path", "")))
+            blocks += late_blocks
             if blocks:
                 context = [*context[:-1], *({"role": "system", "content": b} for b in blocks),
                            context[-1]]
@@ -588,7 +594,10 @@ class ChatService:
                     else "sensible"
             if public_report is not None:
                 request.receipt_ctx["public_lookup"] = True
-            budget = answer_budget(user_text, int(self.config()["model"].get("max_tokens", 1024)))
+            # the language rule of the answer: the stopword vote said "en" for short
+            # Spanish requests and gave them the English token rate
+            budget = answer_budget(user_text, int(self.config()["model"].get("max_tokens", 1024)),
+                                   lang=_lang(user_text))
             answer_kind = egress.PASSAGES if sources else egress.QUESTION
             if answer_model != model:
                 budget *= 2          # a reasoning model spends tokens before it answers
@@ -1377,7 +1386,47 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str,
                     text = f"{text[:m.end()]} («{term}»){text[m.end():]}"
                     break
         lines.append(f"[{label}] ({s.get('rel') or s['source']}) {text}")
+    # The instructions above come before many paragraphs; a 7B model followed
+    # them less as the block grew (no citation at all with 4,400 prompt tokens,
+    # open battery of 9 November 2026). A short reminder at the end, next to
+    # the question, brought the labels back without losing content.
+    lang = _lang(user_text)
+    lines.append("")
+    lines.append(_SOURCES_TAIL.get(lang, _SOURCES_TAIL["en"]))
+    length = _length_note(user_text, lang)
+    if length:
+        lines.append(length)
     return "\n".join(lines)
+
+
+_SOURCES_TAIL = {
+    "es": "Recuerda: pon la etiqueta del párrafo, por ejemplo [D1 p3], junto a cada dato que tomes "
+          "de estos párrafos, en la misma frase.",
+    "en": "Remember: put the paragraph's label, for example [D1 p3], next to each fact you take "
+          "from these paragraphs, in the same sentence.",
+}
+_AT_MOST = re.compile(r"\b(m[aá]ximo|como\s+m[aá]ximo|no\s+m[aá]s\s+de|hasta|at\s+most|no\s+more\s+than|"
+                      r"maximum|up\s+to)\b", re.I)
+
+
+def _length_note(user_text: str, lang: str) -> str:
+    """The length the user asked for, restated at the end of the sources
+    (compositions came out shorter than asked in every version)."""
+    from .engine.contract import _RANGE, requested_words
+    words = requested_words(user_text)
+    if not words:
+        return ""
+    if _AT_MOST.search(user_text or ""):
+        return (f"Extensión pedida: no más de {words} palabras." if lang == "es"
+                else f"Requested length: no more than {words} words.")
+    m = _RANGE.search(user_text or "")
+    if m and m.group(3).lower() not in ("tokens",):
+        span = (f"entre {m.group(1)} y {m.group(2)}" if lang == "es"
+                else f"between {m.group(1)} and {m.group(2)}")
+    else:
+        span = f"unas {words}" if lang == "es" else f"about {words}"
+    return (f"Extensión pedida: {span} palabras; cumple esa extensión." if lang == "es"
+            else f"Requested length: {span} words; keep to it.")
 
 
 def _lane_for_receipt(text: str) -> dict[str, Any]:
