@@ -3,9 +3,10 @@
 # https://citation-file-format.github.io/
 #
 # The whitepaper DOI is 10.5281/zenodo.23150478. The software DOI below is
-# the record of release v0.1.1, minted by the Zenodo GitHub integration; a new
-# release mints a new DOI, which replaces it after the release (an invalid DOI
-# in a citation record is worse than an absent one; publication/CHECKLIST.md).
+# the record of release v0.1.1 (previous release), minted by the Zenodo GitHub
+# integration; release v0.2.0 mints a new DOI, which replaces it after the
+# release (an invalid DOI in a citation record is worse than an absent one;
+# publication/CHECKLIST.md).
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -37,13 +38,16 @@ abstract: >-
   cross-family error agreement under task projection, the value of local
   memory, and the anchored wiki against raw retrieval (confirmatory: the
   wiki loses on accuracy and is retained as a governance layer), together
-  with source forgetting and reproducibility. The repository ships a reference implementation, a
+  with source forgetting and reproducibility. Since 0.2.0 the package also
+  ships level C1 (retrieval over the user's own documents, with citations
+  that survive moving a folder, and a personal glossary), used by Swarmbly
+  App. The repository ships a reference implementation, a
   validation harness whose ten instrument tests pass in simulation, the raw
   outputs of every run and a figure-anchoring test suite; mock and
   simulation outputs are not evidence.
 
-version: "0.1.1"
-date-released: "2026-10-10"
+version: "0.2.0"
+date-released: "2026-11-09"
 license: AGPL-3.0-or-later
 
 authors:
@@ -54,7 +58,7 @@ authors:
     orcid: "https://orcid.org/0000-0003-1497-356X"
 
 repository-code: "https://github.com/Sebastardito/SwarmblyLCE"
-doi: "10.5281/zenodo.23289041"   # software record v0.1.1 (Zenodo, GitHub integration)
+doi: "10.5281/zenodo.23289041"   # software record v0.1.1 (previous release) until v0.2.0 is minted
 
 keywords:
   - "local-first"
