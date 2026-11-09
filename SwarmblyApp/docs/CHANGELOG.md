@@ -1,9 +1,13 @@
 # Changelog
 
-## 0.4.0 — Projects (unreleased)
+## 0.4.0 — Projects (2026-11-09)
 
 Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
-3.0.1 on the sealed banks.
+3.0.1 on the sealed banks. Measured with the sealed S2/S3 banks of Swarmbly
+AI twice on 9 November 2026: on `475ce61` (regression in long compositions,
+diagnosed on an open fictitious battery) and on `6bde03e` after the fix (one
+run per bank each; blind manual review in full agreement with the judge).
+Figures in the Swarmbly AI 3.1.0 release notes. Requires SwarmblyLCE 0.2.0.
 
 - **Projects** (`swarmbly_app/projects.py`, `/api/projects`, a project bar
   above the conversation). A project is a folder of its own, by default

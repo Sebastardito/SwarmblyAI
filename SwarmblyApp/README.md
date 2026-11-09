@@ -203,7 +203,7 @@ depends on it.
 | **SwarmblyApp** | Desktop client, network layer, local interface, observability | this repository |
 
 The app installs SwarmblyAI and SwarmblyLCE as packages pinned to audited
-commits (`51eb44e`, `b659ac4`) and never copies their code. Protocol
+commits (`51eb44e`; LCE release `v0.2.0`) and never copies their code. Protocol
 whitepaper: [10.5281/zenodo.21957088](https://doi.org/10.5281/zenodo.21957088)
 (v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305)) — a
 preprint, not peer-reviewed.
@@ -232,7 +232,7 @@ Licensed under **AGPL-3.0-or-later** ([LICENSE](LICENSE), [NOTICE](NOTICE)).
 If you use Swarmbly App in research, please cite it:
 
 > Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client and network
-> dashboard for decentralized problem-fragmenting inference* (Version 0.3.1)
+> dashboard for decentralized problem-fragmenting inference* (Version 0.4.0)
 > [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638
 
 To cite every version at once, use the concept DOI
@@ -336,7 +336,7 @@ no depende de ella. Licencia **AGPL-3.0-or-later**. Véanse [NOTICE](NOTICE) y
 
 **Cómo citar:** Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client
 and network dashboard for decentralized problem-fragmenting inference*
-(Version 0.3.1) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
+(Version 0.4.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
 para citar todas las versiones: 10.5281/zenodo.23322638.
 
 Copyright © 2026 Sebastián A. Espinoza-Ulloa.
