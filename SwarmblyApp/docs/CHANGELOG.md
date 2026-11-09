@@ -296,6 +296,22 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     one under another are one paragraph in Markdown, so any viewer showed the
     glossary run together. The app always read it line by line; older plain
     lines are rewritten as list items on the next save.
+- **Long compositions** (diagnosis of the sealed-bank measurement of
+  9 November 2026, done on an open fictitious battery, never on the bank):
+  - With 3.1 the model reads short documents whole, so prompts for
+    compositions grew from about 900 to 2,000–4,400 tokens. Key data improved
+    on the open battery (a two-table comparison: 6/6 against 1–3/6), but the
+    instructions at the top of the block were followed less: no citation at
+    all at 4,400 prompt tokens, and answers shorter than asked.
+  - The sources block now ends, next to the question, with a short citation
+    reminder and the requested length ("Extensión pedida: entre 300 y 400
+    palabras"). Open battery, qwen2.5:7b, 7 tasks: citations per answer up in
+    6 of 7 tasks, answers without any citation 2 → 1 (of 21), key data equal
+    or better, lengths closer to the request (n = 2–3 seeds per task).
+  - The answer budget uses the answer's language rule (Spanish requests got
+    the English token rate).
+  - "No search was made" goes after the sources: before a long block it was
+    forgotten and an answer claimed a public lookup that never happened.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

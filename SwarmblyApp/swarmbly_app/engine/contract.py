@@ -66,14 +66,14 @@ def requested_words(prompt: str) -> int | None:
 
 
 def answer_budget(prompt: str, base: int, *, headroom: float = 1.5,
-                  cap: int = 8192) -> int:
+                  cap: int = 8192, lang: str | None = None) -> int:
     """``max_tokens`` for a single local answer: ``base``, raised to fit an
     explicitly requested length (the local path used the configured 1024
     tokens even for an 800-word Spanish essay, and truncated it)."""
     words = requested_words(prompt)
     if words is None:
         return int(base)
-    rate = _TOKENS_PER_WORD.get(detect_language(prompt), 1.3)
+    rate = _TOKENS_PER_WORD.get(lang or detect_language(prompt), 1.3)
     return int(min(cap, max(int(base), int(headroom * words * rate) + 1)))
 
 

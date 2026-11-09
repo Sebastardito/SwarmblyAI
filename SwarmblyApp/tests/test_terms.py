@@ -386,3 +386,35 @@ def test_an_uncited_sentence_taken_from_a_passage_is_not_flagged():
               "El rendimiento esperado supera las tres toneladas por hectárea cultivada.")
     assert _unsupported(answer, given) == ["El rendimiento esperado supera las tres toneladas por "
                                            "hectárea cultivada."]
+
+
+def test_the_sources_block_ends_with_a_citation_reminder_and_the_requested_length():
+    from swarmbly_app.chat import _sources_block
+    src = [{"label": "D1 p1", "source": "a.md", "text": "El lote AB1 rindió 2,8 t/ha en la Parcela Norte."}]
+    block = _sources_block(src, "Escribe un informe de 300 a 400 palabras sobre el lote AB1, citando.")
+    tail = block.splitlines()[-2:]
+    assert tail[0].startswith("Recuerda: pon la etiqueta del párrafo")
+    assert tail[1] == "Extensión pedida: entre 300 y 400 palabras; cumple esa extensión."
+    short = _sources_block(src, "¿Cuánto rindió AB1?")
+    assert short.splitlines()[-1].startswith("Recuerda:")
+
+
+def test_the_answer_budget_uses_the_answers_language():
+    from swarmbly_app.engine.contract import answer_budget
+    q = "Escribe un ensayo de 800 palabras sobre la quinua"
+    assert answer_budget(q, 1024, lang="es") == int(1.5 * 800 * 1.6) + 1
+
+
+def test_the_no_search_note_comes_after_the_sources(app_state, tmp_path):
+    fake = FakeBackend(reply="Respuesta.")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("N", parent=tmp_path / "p")
+    (p.sources / "lote.md").write_text("El lote AB1 rindió 2,8 t/ha en la Parcela Norte.\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "¿Qué artículos y estudios hay sobre el lote AB1?", mode="local",
+                        run_async=False)
+    system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
+    i_src = next(i for i, c in enumerate(system) if c.startswith("Fuentes locales"))
+    i_no = next(i for i, c in enumerate(system) if "NO se hizo ninguna búsqueda" in c)
+    assert i_src < i_no
