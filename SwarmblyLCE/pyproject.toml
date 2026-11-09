@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmbly-lce"
-version = "0.2.0.dev0"
+version = "0.2.0"
 description = "Reference implementation and validation harness of the Swarmbly Local Cognitive Extension: anchored local memory, behavioural adapters regenerated from the base model, and signed knowledge capsules."
 readme = "README.md"
 requires-python = ">=3.10"

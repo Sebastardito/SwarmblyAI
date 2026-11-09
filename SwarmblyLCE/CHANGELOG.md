@@ -2,7 +2,9 @@
 
 Earlier versions are described in their release notes (v0.1.0, v0.1.1) and in `docs/`.
 
-## 0.2.0 — Level C1 in the package (unreleased)
+## 0.2.0 — Level C1 in the package (2026-11-09)
+
+Released with Swarmbly App 0.4.0 and Swarmbly AI 3.1.0, which use it for projects, stable citations and the glossary. C1 is measured as part of the app (Swarmbly AI 3.1.0 release notes); the research results of 0.1.x are unchanged.
 
 - **`swarmbly_lce.c1`**: retrieval over the user's own documents, moved from Swarmbly App 0.3.1 so that every client uses the same C1, unchanged in behaviour.
   - `readers`: plain text from text, Markdown, Word, HTML and PDF (with `pdftotext`).
