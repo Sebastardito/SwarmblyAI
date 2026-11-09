@@ -465,3 +465,11 @@ code.cite { font-size: 11px; opacity: .75; }
 .web-results ul { margin: 4px 0; }
 .terms-box { display: flex; flex-direction: column; gap: 6px; }
 .terms-box select { max-width: 100%; }
+
+/* 3.1 provenance: sentences without a source (see chat.js markUnsupported) */
+::highlight(unsupported) {
+  text-decoration: underline dotted var(--pollen);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  background-color: color-mix(in srgb, var(--pollen) 12%, transparent);
+}

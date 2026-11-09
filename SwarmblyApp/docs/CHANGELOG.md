@@ -278,6 +278,20 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
     - the receipt labels shortened variants of the approved text as "part of
       the text you approved"; the local-answer note is translated in the
       processing explorer and the activity panel.
+- **Provenance of each sentence** (sixth run, at the user's request): a
+  sentence with no citation, not under "Fuera de tus fuentes:", not about the
+  sources and not taken from a passage it was given (most of its words) is
+  listed in `citations.unsupported`, underlined in the answer (CSS Custom
+  Highlights; the rendered Markdown is untouched) and counted in a chip
+  ("N frases sin respaldo en tus fuentes"). The app shows where a claim comes
+  from, not whether it is true: "los cucuves… en otras partes de América del
+  Sur" is right (cucuve names the whole genus *Mimus*), but did not come from
+  the user's documents.
+  - A correction made in a message applies to that same answer ("Gracias por
+    la corrección" followed by the wrong form three times).
+  - When the user says two terms are different, the model is told not to
+    agree out of politeness ("los cucuves y los sinsontes son distintos" got
+    "Sí, tienes razón"; they are synonyms).
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks

@@ -344,10 +344,31 @@ def test_definitions_not_in_the_users_words_are_dropped():
 
 
 def test_a_correction_is_acknowledged_not_answered_again(app_state):
-    fake = FakeBackend(reply="Gracias, uso «hibridación».")
+    fake = FakeBackend(reply="Gracias. La hibridización en grillos produce híbridos F1.")
     app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
     conv = app_state.chat.create_conversation(mode="local")
     app_state.chat.send(conv["id"], "Ojo: se escribe hibridación, no hibridización.", mode="local",
                         run_async=False)
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
     assert "El usuario corrige un término: «hibridación», no «hibridización»" in system
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    assert "hibridización" not in msg["content"] and "La hibridación en grillos" in msg["content"]
+
+
+def test_sentences_presented_as_sourced_without_a_citation_are_listed():
+    from swarmbly_app.chat import _unsupported
+    answer = ("Los cucuves de Galápagos muestran endogamia en islas pequeñas [D1 p81]. Los cucuves "
+              "viven también en otras partes de América del Sur y Centroamérica.\n\n"
+              "Las fuentes no tratan el tema con más detalle que eso en particular.\n\n"
+              "Fuera de tus fuentes: la endogamia reduce la diversidad genética de las poblaciones.")
+    assert _unsupported(answer) == ["Los cucuves viven también en otras partes de América del Sur y "
+                                    "Centroamérica."]
+
+
+def test_an_uncited_sentence_taken_from_a_passage_is_not_flagged():
+    from swarmbly_app.chat import _unsupported
+    given = ["La cosecha del lote AB1 está prevista para la segunda semana de junio de 2026."]
+    answer = ("El lote AB1 se prevé que sea cosechado en la segunda semana de junio de 2026. "
+              "El rendimiento esperado supera las tres toneladas por hectárea cultivada.")
+    assert _unsupported(answer, given) == ["El rendimiento esperado supera las tres toneladas por "
+                                           "hectárea cultivada."]
