@@ -55,7 +55,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.1.0"
+HARNESS_VERSION = "1.1.1"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -373,9 +373,14 @@ class AppInstance:
         return env
 
     def start(self, timeout: float = 90.0) -> None:
-        subprocess.run([self.python, "-c", CONFIG_SNIPPET, str(self.data_dir),
-                        json.dumps(self.settings)], check=True, env=self.env(),
-                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        done = subprocess.run([self.python, "-c", CONFIG_SNIPPET, str(self.data_dir),
+                               json.dumps(self.settings)], env=self.env(),
+                              stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        if done.returncode != 0:
+            # the last lines of the traceback say why (configuration only: no
+            # question, document or answer is involved at this point)
+            tail = " | ".join((done.stderr or "").strip().splitlines()[-3:])
+            raise RuntimeError(f"configuring the app failed (code {done.returncode}): {tail[:600]}")
         self._log = open(self.log_path, "w", encoding="utf-8")
         self.proc = subprocess.Popen(
             [self.python, "-m", "swarmbly_app", "headless", "--data-dir", str(self.data_dir),
