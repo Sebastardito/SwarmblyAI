@@ -53,3 +53,11 @@ def test_a_cp1252_console_does_not_crash(tmp_path):
                           "--skip", "ollama,models,pdf,searxng,shortcuts"],
                          capture_output=True, timeout=120, env=env)
     assert out.returncode == 0, out.stderr.decode("utf-8", "replace")
+
+
+def test_on_macos_the_environment_goes_to_a_folder_icloud_does_not_sync(tmp_path):
+    venv = tmp_path / ".venv"
+    assert install.venv_target(venv, True) == tmp_path / ".venv.nosync"
+    assert install.venv_target(venv, False) == venv
+    (tmp_path / "custom").mkdir()
+    assert install.venv_target(tmp_path / "custom", True) == tmp_path / "custom"

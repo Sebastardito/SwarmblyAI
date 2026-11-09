@@ -2,11 +2,11 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
-## Unreleased (3.1 — Projects)
+## 3.1.0 — Projects (2026-11-09)
 
-On the `edge` branch; `main` keeps the last release.
+Release notes: [`docs/releases/v3.1.0.md`](docs/releases/v3.1.0.md). Measured on the two sealed banks (second run of 9 November, App `6bde03e`; blind review in full agreement with the judge, κ = 1.0).
 
-- **SwarmblyApp 0.4.0** (mirror of `main`, `bd239c1`):
+- **SwarmblyApp 0.4.0** (mirror at tag `v0.4.0`, `9784ea2`):
   - **Projects**: a folder of its own for each piece of work (default `Documents/Swarmbly/<Project>`) with its documents, its memory (glossary, notes) and its chats; conversations of a project read only that project; export and restore as `.swarmbly` packages with the SHA-256 of every file and never an API key; a warning when the folder is synced by a cloud service.
   - **Stable citations** (`doc:<sha12>#p<n>`) that still resolve after a project is restored on another computer.
   - **"Recuerda: …" saves to memory** (the project's `memory/notas.md`), and *Documents* shows what a project can read and why a file gave nothing (found in the first hands-on test).
@@ -19,8 +19,10 @@ On the `edge` branch; `main` keeps the last release.
   - **Provenance of each sentence**: sentences presented as if they came from your sources, with no citation and not marked «Fuera de tus fuentes:», are underlined and counted ("N frases sin respaldo en tus fuentes"). They may be true; the mark says where a claim comes from, not whether it is right. The web UI is revalidated after updates; corrections apply to the same answer.
   - **Long compositions**: after the sealed-bank measurement of 9 November (S3 compositions down in bank v2), a diagnosis on an open fictitious battery showed that reading short documents whole made composition prompts much longer and the model cited less and wrote shorter. The sources block now ends with a citation reminder and the requested length; "no search was made" goes after the sources. To be measured again on the banks with the next version.
   - **Consent per question**: a question about you or your documents gets no public lookup without your yes for that question; the receipt states the consent and its scope (personal or project).
-- **SwarmblyLCE** (mirror of `main`, `2c3a524`): level C1 moves into the package (`swarmbly_lce.c1`), with the stable citations; PDFs are read with `pypdf` where `pdftotext` is missing; with local embeddings, unrelated passages stay out; any one glossary equivalent brings the term; corrected forms (`| no:`) are never equivalents.
+- **SwarmblyLCE 0.2.0** (mirror at tag `v0.2.0`, `e375914`): level C1 moves into the package (`swarmbly_lce.c1`), with the stable citations; PDFs are read with `pypdf` where `pdftotext` is missing; with local embeddings, unrelated passages stay out; any one glossary equivalent brings the term; corrected forms (`| no:`) are never equivalents.
 - **Docker:** projects live in the data volume (`SWARMBLY_PROJECTS_DIR=/data/projects`).
+- **Installer:** on macOS the environment is created as `.venv.nosync` with `.venv` pointing to it (iCloud marked the environment's files hidden and Python ignored them).
+- **Benchmark harness 1.1.1:** reports why an app instance could not be configured.
 
 ## 3.0.1 — Destinations, privacy receipts and Docker (2026-11-07)
 

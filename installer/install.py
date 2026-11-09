@@ -402,6 +402,18 @@ def step_python(ctx: Ctx) -> None:
         ctx.ui.say(c("2", "    " + ctx.ui["py_searx"]))
 
 
+def venv_target(venv: Path, is_mac: bool) -> Path:
+    """Where the environment's files really go. On macOS a folder synced with
+    iCloud (Desktop, Documents) gets its files marked hidden, and recent
+    Python versions skip hidden ``.pth`` files, so the packages "disappear"
+    (Swarmbly AI 3.1 benchmark run, 9 November 2026). iCloud does not sync a
+    folder whose name ends in ``.nosync``: the environment goes to
+    ``.venv.nosync`` and ``.venv`` points to it."""
+    if is_mac and venv.name == ".venv" and not venv.exists() and not venv.is_symlink():
+        return venv.with_name(".venv.nosync")
+    return venv
+
+
 def step_env(ctx: Ctx) -> None:
     ui = ctx.ui
     if ui.interactive and ctx.args.mode == "custom":
@@ -410,11 +422,15 @@ def step_env(ctx: Ctx) -> None:
     if ctx.py.exists():
         ui.result(ui["step_env"], "done", f"{ctx.venv} (existing)")
         return
+    target = venv_target(ctx.venv, IS_MAC)
     uv = shutil.which("uv")
     if uv:
-        run(ui, [uv, "venv", "-q", "--seed", "-p", sys.executable, str(ctx.venv)])
+        run(ui, [uv, "venv", "-q", "--seed", "-p", sys.executable, str(target)])
     else:
-        run(ui, [sys.executable, "-m", "venv", str(ctx.venv)])
+        run(ui, [sys.executable, "-m", "venv", str(target)])
+    if target != ctx.venv:
+        os.symlink(target.name, ctx.venv)
+        run(ui, ["chflags", "-R", "nohidden", str(target)], check=False)
     run(ui, [str(ctx.py), "-m", "pip", "install", "-q", "--upgrade", "pip"], check=False)
     ui.result(ui["step_env"], "done", str(ctx.venv))
 
@@ -813,6 +829,10 @@ def uninstall(ctx: Ctx) -> int:
                  "[Environment]::GetFolderPath('Programs'))){Remove-Item -ErrorAction "
                  "SilentlyContinue (Join-Path $d 'Swarmbly.lnk')}"], check=False)
     venv = Path(info.get("venv") or ctx.venv)
+    if venv.is_symlink():                       # .venv -> .venv.nosync (macOS)
+        real = venv.resolve()
+        venv.unlink()
+        venv = real
     if venv.exists() and (venv / "pyvenv.cfg").exists():
         shutil.rmtree(venv, ignore_errors=True)
     shutil.rmtree(STATE, ignore_errors=True)

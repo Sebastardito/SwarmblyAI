@@ -1,5 +1,7 @@
 # Swarmbly AI (umbrella) — each component keeps its own .gitignore in its folder.
 .venv/
+.venv
+.venv.nosync/
 .swarmbly/
 install.log
 __pycache__/

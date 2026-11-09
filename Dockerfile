@@ -4,7 +4,7 @@
 # container; see compose.yaml and docs/DOCKER.md.
 FROM python:3.12-slim-bookworm
 
-ARG SWARMBLY_VERSION=3.0.1
+ARG SWARMBLY_VERSION=3.1.0
 LABEL org.opencontainers.image.title="Swarmbly AI" \
       org.opencontainers.image.description="Decentralized AI that fragments the problem, not the model: local orchestrator, private memory and a peer-to-peer swarm of small models" \
       org.opencontainers.image.source="https://github.com/Sebastardito/SwarmblyAI" \

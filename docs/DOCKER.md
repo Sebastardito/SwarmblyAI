@@ -61,7 +61,7 @@ Set them in the shell or in a `.env` file next to `compose.yaml`.
 | `SWARMBLY_MODEL` | `qwen2.5:3b` | Chat model downloaded and selected on the first start. `qwen2.5:1.5b` for 4–8 GB of RAM; `qwen2.5:7b` for 16 GB or more |
 | `SWARMBLY_DOCUMENTS` | `./docker/documents` | Folder read as your sources |
 | `SWARMBLY_PORT` | `8765` | Port of the interface on this computer |
-| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Image to run. `latest` is the last release; `edge` follows `main`; `3.0.1` and so on pin a release. Also on Docker Hub as `sebastardito/swarmbly` when it is published there |
+| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Image to run. `latest` is the last release; `edge` follows `main`; `3.1.0` and so on pin a release. Also on Docker Hub as `sebastardito/swarmbly` when it is published there |
 | `SWARMBLY_OLLAMA_URL` | `auto` | `auto` uses the bundled Ollama if it runs, otherwise the one on this computer; or any address, e.g. `http://192.168.1.20:11434` |
 
 Only the server addresses are reapplied on every start; everything else you change in the interface is kept in the `swarmbly-data` volume.
@@ -192,7 +192,7 @@ Se definen en la terminal o en un archivo `.env` junto a `compose.yaml`.
 | `SWARMBLY_MODEL` | `qwen2.5:3b` | Modelo de chat que se descarga y se elige en el primer arranque. `qwen2.5:1.5b` para 4–8 GB de RAM; `qwen2.5:7b` para 16 GB o más |
 | `SWARMBLY_DOCUMENTS` | `./docker/documents` | Carpeta que se lee como tus fuentes |
 | `SWARMBLY_PORT` | `8765` | Puerto de la interfaz en esta computadora |
-| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Imagen que se ejecuta. `latest` es la última versión publicada; `edge` sigue a `main`; `3.0.1`, etc., fijan una versión. También en Docker Hub como `sebastardito/swarmbly` cuando se publique allí |
+| `SWARMBLY_IMAGE` | `ghcr.io/sebastardito/swarmbly:latest` | Imagen que se ejecuta. `latest` es la última versión publicada; `edge` sigue a `main`; `3.1.0`, etc., fijan una versión. También en Docker Hub como `sebastardito/swarmbly` cuando se publique allí |
 | `SWARMBLY_OLLAMA_URL` | `auto` | `auto` usa el Ollama incluido si está en marcha y, si no, el de esta computadora; o cualquier dirección, p. ej. `http://192.168.1.20:11434` |
 
 En cada arranque solo se vuelven a aplicar las direcciones de los servidores; lo demás que cambies en la interfaz se conserva en el volumen `swarmbly-data`.
