@@ -214,8 +214,22 @@ def test_one_glossary_line_per_concept(tmp_path):
     save_glossary(tmp_path, ["cucuves = Mimus | distinto: cucujo"])
     path = save_glossary(tmp_path, ["cucuve = Mimus, mockingbird", "endogamia = inbreeding | wd: Q38978"])
     lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if " = " in ln]
-    assert lines == ["cucuves = Mimus, mockingbird | distinto: cucujo",
-                     "endogamia = inbreeding | wd: Q38978"]
+    assert lines == ["- cucuves = Mimus, mockingbird | distinto: cucujo",
+                     "- endogamia = inbreeding | wd: Q38978"]
+
+
+def test_glossary_entries_are_list_items_and_old_plain_lines_are_converted(tmp_path, app_state):
+    from swarmbly_app.projects import save_glossary
+    (tmp_path / "glosario.md").write_text("# Glosario del proyecto\n\nintrogresión = introgression\n"
+                                          "glosario = diccionario de palabras\n", encoding="utf-8")
+    path = save_glossary(tmp_path, ["endogamia = inbreeding"])
+    assert path.read_text(encoding="utf-8") == (
+        "# Glosario del proyecto\n\n- introgresión = introgression\n"
+        "- glosario = diccionario de palabras\n- endogamia = inbreeding\n")
+    # C1 still reads every entry
+    pairs = dict(app_state.lce.glossary_entries(roots=[tmp_path]) if hasattr(app_state.lce, "glossary_entries")
+                 else [])
+    assert pairs.get("endogamia") == "inbreeding" and pairs.get("introgresión") == "introgression"
 
 
 def test_an_answer_that_misses_an_equivalent_in_the_sources_is_flagged(app_state, tmp_path):

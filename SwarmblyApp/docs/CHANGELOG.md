@@ -292,6 +292,10 @@ Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
   - When the user says two terms are different, the model is told not to
     agree out of politeness ("los cucuves y los sinsontes son distintos" got
     "Sí, tienes razón"; they are synonyms).
+  - The glossary file is written as a Markdown list ("- term = …"): plain lines
+    one under another are one paragraph in Markdown, so any viewer showed the
+    glossary run together. The app always read it line by line; older plain
+    lines are rewritten as list items on the next save.
 - **Retrieval**: a short document is given whole only if it holds the best
   passage or two of them (a manual matched weakly was added to unrelated
   answers); a follow-up is expanded with the previous question; the blocks
