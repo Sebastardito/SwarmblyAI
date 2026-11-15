@@ -89,6 +89,9 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
     unsupported = len(citations.get("unsupported") or [])
     false_lookup = bool(sends == 0 and _FALSE_LOOKUP.search(answer or ""))
     memory = bool(meta.get("memory_saved") or meta.get("memory_proposals"))
+    # 3.2: labels the app added by code (F2) and the bounded rewrite (F4)
+    by_code = sum(len(a.get("labels") or []) for a in meta.get("citations_attached") or [])
+    repair = meta.get("repair") or {}
     checks = {
         "clave": all(hit) if hit else True,
         "prohibido": not forbidden,
@@ -106,7 +109,8 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
         "prohibido_encontrado": forbidden, "palabras": n_words, "rango": rng,
         "citas": cites, "tabla": table, "cobertura_citas": citations.get("coverage"),
         "frases_sin_respaldo": unsupported, "envios": sends, "consulta_falsa": false_lookup,
-        "memoria": memory,
+        "memoria": memory, "citas_codigo": by_code, "citas_modelo": max(0, cites - by_code),
+        "reparacion": ("conservada" if repair.get("kept") else "descartada") if repair else "",
     }
 
 
@@ -127,6 +131,10 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "envios_fuera_de_limite": sum(not (x["comprobaciones"]["envios_max"]
                                                and x["comprobaciones"]["envios_min"]) for x in s),
             "errores_tecnicos": sum(r.get("estado") not in ("done", "completed") for r in rs),
+            "con_citas_del_modelo": sum(x.get("citas_modelo", x["citas"]) > 0 for x in s),
+            "citas_codigo": sum(x.get("citas_codigo", 0) for x in s),
+            "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
+                             sum(bool(x.get("reparacion")) for x in s)],
         }
     cats = sorted({r["cat"] for r in rows})
     return {"total": agg(rows), "por_categoria": {c: agg([r for r in rows if r["cat"] == c]) for c in cats}}
@@ -145,19 +153,26 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
         out.append(f"| {name} | {pct(a['aprobados'], a['n'])} | {pct(*a['clave'])} | {a['con_citas']}/{a['n']} | "
                    f"{a['frases_sin_respaldo']} | {pct(*a['extension_en_rango'])} | {a['prohibido']} | "
                    f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} |")
+    t = summ["total"]
+    if t.get("citas_codigo") or (t.get("reparaciones") or [0, 0])[1]:
+        out += ["", f"Respuestas con alguna cita del propio modelo: {t['con_citas_del_modelo']}/{t['n']}; "
+                f"etiquetas añadidas por el código: {t['citas_codigo']}; reescrituras por extensión conservadas: "
+                f"{t['reparaciones'][0]} de {t['reparaciones'][1]}."]
     if previous:
         p, t = previous["total"], summ["total"]
         out += ["", f"Frente a la corrida anterior: aprobados {p['aprobados']}/{p['n']} → {t['aprobados']}/{t['n']}; "
                 f"datos clave {p['clave'][0]}/{p['clave'][1]} → {t['clave'][0]}/{t['clave'][1]}; "
                 f"con citas {p['con_citas']} → {t['con_citas']}; sin respaldo {p['frases_sin_respaldo']} → "
                 f"{t['frases_sin_respaldo']}; extensión {p['extension_en_rango'][0]} → {t['extension_en_rango'][0]}."]
-    out += ["", "| Caso | Rep. | Aprobado | Clave | Palabras | Citas | Sin respaldo | Envíos | Fallos |", "|---|---|---|---|---|---|---|---|---|"]
+    out += ["", "| Caso | Rep. | Aprobado | Clave | Palabras | Citas (por código) | Sin respaldo | Reescritura | Envíos | Fallos |",
+            "|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         s = r["puntuacion"]
         fails = ", ".join(k for k, v in s["comprobaciones"].items() if not v) or "—"
         rng = f" ({s['rango'][0]}–{s['rango'][1]})" if s["rango"] else ""
         out.append(f"| {r['id']} | {r['rep']} | {'sí' if s['aprobado'] else 'no'} | {s['clave_ok']}/{s['clave_total']} | "
-                   f"{s['palabras']}{rng} | {s['citas']} | {s['frases_sin_respaldo']} | {s['envios']} | {fails} |")
+                   f"{s['palabras']}{rng} | {s['citas']} ({s.get('citas_codigo', 0)}) | {s['frases_sin_respaldo']} | "
+                   f"{s.get('reparacion') or '—'} | {s['envios']} | {fails} |")
     return "\n".join(out) + "\n"
 
 
