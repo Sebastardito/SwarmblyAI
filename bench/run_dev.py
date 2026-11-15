@@ -92,6 +92,9 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
     # 3.2: labels the app added by code (F2) and the bounded rewrite (F4)
     by_code = sum(len(a.get("labels") or []) for a in meta.get("citations_attached") or [])
     repair = meta.get("repair") or {}
+    # F3a: facts the app shows under the answer as left out, and the missing key data among them
+    notice = " ".join(str(f.get("text", "")) for f in (meta.get("coverage") or {}).get("missing") or []).lower()
+    in_notice = sum(1 for group, ok in zip(keys, hit) if not ok and any(re.search(p, notice, re.I) for p in group))
     checks = {
         "clave": all(hit) if hit else True,
         "prohibido": not forbidden,
@@ -111,6 +114,7 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
         "frases_sin_respaldo": unsupported, "envios": sends, "consulta_falsa": false_lookup,
         "memoria": memory, "citas_codigo": by_code, "citas_modelo": max(0, cites - by_code),
         "reparacion": ("conservada" if repair.get("kept") else "descartada") if repair else "",
+        "aviso_cobertura": len((meta.get("coverage") or {}).get("missing") or []), "clave_en_aviso": in_notice,
     }
 
 
@@ -135,6 +139,8 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "citas_codigo": sum(x.get("citas_codigo", 0) for x in s),
             "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
                              sum(bool(x.get("reparacion")) for x in s)],
+            "con_aviso_cobertura": sum(x.get("aviso_cobertura", 0) > 0 for x in s),
+            "clave_en_aviso": sum(x.get("clave_en_aviso", 0) for x in s),
         }
     cats = sorted({r["cat"] for r in rows})
     return {"total": agg(rows), "por_categoria": {c: agg([r for r in rows if r["cat"] == c]) for c in cats}}
@@ -154,6 +160,10 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
                    f"{a['frases_sin_respaldo']} | {pct(*a['extension_en_rango'])} | {a['prohibido']} | "
                    f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} |")
     t = summ["total"]
+    if t.get("con_aviso_cobertura"):
+        missing = t["clave"][1] - t["clave"][0]
+        out += ["", f"Respuestas con aviso de datos no mencionados: {t['con_aviso_cobertura']}/{t['n']}; "
+                f"datos clave que faltan en el texto y aparecen en el aviso: {t['clave_en_aviso']} de {missing}."]
     if t.get("citas_codigo") or (t.get("reparaciones") or [0, 0])[1]:
         out += ["", f"Respuestas con alguna cita del propio modelo: {t['con_citas_del_modelo']}/{t['n']}; "
                 f"etiquetas añadidas por el código: {t['citas_codigo']}; reescrituras por extensión conservadas: "

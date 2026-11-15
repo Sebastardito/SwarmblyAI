@@ -1,5 +1,5 @@
 {
- "version": "0.1.1",
+ "version": "0.1.2",
  "nota": "Batería abierta de desarrollo, con material ficticio. No es un banco sellado: se puede leer, discutir y usar para ajustar. Cada caso monta todos los documentos de corpus/ como fuentes del usuario; los de publico/ solo los sirve el registro público simulado.",
  "casos": [
   {"id": "S1-01", "cat": "S1", "turnos": ["¿Qué densidad de siembra se usó en el lote AB2?"],
@@ -21,7 +21,7 @@
   {"id": "S2-04", "cat": "S2", "turnos": ["¿Dónde trabajé antes de entrar a AcmeLabs?"],
    "clave": [["estaci[oó]n experimental los andes"], ["2016"]], "cita": true},
   {"id": "S3-01", "cat": "S3", "turnos": ["Escribe un informe de 300 a 400 palabras que compare los rendimientos de los lotes AB1 y AB2 en los tres sitios. Incluye una tabla con el rendimiento medio de cada lote por sitio y la diferencia absoluta, y cita la fuente de cada dato."],
-   "clave": [["2[,.]8"], ["3[,.]1"], ["2[,.]4"], ["2[,.]2"], ["1[,.]9"], ["2[,.]3"], ["\\b0[,.]3\\b"], ["\\b0[,.]2\\b"], ["\\b0[,.]4\\b"]],
+   "clave": [["2[,.]8"], ["3[,.]1"], ["2[,.]4"], ["2[,.]2"], ["1[,.]9"], ["2[,.]3"], ["\\b0[,.]30?\\b"], ["\\b0[,.]20?\\b"], ["\\b0[,.]40?\\b"]],
    "prohibido": ["parcela (central|oeste)\\b", "ladera (norte|sur|oeste)"], "palabras": [300, 400], "tabla": true, "cita": true},
   {"id": "S3-02", "cat": "S3", "turnos": ["Redacta un resumen ejecutivo de 250 a 300 palabras que relacione la clorosis observada en la Parcela Sur con el análisis de suelo y con las decisiones de la reunión de abril. Cita cada afirmación."],
    "clave": [["0[,.]09"], ["7[,.]9"], ["40 ?kg"], ["15 ?%"], ["22 ?%"], ["hierro"], ["enmienda|bajar el ph"]], "palabras": [250, 300], "cita": true},
