@@ -154,3 +154,16 @@ def test_f2_and_f4_in_the_chat(app_state, tmp_path):
     assert meta["citations_attached"] and "[D" in msg["content"]
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
     assert "Requisitos de esta solicitud" not in system          # the checklist needs compose.inventory
+
+
+def test_attach_citations_years_order_and_brackets():
+    src = _SRC + [{"label": "D3 p1", "text": "Informe de la temporada 2025-2026 de los lotes AB1 y AB2."},
+                  {"label": "D3 p2", "text": "Calendario de siembra 2025-2026 para la cooperativa."}]
+    out, attached = C.attach_citations(
+        "En esta comparación de los lotes se analizan las parcelas durante la temporada 2025-2026. "
+        "En la Parcela Sur, AB2 tuvo 85 % y AB1 81 % de germinación a los diez días. "
+        "Marta presentará una enmienda para bajar el pH del sector (D1 p2).", [*src[1:], src[0]])
+    assert "temporada 2025-2026." in out                       # years alone, few shared words
+    assert "81 % de germinación a los diez días [D2 p2][D1 p2]." in out
+    assert "(D1 p2)" not in out and "sector [D1 p2]." in out
+    assert [a["by"] for a in attached] == ["format", "figures"]
