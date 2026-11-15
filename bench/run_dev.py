@@ -217,6 +217,15 @@ def parse_set(items: list[str]) -> dict[str, Any]:
     return out
 
 
+def find_run(battery: Path, compare: str, exclude: Path | None = None) -> Path:
+    """A run folder, or the label of the latest run with it."""
+    target = Path(compare).expanduser()
+    if not target.exists():
+        found = [f for f in sorted((battery / "ejecuciones").glob(f"*_{compare}")) if f != exclude]
+        target = found[-1] if found else target
+    return target
+
+
 def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
     """Score a finished run again with the current cases (after a case is
     corrected); answers are not regenerated."""
@@ -238,7 +247,8 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
     info["repuntuada_utc"] = rb.utc_now()
     previous = None
     if compare:
-        previous = json.loads((Path(compare) / "resumen.json").read_text(encoding="utf-8"))["resumen"]
+        target = find_run(battery, compare, run_dir)
+        previous = json.loads((target / "resumen.json").read_text(encoding="utf-8"))["resumen"]
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
     (run_dir / "resumen.md").write_text(summary_markdown(run_dir.name, info, summ, rows, previous), encoding="utf-8")
@@ -356,11 +366,7 @@ def main(argv: list[str] | None = None) -> int:
     summ = summarise(rows)
     previous = None
     if args.compare:
-        target = Path(args.compare)
-        if not target.exists():          # a label: the latest run with it
-            found = sorted((battery / "ejecuciones").glob(f"*_{args.compare}"))
-            found = [f for f in found if f != run_dir]
-            target = found[-1] if found else target
+        target = find_run(battery, args.compare, run_dir)
         try:
             previous = json.loads((target / "resumen.json").read_text(encoding="utf-8"))["resumen"]
         except Exception as exc:
