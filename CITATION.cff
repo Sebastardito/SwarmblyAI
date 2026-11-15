@@ -4,10 +4,9 @@
 # This repository is the umbrella of Swarmbly AI: SwarmblyCore (in-tree),
 # SwarmblyLCE and SwarmblyApp (mirrors). Each component has its own DOI,
 # listed under `identifiers`; cite the component you used and, for the design
-# argument, the whitepaper (`preferred-citation`). Until the DOI of
-# distribution 3.2.0 is minted, the top-level `doi` is that of 3.1.0;
-# earlier distributions are listed under `identifiers` (3.0.1's version DOI
-# is added when known).
+# argument, the whitepaper (`preferred-citation`). The top-level `doi` is
+# distribution 3.2.0; earlier distributions are listed under `identifiers`
+# (3.0.1's version DOI is added when known).
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -33,7 +32,7 @@ abstract: >-
 version: "3.2.0"
 date-released: 2026-11-15
 license: AGPL-3.0-or-later
-doi: "10.5281/zenodo.24070646"   # 3.1.0, until the 3.2.0 record is minted
+doi: "10.5281/zenodo.24265876"
 
 authors:
   - given-names: "Sebastián A."
@@ -46,6 +45,9 @@ repository-code: "https://github.com/Sebastardito/SwarmblyAI"
 url: "https://github.com/Sebastardito/SwarmblyAI"
 
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24265876"
+    description: "Swarmbly AI 3.2.0, integrated distribution (this version)"
   - type: doi
     value: "10.5281/zenodo.24070646"
     description: "Swarmbly AI 3.1.0, integrated distribution (previous version)"
@@ -63,7 +65,10 @@ identifiers:
     description: "SwarmblyLCE whitepaper"
   - type: doi
     value: "10.5281/zenodo.24070622"
-    description: "SwarmblyApp 0.4.0 (previous version; 0.5.0, the version in this distribution, gets its DOI after the release)"
+    description: "SwarmblyApp 0.4.0 (previous version)"
+  - type: doi
+    value: "10.5281/zenodo.24265875"
+    description: "SwarmblyApp 0.5.0, the version in this distribution"
   - type: doi
     value: "10.5281/zenodo.23322638"
     description: "SwarmblyApp, concept DOI (all versions)"
