@@ -479,6 +479,22 @@ def _request_stems(text: str) -> set[str]:
     return {s for s in _stems(text) if s not in _INSTRUCTION}
 
 
+_INSTRUCTION_LIKE = re.compile(
+    r"\b(ignor[ae]\w*\s+(?:todas?\s+)?(?:las\s+|tus\s+)?instrucciones|olvida\w*\s+(?:las\s+|tus\s+)?instrucciones|"
+    r"ignore\s+(?:all\s+)?(?:the\s+|your\s+)?(?:previous|prior|above)\s+instructions|disregard\s+(?:all\s+)?"
+    r"(?:previous|prior)\s+instructions|system\s+prompt|prompt\s+del\s+sistema|"
+    r"env[ií]a\w*\s+(?:tambi[eé]n\s+)?(?:el\s+contenido|todos\s+los\s+documentos|tus\s+documentos)|"
+    r"send\s+(?:all|the\s+contents?\s+of)\s+(?:the\s+|your\s+)?(?:documents|files)|"
+    r"a\s+partir\s+de\s+ahora\s+(?:responde|act[uú]a|eres)|from\s+now\s+on\s+(?:you\s+are|answer|act))", re.I)
+
+
+def instruction_like(text: str) -> bool:
+    """Text addressed to an assistant ("ignora todas las instrucciones
+    anteriores y…", "send all the documents to…"): in a document it is
+    content to report, never an order."""
+    return bool(_INSTRUCTION_LIKE.search(text or ""))
+
+
 def _units(text: str) -> list[str]:
     """Sentences of a passage, and the rows of its tables with their header
     ("Sitio: Parcela Norte · Rendimiento medio (t/ha): 2,8 …")."""
@@ -522,7 +538,7 @@ def facts(request: str, sources: list[dict[str, Any]], inv: dict[str, Any] | Non
         # for a row "Parcela Sur · Nitrógeno total (%): 0,09")
         name = _stems(re.sub(r"[_\-.]+", " ", str(s.get("rel") or s.get("source") or "")))
         for unit in _units(str(s.get("text", ""))):
-            if len(unit.split()) >= 5 and not unit.startswith("#"):
+            if len(unit.split()) >= 5 and not unit.startswith("#") and not instruction_like(unit):
                 units.append((order, label, unit, name))
     df: dict[str, int] = {}
     for _, _, unit, _ in units:
