@@ -129,7 +129,10 @@ DEFAULTS: dict[str, Any] = {
     # 3.2: grounded composition, one step at a time, each off until the open
     # development battery (bench/dev) shows it helps. F0 is 3.1.
     "compose": {
-        "inventory": False,           # F1: requirements read by code, given to the model, checked
+        "inventory": False,           # F1: requirements read by code and checked (meta.requirements)
+        "checklist": True,            # F1: with inventory on, the requirements also go to the model
+        "attach_citations": False,    # F2: labels added by code where a sentence's figures are in a passage
+        "repair": False,              # F4: one rewrite when the length is out of range (needs inventory)
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,
