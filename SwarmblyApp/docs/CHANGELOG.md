@@ -1,10 +1,23 @@
 # Changelog
 
-## 0.5.0 — Grounded composition (unreleased)
+## 0.5.0 — Grounded composition and safety (2026-11-15)
 
-Swarmbly AI 3.2. Each step is behind its own setting (`compose.*`), off by
-default, and is kept only if the open development battery of Swarmbly AI
-(`bench/dev`, fictitious material) shows it helps; F0 is 0.4.0.
+Swarmbly AI 3.2. Each step has its own setting (`compose.*`) and was kept
+only if the open development battery of Swarmbly AI (`bench/dev`,
+fictitious material) showed it helps; F0 is 0.4.0. On by default: labels
+attached by code (F2), the facts a composition leaves out (F3a), closing
+the gaps (F3c), sources that disagree, documents named by file. Off: the
+requirement list for the model (F1), the bounded rewrite (F4) and
+scaffolding (F3b), which did not help with a 7B model; the composer model
+is an optional setting. Measured on the sealed S2/S3 banks of Swarmbly AI
+once, on `940c5c9` (qwen2.5:7b, defaults): supported claims in
+compositions 10/69 → 22/59 and 8/53 → 21/61, no regression in S2, zero
+sends; blind manual review in full agreement with the judge (an upper
+bound: the review sheet sat next to the judge's scoring). The closing
+paragraph (F3c) brought content foreign to the question there; it was
+guarded after the measurement (`776c5d4`, `647cfee`), checked on the open
+battery only. Figures in the Swarmbly AI 3.2.0 release notes. Requires
+SwarmblyLCE 0.2.0.
 
 - **Sources that disagree, and questions outside the sources.** The April
   minutes set the harvest of both lots for the second week of June and a
