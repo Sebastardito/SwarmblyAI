@@ -167,3 +167,8 @@ def test_attach_citations_years_order_and_brackets():
     assert "81 % de germinación a los diez días [D2 p2][D1 p2]." in out
     assert "(D1 p2)" not in out and "sector [D1 p2]." in out
     assert [a["by"] for a in attached] == ["format", "figures"]
+
+
+def test_attach_citations_respects_a_label_after_the_full_stop():
+    text = "La germinación de AB1 en la Parcela Norte fue del 87 %. [D1 p2]"
+    assert C.attach_citations(text, _SRC) == (text, [])
