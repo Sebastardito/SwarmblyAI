@@ -10,3 +10,4 @@ __pycache__/
 Thumbs.db
 build/
 *.egg-info/
+bench/dev/ejecuciones/

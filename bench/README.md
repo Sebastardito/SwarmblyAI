@@ -40,6 +40,8 @@ python3 bench/run_bank.py --bank /path/to/bank --model qwen2.5:7b \
     --persona "<fictitious user's name>" --executor "<your name>"
 ```
 
+For development, the **open battery** in [`dev/`](dev/README.md) uses the same machinery with fictitious material that can be read and used for tuning: `python3 bench/run_dev.py --model qwen2.5:7b`.
+
 Requirements: Swarmbly installed (the installer's `.venv`, or `--python`), Ollama running with the chat model and `nomic-embed-text`. Run each bank once per version; a technical failure means repeating the whole battery, never a single case.
 
 ---
@@ -69,6 +71,8 @@ python3 bench/run_bank.py --bank /ruta/al/banco --model qwen2.5:7b --check
 python3 bench/run_bank.py --bank /ruta/al/banco --model qwen2.5:7b \
     --persona "<nombre de la persona ficticia>" --executor "<tu nombre>"
 ```
+
+Para el desarrollo, la **batería abierta** de [`dev/`](dev/README.md) usa la misma maquinaria con material ficticio que se puede leer y usar para ajustar: `python3 bench/run_dev.py --model qwen2.5:7b`.
 
 **Requisitos:**
 
