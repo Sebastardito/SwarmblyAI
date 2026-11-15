@@ -506,6 +506,10 @@ def _units(text: str) -> list[str]:
     ("Sitio: Parcela Norte · Rendimiento medio (t/ha): 2,8 …")."""
     out, header = [], None
     prose = []
+    # LCE shows the paragraph under a heading with it ("Siembra y germinación —
+    # El lote AB2 se sembró…"): the heading is context, not part of the first
+    # sentence (it made the sowing sentence a germination fact, open battery u32)
+    text = re.sub(r"^[^.!?\n|]{1,90}?\s—\s", "", text or "", count=1)
     for line in (text or "").split("\n"):
         cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else None
         if cells is None:

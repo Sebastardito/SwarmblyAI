@@ -901,6 +901,8 @@ class ChatService:
                                 temperature=float(self.config()["model"].get("temperature", 0.2)),
                                 on_delta=on_delta, interrupt=request.stop_event.is_set)
                         addition = (getattr(more, "text", "") or "").strip()
+                        if re.fullmatch(r"\[[^\[\]]{40,}\]", addition):
+                            addition = addition[1:-1].strip()     # the whole paragraph in brackets
                         kept, why = compose.accept_gap(answer_text, addition, gaps)
                         if kept and _lang(addition) != _lang(user_text):
                             kept, why = False, "another language"

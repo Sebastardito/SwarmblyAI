@@ -155,6 +155,12 @@ default, and is kept only if the open development battery of Swarmbly AI
   specific topic word in common), the paragraph must be in the question's
   language, and header lines ("Responsable:", "Fecha:", "Author:") are never
   facts. Measured on the open battery only; the banks ran before this guard.
+  The check run showed one more cause: LCE shows a paragraph with the
+  heading above it ("Siembra y germinación — El lote AB2 se sembró…"), so
+  the sowing sentence counted as a germination fact and the closing
+  paragraph wrote sowing dates into a germination comparison. The heading
+  is now context, not part of the first sentence; a closing paragraph
+  wrapped whole in brackets is unwrapped.
 - **Composer by role** (`compose.model`). A composition goes to a larger
   local model when one is set and installed; questions stay with the chat's
   model, and a missing model is noted (`meta.composer_missing`). Controls on
