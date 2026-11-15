@@ -603,6 +603,20 @@ class ChatService:
                     else "sensible"
             if public_report is not None:
                 request.receipt_ctx["public_lookup"] = True
+            composer = str((cfg.get("compose") or {}).get("model") or "")
+            if composer and composer != model and request.receipt_ctx.get("inventory") and sources \
+                    and not public_hits:
+                # providers by role (3.2): a composition goes to a larger local
+                # model when one is set and installed (27B against 7B on the open
+                # battery: key data 90/99 → 96/99, ~2× the time)
+                try:
+                    installed = composer in (backend.list_models() or [])
+                except Exception:
+                    installed = False
+                if installed:
+                    answer_model = composer
+                else:
+                    request.receipt_ctx["composer_missing"] = composer
             # the language rule of the answer: the stopword vote said "en" for short
             # Spanish requests and gave them the English token rate
             budget = answer_budget(user_text, int(self.config()["model"].get("max_tokens", 1024)),
@@ -645,6 +659,8 @@ class ChatService:
             extra = {}
             if request.receipt_ctx.get("scaffold"):
                 extra["scaffold"] = request.receipt_ctx["scaffold"]
+            if request.receipt_ctx.get("composer_missing"):
+                extra["composer_missing"] = request.receipt_ctx["composer_missing"]
             if request.receipt_ctx.get("passages_withheld"):
                 extra["passages_withheld"] = (
                     f"your documents were not sent to {request.receipt_ctx['passages_withheld']} "
@@ -751,6 +767,38 @@ class ChatService:
                         answer_text = repaired
                         try:
                             result.text = repaired
+                        except Exception:
+                            pass
+            if inv and ccfg.get("gap_fill") and sources and not public_hits:
+                # F3c (3.2): the facts the draft left out (F3a) are written as one
+                # short closing paragraph, kept only with no figure of its own
+                from . import compose
+                gaps = compose.uncovered(answer_text, compose.facts(user_text, sources, inv, answer_text), limit=4)
+                if gaps:
+                    t0 = time.monotonic()
+                    try:
+                        if on_delta:
+                            on_delta("\n\n")
+                        with egress.purpose(answer_kind):
+                            more = backend.stream_chat(
+                                [{"role": "user", "content": compose.gap_prompt(user_text, answer_text, gaps,
+                                                                                 _lang(user_text))}],
+                                model=answer_model, max_tokens=320,
+                                temperature=float(self.config()["model"].get("temperature", 0.2)),
+                                on_delta=on_delta, interrupt=request.stop_event.is_set)
+                        addition = (getattr(more, "text", "") or "").strip()
+                        kept, why = compose.accept_gap(answer_text, addition, gaps)
+                    except Interrupted:
+                        raise
+                    except Exception as exc:
+                        addition, kept, why = "", False, f"failed: {exc}"
+                    extra["gap_fill"] = {"facts": len(gaps), "kept": kept, "why_not": why,
+                                         "words": len(addition.split()),
+                                         "seconds": round(time.monotonic() - t0, 1)}
+                    if kept:
+                        answer_text = answer_text.rstrip() + "\n\n" + addition
+                        try:
+                            result.text = answer_text
                         except Exception:
                             pass
             if ccfg.get("attach_citations") and sources and not public_hits:
