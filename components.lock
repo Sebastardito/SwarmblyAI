@@ -20,7 +20,7 @@
       "ref": "v0.2.0",
       "commit": "e375914dff535861d101ef733d59e3e3846b1a72",
       "tree": "a0a887dd3c7932f3491ed245b07e2b7ec075a2b3",
-      "doi": "10.5281/zenodo.23289041"
+      "doi": "10.5281/zenodo.24070616"
     },
     "SwarmblyApp": {
       "folder": "SwarmblyApp",
@@ -31,7 +31,7 @@
       "ref": "v0.4.0",
       "commit": "9784ea2e68f2f1c7caf5681c0fe1a46bfe2e98d9",
       "tree": "4ff549745b7215c595651d8d3688d973ec25f7de",
-      "doi": "10.5281/zenodo.23322638"
+      "doi": "10.5281/zenodo.24070622"
     }
   }
 }
