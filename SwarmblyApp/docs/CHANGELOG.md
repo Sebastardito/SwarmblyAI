@@ -18,7 +18,28 @@ default, and is kept only if the open development battery of Swarmbly AI
   (`meta.requirements`). Baseline (F0, 15 November 2026, 54 runs): a note
   asked for three recommendations got two from the sources and an invented
   one; compositions came out at half or double the requested length; two
-  had no citation.
+  had no citation. **Measured** (S3 × 3, qwen2.5:7b): no gain — passed 5/18
+  → 3/18, length in range 10/18 → 7/18, key data 91/99 → 92/99, unsupported
+  sentences 83 → 76. The 7B model does not follow a longer list better than
+  a short reminder. The inventory and its check stay (F4 needs them); the
+  list for the model has its own setting (`compose.checklist`).
+- **F2, labels attached by code** (`compose.attach_citations`). An
+  unlabelled sentence whose figures all appear in one passage (or in two,
+  each giving part of them; a difference or sum of two sourced figures in
+  the same sentence counts as sourced) gets that passage's label, and the
+  addition is recorded (`meta.citations_attached`). Sentences without
+  figures get one only if most of their words are in a single passage. It
+  says where the figures are, not that the reasoning around them holds: a
+  sentence that joins a figure from each report with an invented "because"
+  keeps no label when its words are not in those passages. In the F1 run a
+  paragraph comparing germination by site carried all six figures and no
+  label in six of six answers.
+- **F4, one bounded repair** (`compose.repair`). When the code's check finds
+  the length out of range, the model gets its text back once with the count
+  and the range; the rewrite is kept only if it lands closer to the range,
+  keeps the table and the entities, and brings no figure that is neither in
+  the draft nor in the sources (`meta.repair`). It costs a second generation
+  for the answers that miss the length, and the draft is replaced at the end.
 
 ## 0.4.0 — Projects (2026-11-09)
 

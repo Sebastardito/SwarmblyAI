@@ -16,7 +16,13 @@ In the F0 run of the open battery (15 November 2026) a note asked for "the
 three main recommendations" and got two from the sources and one invented
 ("aunque no se menciona directamente en las fuentes"), while the third one
 in the minutes was left out; paragraphs came out at half or double the
-requested length, and two compositions had no citation at all.
+requested length, and two compositions had no citation at all. F1 measured
+on the six compositions × 3 gave no gain (passed 5/18 → 3/18, length in range
+10/18 → 7/18): the inventory and its check stay because F4 uses them, and the
+list for the model has its own setting (``compose.checklist``).
+
+**F2, labels attached by code** (``compose.attach_citations``) and **F4, one
+bounded repair** (``compose.repair``) are below.
 """
 
 from __future__ import annotations
@@ -181,3 +187,231 @@ def check(answer: str, inv: dict[str, Any]) -> dict[str, Any]:
     out["citations"] = {"paragraphs": len(paragraphs), "cited": cited, "ok": cited == len(paragraphs)}
     out["ok"] = all(v.get("ok", True) for v in out.values() if isinstance(v, dict))
     return out
+
+
+# --- F2: labels attached by code ------------------------------------------------
+#
+# F1 alone did not move the 7B model (open battery, 15 November 2026, S3 × 3):
+# a paragraph comparing germination by site carried every figure and no label
+# in all six runs, with or without the requirement list. The figures of a
+# sentence can be found in the passages by code: when every figure in an
+# unlabelled sentence appears in one passage (or two passages, each giving
+# part of them), the passage's label is added and the addition is recorded
+# (``meta.citations_attached``). It certifies where the figures are, not the
+# reasoning around them: "AB2 cost less because it yielded more" keeps a
+# figure from each report and an invented "because".
+
+_NUMBER = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)*)(\s?%)?")
+_OUTSIDE = re.compile(r"^\W*(fuera\s+de\s+tus\s+fuentes|outside\s+your\s+sources)\b", re.I)
+_SENT_END = re.compile(r"([.!?]+[*_)\"»]*)\s*$")
+
+
+def _canon(num: str) -> str:
+    """"1.150" and "1,150" (thousands) → "1150"; "2,8" and "2.8" → "2.8"."""
+    if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", num):
+        return re.sub(r"[.,]", "", num)
+    return num.replace(",", ".")
+
+
+def _figures(text: str) -> set[str]:
+    """The figures of a sentence worth tracing: decimals, percentages and
+    numbers of two digits or more (a lone "3" is usually a count or a list
+    number)."""
+    out = set()
+    for m in _NUMBER.finditer(_CITE.sub(" ", text or "")):
+        num, pct = m.group(1), bool(m.group(2))
+        if len(num) < 2 and not pct:
+            continue
+        out.add(_canon(num))
+    return out
+
+
+def _fold(text: str) -> str:
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", (text or "").lower())
+                   if unicodedata.category(c) != "Mn")
+
+
+def _stems(text: str) -> set[str]:
+    return {w[:5] for w in re.findall(r"[a-z]{4,}", _fold(_CITE.sub(" ", text or "")))}
+
+
+def _sentence_spans(line: str) -> list[tuple[int, int]]:
+    spans, start = [], 0
+    for m in re.finditer(r"(?<=[.!?])\s+", line):
+        spans.append((start, m.start()))
+        start = m.end()
+    spans.append((start, len(line)))
+    return [(a, b) for a, b in spans if b > a]
+
+
+def _derived(figs: set[str], known: set[str]) -> set[str]:
+    """Figures of the sentence that are the difference or the sum of two other
+    figures in it that the passages give ("1.150 … 1.080 … una diferencia de
+    70"): computed from sourced figures, so they need no passage of their own."""
+    def num(x: str) -> float | None:
+        try:
+            return float(x)
+        except ValueError:
+            return None
+    given = [v for v in (num(x) for x in figs & known) if v is not None]
+    out = set()
+    for f in figs - known:
+        v = num(f)
+        if v is None:
+            continue
+        if any(abs(abs(a - b) - v) < 0.006 or abs(a + b - v) < 0.006
+               for i, a in enumerate(given) for b in given[i + 1:]):
+            out.add(f)
+    return out
+
+
+def _labels_for(sentence: str, passages: list[tuple[str, str, set[str], set[str]]]) -> list[str]:
+    figs = _figures(sentence)
+    known: set[str] = set()
+    for _, _, fg, _ in passages:
+        known |= fg
+    figs -= _derived(figs, known)
+    words = _stems(sentence)
+    if not words:
+        return []
+
+    def overlap(st: set[str]) -> float:
+        return len(words & st) / len(words)
+
+    if figs:
+        full = [(overlap(st), lab) for lab, _, fg, st in passages if figs <= fg]
+        full = [x for x in full if x[0] >= 0.3]
+        if full:
+            return [max(full)[1]]
+        best: tuple[float, list[str]] | None = None
+        for i, (la, _, fa, sa) in enumerate(passages):
+            for lb, _, fb, sb in passages[i + 1:]:
+                if la == lb or not (figs <= (fa | fb)) or not (figs & fa) or not (figs & fb):
+                    continue
+                score = len(words & (sa | sb)) / len(words)
+                if score >= 0.3 and (best is None or score > best[0]):
+                    best = (score, [la, lb])
+        return best[1] if best else []
+    scored = sorted(((overlap(st), lab) for lab, _, _, st in passages), reverse=True)
+    if scored and scored[0][0] >= 0.6 and (len(scored) == 1 or scored[0][0] > scored[1][0]):
+        return [scored[0][1]]
+    return []
+
+
+def attach_citations(answer: str, sources: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
+    """Adds the label of the passage that holds an unlabelled sentence's
+    figures (or most of its words). Tables, headings, questions and anything
+    under "Fuera de tus fuentes:" are left alone."""
+    passages = [(" ".join(str(s.get("label", "")).split()), str(s.get("text", "")),
+                 _figures(str(s.get("text", ""))), _stems(str(s.get("text", ""))))
+                for s in sources if s.get("label")]
+    if not passages or not answer:
+        return answer, []
+    attached: list[dict[str, Any]] = []
+    out_paras = []
+    for para in re.split(r"(\n\s*\n)", answer):
+        if not para.strip():
+            out_paras.append(para)
+            continue
+        outside = False
+        lines = []
+        for line in para.split("\n"):
+            if _OUTSIDE.search(line):
+                outside = True
+            stripped = line.lstrip()
+            if outside or stripped.startswith(("|", "#", ">")):
+                lines.append(line)
+                continue
+            pieces, cursor = [], 0
+            for a, b in _sentence_spans(line):
+                sentence = line[a:b]
+                pieces.append(line[cursor:a])
+                cursor = b
+                if (len(sentence.split()) < 6 or _CITE.search(sentence)
+                        or sentence.rstrip("*_ ").endswith("?")):
+                    pieces.append(sentence)
+                    continue
+                labels = _labels_for(sentence, passages)
+                if not labels:
+                    pieces.append(sentence)
+                    continue
+                tag = " " + "".join(f"[{x}]" for x in labels)
+                m = _SENT_END.search(sentence)
+                new = sentence[:m.start()].rstrip() + tag + m.group(1) if m else sentence.rstrip() + tag
+                pieces.append(new)
+                attached.append({"sentence": sentence.strip()[:200], "labels": labels,
+                                 "by": "figures" if _figures(sentence) else "words"})
+            pieces.append(line[cursor:])
+            lines.append("".join(pieces))
+        out_paras.append("\n".join(lines))
+    return "".join(out_paras), attached
+
+
+# --- F4: one bounded repair -------------------------------------------------------
+#
+# The length the request asked for was missed in 8 of 18 compositions with F0
+# and 11 of 18 with the requirement list (the 7B model wrote 73–79 words for
+# "un párrafo de 150 a 200 palabras" every time). When the code's check finds
+# the length out of range, the model gets its own text back once, with the
+# count and the range; the new text is kept only if it lands closer to the
+# range and brings no figure that is neither in the draft nor in the sources.
+
+def needs_repair(chk: dict[str, Any]) -> str:
+    length = chk.get("length") or {}
+    if length and not length.get("ok"):
+        return "length"
+    return ""
+
+
+def repair_message(chk: dict[str, Any], lang: str = "es") -> str:
+    low, high = chk["length"]["want"]
+    got = chk["length"]["got"]
+    es = lang == "es"
+    if got < low:
+        return (f"Tu texto tiene {got} palabras y se pidieron entre {low} y {high}. Reescríbelo completo con "
+                f"entre {low} y {high} palabras: desarrolla los datos de los párrafos de las fuentes que ya usas "
+                "o que la solicitud pide (cada uno con su etiqueta), sin añadir nada que no esté en ellos. "
+                "Devuelve solo el texto nuevo." if es else
+                f"Your text has {got} words and {low} to {high} were asked for. Rewrite it in full with "
+                f"{low} to {high} words: develop the facts from the source paragraphs that you use or that the "
+                "request asks for (each with its label), adding nothing that is not in them. Return only the "
+                "new text.")
+    return (f"Tu texto tiene {got} palabras y se pidieron entre {low} y {high}. Reescríbelo completo con "
+            f"entre {low} y {high} palabras: quita lo que no responde a la solicitud y conserva cada dato con "
+            "su etiqueta. Devuelve solo el texto nuevo." if es else
+            f"Your text has {got} words and {low} to {high} were asked for. Rewrite it in full with {low} to "
+            f"{high} words: remove what does not answer the request and keep every fact with its label. "
+            "Return only the new text.")
+
+
+def _distance(chk: dict[str, Any]) -> int:
+    length = chk.get("length") or {}
+    if not length:
+        return 0
+    low, high = length["want"]
+    got = length["got"]
+    return max(0, low - got, got - high)
+
+
+def accept_repair(draft: str, repaired: str, inv: dict[str, Any], passages: list[str]) -> tuple[bool, str]:
+    """Keep the repaired text only if it is closer to the requested length,
+    keeps the table and the entities it had, and brings no new figure that is
+    not in the sources."""
+    if not (repaired or "").strip():
+        return False, "empty"
+    before, after = check(draft, inv), check(repaired, inv)
+    if _distance(after) >= _distance(before):
+        return False, "not closer to the requested length"
+    if (before.get("table") or {}).get("ok") and not (after.get("table") or {}).get("ok"):
+        return False, "lost the table"
+    missing_before = len((before.get("entities") or {}).get("missing") or [])
+    if len((after.get("entities") or {}).get("missing") or []) > missing_before:
+        return False, "lost an entity"
+    known = _figures(draft)
+    for p in passages:
+        known |= _figures(p)
+    new = sorted(_figures(repaired) - known)
+    if new:
+        return False, "new figures not in the sources: " + ", ".join(new[:5])
+    return True, ""

@@ -566,12 +566,15 @@ class ChatService:
                                sources, public_hits, user_text, _lang(user_text))}]
             elif sources:
                 inv = None
-                if (cfg.get("compose") or {}).get("inventory"):
+                ccfg = cfg.get("compose") or {}
+                if ccfg.get("inventory") or ccfg.get("repair"):
                     from . import compose
                     if compose.is_composition(user_text):
                         inv = compose.inventory(user_text, [str(x.get("text", "")) for x in sources])
                         request.receipt_ctx["inventory"] = inv
-                blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=inv))
+                given_list = inv if (inv is not None and ccfg.get("inventory")
+                                     and ccfg.get("checklist", True)) else None
+                blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=given_list))
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
                 # only), so "which sources do you have?" is not invented
@@ -698,11 +701,57 @@ class ChatService:
                                      [str(x.get("text", "")) for x in sources])
             if missed:
                 extra["missed_sources"] = missed
-            extra["citations"] = _check_citations(answer_text, sources, history, web_found)
-            if request.receipt_ctx.get("inventory"):
+            ccfg = self.config().get("compose") or {}
+            inv = request.receipt_ctx.get("inventory")
+            if inv and ccfg.get("repair") and sources and not public_hits:
+                # F4 (3.2): one rewrite when the code's check finds the length out
+                # of range; kept only if closer and with no new figure
                 from . import compose
-                extra["requirements"] = {"inventory": request.receipt_ctx["inventory"],
-                                         "check": compose.check(answer_text, request.receipt_ctx["inventory"])}
+                first = compose.check(answer_text, inv)
+                reason = compose.needs_repair(first)
+                if reason:
+                    t0 = time.monotonic()
+                    try:
+                        with egress.purpose(answer_kind):
+                            second = backend.stream_chat(
+                                [*context, {"role": "assistant", "content": answer_text},
+                                 {"role": "user", "content": compose.repair_message(first, _lang(user_text))}],
+                                model=answer_model, max_tokens=budget,
+                                temperature=float(self.config()["model"].get("temperature", 0.2)),
+                                on_delta=None, interrupt=request.stop_event.is_set)
+                        repaired = getattr(second, "text", "") or ""
+                        kept, why = compose.accept_repair(answer_text, repaired, inv,
+                                                          [str(x.get("text", "")) for x in sources])
+                    except Interrupted:
+                        raise
+                    except Exception as exc:
+                        repaired, kept, why = "", False, f"repair failed: {exc}"
+                    extra["repair"] = {"reason": reason, "before": first.get("length"),
+                                       "after": compose.check(repaired, inv).get("length") if repaired else None,
+                                       "kept": kept, "why_not": why,
+                                       "seconds": round(time.monotonic() - t0, 1)}
+                    if kept:
+                        answer_text = repaired
+                        try:
+                            result.text = repaired
+                        except Exception:
+                            pass
+            if ccfg.get("attach_citations") and sources and not public_hits:
+                # F2 (3.2): a label added by code where an unlabelled sentence's
+                # figures are in a passage; recorded so the receipt can say so
+                from . import compose
+                with_labels, attached = compose.attach_citations(answer_text, sources)
+                if attached:
+                    answer_text = with_labels
+                    try:
+                        result.text = with_labels
+                    except Exception:
+                        pass
+                    extra["citations_attached"] = attached
+            extra["citations"] = _check_citations(answer_text, sources, history, web_found)
+            if inv:
+                from . import compose
+                extra["requirements"] = {"inventory": inv, "check": compose.check(answer_text, inv)}
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:
