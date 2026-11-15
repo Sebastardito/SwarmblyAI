@@ -30,7 +30,12 @@ default, and is kept only if the open development battery of Swarmbly AI
   instructions), it is never a fact for F3a or F3c, and the answer carries a
   notice (`meta.injection`, whether the answer repeats it). "Resume mis notas
   de campo." was read as English: Spanish marks now include "mis", "tus",
-  "sus" and composing verbs.
+  "sus" and composing verbs. **Measured** (open battery 0.2.0, 7B, 30 × 2):
+  passed 46/60, key data 128/138, S3 64/66 (the best 7B run so far), no
+  answer repeated the injected line, 0 leaks. A question about a named
+  document now stays on it (two passages of other documents at most, none
+  whole): with the first report also given whole, one summary of the notes
+  was mostly the report.
 - **Ollama cloud models are a third-party destination** (privacy fix). An
   Ollama on this computer forwards its cloud models ("deepseek-v4-pro:cloud",
   "gpt-oss:120b-cloud") to ollama.com; the app saw only 127.0.0.1 and let
