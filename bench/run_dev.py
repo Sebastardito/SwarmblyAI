@@ -242,7 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--repeat", type=int, default=1, help="runs per case (the model has no fixed seed)")
     ap.add_argument("--set", action="append", default=[], help="extra app setting key=value (JSON value)")
     ap.add_argument("--label", default="", help="short label for the run folder")
-    ap.add_argument("--compare", default="", help="an earlier run folder to compare with")
+    ap.add_argument("--compare", default="", help="an earlier run folder, or the label of the latest run with it")
     ap.add_argument("--case-timeout", type=float, default=600.0)
     ap.add_argument("--battery", default=str(DEV), help="battery folder (casos.json, corpus/, publico/)")
     if argv is None:
@@ -341,8 +341,13 @@ def main(argv: list[str] | None = None) -> int:
     summ = summarise(rows)
     previous = None
     if args.compare:
+        target = Path(args.compare)
+        if not target.exists():          # a label: the latest run with it
+            found = sorted((battery / "ejecuciones").glob(f"*_{args.compare}"))
+            found = [f for f in found if f != run_dir]
+            target = found[-1] if found else target
         try:
-            previous = json.loads((Path(args.compare) / "resumen.json").read_text(encoding="utf-8"))["resumen"]
+            previous = json.loads((target / "resumen.json").read_text(encoding="utf-8"))["resumen"]
         except Exception as exc:
             print(f"No se pudo leer la corrida a comparar: {exc}")
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
