@@ -60,6 +60,19 @@ default, and is kept only if the open development battery of Swarmbly AI
   see is a decision the model did not pick as a recommendation, or a
   paragraph that retrieval never brought. Decimals with trailing zeros
   ("2,80") are the figure of the sources ("2,8") for F2 and F3a.
+- **F3b, composition by scaffolding** (`compose.scaffold`, off until
+  measured). The IA-Scaffolding idea of Swarmbly on one machine: the code
+  plans the sections of a composition from the facts that bear on the
+  request, the model writes each section (and the table, when asked) as a
+  short task that sees only its facts, and the code joins them in the order
+  the request names their topics. Facts that share a specific topic word go
+  in the same section (the chlorosis of both lots), a word counts more the
+  fewer paragraphs use it, units of measure are not a topic, and a table row
+  that names the request's entity counts more. With fewer than two facts the
+  request is answered in one go. The sections are independent: a network of
+  nodes could write them at the same time. `meta.scaffold` keeps the plan
+  and the time of each call. `model.think` (Ollama) can turn off the
+  thinking of a reasoning model used as a control.
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,

@@ -610,12 +610,27 @@ class ChatService:
             answer_kind = egress.PASSAGES if sources else egress.QUESTION
             if answer_model != model:
                 budget *= 2          # a reasoning model spends tokens before it answers
-            with egress.purpose(answer_kind):
-                result = backend.stream_chat(
-                    context, model=answer_model, max_tokens=budget,
+            scaffold = None
+            ccfg_now = self.config().get("compose") or {}
+            if (ccfg_now.get("scaffold") and request.receipt_ctx.get("inventory") and sources
+                    and not public_hits):
+                from . import compose
+                scaffold = compose.plan(user_text, sources, request.receipt_ctx["inventory"])
+            if scaffold:
+                # F3b (3.2): the code plans the sections, the model writes each
+                # one from its facts, the code assembles them
+                result, scaffold_meta = _compose_by_sections(
+                    backend, scaffold, user_text, model=answer_model,
                     temperature=float(self.config()["model"].get("temperature", 0.2)),
-                    on_delta=on_delta,
-                    interrupt=request.stop_event.is_set)
+                    on_delta=on_delta, interrupt=request.stop_event.is_set, kind=answer_kind)
+                request.receipt_ctx["scaffold"] = scaffold_meta
+            else:
+                with egress.purpose(answer_kind):
+                    result = backend.stream_chat(
+                        context, model=answer_model, max_tokens=budget,
+                        temperature=float(self.config()["model"].get("temperature", 0.2)),
+                        on_delta=on_delta,
+                        interrupt=request.stop_event.is_set)
             fusion_fallback = ""
             if answer_model != model and not (getattr(result, "text", "") or "").strip():
                 # The fusion model returned nothing (P2e round 9c: one empty answer
@@ -628,6 +643,8 @@ class ChatService:
                         temperature=float(self.config()["model"].get("temperature", 0.2)),
                         on_delta=on_delta, interrupt=request.stop_event.is_set)
             extra = {}
+            if request.receipt_ctx.get("scaffold"):
+                extra["scaffold"] = request.receipt_ctx["scaffold"]
             if request.receipt_ctx.get("passages_withheld"):
                 extra["passages_withheld"] = (
                     f"your documents were not sent to {request.receipt_ctx['passages_withheld']} "
@@ -1231,6 +1248,51 @@ _ASKS_REFERENCES = re.compile(r"\b(referencias?|art[ií]culos?|estudios|bibliogr
                               r"literature)\b", re.I)
 _CITE = re.compile(r"\b([A-Z]\d+\s+p\d+|W\d+)\b")
 _CITE_FILE = re.compile(r"\[([A-Z]\d+\s+p\d+)\]\s*\(([^)]{3,200})\)")
+
+
+def _compose_by_sections(backend: Any, plan: dict[str, Any], user_text: str, *, model: str,
+                         temperature: float, on_delta: Callable[[str], None] | None,
+                         interrupt: Callable[[], bool], kind: str) -> tuple[GenerationResult, dict[str, Any]]:
+    """F3b (3.2): one short generation per section of the plan (and one for the
+    table), streamed in order and joined. Each section sees only its facts."""
+    from . import compose
+    lang = _lang(user_text)
+    tasks: list[tuple[str, str, int]] = []
+    sections = plan["sections"]
+    for i, sec in enumerate(sections):
+        tasks.append(("section", compose.section_prompt(user_text, sec, i, len(sections), lang),
+                      max(160, int(sec["words"] * 2.4))))
+    if plan.get("table"):
+        all_facts = [f for sec in sections for f in sec["facts"]]
+        low = (user_text or "").lower()
+        t_pos = min((low.find(w) for w in ("tabla", "cuadro", "table") if w in low), default=-1)
+        k_pos = min((low.find(w) for w in ("informe", "párrafo", "parrafo", "texto", "resumen", "report",
+                                           "paragraph", "text") if w in low), default=10 ** 6)
+        table = ("table", compose.table_prompt(user_text, all_facts, lang), 400)
+        tasks.insert(0 if 0 <= t_pos < k_pos else 1, table)
+    parts: list[str] = []
+    tokens = 0
+    started = time.monotonic()
+    calls = []
+    for n, (what, prompt, max_tokens) in enumerate(tasks):
+        if n and on_delta:
+            on_delta("\n\n")
+        t0 = time.monotonic()
+        with egress.purpose(kind):
+            r = backend.stream_chat([{"role": "user", "content": prompt}], model=model,
+                                    max_tokens=max_tokens, temperature=temperature,
+                                    on_delta=on_delta, interrupt=interrupt)
+        text = (getattr(r, "text", "") or "").strip()
+        parts.append(text)
+        tokens += int(getattr(r, "completion_tokens", 0) or 0)
+        calls.append({"part": what, "words": len(text.split()), "seconds": round(time.monotonic() - t0, 1)})
+    total_ms = int((time.monotonic() - started) * 1000)
+    result = GenerationResult(text="\n\n".join(p for p in parts if p), model=model,
+                              completion_tokens=tokens, total_ms=total_ms, finish_reason="stop",
+                              meta={"backend": getattr(backend, "name", "")})
+    meta = {"sections": len(sections), "table": bool(plan.get("table")),
+            "facts": [len(sec["facts"]) for sec in sections], "calls": calls}
+    return result, meta
 
 
 def _check_citations(answer: str, sources: list[dict[str, Any]],

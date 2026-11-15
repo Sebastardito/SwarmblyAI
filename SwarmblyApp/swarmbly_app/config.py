@@ -36,6 +36,7 @@ DEFAULTS: dict[str, Any] = {
         "model_name": "",             # empty -> auto pick
         "max_tokens": 1024,
         "temperature": 0.2,
+        "think": None,                # Ollama: false turns off a reasoning model's thinking (None: not sent)
         "embedder": "hash",           # hash (lexical) | server (Ollama /embeddings)
         "embed_model": "nomic-embed-text",
         "max_tokens_per_fragment": 400,
@@ -134,6 +135,7 @@ DEFAULTS: dict[str, Any] = {
         "attach_citations": True,     # F2: labels added by code where a sentence's figures are in a passage
         "repair": False,              # F4: one rewrite when the length is out of range (needs inventory)
         "coverage": True,             # F3a: facts of the sources the composition leaves out, shown under it
+        "scaffold": False,            # F3b: sections planned by code, each written from its facts, joined
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,

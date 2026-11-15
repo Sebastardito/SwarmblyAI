@@ -218,3 +218,43 @@ def test_coverage_in_the_chat(app_state, tmp_path):
                         "la Parcela Sur.", mode="local", run_async=False)
     cov = app_state.chat.get_messages(conv["id"])[-1]["meta"]["coverage"]
     assert [m["text"][:28] for m in cov["missing"]] == ["El 28 de febrero se observó "]
+
+
+def test_plan_groups_parallel_facts_and_follows_the_request():
+    src = [dict(s, rel=r) for s, r in zip(_CLOROSIS, ["analisis_suelo.md", "informe_ab1.md", "informe_ab2.md",
+                                                       "informe_ab1.md", "informe_ab1.md"])]
+    src.append({"label": "D6 p4", "rel": "acta.md",
+                "text": "Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur según el análisis de suelo."})
+    q = ("Redacta un resumen ejecutivo de 250 a 300 palabras que relacione la clorosis observada en la "
+         "Parcela Sur con el análisis de suelo y con las decisiones de la reunión. Cita cada afirmación.")
+    p = C.plan(q, src, C.inventory(q, [s["text"] for s in src]))
+    first = [f["label"] for f in p["sections"][0]["facts"]]
+    assert sorted(first) == ["D2 p11", "D3 p11"]                 # both lots' chlorosis, first as asked
+    assert all(sec["words"] >= 30 for sec in p["sections"]) and p["table"] is False
+    prompt = C.section_prompt(q, p["sections"][0], 0, len(p["sections"]))
+    assert "[D2 p11]" in prompt and "solo el primer párrafo" in prompt
+    assert C.plan("Escribe un párrafo de 100 palabras sobre el riego.", src[:1], {"entities": []}) is None
+
+
+def test_f3b_in_the_chat(app_state, tmp_path):
+    class Sections(FakeBackend):
+        def stream_chat(self, messages, **kw):
+            text = messages[-1]["content"]
+            self.reply = ("| Lote | Clorosis |\n|---|---|\n| AB1 | 15 % |\n| AB2 | 22 % |\nFuente: [D1 p1] [D2 p1]"
+                          if "Haz solo la tabla" in text else
+                          "La clorosis llegó al 15 % de las plantas en AB1 [D1 p1] y al 22 % en AB2 [D2 p1].")
+            return super().stream_chat(messages, **kw)
+    fake = Sections()
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("S", parent=tmp_path / "p")
+    (p.sources / "ab1.md").write_text(_CLOROSIS[1]["text"] + "\n", encoding="utf-8")
+    (p.sources / "ab2.md").write_text(_CLOROSIS[2]["text"] + "\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "compose.scaffold": True})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 40 a 60 palabras sobre la clorosis observada en la "
+                        "Parcela Sur e incluye una tabla.", mode="local", run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    sc = msg["meta"]["scaffold"]
+    assert sc["sections"] == 1 and sc["table"] is True and [c["part"] for c in sc["calls"]] == ["section", "table"]
+    assert msg["content"].startswith("La clorosis") and "| AB1 | 15 % |" in msg["content"]
+    assert all(len(c["messages"]) == 1 for c in fake.calls[-2:])          # each task sees only its own facts
