@@ -194,8 +194,22 @@ class ChatService:
             self._run_generation(request, mode, model)
         return user_msg, assistant_msg
 
-    def _whole_small_documents(self, sources: list[dict[str, Any]],
-                               project_id: str) -> list[dict[str, Any]]:
+    def _whole_small_documents(self, sources: list[dict[str, Any]], project_id: str,
+                               named: list[str] | tuple[str, ...] = (),
+                               wide: bool = False) -> list[dict[str, Any]]:
+        # 3.2: a document the request names by its file ("mis notas de campo" →
+        # notas_campo_varias.md) goes first and whole, even if the search did
+        # not rank it (it brought another report whole, open battery)
+        for doc in reversed([d for d in named if d not in {s.get("doc_id") for s in sources}]):
+            try:
+                spans = self.document_spans(project_id, doc) if self.document_spans else []
+            except Exception:
+                spans = []
+            if spans:
+                sources = [{**spans[0], "score": (sources[0].get("score") if sources else None)}, *sources]
+        if named:
+            first = [s for s in sources if s.get("doc_id") in named]
+            sources = first + [s for s in sources if s.get("doc_id") not in named]
         if not sources:
             return sources
         # Only the document of the best passage, or one with two passages or
@@ -204,15 +218,46 @@ class ChatService:
         counts: dict[str, int] = {}
         for s in sources:
             counts[s.get("doc_id", "")] = counts.get(s.get("doc_id", ""), 0) + 1
-        eligible = {sources[0].get("doc_id", "")} | {d for d, c in counts.items() if c >= 2}
+        eligible = {sources[0].get("doc_id", "")} | {d for d, c in counts.items() if c >= 2} | set(named)
+        if wide:
+            # 3.2: a composition draws on several documents: the three best are
+            # given whole when short ("qué aprendimos esta temporada" got the
+            # minutes whole and one paragraph of each report, never the chlorosis)
+            order: list[str] = []
+            for s in sources:
+                if s.get("doc_id") and s["doc_id"] not in order:
+                    order.append(s["doc_id"])
+            eligible |= set(order[:3])
         # the memory notes file is a list of unrelated notes: only the matching
         # ones go (it was added whole to every answer, fourth test)
         eligible -= {s.get("doc_id", "") for s in sources
                      if s.get("source") in ("notas.md", "glosario.md")}
-        return self._whole_docs(sources, project_id, eligible)
+        return self._whole_docs(sources, project_id, eligible, budget=WHOLE_DOC_CHARS * (3 if wide else 2))
+
+    def _named_documents(self, text: str, project_id: str) -> list[str]:
+        """doc_ids of the user's files the request names: two words of the file
+        name ("notas de campo" → notas_campo_varias.md), or its only word when
+        long. The memory notes and the glossary are never named this way."""
+        if self.document_list is None:
+            return []
+        try:
+            docs = self.document_list(project_id)
+        except Exception:
+            return []
+        asked = _name_tokens(text)
+        out = []
+        for d in docs:
+            if d.get("glossary") or not d.get("doc_id") or not d.get("passages") \
+                    or d.get("name") in ("notas.md", "glosario.md"):
+                continue
+            own = _name_tokens(Path(str(d.get("name", ""))).stem)
+            hit = own & asked
+            if len(hit) >= 2 or (len(own) == 1 and hit and len(next(iter(own))) >= 5):
+                out.append(str(d["doc_id"]))
+        return out[:3]
 
     def _whole_docs(self, sources: list[dict[str, Any]], project_id: str,
-                    eligible: set[str]) -> list[dict[str, Any]]:
+                    eligible: set[str], budget: int = 0) -> list[dict[str, Any]]:
         """A short document that answered is given whole, in order (3.1).
 
         "Describe the manual step by step" over a three-page manual got four
@@ -224,7 +269,7 @@ class ChatService:
             return sources
         out: list[dict[str, Any]] = []
         done: set[str] = set()
-        budget = WHOLE_DOC_CHARS * 2
+        budget = budget or WHOLE_DOC_CHARS * 2
         for s in sources:
             doc = s.get("doc_id", "")
             if doc in done:
@@ -356,11 +401,8 @@ class ChatService:
                 if not pol.authorised(dest_host):
                     egress.record(destino=dest_host, clase=dest_cls, tipo=egress.QUESTION,
                                   bytes=0, motivo="modelo", bloqueado=True)
-                    return self._fail(request, (
-                        f"The configured model runs at {dest_host}, a third-party service you "
-                        "have not authorised. Nothing was sent. Authorise it in Settings → "
-                        "Models (third-party model services), or choose a model on this "
-                        "computer."))
+                    return self._fail(request, _privacy_message(
+                        "model", dest_host, str(self.config().get("language") or "en")))
                 passages_allowed = pol.third_party_passages
             if not model:
                 raise IncompleteSettings("no model selected")
@@ -390,6 +432,18 @@ class ChatService:
                 # returned nothing in 90 tokens (P2e round 6).
                 exp_model = ((cfg.get("lce") or {}).get("expansion_model")
                              or (cfg.get("model") or {}).get("model_name") or model)
+                composer = str((cfg.get("compose") or {}).get("model") or "")
+                if composer and lce_on:
+                    from .compose import is_composition
+                    if is_composition(user_text) and not _remote_host(backend, composer):
+                        # 3.2: the composer also writes the search terms of a
+                        # composition: with the 7B's terms the farmers' text never
+                        # found the chlorosis report, with the 27B's it did (3 of 3)
+                        try:
+                            if composer in (backend.list_models() or []):
+                                exp_model = composer
+                        except Exception:
+                            pass
                 # a short follow-up ("¿puedes extenderlo?") is expanded with the
                 # previous question; alone it gave unrelated keywords (3.1 test)
                 prev_q = _previous_user_turn(context)
@@ -408,7 +462,11 @@ class ChatService:
                     sources = self.retriever(user_text, extra_terms, request.project_id) or []
                 except Exception:
                     sources = []
-                sources = self._whole_small_documents(sources, request.project_id)
+                from .compose import is_composition
+                sources = self._whole_small_documents(
+                    sources, request.project_id,
+                    named=self._named_documents(user_text, request.project_id),
+                    wide=is_composition(user_text))
                 _label_sources(sources, history)
             public_hits: list[dict[str, Any]] = []
             public_report: dict[str, Any] | None = None
@@ -850,7 +908,8 @@ class ChatService:
             self._finish(request, None, status="stopped",
                          note="interrupted by user")
         except egress.EgressDenied as exc:
-            self._fail(request, str(exc))
+            lang_ui = str(self.config().get("language") or "en")
+            self._fail(request, _privacy_message(exc.kind, exc.destination, lang_ui, str(exc)))
         except (BackendError, IncompleteSettings, KeyError) as exc:
             self._fail(request, str(exc))
         except Exception as exc:  # never leave a request hanging in "running"
@@ -1309,6 +1368,46 @@ _ASKS_REFERENCES = re.compile(r"\b(referencias?|art[ií]culos?|estudios|bibliogr
                               r"literature)\b", re.I)
 _CITE = re.compile(r"\b([A-Z]\d+\s+p\d+|W\d+)\b")
 _CITE_FILE = re.compile(r"\[([A-Z]\d+\s+p\d+)\]\s*\(([^)]{3,200})\)")
+
+
+_NAME_STOP = {"md", "txt", "pdf", "docx", "doc", "csv", "json", "html", "rtf", "odt", "varios", "varias",
+              "final", "nuevo", "nueva", "copia", "copy", "the", "and", "los", "las", "del", "de", "la", "el",
+              "mis", "tus", "sus", "our", "your", "con", "por", "para", "que", "una", "uno"}
+
+
+def _name_tokens(text: str) -> set[str]:
+    """Words of a file name or a request, folded and without plural ending, to
+    match one with the other ("notas_campo_varias" ↔ "mis notas de campo")."""
+    out = set()
+    for w in re.split(r"[^0-9a-z]+", _fold_word(text or "")):
+        if len(w) < 3 or w in _NAME_STOP or w.isdigit():
+            continue
+        if not any(c.isdigit() for c in w):
+            w = w[:-1] if len(w) > 4 and w.endswith("s") else w
+            w = w[:6]
+        out.add(w)
+    return out
+
+
+def _privacy_message(kind: str, host: str, lang: str, english: str = "") -> str:
+    """The reason nothing was sent, in the language of the interface (3.2:
+    it came in English to a Spanish interface)."""
+    es = (lang or "").lower().startswith("es")
+    if kind == "model":
+        return (f"El modelo configurado se ejecuta en {host}, un servicio externo que no has autorizado. "
+                "No se envió nada. Autorízalo en Ajustes → Modelos (servicios de modelos externos) o elige un "
+                "modelo de esta computadora." if es else
+                f"The configured model runs at {host}, a third-party service you have not authorised. "
+                "Nothing was sent. Authorise it in Settings → Models (third-party model services), or choose "
+                "a model on this computer.")
+    if not es:
+        return english or f"Nothing was sent to {host}."
+    if kind == egress.FOREIGN:
+        return f"{host} es un servicio externo: este nodo nunca le envía fragmentos de otros nodos."
+    if kind in (egress.PASSAGES, egress.UNKNOWN) and egress.policy().authorised(host):
+        return f"{host} está autorizado para preguntas, pero no para pasajes de tus documentos; no se envió nada."
+    return (f"{host} es un servicio externo y no está autorizado. No se envió nada. Autorízalo en Ajustes → "
+            "Modelos o usa un modelo de esta computadora.")
 
 
 def _remote_host(backend: Any, model: str) -> str:

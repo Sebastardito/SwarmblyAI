@@ -6,6 +6,17 @@ Swarmbly AI 3.2. Each step is behind its own setting (`compose.*`), off by
 default, and is kept only if the open development battery of Swarmbly AI
 (`bench/dev`, fictitious material) shows it helps; F0 is 0.4.0.
 
+- **Retrieval for compositions and documents named by file.** Of 59 key
+  data missing in the open battery, 18 never reached the model. A request
+  that names a file ("resume mis notas de campo" → notas_campo_varias.md)
+  now gets that document first and whole when short, even if the search did
+  not rank it (it brought another report whole). A composition gets the
+  three best documents whole when short, within a larger budget ("qué
+  aprendimos esta temporada" had the minutes whole and one paragraph of each
+  report). With a composer model set and installed on this computer, the
+  composer also writes the search terms of a composition. The reason
+  nothing was sent to an unauthorised service now comes in the language of
+  the interface.
 - **Ollama cloud models are a third-party destination** (privacy fix). An
   Ollama on this computer forwards its cloud models ("deepseek-v4-pro:cloud",
   "gpt-oss:120b-cloud") to ollama.com; the app saw only 127.0.0.1 and let
