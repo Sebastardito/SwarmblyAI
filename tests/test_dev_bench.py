@@ -63,9 +63,11 @@ def test_summary_counts_by_category():
             {"id": "B", "cat": "S3", "rep": 1, "estado": "done",
              "puntuacion": rd.score({"clave": [["b"]], "palabras": [10, 20]}, "b", {}, 0)}]
     summ = rd.summarise(rows)
-    assert summ["total"]["aprobados"] == 1 and summ["por_categoria"]["S3"]["extension_en_rango"] == [0, 1]
+    # 0.2.1: the length is a notice; counted apart
+    assert summ["total"]["aprobados"] == 2 and summ["total"]["aprobados_con_extension"] == 1
+    assert summ["por_categoria"]["S3"]["extension_en_rango"] == [0, 1]
     md = rd.summary_markdown("r", {"modelo": "m", "repeticiones": 1}, summ, rows, None)
-    assert "| S3 |" in md and "| B | 1 | no |" in md
+    assert "| S3 |" in md and "| B | 1 | sí |" in md
 
 
 def test_privacy_checks_read_what_left():

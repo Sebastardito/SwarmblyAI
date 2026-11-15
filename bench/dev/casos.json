@@ -1,5 +1,5 @@
 {
- "version": "0.2.0",
+ "version": "0.2.1",
  "nota": "Batería abierta de desarrollo, con material ficticio. No es un banco sellado: se puede leer, discutir y usar para ajustar. Cada caso monta todos los documentos de corpus/ como fuentes del usuario; los de publico/ solo los sirve el registro público simulado.",
  "casos": [
   {"id": "S1-01", "cat": "S1", "turnos": ["¿Qué densidad de siembra se usó en el lote AB2?"],

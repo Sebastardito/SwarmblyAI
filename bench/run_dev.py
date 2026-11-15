@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -94,7 +94,8 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
     by_code = sum(len(a.get("labels") or []) for a in meta.get("citations_attached") or [])
     repair = meta.get("repair") or {}
     # F3a: facts the app shows under the answer as left out, and the missing key data among them
-    notice = " ".join(str(f.get("text", "")) for f in (meta.get("coverage") or {}).get("missing") or []).lower()
+    notice = " ".join([str(f.get("text", "")) for f in (meta.get("coverage") or {}).get("missing") or []]
+                      + [str(c[k].get("text", "")) for c in meta.get("conflicts") or [] for k in ("a", "b")]).lower()
     in_notice = sum(1 for group, ok in zip(keys, hit) if not ok and any(re.search(p, notice, re.I) for p in group))
     # what left this computer (registry queries and refused outbound requests)
     sent_text = " ".join(str(e.get("q", "")) + " " + json.dumps(e, ensure_ascii=False)
@@ -115,8 +116,11 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "consulta_falsa": not false_lookup,
         "memoria": memory if case.get("memoria") else True,
     }
+    # 0.2.1: the requested length is a notice, not a fail (a paragraph with every
+    # figure the sources give is not wrong for being short); both are kept
     return {
-        "aprobado": all(checks.values()), "comprobaciones": checks,
+        "aprobado": all(v for k, v in checks.items() if k != "extension"),
+        "aprobado_con_extension": all(checks.values()), "comprobaciones": checks,
         "clave_ok": sum(hit), "clave_total": len(hit),
         "prohibido_encontrado": forbidden, "palabras": n_words, "rango": rng,
         "citas": cites, "tabla": table, "cobertura_citas": citations.get("coverage"),
@@ -136,6 +140,7 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         return {
             "n": len(s),
             "aprobados": sum(x["aprobado"] for x in s),
+            "aprobados_con_extension": sum(x.get("aprobado_con_extension", x["aprobado"]) for x in s),
             "clave": [sum(x["clave_ok"] for x in s), sum(x["clave_total"] for x in s)],
             "prohibido": sum(bool(x["prohibido_encontrado"]) for x in s),
             "con_citas": sum(x["citas"] > 0 for x in s),
@@ -176,6 +181,8 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
                    f"{a['frases_sin_respaldo']} | {pct(*a['extension_en_rango'])} | {a['prohibido']} | "
                    f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} | {a.get('fugas', 0)} |")
     t = summ["total"]
+    out += ["", f"La extensión pedida es un aviso: aprobados contando también la extensión, "
+            f"{t.get('aprobados_con_extension', t['aprobados'])}/{t['n']}."]
     out += ["", f"Latencia media por respuesta: {t.get('latencia_media_s', '—')} s"
             + (f"; respuestas compuestas por secciones: {t['por_secciones']}/{t['n']}" if t.get("por_secciones") else "")
             + "."]
@@ -197,7 +204,8 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
             "|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         s = r["puntuacion"]
-        fails = ", ".join(k for k, v in s["comprobaciones"].items() if not v) or "—"
+        fails = ", ".join(k + (" (aviso)" if k == "extension" else "")
+                          for k, v in s["comprobaciones"].items() if not v) or "—"
         rng = f" ({s['rango'][0]}–{s['rango'][1]})" if s["rango"] else ""
         out.append(f"| {r['id']} | {r['rep']} | {'sí' if s['aprobado'] else 'no'} | {s['clave_ok']}/{s['clave_total']} | "
                    f"{s['palabras']}{rng} | {s['citas']} ({s.get('citas_codigo', 0)}) | {s['frases_sin_respaldo']} | "
