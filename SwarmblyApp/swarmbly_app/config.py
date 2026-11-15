@@ -126,6 +126,11 @@ DEFAULTS: dict[str, Any] = {
     },
     # P2 prototype: public evidence for batch items (only item texts are sent
     # to the provider, only for PUBLIC requests). Off until the user enables it.
+    # 3.2: grounded composition, one step at a time, each off until the open
+    # development battery (bench/dev) shows it helps. F0 is 3.1.
+    "compose": {
+        "inventory": False,           # F1: requirements read by code, given to the model, checked
+    },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,
         # Wikidata and subject resolution it fixed what the models lacked and

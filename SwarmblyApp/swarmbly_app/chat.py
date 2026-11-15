@@ -565,7 +565,13 @@ class ChatService:
                            {"role": "user", "content": fusion_prompt(
                                sources, public_hits, user_text, _lang(user_text))}]
             elif sources:
-                blocks.append(_sources_block(sources, user_text, gloss_pairs))
+                inv = None
+                if (cfg.get("compose") or {}).get("inventory"):
+                    from . import compose
+                    if compose.is_composition(user_text):
+                        inv = compose.inventory(user_text, [str(x.get("text", "")) for x in sources])
+                        request.receipt_ctx["inventory"] = inv
+                blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=inv))
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
                 # only), so "which sources do you have?" is not invented
@@ -693,6 +699,10 @@ class ChatService:
             if missed:
                 extra["missed_sources"] = missed
             extra["citations"] = _check_citations(answer_text, sources, history, web_found)
+            if request.receipt_ctx.get("inventory"):
+                from . import compose
+                extra["requirements"] = {"inventory": request.receipt_ctx["inventory"],
+                                         "check": compose.check(answer_text, request.receipt_ctx["inventory"])}
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:
@@ -1358,7 +1368,8 @@ def _documents_block(docs: list[dict[str, Any]], user_text: str,
 
 
 def _sources_block(sources: list[dict[str, Any]], user_text: str,
-                   pairs: list[tuple[str, str]] | None = None) -> str:
+                   pairs: list[tuple[str, str]] | None = None,
+                   inventory: dict[str, Any] | None = None) -> str:
     """LCE C1: retrieved paragraphs for a local answer, with their origin.
 
     The user's term is written next to the first equivalent of it in each
@@ -1392,6 +1403,12 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str,
     # the question, brought the labels back without losing content.
     lang = _lang(user_text)
     lines.append("")
+    if inventory is not None:
+        # F1 (3.2): the requirements of a composition, read by code, replace the
+        # generic reminder; they include the length and the citations
+        from .compose import checklist
+        lines.append(checklist(inventory, lang))
+        return "\n".join(lines)
     lines.append(_SOURCES_TAIL.get(lang, _SOURCES_TAIL["en"]))
     length = _length_note(user_text, lang)
     if length:

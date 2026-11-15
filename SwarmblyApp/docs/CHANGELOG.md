@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.5.0 — Grounded composition (unreleased)
+
+Swarmbly AI 3.2. Each step is behind its own setting (`compose.*`), off by
+default, and is kept only if the open development battery of Swarmbly AI
+(`bench/dev`, fictitious material) shows it helps; F0 is 0.4.0.
+
+- **F1, the requirement inventory** (`compose.inventory`, `swarmbly_app/compose.py`).
+  A composition request (a composing verb with a length, a table, a number of
+  items or a kind of text) is read by code: the length range ("unas 200
+  palabras" → 170–229), a table, the number of items ("las tres
+  recomendaciones"), the entities to cover (codes and names in the request,
+  and the members of a group the user's documents list: "los tres sitios" →
+  Parcela Norte, Parcela Sur, Ladera Este), the audience and a citation for
+  every fact. The list replaces the generic reminder at the end of the
+  sources, and the answer is checked against it by code
+  (`meta.requirements`). Baseline (F0, 15 November 2026, 54 runs): a note
+  asked for three recommendations got two from the sources and an invented
+  one; compositions came out at half or double the requested length; two
+  had no citation.
+
 ## 0.4.0 — Projects (2026-11-09)
 
 Swarmbly AI 3.1. From the roadmap of 4 November 2026 and the measurement of
