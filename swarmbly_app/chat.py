@@ -196,7 +196,7 @@ class ChatService:
 
     def _whole_small_documents(self, sources: list[dict[str, Any]], project_id: str,
                                named: list[str] | tuple[str, ...] = (),
-                               wide: bool = False) -> list[dict[str, Any]]:
+                               wide: bool = False, compose_request: bool = False) -> list[dict[str, Any]]:
         # 3.2: a document the request names by its file ("mis notas de campo" →
         # notas_campo_varias.md) goes first and whole, even if the search did
         # not rank it (it brought another report whole, open battery)
@@ -209,7 +209,14 @@ class ChatService:
                 sources = [{**spans[0], "score": (sources[0].get("score") if sources else None)}, *sources]
         if named:
             first = [s for s in sources if s.get("doc_id") in named]
-            sources = first + [s for s in sources if s.get("doc_id") not in named]
+            rest = [s for s in sources if s.get("doc_id") not in named]
+            if not wide and not compose_request:
+                # a question about a named document stays on it: with the
+                # first report given whole too, "resume mis notas de campo"
+                # summarised the report (open battery, s32); two passages of
+                # other documents remain for what the question links to
+                rest = rest[:2]
+            sources = first + rest
         if not sources:
             return sources
         # Only the document of the best passage, or one with two passages or
@@ -219,6 +226,8 @@ class ChatService:
         for s in sources:
             counts[s.get("doc_id", "")] = counts.get(s.get("doc_id", ""), 0) + 1
         eligible = {sources[0].get("doc_id", "")} | {d for d, c in counts.items() if c >= 2} | set(named)
+        if named and not wide and not compose_request:
+            eligible = set(named)
         if wide:
             # 3.2: a composition draws on several documents: the three best are
             # given whole when short ("qué aprendimos esta temporada" got the
@@ -472,7 +481,8 @@ class ChatService:
                     # three documents whole only for a larger composer: the 7B
                     # lost data with them (S3 key data 63/66 → 58/66), the 27B
                     # got all of them (99/99)
-                    wide=bool(composer_ready) and is_composition(user_text))
+                    wide=bool(composer_ready) and is_composition(user_text),
+                    compose_request=is_composition(user_text))
                 _label_sources(sources, history)
             public_hits: list[dict[str, Any]] = []
             public_report: dict[str, Any] | None = None

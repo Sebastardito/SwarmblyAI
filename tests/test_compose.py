@@ -331,6 +331,8 @@ def test_a_document_named_by_its_file_goes_first_and_whole(app_state, tmp_path):
     srcs = app_state.chat.get_messages(conv["id"])[-1]["meta"]["lce"]["sources"]
     assert srcs[0]["rel"] == "notas_campo_varias.md"
     assert all(s["whole_document"] for s in srcs if s["rel"] == "notas_campo_varias.md")
+    assert sum(s["rel"] != "notas_campo_varias.md" for s in srcs) <= 2
+    assert not any(s.get("whole_document") for s in srcs if s["rel"] != "notas_campo_varias.md")
 
 
 def test_privacy_message_in_the_interface_language():
