@@ -686,7 +686,9 @@ def table_prompt(request: str, fact_list: list[dict[str, Any]], lang: str = "es"
 # rather than re-assembling from fewer reads.
 
 def gap_prompt(request: str, draft: str, gaps: list[dict[str, Any]], lang: str = "es") -> str:
-    lines = "\n".join(f"[{g['label']}] {g['text']}" for g in gaps)
+    # the label after the fact: the model copies the line, and "[D4 p11] A
+    # mediados…" came back with the label in front (open battery, F3c run)
+    lines = "\n".join(f"- {g['text'].rstrip('.;')} [{g['label']}]." for g in gaps)
     words = min(90, 30 * len(gaps))
     if lang == "es":
         return (f"Solicitud del usuario: {request}\n\nTexto ya escrito:\n{draft}\n\n"
@@ -708,6 +710,12 @@ def accept_gap(draft: str, addition: str, gaps: list[dict[str, Any]]) -> tuple[b
         return False, "empty"
     if addition.lstrip().startswith("|"):
         return False, "not a paragraph"
+    label = re.compile(r"\[([A-Z]\d+\s*p\d+)\]")
+    known_labels = {" ".join(g["label"].split()) for g in gaps}
+    known_labels |= {" ".join(x.split()) for x in label.findall(draft or "")}
+    strange = sorted({" ".join(x.split()) for x in label.findall(addition)} - known_labels)
+    if strange:          # "[C2 p11]": a label no passage has
+        return False, "unknown labels: " + ", ".join(strange[:3])
     known = _figures(draft)
     gap_figs: set[str] = set()
     for g in gaps:

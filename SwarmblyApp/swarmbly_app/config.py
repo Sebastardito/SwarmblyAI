@@ -136,7 +136,7 @@ DEFAULTS: dict[str, Any] = {
         "repair": False,              # F4: one rewrite when the length is out of range (needs inventory)
         "coverage": True,             # F3a: facts of the sources the composition leaves out, shown under it
         "scaffold": False,            # F3b: sections planned by code, each written from its facts, joined
-        "gap_fill": False,            # F3c: the facts the draft left out, written as one closing paragraph
+        "gap_fill": True,             # F3c: the facts the draft left out, written as one closing paragraph
         "model": "",                  # a larger local model for compositions only (empty: the chat's model)
     },
     "evidence": {
