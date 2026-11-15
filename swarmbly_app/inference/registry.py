@@ -40,6 +40,8 @@ class BackendRegistry:
 
         if backend == "ollama" or backend == "auto":
             candidate = OllamaBackend(url or DEFAULT_URL)
+            if model_cfg.get("think") is not None:
+                candidate.think = bool(model_cfg.get("think"))
             if backend == "ollama" or candidate.available():
                 self._last_backend = candidate
                 return candidate

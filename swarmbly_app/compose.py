@@ -469,7 +469,10 @@ _INSTRUCTION = {"escri", "redac", "prepa", "elabo", "inclu", "palab", "fuent", "
 
 
 _GROUP_STEMS = {"sitio", "lote", "lotes", "parce", "isla", "islas", "espec", "docum", "pobla", "varie", "sites",
-                "plots", "speci", "tres", "ambos", "todos", "todas"}
+                "plots", "speci", "tres", "ambos", "todos", "todas", "enero", "febre", "marzo", "abril", "mayo",
+                "junio", "julio", "agost", "septi", "octub", "novie", "dicie",
+                # units of measure are not a topic ("por hectárea" in costs and in every density)
+                "hecta", "dolar", "tonel", "kilog", "gramo", "metro", "litro", "porce", "unida"}
 
 
 def _request_stems(text: str) -> set[str]:
@@ -500,38 +503,68 @@ def _units(text: str) -> list[str]:
 
 
 def facts(request: str, sources: list[dict[str, Any]], inv: dict[str, Any] | None = None,
-          answer: str = "", limit: int = 10) -> list[dict[str, Any]]:
+          answer: str = "", limit: int = 10, ratio: float = 0.6) -> list[dict[str, Any]]:
     """Facts of the passages that bear on the request: sentences or table rows
     with a figure or one of the request's entities that share a word of its
-    topic, best first."""
+    topic, best first. A topic word counts more the fewer paragraphs use it
+    ("clorosis" is in two, "hectárea" in many), and a fact of the same kind as
+    a chosen one (same specific word, with figures) is kept with it: the
+    chlorosis of the other lot is the fact the model drops."""
+    import math
     entities = [e.lower() for e in (inv or {}).get("entities") or []]
     # the topic: the request's words without its entities and group nouns
     # ("compare la germinación de AB1 y AB2 en cada sitio" → germinación)
     topic = _request_stems(request) - _stems(" ".join(entities)) - _GROUP_STEMS
-    scored: list[tuple[float, int, dict[str, Any]]] = []
-    seen: set[str] = set()
+    units: list[tuple[int, str, str, set[str]]] = []
     for order, s in enumerate(sources):
         label = " ".join(str(s.get("label", "")).split())
+        # the file's name says what its rows are about ("analisis_suelo_2026.md"
+        # for a row "Parcela Sur · Nitrógeno total (%): 0,09")
+        name = _stems(re.sub(r"[_\-.]+", " ", str(s.get("rel") or s.get("source") or "")))
         for unit in _units(str(s.get("text", ""))):
-            if len(unit.split()) < 5 or unit.startswith("#"):
-                continue
-            key = _fold(unit)[:120]
-            if key in seen:
-                continue
-            figs = {f for f in _figures(unit) if not _YEAR.fullmatch(f)}
-            has_entity = any(e in unit.lower() for e in entities)
-            on_topic = len(_stems(unit) & topic)
-            score = 2 * on_topic + (1 if has_entity else 0)
-            if not ((figs or has_entity) and on_topic):
-                continue
-            seen.add(key)
-            scored.append((score, -order, {"text": unit[:240], "label": label, "figures": sorted(figs)}))
+            if len(unit.split()) >= 5 and not unit.startswith("#"):
+                units.append((order, label, unit, name))
+    df: dict[str, int] = {}
+    for _, _, unit, _ in units:
+        for st in _stems(unit) & topic:
+            df[st] = df.get(st, 0) + 1
+    idf = {st: math.log(1 + len(units) / n) for st, n in df.items()}
+    scored: list[tuple[float, int, dict[str, Any]]] = []
+    seen: set[str] = set()
+    for order, label, unit, name in units:
+        key = _fold(unit)[:120]
+        if key in seen:
+            continue
+        figs = {f for f in _figures(unit) if not _YEAR.fullmatch(f)}
+        has_entity = any(e in unit.lower() for e in entities)
+        own = _stems(unit) & topic
+        named = bool(name & topic)
+        if not ((figs or has_entity) and (own or (named and figs))):
+            continue
+        # a table row is a record about its entity: naming the request's
+        # entity counts more there ("Parcela Sur, sector oeste · N 0,09 · pH 7,9"
+        # in a file called analisis_suelo)
+        row = " · " in unit
+        score = (sum(idf[st] for st in own)
+                 + 0.5 * sum(idf.get(st, 1.0) for st in name & topic)
+                 + ((1.0 if row else 0.3) if has_entity else 0))
+        seen.add(key)
+        scored.append((score, -order, {"text": unit[:240], "label": label, "figures": sorted(figs),
+                                       "topic": sorted(own | (name & topic)), "own": sorted(own)}))
     if not scored:
         return []
     top = max(x[0] for x in scored)
-    scored = [x for x in scored if x[0] >= 0.6 * top]
-    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    return [f for _, _, f in scored[:limit]]
+    # a word is specific when few paragraphs use it ("clorosis", not "análisis"
+    # in a soil report)
+    least = min(df.values()) if df else 0
+    specific = {st for st, n in df.items() if n <= max(4, 1.5 * least)}
+    chosen = [x for x in scored if x[0] >= ratio * top]
+    kinds = set().union(*(set(x[2]["own"]) for x in chosen)) & specific
+    chosen += [x for x in scored if x not in chosen and x[2]["figures"] and set(x[2]["own"]) & kinds]
+    for x in chosen:
+        x[2]["keys"] = sorted(set(x[2]["own"]) & specific)
+    chosen.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return [f for _, _, f in chosen[:limit]]
 
 
 def uncovered(answer: str, fact_list: list[dict[str, Any]], limit: int = 6) -> list[dict[str, Any]]:
@@ -551,3 +584,91 @@ def uncovered(answer: str, fact_list: list[dict[str, Any]], limit: int = 6) -> l
                 continue
         out.append({"text": f["text"], "label": f["label"]})
     return out[:limit]
+
+
+# --- F3b: composition by scaffolding --------------------------------------------
+#
+# The 7B model answers short questions from a few passages without fault (S1
+# and S2 at 100 % in every run) and drops facts when it writes a whole piece
+# from many (41 of 59 missing key data were in its passages). This is the
+# IA-Scaffolding idea of Swarmbly applied on one machine: the code groups the
+# facts that bear on the request by topic (the chlorosis of both lots goes
+# together), the model writes one short section per group from those facts
+# only, and the code assembles them; a table, when asked for, is one more
+# short task with the figures. The sections are independent, so a network of
+# nodes could write them at the same time.
+
+def plan(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
+         max_sections: int = 4) -> dict[str, Any] | None:
+    """Sections of the answer, each with its facts, or None when the code
+    finds too few facts to build on (the request is then answered in one go)."""
+    listed = facts(request, sources, inv, limit=12, ratio=0.5)
+    if len(listed) < 2:
+        return None
+    # facts that share a specific topic word go in one section (union-find):
+    # the chlorosis of both lots, the soil analysis and what was decided on it
+    parent = list(range(len(listed)))
+
+    def root(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for i in range(len(listed)):
+        for j in range(i):
+            if set(listed[i].get("keys") or []) & set(listed[j].get("keys") or []):
+                parent[root(i)] = root(j)
+    groups: dict[int, list[dict[str, Any]]] = {}
+    for i, f in enumerate(listed):
+        groups.setdefault(root(i), []).append(f)
+    ordered = sorted(groups.items(), key=lambda kv: -len(kv[1]))
+    sections = [list(v) for _, v in ordered[:max_sections]]
+    for _, rest in ordered[max_sections:]:
+        for f in rest:              # a small group joins the section it shares most words with
+            best = max(range(len(sections)),
+                       key=lambda i: len(_stems(f["text"]) & set().union(*(_stems(x["text"]) for x in sections[i]))))
+            sections[best].append(f)
+    # in the order the request names their topics ("la clorosis … con el
+    # análisis de suelo y con las decisiones")
+    folded = _fold(request)
+
+    def first_mention(sec: list[dict[str, Any]]) -> int:
+        spots = [folded.find(st) for f in sec for st in f.get("topic") or [] if folded.find(st) >= 0]
+        return min(spots) if spots else len(folded)
+    sections.sort(key=first_mention)
+    words = inv.get("words") or [0, 0]
+    total = (words[0] + words[1]) // 2 if words[1] else 60 * len(sections)
+    if inv.get("table"):
+        total = max(40, total - 30)
+    return {"sections": [{"facts": sec, "words": max(30, total // len(sections))} for sec in sections],
+            "table": bool(inv.get("table"))}
+
+
+def section_prompt(request: str, section: dict[str, Any], index: int, count: int, lang: str = "es") -> str:
+    lines = "\n".join(f"[{f['label']}] {f['text']}" for f in section["facts"])
+    if lang == "es":
+        place = ("el primer párrafo" if index == 0 else
+                 "el último párrafo" if index == count - 1 else f"el párrafo {index + 1}") + f" de {count}"
+        return (f"Solicitud del usuario: {request}\n\n"
+                f"Escribe solo {place} de ese texto, de unas {section['words']} palabras, con estos datos de sus "
+                f"fuentes:\n{lines}\n\n"
+                "Usa todas las cifras de esos datos y pon la etiqueta entre corchetes, por ejemplo [D1 p3], en la "
+                "misma frase de cada dato. No añadas datos que no estén en la lista, ni títulos, ni saludos. "
+                "Devuelve solo el párrafo.")
+    place = ("the first paragraph" if index == 0 else
+             "the last paragraph" if index == count - 1 else f"paragraph {index + 1}") + f" of {count}"
+    return (f"User's request: {request}\n\nWrite only {place} of that text, about {section['words']} words, "
+            f"with these facts from their sources:\n{lines}\n\nUse every figure in those facts and put the "
+            "label in brackets, for example [D1 p3], in the same sentence as each fact. Add no facts that are "
+            "not in the list, no headings, no greetings. Return only the paragraph.")
+
+
+def table_prompt(request: str, fact_list: list[dict[str, Any]], lang: str = "es") -> str:
+    lines = "\n".join(f"[{f['label']}] {f['text']}" for f in fact_list if f["figures"])
+    if lang == "es":
+        return (f"Solicitud del usuario: {request}\n\nHaz solo la tabla que pide la solicitud, en Markdown, con "
+                f"estos datos de sus fuentes:\n{lines}\n\nSi pide una diferencia, calcúlala con esas cifras. "
+                "Debajo de la tabla, una línea: «Fuente: » y las etiquetas usadas. Devuelve solo la tabla y esa línea.")
+    return (f"User's request: {request}\n\nMake only the table the request asks for, in Markdown, with these "
+            f"facts from their sources:\n{lines}\n\nIf it asks for a difference, compute it from those figures. "
+            "Under the table, one line: \"Source: \" and the labels used. Return only the table and that line.")

@@ -29,6 +29,7 @@ class OllamaBackend:
     def __init__(self, url: str = DEFAULT_URL, timeout: float = 30.0):
         self.url = url.rstrip("/")
         self.timeout = timeout
+        self.think: bool | None = None   # Ollama "think": None leaves the model's default
 
     def available(self) -> bool:
         try:
@@ -63,6 +64,8 @@ class OllamaBackend:
                 "temperature": temperature,
             },
         }
+        if self.think is not None:
+            payload["think"] = bool(self.think)
         # Policy and record at the point where the bytes leave (3.0.1).
         egress.check_call(self.url, len(__import__("json").dumps(payload).encode("utf-8")),
                           reason=f"modelo {model}")
