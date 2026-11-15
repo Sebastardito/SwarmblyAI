@@ -197,6 +197,8 @@
   "injection": "Instrucciones en un documento",
   "injectionTitle": "El párrafo {labels} contiene instrucciones dirigidas a un asistente. No se siguieron: es texto del documento.",
   "injectionEchoed": "El párrafo {labels} contiene instrucciones dirigidas a un asistente. No se siguieron, pero la respuesta las repite: léelas como texto del documento, no como un consejo.",
+  "conflictTitle": "Tus fuentes no coinciden",
+  "conflictNote": "Dos documentos dan datos distintos sobre lo que preguntaste. Revisa cuál es más reciente o cuál se aplica.",
   "missedSources": "Tus fuentes sí lo tratan",
   "missedSourcesTitle": "La respuesta dice que tus fuentes no hablan de «{term}», pero usan «{found}», que tu glosario da como equivalente.",
   "unsupported": "{n} frases sin respaldo en tus fuentes",

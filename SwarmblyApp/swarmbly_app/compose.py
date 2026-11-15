@@ -744,3 +744,109 @@ def accept_gap(draft: str, addition: str, gaps: list[dict[str, Any]]) -> tuple[b
     if gap_figs and not brought:
         return False, "brings none of the facts"
     return True, ""
+
+
+# --- Sources that disagree ---------------------------------------------------------
+#
+# CX-01 of the open battery: the April minutes set the harvest of both lots for
+# the second week of June; a later e-mail moves AB2 to the third. Every 7B
+# answer gave the e-mail's date and said nothing of the change. The code finds
+# sentences of different documents about the same thing (a word of the
+# question's topic, the question's entity or "ambos/todos"), each with a date
+# or an amount of the same kind, and values that differ; it tells the model,
+# and the app shows both under the answer (``meta.conflicts``). Two documents
+# about different lots (AB1's report, AB2's report) do not disagree.
+
+_MONTHS = r"(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)"
+_WHEN = re.compile(r"\b(?:(?:primera|segunda|tercera|cuarta|[uú]ltima)\s+semana\s+de\s+" + _MONTHS +
+                   r"|\d{1,2}\s+de\s+" + _MONTHS + r"|(?:principios|mediados|finales)\s+de\s+" + _MONTHS + r")\b", re.I)
+_AMOUNT = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)?)\s?(%|kg(?:\s?N)?(?:/ha)?|t/ha|d[ií]as|d[oó]lares|usd|ha)\b", re.I)
+_COLLECTIVE = re.compile(r"\b(ambos|ambas|todos\s+los|todas\s+las|los\s+dos|las\s+dos|both|all\s+the)\b", re.I)
+_QUESTION_WORDS = {"cuand", "donde", "quien", "cuale", "cual", "como", "cuant", "hubo", "habra", "sera", "when",
+                   "where", "which", "what", "many", "much",
+                   # reporting verbs say nothing of what is reported ("se registró")
+                   "regis", "obser", "indic", "mostr", "repor", "tuvo", "dice", "segun"}
+
+
+def _codes(text: str) -> set[str]:
+    return {c.upper().replace("-", "") for c in re.findall(r"\b[A-Za-z]{1,4}-?\d{1,4}\b", text or "")
+            if not _YEAR.fullmatch(c)}
+
+
+def _values(sentence: str) -> dict[str, set[str]]:
+    out: dict[str, set[str]] = {}
+    for m in _WHEN.finditer(sentence):
+        out.setdefault("when", set()).add(_fold(" ".join(m.group(0).split())))
+    for m in _AMOUNT.finditer(sentence):
+        unit = _fold(m.group(2)).replace(" ", "")
+        out.setdefault(unit, set()).add(_canon(m.group(1)))
+    return out
+
+
+def conflicts(question: str, sources: list[dict[str, Any]], limit: int = 2) -> list[dict[str, Any]]:
+    """Pairs of sentences from different documents that give different dates
+    or amounts of the same kind for what the question asks."""
+    q_codes = _codes(question)
+    q_names = [n.lower() for n in _PROPER.findall(question or "") if n.split()[0] not in _NOT_ENTITY]
+    # the topic is what is asked about, not where ("la Parcela Norte") or which lot
+    topic = _request_stems(question) - _GROUP_STEMS - _QUESTION_WORDS - _stems(" ".join(q_names))
+    if not topic:
+        return []
+    found: list[tuple[str, str, str, set[str], dict[str, set[str]]]] = []
+    for s in sources:
+        label = " ".join(str(s.get("label", "")).split())
+        rel = str(s.get("rel") or s.get("source") or "")
+        name_codes = _codes(re.sub(r"[_.]+", " ", rel))
+        for unit in _units(str(s.get("text", ""))):
+            if instruction_like(unit) or not (_stems(unit) & topic):
+                continue
+            low = unit.lower()
+            codes = _codes(unit) | name_codes
+            about = (bool(q_codes & codes) or any(n in low for n in q_names) or bool(_COLLECTIVE.search(unit))
+                     or (not q_codes and not q_names))
+            if q_codes and codes and not (q_codes & codes):
+                about = False                # another lot's document
+            values = _values(unit)
+            if about and values:
+                found.append((rel, label, unit, codes, values))
+    out: list[dict[str, Any]] = []
+    for i, (ra, la, ua, ca, va) in enumerate(found):
+        for rb, lb, ub, cb, vb in found[i + 1:]:
+            if ra == rb or (ca and cb and not (ca & cb)):
+                continue
+            if not (_stems(ua) & _stems(ub) & topic):
+                continue                     # not about the same thing
+            kinds = [k for k in va if k in vb and va[k] != vb[k]]
+            if kinds:
+                out.append({"a": {"label": la, "text": ua[:240]}, "b": {"label": lb, "text": ub[:240]},
+                            "kind": kinds[0]})
+                if len(out) >= limit:
+                    return out
+    return out
+
+
+def related(question: str, sources: list[dict[str, Any]]) -> bool:
+    """Whether any retrieved passage shares a word of the question (or of its
+    search terms): "¿Cuál es la capital de Perú?" got two crop reports whole,
+    and the 7B answered that the sources did not say (open battery, OUT-01)."""
+    asked = (_request_stems(question) - _QUESTION_WORDS) | {c.lower() for c in _codes(question)}
+    if not asked:
+        return True
+    for s in sources:
+        text = str(s.get("text", ""))
+        if _stems(text) & asked or {c.lower() for c in _codes(text)} & asked:
+            return True
+    return False
+
+
+def conflict_block(found: list[dict[str, Any]], lang: str = "es") -> str:
+    es = lang == "es"
+    lines = ["Tus fuentes no coinciden en esto:" if es else "Your sources disagree on this:"]
+    for c in found:
+        lines.append(f"- [{c['a']['label']}] {c['a']['text']}")
+        lines.append(f"- [{c['b']['label']}] {c['b']['text']}")
+    lines.append("Da los dos datos, cada uno con su etiqueta, y di cuál es posterior si las fuentes lo indican; no "
+                 "elijas uno en silencio." if es else
+                 "Give both, each with its label, and say which is later if the sources show it; do not pick one "
+                 "silently.")
+    return "\n".join(lines)

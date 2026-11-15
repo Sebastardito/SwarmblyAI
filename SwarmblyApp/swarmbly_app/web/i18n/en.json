@@ -197,6 +197,8 @@
   "injection": "Instructions in a document",
   "injectionTitle": "Paragraph {labels} contains instructions addressed to an assistant. They were not followed: it is the document's text.",
   "injectionEchoed": "Paragraph {labels} contains instructions addressed to an assistant. They were not followed, but the answer repeats them: read them as the document's text, not as advice.",
+  "conflictTitle": "Your sources disagree",
+  "conflictNote": "Two documents give different facts about what you asked. Check which is more recent or which applies.",
   "missedSources": "Your sources do cover it",
   "missedSourcesTitle": "The answer says your sources do not discuss \"{term}\", but they use \"{found}\", which your glossary gives as an equivalent.",
   "unsupported": "{n} sentences not backed by your sources",
