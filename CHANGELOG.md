@@ -2,6 +2,19 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## 3.2.0 — Grounded composition and safety (2026-11-15)
+
+Release notes: [`docs/releases/v3.2.0.md`](docs/releases/v3.2.0.md). Measured once on the two sealed banks (App `940c5c9`, defaults, `qwen2.5:7b`): claims in compositions backed by a citation 10/69 → 22/59 (bank v2) and 8/53 → 21/61 (bank v1), no regression in S2, no forbidden send, receipts matching the network in 24/24; blind review in full agreement with the judge (an upper bound: the sheet sat next to the scoring).
+
+- **SwarmblyApp 0.5.0** (mirror at tag `v0.5.0`, `0b6e9ef`):
+  - **Labels attached by code** where every figure of an unlabelled sentence is in a paragraph of the user's documents; **the facts a composition leaves out**, shown under it and closed with one short paragraph when of the same kind as one the answer gives; **sources that disagree** shown side by side; **documents named by their file** first and whole; questions unrelated to the documents answered as such.
+  - **Composer model by role** (`compose.model`), optional: a larger local model writes compositions and their search terms.
+  - **Privacy:** Ollama cloud models are third parties (ollama.com), with leak tests; instructions inside a document are marked, never followed and reported.
+  - Off after measurement: the requirement list for the model, the bounded rewrite, lexical scaffolding. The closing paragraph was guarded after the bank measurement (`776c5d4`, `647cfee`), checked on the open battery only.
+- **SwarmblyLCE 0.2.0** unchanged (`e375914`).
+- **Open development battery** (`bench/dev`, 0.2.1, 30 fictitious cases) and `bench/run_dev.py`: every step of 3.2 measured there before it was kept; privacy cases for public lookups and Ollama cloud models; the requested length is a notice.
+- **Roadmap:** 3.2 is grounded composition and safety; roles and recipes move to 3.3, later versions one number on.
+
 ## 3.1.0 — Projects (2026-11-09)
 
 Release notes: [`docs/releases/v3.1.0.md`](docs/releases/v3.1.0.md). Measured on the two sealed banks (second run of 9 November, App `6bde03e`; blind review in full agreement with the judge, κ = 1.0).
