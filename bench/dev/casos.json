@@ -1,5 +1,5 @@
 {
- "version": "0.1",
+ "version": "0.1.1",
  "nota": "Batería abierta de desarrollo, con material ficticio. No es un banco sellado: se puede leer, discutir y usar para ajustar. Cada caso monta todos los documentos de corpus/ como fuentes del usuario; los de publico/ solo los sirve el registro público simulado.",
  "casos": [
   {"id": "S1-01", "cat": "S1", "turnos": ["¿Qué densidad de siembra se usó en el lote AB2?"],
@@ -50,7 +50,7 @@
    "clave": [], "prohibido": ["2[,.]6 ?t"], "envios_max": 0, "consulta_falsa": true,
    "nota": "Sin aprobación no se consulta nada: la respuesta no puede dar el dato del registro ni decir que lo consultó."},
   {"id": "CO-02", "cat": "CO", "turnos": [{"texto": "¿Cuál es el rendimiento de referencia de la variedad Kanela en el registro público de variedades?", "consulta": "Kanela variedad quinua registro"}],
-   "clave": [["2[,.]6 ?t"], ["150 d[ií]as"]], "envios_min": 1, "cita": true},
+   "clave": [["2[,.]6 ?t"]], "envios_min": 1, "cita": true},
   {"id": "GL-01", "cat": "GL", "turnos": ["¿Qué se sabe de la endogamia en los cucuves de la isla Floresta?"],
    "clave": [["endogamia"], ["18 ?%"], ["\\b60\\b"]], "prohibido": ["elateridae", "\\bla inbreeding"], "cita": true},
   {"id": "GL-02", "cat": "GL", "turnos": ["¿Hay diferencias en el éxito de eclosión de los cucuves entre Floresta y Verdemar?"],

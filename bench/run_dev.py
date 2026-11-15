@@ -24,6 +24,7 @@ claims of a public lookup that did not happen, memory saved when asked.
     python3 bench/run_dev.py --model qwen2.5:7b --only S3-01,S3-02 --repeat 3
     python3 bench/run_dev.py --model qwen2.5:7b --set compose.inventory=true \\
         --compare bench/dev/ejecuciones/<earlier run>
+    python3 bench/run_dev.py --rescore bench/dev/ejecuciones/<run>   # after correcting a case
 
 Standard library only.
 """
@@ -45,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -201,6 +202,35 @@ def parse_set(items: list[str]) -> dict[str, Any]:
     return out
 
 
+def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
+    """Score a finished run again with the current cases (after a case is
+    corrected); answers are not regenerated."""
+    cases = {c["id"]: c for c in load_cases(battery / "casos.json")}
+    info = json.loads((run_dir / "resumen.json").read_text(encoding="utf-8"))["info"]
+    rows = []
+    for f in sorted((run_dir / "casos").glob("*.json")):
+        row = json.loads(f.read_text(encoding="utf-8"))
+        case = cases.get(row["id"])
+        if case is None:
+            continue
+        row["puntuacion"] = score(case, row.get("respuesta", ""), row.get("meta") or {},
+                                  row["puntuacion"]["envios"])
+        f.write_text(json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
+        rows.append(row)
+    order = {cid: i for i, cid in enumerate(cases)}
+    rows.sort(key=lambda r: (order.get(r["id"], 999), r["rep"]))
+    summ = summarise(rows)
+    info["repuntuada_utc"] = rb.utc_now()
+    previous = None
+    if compare:
+        previous = json.loads((Path(compare) / "resumen.json").read_text(encoding="utf-8"))["resumen"]
+    (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
+                                          encoding="utf-8")
+    (run_dir / "resumen.md").write_text(summary_markdown(run_dir.name, info, summ, rows, previous), encoding="utf-8")
+    print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} aprobados")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Open development battery of Swarmbly AI")
     ap.add_argument("--model", required=True)
@@ -215,6 +245,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--compare", default="", help="an earlier run folder to compare with")
     ap.add_argument("--case-timeout", type=float, default=600.0)
     ap.add_argument("--battery", default=str(DEV), help="battery folder (casos.json, corpus/, publico/)")
+    if argv is None:
+        argv = sys.argv[1:]
+    if argv[:1] == ["--rescore"]:
+        rest = argv[2:]
+        cmp = rest[rest.index("--compare") + 1] if "--compare" in rest else ""
+        return rescore(Path(argv[1]).expanduser(), DEV, cmp)
     args = ap.parse_args(argv)
 
     battery = Path(args.battery)
