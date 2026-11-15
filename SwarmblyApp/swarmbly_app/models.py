@@ -14,6 +14,8 @@ from typing import Any
 
 import httpx
 
+from . import egress
+
 OLLAMA_DEFAULT_URL = "http://127.0.0.1:11434"
 
 
@@ -30,6 +32,7 @@ class DetectedModel:
     source: str = "backend"
     parameter_size: str = ""        # as reported, e.g. "3.2B"
     kind: str = "chat"              # chat | embedding
+    remote: str = ""                # where Ollama forwards it ("ollama.com" for a cloud model)
 
     @property
     def params_b(self) -> float | None:
@@ -95,7 +98,9 @@ class ModelManager:
                         quantization=quant, backend="ollama",
                         source="ollama /api/tags",
                         parameter_size=str(detail.get("parameter_size") or ""),
-                        kind=classify_kind(name, family)))
+                        kind=classify_kind(name, family),
+                        remote=(egress.host_of(str(item.get("remote_host") or ""))
+                                or egress.cloud_host_by_name(name))))
                 info.models = models
         except httpx.HTTPError as exc:
             info.error = str(exc)

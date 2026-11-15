@@ -441,6 +441,7 @@
   "saved": "Saved",
   "analyzing": "Checking this computer…",
   "moreInAdvanced": "More parameters appear with the Advanced profile.",
+  "cloudModel": "runs at {host}, off this computer",
   "notInstalled": "not installed",
   "tab": {
    "recommended": "Recommended",

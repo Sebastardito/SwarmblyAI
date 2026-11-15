@@ -23,6 +23,11 @@ def _stream_lines(response: httpx.Response):
 COLD_LOAD_READ_S = 90.0   # first chunk after a cold model load
 
 
+# Ollama URL -> (when read, {model: host it forwards to}); a cloud model's
+# entry in /api/tags carries "remote_host"
+_REMOTE: dict[str, tuple[float, dict[str, str]]] = {}
+
+
 class OllamaBackend:
     name = "ollama"
 
@@ -30,6 +35,26 @@ class OllamaBackend:
         self.url = url.rstrip("/")
         self.timeout = timeout
         self.think: bool | None = None   # Ollama "think": None leaves the model's default
+
+    def remote_host(self, model: str) -> str:
+        """Where Ollama really runs ``model``: "" on this computer, or the host
+        it forwards to ("ollama.com" for a cloud model). Read from /api/tags
+        ("remote_host", Ollama 0.12 and later), with the name as a fallback."""
+        from .. import egress
+        now = time.monotonic()
+        seen_at, table = _REMOTE.get(self.url, (0.0, {}))
+        if now - seen_at > 30:
+            try:
+                with httpx.Client(timeout=3.0) as client:
+                    resp = client.get(f"{self.url}/api/tags")
+                    resp.raise_for_status()
+                    table = {str(m.get("name", "")): egress.host_of(str(m.get("remote_host") or ""))
+                             for m in resp.json().get("models", [])}
+            except Exception:
+                table = {}
+            _REMOTE[self.url] = (now, table)
+        found = table.get(model) or table.get(f"{model}:latest") or ""
+        return found or egress.cloud_host_by_name(model)
 
     def available(self) -> bool:
         try:
@@ -67,8 +92,13 @@ class OllamaBackend:
         if self.think is not None:
             payload["think"] = bool(self.think)
         # Policy and record at the point where the bytes leave (3.0.1).
-        egress.check_call(self.url, len(__import__("json").dumps(payload).encode("utf-8")),
-                          reason=f"modelo {model}")
+        nbytes = len(__import__("json").dumps(payload).encode("utf-8"))
+        egress.check_call(self.url, nbytes, reason=f"modelo {model}")
+        remote = self.remote_host(model)
+        if remote:
+            # an Ollama cloud model: the text leaves through the local Ollama,
+            # so the policy applies to where it goes, not to 127.0.0.1
+            egress.check_call(f"https://{remote}", nbytes, reason=f"modelo {model} (reenviado por Ollama)")
         started = time.monotonic()
         text_parts: list[str] = []
         prompt_tokens = completion_tokens = load_ns = None

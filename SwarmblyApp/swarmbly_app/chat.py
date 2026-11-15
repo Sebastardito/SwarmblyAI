@@ -339,10 +339,17 @@ class ChatService:
                                  note=local_reason)
 
             backend = self.registry.resolve(self.config())
+            model = model or (backend.list_models() or [""])[0]
             # 3.0.1: where the model runs decides what it may receive.
             from .inference.registry import endpoint
             dest_cls, dest_host = egress.classify_url(endpoint(backend) or "http://127.0.0.1")
             request.receipt_ctx["model_destination"] = {"clase": dest_cls, "host": dest_host}
+            remote = _remote_host(backend, model)
+            if remote:
+                # an Ollama cloud model: Ollama is on this computer, the model is not
+                request.receipt_ctx["model_destination"] = {"clase": egress.THIRD_PARTY, "host": remote,
+                                                            "via": dest_host}
+                dest_cls, dest_host = egress.THIRD_PARTY, remote
             passages_allowed = True
             if dest_cls == egress.THIRD_PARTY:
                 pol = egress.policy()
@@ -355,7 +362,6 @@ class ChatService:
                         "Models (third-party model services), or choose a model on this "
                         "computer."))
                 passages_allowed = pol.third_party_passages
-            model = model or (backend.list_models() or [""])[0]
             if not model:
                 raise IncompleteSettings("no model selected")
 
@@ -613,7 +619,12 @@ class ChatService:
                     installed = composer in (backend.list_models() or [])
                 except Exception:
                     installed = False
-                if installed:
+                remote = _remote_host(backend, composer) if installed else ""
+                if remote and not (egress.policy().authorised(remote) and egress.policy().third_party_passages):
+                    # a cloud composer would take the user's passages off this
+                    # computer: only with both authorisations
+                    request.receipt_ctx["composer_blocked"] = f"{composer} runs at {remote}"
+                elif installed:
                     answer_model = composer
                 else:
                     request.receipt_ctx["composer_missing"] = composer
@@ -661,6 +672,8 @@ class ChatService:
                 extra["scaffold"] = request.receipt_ctx["scaffold"]
             if request.receipt_ctx.get("composer_missing"):
                 extra["composer_missing"] = request.receipt_ctx["composer_missing"]
+            if request.receipt_ctx.get("composer_blocked"):
+                extra["composer_blocked"] = request.receipt_ctx["composer_blocked"]
             if request.receipt_ctx.get("passages_withheld"):
                 extra["passages_withheld"] = (
                     f"your documents were not sent to {request.receipt_ctx['passages_withheld']} "
@@ -1296,6 +1309,16 @@ _ASKS_REFERENCES = re.compile(r"\b(referencias?|art[ií]culos?|estudios|bibliogr
                               r"literature)\b", re.I)
 _CITE = re.compile(r"\b([A-Z]\d+\s+p\d+|W\d+)\b")
 _CITE_FILE = re.compile(r"\[([A-Z]\d+\s+p\d+)\]\s*\(([^)]{3,200})\)")
+
+
+def _remote_host(backend: Any, model: str) -> str:
+    """Where the backend really runs the model ("" here or in the user's
+    network); only Ollama forwards models (its cloud models)."""
+    fn = getattr(backend, "remote_host", None)
+    try:
+        return str(fn(model) or "") if callable(fn) and model else ""
+    except Exception:
+        return egress.cloud_host_by_name(model)
 
 
 def _compose_by_sections(backend: Any, plan: dict[str, Any], user_text: str, *, model: str,

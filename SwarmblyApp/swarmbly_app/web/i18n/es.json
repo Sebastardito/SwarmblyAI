@@ -441,6 +441,7 @@
   "saved": "Guardado",
   "analyzing": "Revisando esta computadora…",
   "moreInAdvanced": "Con el perfil Avanzado aparecen más parámetros.",
+  "cloudModel": "se ejecuta en {host}, fuera de tu computadora",
   "notInstalled": "no instalado",
   "tab": {
    "recommended": "Recomendado",
