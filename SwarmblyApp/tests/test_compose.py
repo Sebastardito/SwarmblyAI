@@ -314,3 +314,26 @@ def test_compositions_go_to_the_composer_model_when_installed(app_state, tmp_pat
     app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis.",
                         mode="local", run_async=False)
     assert app_state.chat.get_messages(conv["id"])[-1]["meta"]["composer_missing"] == "missing:70b"
+
+
+def test_a_document_named_by_its_file_goes_first_and_whole(app_state, tmp_path):
+    fake = FakeBackend(reply="Las notas registran humedad alta y una helada [D1 p1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("N", parent=tmp_path / "p")
+    (p.sources / "notas_campo_varias.md").write_text(
+        "# Notas\n\nMarzo: humedad alta en la Parcela Norte.\n\nAbril: una helada leve.\n", encoding="utf-8")
+    (p.sources / "informe_lote_AB1.md").write_text(
+        "# Informe\n\nEl campo del lote AB1 tuvo notas de riego y campo seco en las notas del técnico.\n",
+        encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Resume mis notas de campo.", mode="local", run_async=False)
+    srcs = app_state.chat.get_messages(conv["id"])[-1]["meta"]["lce"]["sources"]
+    assert srcs[0]["rel"] == "notas_campo_varias.md"
+    assert all(s["whole_document"] for s in srcs if s["rel"] == "notas_campo_varias.md")
+
+
+def test_privacy_message_in_the_interface_language():
+    from swarmbly_app.chat import _privacy_message
+    assert "no has autorizado" in _privacy_message("model", "ollama.com", "es")
+    assert "not authorised" in _privacy_message("model", "ollama.com", "en")
