@@ -47,10 +47,10 @@ flowchart LR
 
 | Works, measured | Not yet, or refuted |
 |---|---|
-| Privacy lanes; personal requests stay local; evidence sent by name only; where each call goes is enforced, with a privacy receipt per answer (3.0.1); projects, consent per question, memory with the user's yes (3.1) | Grounded composition; the receipt tried with non-technical people |
+| Privacy lanes; personal requests stay local; evidence sent by name only; where each call goes is enforced, with a privacy receipt per answer (3.0.1); projects, consent per question, memory with the user's yes (3.1) | Roles and recipes (3.3); the receipt tried with non-technical people |
 | LAN swarm: authentication, hedging, local fallback, learned speed | Internet swarms; no tools (MCP) or skills |
 | Batches with evidence; extraction with aggregation by code | Distributed long-form writing; coherence-tax criterion |
-| Local memory over text, Word, HTML and PDF | Grounded composition (fact sheet, tables by code, verifier) |
+| Local memory over text, Word, HTML and PDF; grounded composition, first steps: labels by code, omitted facts shown, gaps closed, sources that disagree shown (3.2, open battery) | Fact sheet, tables built by code, claim verifier (3.3) |
 | Installer for three systems; Docker image; sealed benchmark banks, run once per version | Testers outside the project; a second model on the banks |
 
 ### The road to a public network with volunteers
@@ -60,10 +60,11 @@ Each version can be shown working on its own. Volunteers join in growing circles
 ```mermaid
 flowchart LR
   V1["<b>3.0.1</b><br/>destinations<br/>+ Docker"] --> V2["<b>3.1</b><br/>projects and<br/>privacy receipt"]
-  V2 --> V3["<b>3.2</b><br/>providers by role<br/>and recipes"]
-  V3 --> V4["<b>3.3</b><br/>tools: MCP<br/>and skills"]
-  V4 --> V5["<b>3.4</b><br/>teams and trusted<br/>circles · private beta"]
-  V5 --> V6["<b>3.5</b><br/>public network<br/>· public beta"]
+  V2 --> V3["<b>3.2</b><br/>grounded composition<br/>and safety"]
+  V3 --> V3b["<b>3.3</b><br/>roles<br/>and recipes"]
+  V3b --> V4["<b>3.4</b><br/>tools: MCP<br/>and skills"]
+  V4 --> V5["<b>3.5</b><br/>teams and trusted<br/>circles · private beta"]
+  V5 --> V6["<b>3.6</b><br/>public network<br/>· public beta"]
   V6 --> V7["<b>4.0</b><br/>protocol 1.0<br/>· public release"]
   V7 -.-> V8["<b>later</b><br/>agent hierarchy,<br/>LCE C3–C4"]
   style V5 fill:#2a78d622,stroke:#2a78d6
@@ -74,10 +75,11 @@ flowchart LR
 |---|---|---|
 | **3.0.1 — Destinations** | <ul><li>Every model provider is labelled local, my network or third party, checked from its address.</li><li>An outbound policy runs before every call: answer, query expansion, embeddings, assembly, worker, retries and fallback.</li><li>A node never serves the swarm through a third-party API.</li><li>Answers record where they were actually computed.</li><li>API keys move to the system keychain.</li><li>Docker distribution.</li></ul> | A synthetic leak test fails if any path sends private passages, or other nodes' fragments, to an unauthorised destination |
 | **3.1 — Projects** | <ul><li>Projects with their own folder (default `Documents/Swarmbly/<Project>`, with a warning for cloud-synced folders).</li><li>Project memory kept apart from personal memory.</li><li>Chats saved in the folder.</li><li>Export and restore as a `.swarmbly` package with hashes and without secrets.</li><li>A **privacy receipt** for each answer: what left, for whom, why.</li><li>C1 moved into SwarmblyLCE.</li></ul> | <ul><li>Two projects stay isolated.</li><li>A restore on another computer and system keeps chats, sources and citations.</li><li>3–5 non-technical people understand the receipt</li></ul> |
-| **3.2 — Providers and recipes** | <ul><li>Several providers (local, OpenAI-compatible, Anthropic) assigned **by role**: planner, extractor, writer, verifier, embeddings. Third parties are an explicit choice per project and per role.</li><li>Bounded reasoning per role.</li><li>Four reference recipes, run as flows in code: *ask your documents*, *compare documents into a table*, *research with public sources*, *process a list on the swarm*.</li><li>Grounded composition, built on what 3.1 already has (C1 citations, labels, the anchoring measure): a local inventory of the request's requirements; an evidence ledger of admitted facts with their `doc:` citations, values and units checked by code; a requirement ↔ evidence matrix; a composer that writes only from admitted facts and builds tables by code; a claim auditor (deterministic first, a model check where it pays) and at most one bounded repair, off by default. All local, behind flags, measured one step at a time (F0 = 3.1, then each addition).</li><li>An open development battery, separate from the sealed banks, for S1/S2/S3, follow-ups, contradictions, consent, isolation and prompt injection.</li><li>The agent runtime is born in SwarmblyCore.</li><li>Benchmark v2 with held-out sets.</li></ul> | <ul><li>The same recipes run with a local model and with an API.</li><li>Held-out sets measured and published.</li><li>Zero unauthorised sends</li></ul> |
-| **3.3 — Tools** | <ul><li>One tool broker.</li><li>MCP client: local servers approved one by one; remote ones shown as third parties.</li><li>Skills in the open Agent Skills format (`SKILL.md`), instructions only at first.</li><li>Importing never runs anything.</li><li>Author search with consent (ORCID, OpenAlex, PubMed).</li></ul> | <ul><li>Effective permissions equal the declared ones.</li><li>A page containing instructions cannot widen them</li></ul> |
-| **3.4 — Teams and trusted circles · private beta** | <ul><li>Nodes announce roles: search, large model, reasoner, corpus.</li><li>The same team runs on one node or several.</li><li>**Trusted circles:** small swarms joined by invitation (code or QR) that also work beyond the LAN, through direct addresses or an overlay network.</li><li>Non-transferable reciprocity credits.</li><li>Signed installers.</li><li>**20–50 volunteers** in 3–5 circles.</li></ul> | <ul><li>Team versus equivalent local run measured.</li><li>Losing a node leaves honest partial results.</li><li>≥ 90 % successful installs.</li><li>No severe bug open for two weeks</li></ul> |
-| **3.5 — Public network · public beta** | <ul><li>Rendezvous and relay; NAT traversal.</li><li>Reputation, rate limits and abuse protection.</li><li>Protocol 1.0-rc with conformance tests.</li><li>LCE specification 0.3.</li><li>External privacy review.</li><li>Automatic updates.</li><li>Open registration of volunteers.</li></ul> | <ul><li>No critical finding.</li><li>A third-party node passes conformance.</li><li>Leak test and held-out sets without regression on the public network</li></ul> |
+| **3.2 — Grounded composition and safety** | <ul><li>An open development battery (fictitious, 30 cases), separate from the sealed banks: compositions, follow-ups, contradictions, consent, privacy of public lookups and prompt injection.</li><li>Labels attached by code where a sentence's figures are in a passage; the facts of the sources that a composition leaves out, shown under it; those gaps closed with one short paragraph.</li><li>Sources that disagree shown side by side; documents named by their file found first; questions outside the documents answered as such.</li><li>An optional larger **composer model by role**, which also writes the search terms of a composition.</li><li>Ollama cloud models treated as third parties; instructions inside a document marked and never followed.</li><li>Every step measured on the open battery; what did not help (a requirement list for the model, self-repair, lexical scaffolding) stays off.</li></ul> | <ul><li>The sealed banks, run once against 3.1: more supported claims in compositions, no regression in S2.</li><li>Zero unauthorised sends, with leak tests for cloud models and injected instructions.</li><li>The open battery and each step's result published</li></ul> |
+| **3.3 — Roles and recipes** | <ul><li>A registry of **roles** (writer, search terms, verifier, embeddings) over several providers (local, OpenAI-compatible, Anthropic), with bounded reasoning per role. A third party stays an explicit choice per project and per role.</li><li>Four reference recipes, run as flows in code behind a "What do you want to do?" entry: *ask your documents*, *compare documents into a table* (fact sheet and table built by code), *research with public sources* (claim verifier), *process a list on the swarm*.</li><li>The agent runtime is born in SwarmblyCore.</li><li>A new sealed bank (v3) written by the maintainer, on a new person and domain, with tasks for recipes 2 and 3.</li></ul> | <ul><li>The same recipes run with a local model and with a simulated API.</li><li>Recipes 2 and 3 measured on bank v3 (claim precision, coverage).</li><li>3–5 non-technical people understand the receipt and the notices (carried over from 3.1).</li><li>Zero unauthorised sends</li></ul> |
+| **3.4 — Tools** | <ul><li>One tool broker.</li><li>MCP client: local servers approved one by one; remote ones shown as third parties.</li><li>Skills in the open Agent Skills format (`SKILL.md`), instructions only at first.</li><li>Importing never runs anything.</li><li>Author search with consent (ORCID, OpenAlex, PubMed).</li></ul> | <ul><li>Effective permissions equal the declared ones.</li><li>A page containing instructions cannot widen them</li></ul> |
+| **3.5 — Teams and trusted circles · private beta** | <ul><li>Nodes announce roles: search, large model, reasoner, corpus.</li><li>The same team runs on one node or several.</li><li>**Trusted circles:** small swarms joined by invitation (code or QR) that also work beyond the LAN, through direct addresses or an overlay network.</li><li>Non-transferable reciprocity credits.</li><li>Signed installers.</li><li>**20–50 volunteers** in 3–5 circles.</li></ul> | <ul><li>Team versus equivalent local run measured.</li><li>Losing a node leaves honest partial results.</li><li>≥ 90 % successful installs.</li><li>No severe bug open for two weeks</li></ul> |
+| **3.6 — Public network · public beta** | <ul><li>Rendezvous and relay; NAT traversal.</li><li>Reputation, rate limits and abuse protection.</li><li>Protocol 1.0-rc with conformance tests.</li><li>LCE specification 0.3.</li><li>External privacy review.</li><li>Automatic updates.</li><li>Open registration of volunteers.</li></ul> | <ul><li>No critical finding.</li><li>A third-party node passes conformance.</li><li>Leak test and held-out sets without regression on the public network</li></ul> |
 | **4.0 — Protocol 1.0 · public release** | <ul><li>Protocol frozen, with capability negotiation, delegation and third-party destinations decided.</li><li>Versioning policy.</li><li>Governance in place (Swiss Verein).</li></ul> | Public-beta criteria held for two releases |
 | **Later** | <ul><li>**SwarmblyAgents hierarchy:** one level of delegation, kept only if a held-out experiment shows it beats the flat team.</li><li>LCE C3–C4.</li><li>Further incentives for sharing.</li></ul> | Each starts with a design document and a pre-registered experiment |
 
@@ -93,9 +95,9 @@ flowchart LR
 
 | Phase | Who | What volunteers do | What they get |
 |---|---|---|---|
-| Alpha (3.1–3.3) | People the maintainer knows, 5–10 | Install (native or Docker), use the recipes, send local reports voluntarily | Early access; their findings shape the next version |
-| Private beta (3.4) | 3–5 invited circles, 20–50 people | Share their computers within their circle; try teams and batches | A swarm of their own; reciprocity credits |
-| Public beta (3.5) | Anyone | Run a node on the public network, report problems | Free access to community computing |
+| Alpha (3.1–3.4) | People the maintainer knows, 5–10 | Install (native or Docker), use the recipes, send local reports voluntarily | Early access; their findings shape the next version |
+| Private beta (3.5) | 3–5 invited circles, 20–50 people | Share their computers within their circle; try teams and batches | A swarm of their own; reciprocity credits |
+| Public beta (3.6) | Anyone | Run a node on the public network, report problems | Free access to community computing |
 
 Telemetry is never collected. Reports are files the user chooses to send. Feedback goes through GitHub issues and the private security channel ([`SECURITY.md`](../SECURITY.md)).
 
@@ -110,13 +112,14 @@ Telemetry is never collected. Reports are files the user chooses to send. Feedba
 
 ### Decisions behind this roadmap
 
-Taken on 4 November 2026:
+Taken on 4 November 2026 (1–5) and 15 November 2026 (6):
 
 1. **Local by default.** A third-party API is an explicit choice per project and per role, with a receipt.
 2. **No sharing of API keys in the swarm.** The swarm shares open models, within trusted circles first.
 3. **Standard formats:** Agent Skills (`SKILL.md`) for skills, MCP for tools.
 4. **Projects** go in `Documents/Swarmbly/<Project>`, with a warning for cloud-synced folders.
 5. **Trusted circles come before the open internet network.**
+6. **3.2 is published as grounded composition and safety**, measured on the open battery and the sealed banks; roles and recipes move to 3.3, and each later version moves one number.
 
 ---
 
@@ -159,10 +162,10 @@ flowchart LR
 
 | Funciona, medido | Todavía no, o refutado |
 |---|---|
-| Carriles de privacidad; lo personal se queda en local; evidencia enviada solo por nombre; se controla adónde va cada llamada, con un recibo de privacidad por respuesta (3.0.1); proyectos, consentimiento por pregunta, memoria con el sí del usuario (3.1) | Composición fundamentada; el recibo probado con personas no técnicas |
+| Carriles de privacidad; lo personal se queda en local; evidencia enviada solo por nombre; se controla adónde va cada llamada, con un recibo de privacidad por respuesta (3.0.1); proyectos, consentimiento por pregunta, memoria con el sí del usuario (3.1) | Papeles y recetas (3.3); el recibo probado con personas no técnicas |
 | Enjambre LAN: autenticación, coberturas, respaldo local, velocidad aprendida | Enjambres por internet; sin herramientas (MCP) ni habilidades |
 | Lotes con evidencia; extracción con agregación por código | Redacción larga distribuida; criterio del impuesto de coherencia |
-| Memoria local sobre texto, Word, HTML y PDF | Composición fundamentada (hoja de datos, tablas por código, verificador) |
+| Memoria local sobre texto, Word, HTML y PDF; composición fundamentada, primeros pasos: etiquetas por código, datos omitidos a la vista, huecos cerrados, fuentes que no coinciden a la vista (3.2, batería abierta) | Hoja de datos, tablas armadas por código, verificador de afirmaciones (3.3) |
 | Instalador para tres sistemas; imagen Docker; bancos de preguntas sellados, una corrida por versión | Probadores ajenos al proyecto; un segundo modelo en los bancos |
 
 ### El camino a una red pública con voluntarios
@@ -172,10 +175,11 @@ Cada versión puede demostrarse funcionando por sí sola. Los voluntarios entran
 ```mermaid
 flowchart LR
   V1["<b>3.0.1</b><br/>destinos<br/>+ Docker"] --> V2["<b>3.1</b><br/>proyectos y<br/>recibo de privacidad"]
-  V2 --> V3["<b>3.2</b><br/>proveedores por papel<br/>y recetas"]
-  V3 --> V4["<b>3.3</b><br/>herramientas: MCP<br/>y habilidades"]
-  V4 --> V5["<b>3.4</b><br/>equipos y círculos<br/>de confianza · beta privada"]
-  V5 --> V6["<b>3.5</b><br/>red pública<br/>· beta pública"]
+  V2 --> V3["<b>3.2</b><br/>composición fundamentada<br/>y seguridad"]
+  V3 --> V3b["<b>3.3</b><br/>papeles<br/>y recetas"]
+  V3b --> V4["<b>3.4</b><br/>herramientas: MCP<br/>y habilidades"]
+  V4 --> V5["<b>3.5</b><br/>equipos y círculos<br/>de confianza · beta privada"]
+  V5 --> V6["<b>3.6</b><br/>red pública<br/>· beta pública"]
   V6 --> V7["<b>4.0</b><br/>protocolo 1.0<br/>· versión pública"]
   V7 -.-> V8["<b>después</b><br/>jerarquía de agentes,<br/>LCE C3–C4"]
   style V5 fill:#2a78d622,stroke:#2a78d6
@@ -186,10 +190,11 @@ flowchart LR
 |---|---|---|
 | **3.0.1 — Destinos** | <ul><li>Cada proveedor de modelos queda marcado como local, de mi red o de terceros, comprobado a partir de su dirección.</li><li>Una política de salida se aplica antes de cada llamada: respuesta, expansión de consultas, embeddings, ensamblaje, worker, reintentos y respaldo.</li><li>Un nodo nunca sirve al enjambre a través de una API de terceros.</li><li>Las respuestas registran dónde se calcularon de verdad.</li><li>Las claves API pasan al llavero del sistema.</li><li>Distribución Docker.</li></ul> | Una prueba de fuga sintética falla si algún camino envía pasajes privados, o fragmentos de otros nodos, a un destino no autorizado |
 | **3.1 — Proyectos** | <ul><li>Proyectos con carpeta propia (por defecto `Documentos/Swarmbly/<Proyecto>`, con aviso si está sincronizada en la nube).</li><li>Memoria de proyecto separada de la memoria personal.</li><li>Chats guardados en la carpeta.</li><li>Exportar y restaurar como paquete `.swarmbly` con hashes y sin secretos.</li><li>**Recibo de privacidad** por respuesta: qué salió, para quién y por qué.</li><li>C1 movida a SwarmblyLCE.</li></ul> | <ul><li>Dos proyectos quedan aislados.</li><li>Una restauración en otra computadora y otro sistema conserva chats, fuentes y citas.</li><li>3–5 personas no técnicas entienden el recibo</li></ul> |
-| **3.2 — Proveedores y recetas** | <ul><li>Varios proveedores (locales, compatibles con OpenAI, Anthropic) asignados **por papel**: planificador, extractor, redactor, verificador, embeddings. Un tercero es una elección explícita por proyecto y por papel.</li><li>Razonamiento acotado por papel.</li><li>Cuatro recetas de referencia, ejecutadas como flujos en código: *pregunta a tus documentos*, *compara documentos en una tabla*, *investiga con fuentes públicas*, *procesa una lista en el enjambre*.</li><li>Composición fundamentada, sobre lo que ya tiene 3.1 (citas C1, etiquetas, la medida de anclaje): un inventario local de los requisitos de la petición; un registro de hechos admitidos con sus citas `doc:`, con valores y unidades comprobados por código; una matriz requisito ↔ evidencia; un compositor que solo escribe con hechos admitidos y arma las tablas por código; un auditor de afirmaciones (primero determinista, con un modelo donde compense) y como máximo una reparación acotada, desactivada por defecto. Todo local, con interruptores, medido paso a paso (F0 = 3.1 y luego cada añadido).</li><li>Una batería de desarrollo abierta, separada de los bancos sellados, para S1/S2/S3, seguimientos, contradicciones, consentimiento, aislamiento e inyección de instrucciones.</li><li>El runtime de agentes nace en SwarmblyCore.</li><li>Banco v2 con conjuntos reservados.</li></ul> | <ul><li>Las mismas recetas funcionan con un modelo local y con una API.</li><li>Conjuntos reservados medidos y publicados.</li><li>Cero envíos no autorizados</li></ul> |
-| **3.3 — Herramientas** | <ul><li>Un único intermediario de herramientas.</li><li>Cliente MCP: servidores locales aprobados uno a uno; los remotos se muestran como terceros.</li><li>Habilidades en el formato abierto Agent Skills (`SKILL.md`), al principio solo instrucciones.</li><li>Importar nunca ejecuta nada.</li><li>Búsqueda de autor con consentimiento (ORCID, OpenAlex, PubMed).</li></ul> | <ul><li>Los permisos efectivos son iguales a los declarados.</li><li>Una página con instrucciones no puede ampliarlos</li></ul> |
-| **3.4 — Equipos y círculos de confianza · beta privada** | <ul><li>Los nodos anuncian papeles: búsqueda, modelo grande, razonador, corpus.</li><li>El mismo equipo funciona en uno o varios nodos.</li><li>**Círculos de confianza:** enjambres pequeños por invitación (código o QR) que funcionan también fuera de la LAN, con direcciones directas o una red superpuesta.</li><li>Créditos de reciprocidad no transferibles.</li><li>Instaladores firmados.</li><li>**20–50 voluntarios** en 3–5 círculos.</li></ul> | <ul><li>Equipo frente a ejecución local equivalente, medido.</li><li>La caída de un nodo deja resultados parciales honestos.</li><li>≥ 90 % de instalaciones exitosas.</li><li>Ningún error grave abierto durante dos semanas</li></ul> |
-| **3.5 — Red pública · beta pública** | <ul><li>Encuentro y relevo de nodos; travesía de NAT.</li><li>Reputación, límites y protección contra abuso.</li><li>Protocolo 1.0-rc con pruebas de conformidad.</li><li>Especificación LCE 0.3.</li><li>Revisión externa de privacidad.</li><li>Actualizaciones automáticas.</li><li>Registro abierto de voluntarios.</li></ul> | <ul><li>Ningún hallazgo crítico.</li><li>Un nodo de terceros pasa la conformidad.</li><li>Prueba de fugas y conjuntos reservados sin regresión en la red pública</li></ul> |
+| **3.2 — Composición fundamentada y seguridad** | <ul><li>Una batería de desarrollo abierta (ficticia, 30 casos), separada de los bancos sellados: composiciones, seguimientos, contradicciones, consentimiento, privacidad de las consultas públicas e inyección de instrucciones.</li><li>Etiquetas añadidas por código donde las cifras de una frase están en un pasaje; los datos de las fuentes que una composición omite, mostrados debajo; esos huecos cerrados con un párrafo breve.</li><li>Las fuentes que no coinciden se muestran juntas; los documentos nombrados por su archivo se encuentran primero; las preguntas ajenas a los documentos se responden como tales.</li><li>Un **modelo redactor por papel**, opcional y más grande, que también escribe los términos de búsqueda de una composición.</li><li>Los modelos en la nube de Ollama se tratan como terceros; las instrucciones dentro de un documento se marcan y nunca se siguen.</li><li>Cada paso medido en la batería abierta; lo que no ayudó (una lista de requisitos para el modelo, la autorreparación, el andamiaje léxico) queda apagado.</li></ul> | <ul><li>Los bancos sellados, corridos una vez frente a 3.1: más afirmaciones respaldadas en las composiciones, sin regresión en S2.</li><li>Cero envíos no autorizados, con pruebas de fuga para modelos en la nube e instrucciones inyectadas.</li><li>La batería abierta y el resultado de cada paso, publicados</li></ul> |
+| **3.3 — Papeles y recetas** | <ul><li>Un registro de **papeles** (redactor, términos de búsqueda, verificador, embeddings) sobre varios proveedores (locales, compatibles con OpenAI, Anthropic), con razonamiento acotado por papel. Un tercero sigue siendo una elección explícita por proyecto y por papel.</li><li>Cuatro recetas de referencia, ejecutadas como flujos en código tras una entrada «¿Qué quieres hacer?»: *pregunta a tus documentos*, *compara documentos en una tabla* (hoja de datos y tabla armada por código), *investiga con fuentes públicas* (verificador de afirmaciones), *procesa una lista en el enjambre*.</li><li>El runtime de agentes nace en SwarmblyCore.</li><li>Un banco sellado nuevo (v3) escrito por el mantenedor, sobre una persona y un dominio nuevos, con tareas para las recetas 2 y 3.</li></ul> | <ul><li>Las mismas recetas funcionan con un modelo local y con una API simulada.</li><li>Recetas 2 y 3 medidas en el banco v3 (precisión de afirmaciones, cobertura).</li><li>3–5 personas no técnicas entienden el recibo y los avisos (viene de 3.1).</li><li>Cero envíos no autorizados</li></ul> |
+| **3.4 — Herramientas** | <ul><li>Un único intermediario de herramientas.</li><li>Cliente MCP: servidores locales aprobados uno a uno; los remotos se muestran como terceros.</li><li>Habilidades en el formato abierto Agent Skills (`SKILL.md`), al principio solo instrucciones.</li><li>Importar nunca ejecuta nada.</li><li>Búsqueda de autor con consentimiento (ORCID, OpenAlex, PubMed).</li></ul> | <ul><li>Los permisos efectivos son iguales a los declarados.</li><li>Una página con instrucciones no puede ampliarlos</li></ul> |
+| **3.5 — Equipos y círculos de confianza · beta privada** | <ul><li>Los nodos anuncian papeles: búsqueda, modelo grande, razonador, corpus.</li><li>El mismo equipo funciona en uno o varios nodos.</li><li>**Círculos de confianza:** enjambres pequeños por invitación (código o QR) que funcionan también fuera de la LAN, con direcciones directas o una red superpuesta.</li><li>Créditos de reciprocidad no transferibles.</li><li>Instaladores firmados.</li><li>**20–50 voluntarios** en 3–5 círculos.</li></ul> | <ul><li>Equipo frente a ejecución local equivalente, medido.</li><li>La caída de un nodo deja resultados parciales honestos.</li><li>≥ 90 % de instalaciones exitosas.</li><li>Ningún error grave abierto durante dos semanas</li></ul> |
+| **3.6 — Red pública · beta pública** | <ul><li>Encuentro y relevo de nodos; travesía de NAT.</li><li>Reputación, límites y protección contra abuso.</li><li>Protocolo 1.0-rc con pruebas de conformidad.</li><li>Especificación LCE 0.3.</li><li>Revisión externa de privacidad.</li><li>Actualizaciones automáticas.</li><li>Registro abierto de voluntarios.</li></ul> | <ul><li>Ningún hallazgo crítico.</li><li>Un nodo de terceros pasa la conformidad.</li><li>Prueba de fugas y conjuntos reservados sin regresión en la red pública</li></ul> |
 | **4.0 — Protocolo 1.0 · versión pública** | <ul><li>Protocolo congelado, con negociación de capacidades, delegación y destinos de terceros decididos.</li><li>Política de versiones.</li><li>Gobernanza en marcha (Verein suiza).</li></ul> | Criterios de la beta pública sostenidos durante dos versiones |
 | **Después** | <ul><li>**Jerarquía de SwarmblyAgents:** un nivel de delegación, que se conserva solo si un experimento con conjunto reservado muestra que supera al equipo plano.</li><li>LCE C3–C4.</li><li>Más incentivos para compartir.</li></ul> | Cada uno empieza con un documento de diseño y un experimento preregistrado |
 
@@ -205,9 +210,9 @@ flowchart LR
 
 | Fase | Quiénes | Qué hacen los voluntarios | Qué reciben |
 |---|---|---|---|
-| Alfa (3.1–3.3) | Personas que conoce el mantenedor, 5–10 | Instalar (nativo o Docker), usar las recetas, enviar informes locales si quieren | Acceso temprano; sus hallazgos dan forma a la siguiente versión |
-| Beta privada (3.4) | 3–5 círculos invitados, 20–50 personas | Compartir sus computadoras dentro de su círculo; probar equipos y lotes | Un enjambre propio; créditos de reciprocidad |
-| Beta pública (3.5) | Cualquiera | Correr un nodo en la red pública, informar de problemas | Acceso libre al cómputo comunitario |
+| Alfa (3.1–3.4) | Personas que conoce el mantenedor, 5–10 | Instalar (nativo o Docker), usar las recetas, enviar informes locales si quieren | Acceso temprano; sus hallazgos dan forma a la siguiente versión |
+| Beta privada (3.5) | 3–5 círculos invitados, 20–50 personas | Compartir sus computadoras dentro de su círculo; probar equipos y lotes | Un enjambre propio; créditos de reciprocidad |
+| Beta pública (3.6) | Cualquiera | Correr un nodo en la red pública, informar de problemas | Acceso libre al cómputo comunitario |
 
 Nunca se recoge telemetría. Los informes son archivos que el usuario decide enviar. Las opiniones llegan por issues de GitHub y por el canal privado de seguridad ([`SECURITY.md`](../SECURITY.md)).
 
@@ -222,10 +227,11 @@ Nunca se recoge telemetría. Los informes son archivos que el usuario decide env
 
 ### Decisiones detrás de esta hoja de ruta
 
-Tomadas el 4 de noviembre de 2026:
+Tomadas el 4 de noviembre de 2026 (1–5) y el 15 de noviembre de 2026 (6):
 
 1. **Local por defecto.** Una API de terceros es una elección explícita por proyecto y por papel, con recibo.
 2. **No se comparten claves API en el enjambre.** El enjambre comparte modelos abiertos, primero dentro de círculos de confianza.
 3. **Formatos estándar:** Agent Skills (`SKILL.md`) para habilidades y MCP para herramientas.
 4. **Los proyectos** van en `Documentos/Swarmbly/<Proyecto>`, con aviso si la carpeta está sincronizada en la nube.
 5. **Los círculos de confianza van antes que la red abierta por internet.**
+6. **3.2 se publica como composición fundamentada y seguridad**, medida en la batería abierta y en los bancos sellados; papeles y recetas pasan a 3.3, y cada versión siguiente avanza un número.

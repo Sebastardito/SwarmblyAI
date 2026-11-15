@@ -291,10 +291,11 @@ Maintainer workflow: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Where to contri
 ```mermaid
 flowchart LR
   A["<b>3.0.1</b><br/>destinations<br/>+ Docker"] --> B["<b>3.1</b><br/>projects and<br/>privacy receipt"]
-  B --> C["<b>3.2</b><br/>providers by role<br/>and recipes"]
-  C --> D["<b>3.3</b><br/>tools: MCP<br/>and skills"]
-  D --> E["<b>3.4</b><br/>trusted circles<br/>· private beta"]
-  E --> F["<b>3.5</b><br/>public network<br/>· public beta"]
+  B --> C["<b>3.2</b><br/>grounded composition<br/>and safety"]
+  C --> C2["<b>3.3</b><br/>roles<br/>and recipes"]
+  C2 --> D["<b>3.4</b><br/>tools: MCP<br/>and skills"]
+  D --> E["<b>3.5</b><br/>trusted circles<br/>· private beta"]
+  E --> F["<b>3.6</b><br/>public network<br/>· public beta"]
   F --> G["<b>4.0</b><br/>protocol 1.0"]
   style E fill:#2a78d622,stroke:#2a78d6
   style F fill:#2a78d622,stroke:#2a78d6
@@ -585,10 +586,11 @@ Flujo de mantenimiento: [`docs/COMPONENTS.md`](docs/COMPONENTS.md). Dónde contr
 ```mermaid
 flowchart LR
   A["<b>3.0.1</b><br/>destinos<br/>+ Docker"] --> B["<b>3.1</b><br/>proyectos y<br/>recibo de privacidad"]
-  B --> C["<b>3.2</b><br/>proveedores por papel<br/>y recetas"]
-  C --> D["<b>3.3</b><br/>herramientas: MCP<br/>y habilidades"]
-  D --> E["<b>3.4</b><br/>círculos de confianza<br/>· beta privada"]
-  E --> F["<b>3.5</b><br/>red pública<br/>· beta pública"]
+  B --> C["<b>3.2</b><br/>composición fundamentada<br/>y seguridad"]
+  C --> C2["<b>3.3</b><br/>papeles<br/>y recetas"]
+  C2 --> D["<b>3.4</b><br/>herramientas: MCP<br/>y habilidades"]
+  D --> E["<b>3.5</b><br/>círculos de confianza<br/>· beta privada"]
+  E --> F["<b>3.6</b><br/>red pública<br/>· beta pública"]
   F --> G["<b>4.0</b><br/>protocolo 1.0"]
   style E fill:#2a78d622,stroke:#2a78d6
   style F fill:#2a78d622,stroke:#2a78d6
