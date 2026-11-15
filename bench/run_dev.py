@@ -140,6 +140,9 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
                              sum(bool(x.get("reparacion")) for x in s)],
             "con_aviso_cobertura": sum(x.get("aviso_cobertura", 0) > 0 for x in s),
+            "latencia_media_s": round(sum(float((r.get("turnos") or [{}])[-1].get("latencia_s") or 0) for r in rs)
+                                      / max(1, len(rs)), 1),
+            "por_secciones": sum(bool((r.get("meta") or {}).get("scaffold")) for r in rs),
             "clave_en_aviso": sum(x.get("clave_en_aviso", 0) for x in s),
         }
     cats = sorted({r["cat"] for r in rows})
@@ -160,6 +163,9 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
                    f"{a['frases_sin_respaldo']} | {pct(*a['extension_en_rango'])} | {a['prohibido']} | "
                    f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} |")
     t = summ["total"]
+    out += ["", f"Latencia media por respuesta: {t.get('latencia_media_s', '—')} s"
+            + (f"; respuestas compuestas por secciones: {t['por_secciones']}/{t['n']}" if t.get("por_secciones") else "")
+            + "."]
     if t.get("con_aviso_cobertura"):
         missing = t["clave"][1] - t["clave"][0]
         out += ["", f"Respuestas con aviso de datos no mencionados: {t['con_aviso_cobertura']}/{t['n']}; "
