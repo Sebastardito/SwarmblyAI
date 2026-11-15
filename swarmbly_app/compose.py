@@ -22,7 +22,11 @@ on the six compositions × 3 gave no gain (passed 5/18 → 3/18, length in range
 list for the model has its own setting (``compose.checklist``).
 
 **F2, labels attached by code** (``compose.attach_citations``) and **F4, one
-bounded repair** (``compose.repair``) are below.
+bounded repair** (``compose.repair``) are below. Measured together on the
+same cases: F2 brought a citation to 18 of 18 answers and cut the unsupported
+sentences from 83 to 52; F4 did not work with the 7B model (it returned the
+same text when asked to lengthen and dropped content when asked to shorten)
+and stays off.
 """
 
 from __future__ import annotations
@@ -266,6 +270,18 @@ def _derived(figs: set[str], known: set[str]) -> set[str]:
     return out
 
 
+_YEAR = re.compile(r"(?:19|20)\d\d")
+
+
+def _first(sentence: str, figs: set[str]) -> int:
+    """Where the first of these figures appears in the sentence (to give two
+    labels in the order of the figures: "AB1 87 %, AB2 90 %" → AB1's first)."""
+    for m in _NUMBER.finditer(sentence):
+        if _canon(m.group(1)) in figs:
+            return m.start()
+    return len(sentence)
+
+
 def _labels_for(sentence: str, passages: list[tuple[str, str, set[str], set[str]]]) -> list[str]:
     figs = _figures(sentence)
     known: set[str] = set()
@@ -279,6 +295,12 @@ def _labels_for(sentence: str, passages: list[tuple[str, str, set[str], set[str]
     def overlap(st: set[str]) -> float:
         return len(words & st) / len(words)
 
+    if figs and all(_YEAR.fullmatch(f) for f in figs):
+        # only years ("la temporada 2025-2026"): they are in many paragraphs, so
+        # they count only with half of the sentence's words in the same one
+        full = [(overlap(st), lab) for lab, _, fg, st in passages if figs <= fg]
+        full = sorted(x for x in full if x[0] >= 0.5)
+        return [full[-1][1]] if full else []
     if figs:
         full = [(overlap(st), lab) for lab, _, fg, st in passages if figs <= fg]
         full = [x for x in full if x[0] >= 0.3]
@@ -291,7 +313,8 @@ def _labels_for(sentence: str, passages: list[tuple[str, str, set[str], set[str]
                     continue
                 score = len(words & (sa | sb)) / len(words)
                 if score >= 0.3 and (best is None or score > best[0]):
-                    best = (score, [la, lb])
+                    best = (score, [la, lb] if _first(sentence, fa - fb) <= _first(sentence, fb - fa)
+                            else [lb, la])
         return best[1] if best else []
     scored = sorted(((overlap(st), lab) for lab, _, _, st in passages), reverse=True)
     if scored and scored[0][0] >= 0.6 and (len(scored) == 1 or scored[0][0] > scored[1][0]):
@@ -309,6 +332,10 @@ def attach_citations(answer: str, sources: list[dict[str, Any]]) -> tuple[str, l
     if not passages or not answer:
         return answer, []
     attached: list[dict[str, Any]] = []
+    # "(D1 p4)" written by the model is the same label in the wrong brackets
+    for m in re.finditer(r"\((D\d+\s*p\d+)\)", answer):
+        attached.append({"sentence": m.group(0), "labels": [], "by": "format"})
+    answer = re.sub(r"\((D\d+\s*p\d+)\)", r"[\1]", answer)
     out_paras = []
     for para in re.split(r"(\n\s*\n)", answer):
         if not para.strip():

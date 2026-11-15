@@ -33,13 +33,25 @@ default, and is kept only if the open development battery of Swarmbly AI
   sentence that joins a figure from each report with an invented "because"
   keeps no label when its words are not in those passages. In the F1 run a
   paragraph comparing germination by site carried all six figures and no
-  label in six of six answers.
+  label in six of six answers. Years alone ("temporada 2025-2026") count only
+  with half of the sentence's words in the same passage; two labels follow
+  the order of the figures; "(D1 p4)" is rewritten as "[D1 p4]".
+  **Measured** with F4 (S3 × 3): answers with a citation 13/18 → 18/18 (12
+  with one from the model, 47 labels added by code), unsupported sentences
+  83 → 52, the cost table passed 3/3 (1/3 before). Kept.
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,
   keeps the table and the entities, and brings no figure that is neither in
   the draft nor in the sources (`meta.repair`). It costs a second generation
   for the answers that miss the length, and the draft is replaced at the end.
+  **Measured** (S3 × 3): no use as it stands. Asked to lengthen, the 7B
+  model returned the same text in 7 of 7 cases (81 → 81 words); asked to
+  shorten, it cut to below the range and dropped content (the farmers' text
+  lost clorosis and pH in 3 of 3, which the length check cannot see). Off;
+  the paragraph that came out at 80 words for 150–200 holds every figure the
+  sources give, so a longer one would be padding. The requested length stays
+  checked and shown (`meta.requirements`).
 
 ## 0.4.0 — Projects (2026-11-09)
 
