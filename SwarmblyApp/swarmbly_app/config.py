@@ -131,7 +131,7 @@ DEFAULTS: dict[str, Any] = {
     "compose": {
         "inventory": False,           # F1: requirements read by code and checked (meta.requirements)
         "checklist": True,            # F1: with inventory on, the requirements also go to the model
-        "attach_citations": False,    # F2: labels added by code where a sentence's figures are in a passage
+        "attach_citations": True,     # F2: labels added by code where a sentence's figures are in a passage
         "repair": False,              # F4: one rewrite when the length is out of range (needs inventory)
     },
     "evidence": {

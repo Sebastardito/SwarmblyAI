@@ -23,7 +23,7 @@ default, and is kept only if the open development battery of Swarmbly AI
   sentences 83 → 76. The 7B model does not follow a longer list better than
   a short reminder. The inventory and its check stay (F4 needs them); the
   list for the model has its own setting (`compose.checklist`).
-- **F2, labels attached by code** (`compose.attach_citations`). An
+- **F2, labels attached by code** (`compose.attach_citations`, on). An
   unlabelled sentence whose figures all appear in one passage (or in two,
   each giving part of them; a difference or sum of two sourced figures in
   the same sentence counts as sourced) gets that passage's label, and the
@@ -38,7 +38,12 @@ default, and is kept only if the open development battery of Swarmbly AI
   the order of the figures; "(D1 p4)" is rewritten as "[D1 p4]".
   **Measured** with F4 (S3 × 3): answers with a citation 13/18 → 18/18 (12
   with one from the model, 47 labels added by code), unsupported sentences
-  83 → 52, the cost table passed 3/3 (1/3 before). Kept.
+  83 → 52, the cost table passed 3/3 (1/3 before). Kept. On the whole
+  battery (27 cases × 2, against F0): passed 35/54 → 38/54, key data
+  117/132 in both, answers with a citation 47 → 52, unsupported sentences
+  67 → 52, no category worse. A label written after the full stop
+  ("…(administración). [D1 p2]") now counts for the sentence before it (it
+  was doubled in that run). **On by default.**
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,

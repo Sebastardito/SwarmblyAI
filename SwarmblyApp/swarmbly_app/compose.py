@@ -355,7 +355,10 @@ def attach_citations(answer: str, sources: list[dict[str, Any]]) -> tuple[str, l
                 sentence = line[a:b]
                 pieces.append(line[cursor:a])
                 cursor = b
-                if (len(sentence.split()) < 6 or _CITE.search(sentence)
+                # a label right after the full stop belongs to this sentence
+                # ("…(administración). [D1 p2]", open battery, F2 run)
+                labelled_after = bool(re.match(_CITE, line[b:].lstrip()))
+                if (len(sentence.split()) < 6 or _CITE.search(sentence) or labelled_after
                         or sentence.rstrip("*_ ").endswith("?")):
                     pieces.append(sentence)
                     continue
