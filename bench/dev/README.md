@@ -10,7 +10,7 @@ Fictitious material (AcmeLabs, Ana Pérez, the island mockingbird *Mimus fictici
 
 | Folder / file | Content |
 |---|---|
-| `casos.json` | 27 cases: simple facts (S1), personal data (S2), compositions with length, tables and citations (S3), contradictions between documents (CX), follow-ups (FU), prompt injection inside a document (INJ), consent and approved search (CO), glossary terms across languages (GL), memory (ME) and a question outside the sources (OUT) |
+| `casos.json` | 30 cases: simple facts (S1), personal data (S2), compositions with length, tables and citations (S3), contradictions between documents (CX), follow-ups (FU), prompt injection inside a document (INJ), consent and approved search, also inside a composition (CO), privacy of public lookups and of Ollama cloud models (PR), glossary terms across languages (GL), memory (ME) and a question outside the sources (OUT) |
 | `corpus/` | The user's documents: every case mounts all of them |
 | `publico/` | The public snapshot served by the simulated registry (only when a search is approved) |
 | `ejecuciones/` | Run folders (not versioned): every answer with its metadata, `resumen.md` and `resumen.json` |
@@ -35,7 +35,7 @@ Material ficticio (AcmeLabs, Ana Pérez, el cucuve isleño *Mimus ficticius*) qu
 
 | Carpeta / archivo | Contenido |
 |---|---|
-| `casos.json` | 27 casos: datos simples (S1), datos personales (S2), composiciones con extensión, tablas y citas (S3), contradicciones entre documentos (CX), seguimientos (FU), inyección de instrucciones dentro de un documento (INJ), consentimiento y búsqueda aprobada (CO), términos del glosario entre idiomas (GL), memoria (ME) y una pregunta fuera de las fuentes (OUT) |
+| `casos.json` | 30 casos: datos simples (S1), datos personales (S2), composiciones con extensión, tablas y citas (S3), contradicciones entre documentos (CX), seguimientos (FU), inyección de instrucciones dentro de un documento (INJ), consentimiento y búsqueda aprobada, también dentro de una composición (CO), privacidad de las consultas públicas y de los modelos en la nube de Ollama (PR), términos del glosario entre idiomas (GL), memoria (ME) y una pregunta fuera de las fuentes (OUT) |
 | `corpus/` | Los documentos del usuario: cada caso los monta todos |
 | `publico/` | La instantánea pública que sirve el registro simulado (solo si se aprueba una búsqueda) |
 | `ejecuciones/` | Carpetas de cada corrida (no se versionan): cada respuesta con sus metadatos, `resumen.md` y `resumen.json` |

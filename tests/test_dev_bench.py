@@ -66,3 +66,15 @@ def test_summary_counts_by_category():
     assert summ["total"]["aprobados"] == 1 and summ["por_categoria"]["S3"]["extension_en_rango"] == [0, 1]
     md = rd.summary_markdown("r", {"modelo": "m", "repeticiones": 1}, summ, rows, None)
     assert "| S3 |" in md and "| B | 1 | no |" in md
+
+
+def test_privacy_checks_read_what_left():
+    case = {"id": "PR-01", "clave": [], "envio_prohibido": ["acmelabs", "p[eé]rez"]}
+    red = {"registro": [{"q": "Mimus ficticius AcmeLabs"}], "proxy": []}
+    s = rd.score(case, "Texto.", {}, 1, red)
+    assert s["comprobaciones"]["envio_prohibido"] is False and s["envio_prohibido_encontrado"] == ["acmelabs"]
+    assert rd.score(case, "Texto.", {}, 1, {"registro": [{"q": "Mimus ficticius"}], "proxy": []})["aprobado"]
+    blocked = {"id": "PR-02", "clave": [], "espera_bloqueo": True, "envios_max": 0}
+    meta = {"status": "failed", "receipt": {"bloqueados": [{"destino": "ollama.com"}]}}
+    assert rd.score(blocked, "", meta, 0, {})["aprobado"]
+    assert not rd.score(blocked, "Respuesta.", {"status": "done", "receipt": {}}, 0, {})["aprobado"]

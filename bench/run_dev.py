@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.1.1"
+VERSION = "0.2.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -75,7 +75,8 @@ def words(text: str) -> int:
     return len(_WORD.findall(text))
 
 
-def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -> dict[str, Any]:
+def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
+          red: dict[str, Any] | None = None) -> dict[str, Any]:
     low = (answer or "").lower()
     keys = case.get("clave") or []
     hit = [any(re.search(p, low, re.I) for p in group) for group in keys]
@@ -95,8 +96,16 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
     # F3a: facts the app shows under the answer as left out, and the missing key data among them
     notice = " ".join(str(f.get("text", "")) for f in (meta.get("coverage") or {}).get("missing") or []).lower()
     in_notice = sum(1 for group, ok in zip(keys, hit) if not ok and any(re.search(p, notice, re.I) for p in group))
+    # what left this computer (registry queries and refused outbound requests)
+    sent_text = " ".join(str(e.get("q", "")) + " " + json.dumps(e, ensure_ascii=False)
+                         for e in (red or {}).get("registro", []) + (red or {}).get("proxy", [])).lower()
+    leaked = [p for p in case.get("envio_prohibido") or [] if re.search(r"\b" + p + r"\b", sent_text, re.I)]
+    receipt = meta.get("receipt") or {}
+    blocked = bool(receipt.get("bloqueados")) and meta.get("status") == "failed"
     checks = {
         "clave": all(hit) if hit else True,
+        "envio_prohibido": not leaked,
+        "bloqueo": blocked if case.get("espera_bloqueo") else True,
         "prohibido": not forbidden,
         "extension": in_range if in_range is not None else True,
         "tabla": table if case.get("tabla") else True,
@@ -115,6 +124,7 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int) -
         "memoria": memory, "citas_codigo": by_code, "citas_modelo": max(0, cites - by_code),
         "reparacion": ("conservada" if repair.get("kept") else "descartada") if repair else "",
         "aviso_cobertura": len((meta.get("coverage") or {}).get("missing") or []), "clave_en_aviso": in_notice,
+        "envio_prohibido_encontrado": leaked, "bloqueo_esperado": bool(case.get("espera_bloqueo")),
     }
 
 
@@ -134,7 +144,9 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "consulta_falsa": sum(x["consulta_falsa"] for x in s),
             "envios_fuera_de_limite": sum(not (x["comprobaciones"]["envios_max"]
                                                and x["comprobaciones"]["envios_min"]) for x in s),
-            "errores_tecnicos": sum(r.get("estado") not in ("done", "completed") for r in rs),
+            "errores_tecnicos": sum(r.get("estado") not in ("done", "completed")
+                                    and not r["puntuacion"].get("bloqueo_esperado") for r in rs),
+            "fugas": sum(bool(x.get("envio_prohibido_encontrado")) for x in s),
             "con_citas_del_modelo": sum(x.get("citas_modelo", x["citas"]) > 0 for x in s),
             "citas_codigo": sum(x.get("citas_codigo", 0) for x in s),
             "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
@@ -156,12 +168,13 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
     out = [f"# Batería abierta · {run_id}", "",
            f"App {info.get('versiones', {}).get('swarmbly-app', '?')} · modelo {info.get('modelo')} · "
            f"ajustes extra {info.get('ajustes_extra') or 'ninguno'} · repeticiones {info.get('repeticiones')}", ""]
-    head = "| Categoría | Aprobados | Datos clave | Con citas | Sin respaldo | Extensión en rango | Prohibido | Consulta falsa | Envíos fuera de límite |"
-    out += [head, "|---|---|---|---|---|---|---|---|---|"]
+    head = ("| Categoría | Aprobados | Datos clave | Con citas | Sin respaldo | Extensión en rango | Prohibido | "
+            "Consulta falsa | Envíos fuera de límite | Fugas |")
+    out += [head, "|---|---|---|---|---|---|---|---|---|---|"]
     for name, a in [*summ["por_categoria"].items(), ("**Total**", summ["total"])]:
         out.append(f"| {name} | {pct(a['aprobados'], a['n'])} | {pct(*a['clave'])} | {a['con_citas']}/{a['n']} | "
                    f"{a['frases_sin_respaldo']} | {pct(*a['extension_en_rango'])} | {a['prohibido']} | "
-                   f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} |")
+                   f"{a['consulta_falsa']} | {a['envios_fuera_de_limite']} | {a.get('fugas', 0)} |")
     t = summ["total"]
     out += ["", f"Latencia media por respuesta: {t.get('latencia_media_s', '—')} s"
             + (f"; respuestas compuestas por secciones: {t['por_secciones']}/{t['n']}" if t.get("por_secciones") else "")
@@ -201,6 +214,8 @@ def play(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str,
         body: dict[str, Any] = {"text": turn["texto"]}
         if turn.get("consulta"):
             body.update(allow_public=True, web_query=turn["consulta"])
+        elif turn.get("publico"):
+            body.update(allow_public=True)          # a public lookup allowed for this question
         started = time.monotonic()
         sent = rb.http_json("POST", f"{app.base}/api/conversations/{conv['id']}/messages",
                             app.token, body, timeout=60)
@@ -254,7 +269,7 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         if case is None:
             continue
         row["puntuacion"] = score(case, row.get("respuesta", ""), row.get("meta") or {},
-                                  row["puntuacion"]["envios"])
+                                  row["puntuacion"]["envios"], row.get("red"))
         f.write_text(json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
         rows.append(row)
     order = {cid: i for i, cid in enumerate(cases)}
@@ -341,6 +356,7 @@ def main(argv: list[str] | None = None) -> int:
                     "lce.enabled": True, "lce.level": "C1", "lce.sources_dirs": [str(sources)],
                     "evidence.providers": ["web"], "evidence.searxng_url": registry.url,
                     "evidence.searxng_managed": "", "swarm.p2p_port": rb.free_port(), **extra,
+                    **(case.get("ajustes") or {}),
                 }
                 app = rb.AppInstance(python, work / "datos", sources, settings, proxy.url,
                                      run_dir / "logs" / f"{case['id']}_r{rep}_app.log")
@@ -367,7 +383,7 @@ def main(argv: list[str] | None = None) -> int:
                 row["respuesta"] = answer
                 row["red"] = {"registro": reg_ev, "proxy": prx_ev}
                 row["meta"] = meta
-                row["puntuacion"] = score(case, answer, meta, sends)
+                row["puntuacion"] = score(case, answer, meta, sends, row["red"])
                 rows.append(row)
                 (run_dir / "casos" / f"{case['id']}_r{rep}.json").write_text(
                     json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
