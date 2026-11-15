@@ -535,6 +535,7 @@ const Chat = (() => {
       if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
       else if (meta.web_search) article.appendChild(h("p.note.web-results",
         t("chat.webNone").replace("{q}", meta.web_search.query || "")));
+      if (meta.coverage?.missing?.length) article.appendChild(coverageBox(meta.coverage.missing));
       if (meta.memory_proposals) article.appendChild(memoryCard(m));
       article.appendChild(footer(m));
     }
@@ -713,6 +714,15 @@ const Chat = (() => {
       } catch (e) { UI.toast(e.message, "error"); }
     }
     retry(m.id, { web_query: q.value.trim() });
+  }
+
+  /* 3.2 F3a: facts of the user's sources that bear on the request and that the
+     text does not mention, with their labels. Nothing is rewritten. */
+  function coverageBox(missing) {
+    return h("details.coverage",
+      h("summary", t("chat.coverageTitle").replace("{n}", missing.length)),
+      h("ul.sources", missing.map((f) => h("li", h("strong", `[${f.label}] `), f.text))),
+      h("p.muted", t("chat.coverageNote")));
   }
 
   function webResults(found) {

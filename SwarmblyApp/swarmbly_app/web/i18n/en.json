@@ -192,6 +192,8 @@
   "termConflict": "{n} possible mix-up of terms",
   "termConflictTitle": "\"{concept}\" is given traits of \"{other}\" ({traits}), and your glossary says they are different things.",
   "termsErrors": "Did not answer:",
+  "coverageTitle": "Facts in your sources the text does not mention ({n})",
+  "coverageNote": "They are in your documents and bear on what you asked; the text leaves them out. Nothing was rewritten.",
   "missedSources": "Your sources do cover it",
   "missedSourcesTitle": "The answer says your sources do not discuss \"{term}\", but they use \"{found}\", which your glossary gives as an equivalent.",
   "unsupported": "{n} sentences not backed by your sources",

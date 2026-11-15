@@ -56,7 +56,8 @@ def test_f1_is_off_by_default_and_on_with_its_setting(app_state, tmp_path):
     app_state.chat.send(conv["id"], q, mode="local", run_async=False)
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
     assert "Requisitos de esta solicitud" not in system
-    assert "requirements" not in app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    # the inventory and its check are computed for F3a (on by default); the list for the model is not sent
+    assert "coverage" in app_state.chat.get_messages(conv["id"])[-1]["meta"]
     app_state.config.update({"compose.inventory": True})
     conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
     app_state.chat.send(conv["id"], q, mode="local", run_async=False)
@@ -172,3 +173,48 @@ def test_attach_citations_years_order_and_brackets():
 def test_attach_citations_respects_a_label_after_the_full_stop():
     text = "La germinación de AB1 en la Parcela Norte fue del 87 %. [D1 p2]"
     assert C.attach_citations(text, _SRC) == (text, [])
+
+
+_CLOROSIS = [
+    {"label": "D1 p4", "text": "El sector oeste de la Parcela Sur tiene nitrógeno bajo (0,09 %) y un pH de 7,9."},
+    {"label": "D2 p11", "text": "El 28 de febrero se observó clorosis en el 15 % de las plantas del borde oeste de "
+                                "la Parcela Sur; la Parcela Norte no tuvo síntomas."},
+    {"label": "D3 p11", "text": "A mediados de marzo se registró clorosis en el 22 % de las plantas de la Parcela "
+                                "Sur, sobre todo en el sector oeste."},
+    {"label": "D4 p3", "text": "El riego por goteo funcionó sin interrupciones durante 12 semanas en la Parcela Sur."},
+    {"label": "D5 p2", "text": "| Sitio | Rendimiento medio (t/ha) | Desviación |\n|---|---|---|\n"
+                               "| Parcela Sur | 2,4 | 0,4 |"},
+]
+
+
+def test_coverage_lists_the_parallel_fact_the_text_dropped():
+    q = ("Redacta un resumen ejecutivo de 250 a 300 palabras que relacione la clorosis observada en la "
+         "Parcela Sur con el análisis de suelo. Cita cada afirmación.")
+    inv = C.inventory(q, [s["text"] for s in _CLOROSIS])
+    listed = C.facts(q, _CLOROSIS, inv)
+    labels = [f["label"] for f in listed]
+    assert "D2 p11" in labels and "D3 p11" in labels and "D4 p3" not in labels   # irrigation is off topic
+    answer = "La clorosis afectó al 22 % de las plantas de la Parcela Sur [D3 p11], con nitrógeno bajo [D1 p4]."
+    missing = C.uncovered(answer, listed)
+    assert [m["label"] for m in missing] == ["D2 p11"]
+
+
+def test_coverage_reads_table_rows_and_trailing_zeros():
+    units = C._units(_CLOROSIS[4]["text"])
+    assert units == ["Sitio: Parcela Sur · Rendimiento medio (t/ha): 2,4 · Desviación: 0,4"]
+    fact = [{"text": units[0], "label": "D5 p2", "figures": ["0.4", "2.4"]}]
+    assert C.uncovered("En la Parcela Sur rindió 2,40 t/ha [D5 p2].", fact) == []
+
+
+def test_coverage_in_the_chat(app_state, tmp_path):
+    fake = FakeBackend(reply="La clorosis afectó al 22 % de las plantas de la Parcela Sur [D2 p1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("V", parent=tmp_path / "p")
+    (p.sources / "ab1.md").write_text(_CLOROSIS[1]["text"] + "\n", encoding="utf-8")
+    (p.sources / "ab2.md").write_text(_CLOROSIS[2]["text"] + "\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis observada en "
+                        "la Parcela Sur.", mode="local", run_async=False)
+    cov = app_state.chat.get_messages(conv["id"])[-1]["meta"]["coverage"]
+    assert [m["text"][:28] for m in cov["missing"]] == ["El 28 de febrero se observó "]

@@ -462,6 +462,9 @@ code.cite { font-size: 11px; opacity: .75; }
 .memory-row input.memory-term { flex: 0 1 140px; }
 .memory-done { margin: 6px 0 0 34px; }
 .web-results { margin: 6px 0 0 34px; }
+.coverage { margin: 6px 0 0 34px; }
+.coverage summary { cursor: pointer; color: var(--warn, #8a5a00); }
+.coverage ul { margin: 4px 0; }
 .web-results ul { margin: 4px 0; }
 .terms-box { display: flex; flex-direction: column; gap: 6px; }
 .terms-box select { max-width: 100%; }
