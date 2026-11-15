@@ -672,3 +672,51 @@ def table_prompt(request: str, fact_list: list[dict[str, Any]], lang: str = "es"
     return (f"User's request: {request}\n\nMake only the table the request asks for, in Markdown, with these "
             f"facts from their sources:\n{lines}\n\nIf it asks for a difference, compute it from those figures. "
             "Under the table, one line: \"Source: \" and the labels used. Return only the table and that line.")
+
+
+# --- F3c: closing the gaps ---------------------------------------------------------
+#
+# F3b, measured (S3 × 3, qwen2.5:7b): key data 90/99 → 73/99. Each section saw
+# only the facts the code picked, and the picking missed what the whole
+# passages held (the second lot's yields, the soil figures); a table task
+# without the second lot's rows invented them. The single pass keeps what it
+# had; what it drops is a few facts that F3a can name. F3c writes those as one
+# short closing paragraph: a task the size of a simple question, the kind the
+# model does without fault. In genome terms, closing the gaps between contigs
+# rather than re-assembling from fewer reads.
+
+def gap_prompt(request: str, draft: str, gaps: list[dict[str, Any]], lang: str = "es") -> str:
+    lines = "\n".join(f"[{g['label']}] {g['text']}" for g in gaps)
+    words = min(90, 30 * len(gaps))
+    if lang == "es":
+        return (f"Solicitud del usuario: {request}\n\nTexto ya escrito:\n{draft}\n\n"
+                f"Estos datos de sus fuentes tocan la solicitud y el texto no los menciona:\n{lines}\n\n"
+                f"Escribe un párrafo final de no más de {words} palabras que los incorpore, cada uno con su "
+                "etiqueta entre corchetes en la misma frase. No repitas lo que el texto ya dice ni añadas otros "
+                "datos. Devuelve solo ese párrafo.")
+    return (f"User's request: {request}\n\nText already written:\n{draft}\n\n"
+            f"These facts from their sources bear on the request and the text does not mention them:\n{lines}"
+            f"\n\nWrite one closing paragraph of no more than {words} words that brings them in, each with its "
+            "label in brackets in the same sentence. Do not repeat what the text says or add other facts. "
+            "Return only that paragraph.")
+
+
+def accept_gap(draft: str, addition: str, gaps: list[dict[str, Any]]) -> tuple[bool, str]:
+    """Keep the closing paragraph only if it brings at least one of the facts
+    and no figure that is neither in those facts nor in the draft."""
+    if not (addition or "").strip():
+        return False, "empty"
+    if addition.lstrip().startswith("|"):
+        return False, "not a paragraph"
+    known = _figures(draft)
+    gap_figs: set[str] = set()
+    for g in gaps:
+        gap_figs |= _figures(g["text"])
+    known |= gap_figs
+    new = sorted(_figures(addition) - known - _derived(_figures(addition), known))
+    if new:
+        return False, "new figures: " + ", ".join(new[:5])
+    brought = _figures(addition) & gap_figs
+    if gap_figs and not brought:
+        return False, "brings none of the facts"
+    return True, ""

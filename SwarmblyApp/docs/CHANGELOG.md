@@ -72,7 +72,28 @@ default, and is kept only if the open development battery of Swarmbly AI
   request is answered in one go. The sections are independent: a network of
   nodes could write them at the same time. `meta.scaffold` keeps the plan
   and the time of each call. `model.think` (Ollama) can turn off the
-  thinking of a reasoning model used as a control.
+  thinking of a reasoning model used as a control. **Measured** (S3 × 3,
+  qwen2.5:7b, against the same model in one pass): key data 90/99 → 73/99,
+  passed 7/18 → 2/18, unsupported sentences 73 → 50, 8.0 s against 10.6 s.
+  Each section saw only the facts the code picked, and the picking missed
+  what the whole passages held (the second lot's yields, the soil figures);
+  the table task, without the second lot's rows, invented them. The idea is
+  not refuted, the fragmenter is: a lexical selector has too little
+  coverage to be the only reader. Off.
+- **F3c, closing the gaps** (`compose.gap_fill`, off until measured). The
+  draft is written in one pass as before; the facts F3a finds missing (up
+  to four) are written as one short closing paragraph, a task the size of a
+  simple question, kept only if it brings at least one of them and no figure
+  of its own (`meta.gap_fill`).
+- **Composer by role** (`compose.model`). A composition goes to a larger
+  local model when one is set and installed; questions stay with the chat's
+  model, and a missing model is noted (`meta.composer_missing`). Controls on
+  the same cases, without scaffolding: qwen2.5:14b key data 94/99, passed
+  7/18, unsupported 79, 26.5 s per answer (texts too long); qwen3.8:27b
+  (`model.think: false`) key data 96/99, passed 11/18, unsupported 51, length
+  in range 13/18, 22.9 s, against 90/99, 7/18, 73, 7/18 and 10.6 s for the
+  7B. The farmers' text found the chlorosis with the 27B in 3 of 3: the
+  query expansion is written by the model, so retrieval improves with it.
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,

@@ -258,3 +258,54 @@ def test_f3b_in_the_chat(app_state, tmp_path):
     assert sc["sections"] == 1 and sc["table"] is True and [c["part"] for c in sc["calls"]] == ["section", "table"]
     assert msg["content"].startswith("La clorosis") and "| AB1 | 15 % |" in msg["content"]
     assert all(len(c["messages"]) == 1 for c in fake.calls[-2:])          # each task sees only its own facts
+
+
+def test_gap_closing_paragraph_is_checked():
+    gaps = [{"label": "D2 p11", "text": "El 28 de febrero se observó clorosis en el 15 % de las plantas."}]
+    draft = "La clorosis afectó al 22 % de las plantas [D3 p11]."
+    assert "[D2 p11]" in C.gap_prompt("Resume la clorosis.", draft, gaps)
+    assert C.accept_gap(draft, "Antes, el 28 de febrero, ya había un 15 % de plantas con clorosis [D2 p11].",
+                        gaps) == (True, "")
+    assert C.accept_gap(draft, "En abril llegó al 31 % [D2 p11].", gaps)[0] is False
+    assert C.accept_gap(draft, "Esto muestra un problema serio de manejo.", gaps) == (False, "brings none of the facts")
+
+
+def test_f3c_in_the_chat(app_state, tmp_path):
+    class Gap(FakeBackend):
+        def stream_chat(self, messages, **kw):
+            last = messages[-1]["content"]
+            self.reply = ("Ya el 28 de febrero se había observado clorosis en el 15 % de las plantas [D1 p1]."
+                          if "Texto ya escrito" in last else
+                          "La clorosis afectó al 22 % de las plantas de la Parcela Sur [D2 p1].")
+            return super().stream_chat(messages, **kw)
+    fake = Gap()
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("F", parent=tmp_path / "p")
+    (p.sources / "ab1.md").write_text(_CLOROSIS[1]["text"] + "\n", encoding="utf-8")
+    (p.sources / "ab2.md").write_text(_CLOROSIS[2]["text"] + "\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "compose.gap_fill": True})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis observada en "
+                        "la Parcela Sur.", mode="local", run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    assert msg["meta"]["gap_fill"]["kept"] is True and "15 %" in msg["content"]
+    assert not msg["meta"]["coverage"]["missing"]
+
+
+def test_compositions_go_to_the_composer_model_when_installed(app_state, tmp_path):
+    fake = FakeBackend(reply="La clorosis afectó al 22 % de las plantas [D1 p1].")
+    fake.list_models = lambda: ["fake-model:1b", "big:27b"]    # type: ignore[method-assign]
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("M", parent=tmp_path / "p")
+    (p.sources / "ab2.md").write_text(_CLOROSIS[2]["text"] + "\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "compose.model": "big:27b"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis.",
+                        mode="local", run_async=False)
+    assert fake.calls[-1]["model"] == "big:27b"
+    app_state.chat.send(conv["id"], "¿Qué porcentaje de clorosis hubo?", mode="local", run_async=False)
+    assert fake.calls[-1]["model"] != "big:27b"                 # a question stays with the chat's model
+    app_state.config.update({"compose.model": "missing:70b"})
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis.",
+                        mode="local", run_async=False)
+    assert app_state.chat.get_messages(conv["id"])[-1]["meta"]["composer_missing"] == "missing:70b"
