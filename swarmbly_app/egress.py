@@ -103,11 +103,28 @@ def classify_url(url: str) -> tuple[str, str]:
     return classify_host(host), host
 
 
+OLLAMA_CLOUD = "ollama.com"
+
+
+def cloud_host_by_name(model: str) -> str:
+    """An Ollama cloud model by its name ("deepseek-v4-pro:cloud",
+    "gpt-oss:120b-cloud"): the local Ollama forwards it to ollama.com, so the
+    address the app connects to (127.0.0.1) is not where the text goes."""
+    tag = (model or "").strip().lower().rpartition(":")[2] if ":" in (model or "") else ""
+    return OLLAMA_CLOUD if tag == "cloud" or tag.endswith("-cloud") else ""
+
+
 def model_destination(cfg: dict[str, Any]) -> dict[str, str]:
-    """Where the configured chat model runs: {"clase": …, "host": …}."""
+    """Where the configured chat model runs: {"clase": …, "host": …}. An
+    Ollama cloud model runs at ollama.com even when Ollama is on this computer
+    ("via" names the local address)."""
     model = cfg.get("model") or {}
     url = str(model.get("backend_url") or "") or "http://127.0.0.1:11434"
     cls, host = classify_url(url)
+    remote = cloud_host_by_name(str(model.get("model_name") or "")) \
+        if str(model.get("backend", "auto")) in ("auto", "ollama") else ""
+    if remote:
+        return {"clase": THIRD_PARTY, "host": remote, "via": host}
     return {"clase": cls, "host": host}
 
 

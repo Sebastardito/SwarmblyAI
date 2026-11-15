@@ -36,6 +36,12 @@ class Capture:
                 {"message": {"content": "Respuesta local."}, "done": True}) + "\n")
         if request.url.path.endswith("/models"):
             return httpx.Response(200, json={"data": [{"id": "remote-model"}]})
+        if request.url.path.endswith("/api/tags"):
+            # an Ollama cloud model is listed with the host it is forwarded to
+            return httpx.Response(200, json={"models": [
+                {"name": "qwen2.5:7b"},
+                {"name": "grande-pro:cloud", "remote_host": "https://ollama.com"},
+                {"name": "sin-sufijo:latest", "remote_host": "https://ollama.com"}]})
         return httpx.Response(404)
 
     def bodies(self) -> list[str]:
@@ -305,3 +311,87 @@ def test_public_lookups_from_worker_threads_reach_the_receipt():
     receipt = egress.build_receipt(ledger, lane="local", route="local+consulta_publica",
                                    answer="", consent={}, passages=[])
     assert len(receipt["envios"]) == len(ledger.events) >= 1
+
+
+# --- Ollama cloud models (3.2) -------------------------------------------------------
+#
+# Ollama runs on this computer and forwards its cloud models to ollama.com: the
+# address the app connects to (127.0.0.1) is not where the text goes. Found on
+# 15 November 2026 while adding a composer model by role: a cloud model chosen
+# as the chat's model or the composer would have taken the user's documents
+# off the computer with an empty receipt.
+
+def _cloud_setup(state, model="grande-pro:cloud", **privacy):
+    from swarmbly_app.inference import ollama as oll
+    oll._REMOTE.clear()
+    _personal_setup(state, **privacy)
+    state.config.update({"model": {"backend": "ollama", "backend_url": "http://127.0.0.1:11434",
+                                   "model_name": model}})
+
+
+@pytest.mark.parametrize("name,host", [("deepseek-v4-pro:cloud", "ollama.com"), ("gpt-oss:120b-cloud", "ollama.com"),
+                                       ("qwen2.5:7b", ""), ("cloud-model:7b", ""), ("cloudy", "")])
+def test_cloud_models_by_name(name, host):
+    assert egress.cloud_host_by_name(name) == host
+
+
+def test_cloud_model_counts_as_a_third_party_destination():
+    dest = egress.model_destination({"model": {"backend_url": "http://127.0.0.1:11434",
+                                               "model_name": "grande-pro:cloud"}})
+    assert dest == {"clase": egress.THIRD_PARTY, "host": "ollama.com", "via": "127.0.0.1"}
+
+
+@pytest.mark.parametrize("model", ["grande-pro:cloud", "sin-sufijo:latest"])
+def test_unauthorised_ollama_cloud_model_receives_nothing(app_state, capture, model):
+    _cloud_setup(app_state, model=model)
+    msg = _ask(app_state, "¿Desde cuándo coordino el monitoreo del proyecto Zeta?")
+    assert msg["meta"]["status"] == "failed" and "not authorised" in msg["meta"]["error"]
+    assert not [r for r in capture.requests if r.url.path.endswith("/api/chat")]
+    assert not any(MARKER in b for b in capture.bodies())
+    receipt = msg["meta"]["receipt"]
+    assert receipt["bloqueados"] and receipt["destino_modelo"]["host"] == "ollama.com"
+
+
+def test_ollama_cloud_model_authorised_for_questions_keeps_documents_out(app_state, capture):
+    _cloud_setup(app_state, third_party_models=["ollama.com"])
+    msg = _ask(app_state, "¿Desde cuándo coordino el monitoreo del proyecto Zeta?")
+    assert msg["meta"]["status"] == "done" and "passages_withheld" in msg["meta"]
+    sent = [b for r, b in zip(capture.requests, capture.bodies()) if r.url.path.endswith("/api/chat")]
+    assert sent and not any(MARKER in b for b in sent)
+    receipt = msg["meta"]["receipt"]
+    assert [s["destino"] for s in receipt["envios"]] == ["ollama.com"] and receipt["pasajes_enviados"] == 0
+
+
+def test_a_cloud_model_set_by_hand_is_stopped_where_the_bytes_leave(capture):
+    from swarmbly_app.inference import ollama as oll
+    oll._REMOTE.clear()
+    backend = oll.OllamaBackend("http://127.0.0.1:11434")
+    with egress.request_ledger("t") as ledger, egress.purpose(egress.PASSAGES):
+        with pytest.raises(egress.EgressDenied):
+            backend.stream_chat([{"role": "user", "content": MARKER}], model="grande-pro:cloud", max_tokens=5)
+    assert not [r for r in capture.requests if r.url.path.endswith("/api/chat")]
+    assert any(e.get("bloqueado") and e.get("destino") == "ollama.com" for e in ledger.events)
+
+
+def test_cloud_composer_is_not_used_without_both_authorisations(app_state, capture):
+    _cloud_setup(app_state, model="qwen2.5:7b")
+    app_state.config.update({"compose": {"model": "grande-pro:cloud"}})
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre mi trabajo en el proyecto Zeta.",
+                        mode="local", run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    assert msg["meta"]["status"] == "done" and "ollama.com" in msg["meta"]["composer_blocked"]
+    models = [json.loads(b).get("model") for r, b in zip(capture.requests, capture.bodies())
+              if r.url.path.endswith("/api/chat")]
+    assert models and "grande-pro:cloud" not in models
+
+
+def test_worker_never_shares_a_cloud_model(app_state, fake_chat):
+    from swarmbly_app.p2p.worker import WorkerService
+    app_state.config.update({"model": {"model_name": "grande-pro:cloud"},
+                             "swarm": {"worker_enabled": True, "worker_models": ["qwen2.5:7b", "x:120b-cloud"]}})
+    _, fake = fake_chat
+    worker = WorkerService(app_state.config, app_state.db, app_state.bus,
+                           app_state.identity_manager, app_state.lce, lambda: fake)
+    assert worker.shared_models() == ["qwen2.5:7b"]
+    assert worker.policy()["third_party_backend"] is True and worker.policy()["enabled"] is False

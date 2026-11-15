@@ -26,8 +26,9 @@ const Settings = (() => {
       { key: "model.backend", type: "select", options: [["auto", "backend.auto"], ["ollama", "Ollama"], ["openai_compat", "backend.openai"]] },
       { key: "model.backend_url", type: "text", placeholder: "http://127.0.0.1:11434" },
       { key: "model.api_key", type: "password", advanced: true },
-      { key: "privacy.third_party_models", type: "list", showIf: (c) => c.model?.backend === "openai_compat" },
-      { key: "privacy.third_party_passages", type: "bool", showIf: (c) => c.model?.backend === "openai_compat" },
+      // 3.2: shown for every backend: an Ollama on this computer forwards its cloud models
+      { key: "privacy.third_party_models", type: "list" },
+      { key: "privacy.third_party_passages", type: "bool" },
       { key: "model.model_name", type: "model" },
       { key: "model.multi_model", type: "bool" },
       { key: "model.local_models", type: "models", showIf: (c) => c.model?.multi_model },
@@ -168,7 +169,8 @@ const Settings = (() => {
         value: value ?? "", "aria-label": label });
       control.addEventListener("change", () => save(Number(control.value)));
     } else if (f.type === "model") {
-      const chat = installed.filter((m) => m.kind !== "embedding").map((m) => ({ value: m.name, label: m.name }));
+      const chat = installed.filter((m) => m.kind !== "embedding").map((m) => ({ value: m.name,
+        label: m.remote ? `${m.name} (${t("settings.cloudModel").replace("{host}", m.remote)})` : m.name }));
       if (value && !chat.some((o) => o.value === value)) chat.unshift({ value, label: `${value} (${t("settings.notInstalled")})` });
       if (f.allowEmpty) chat.unshift({ value: "", label: t("settings.sameModel") });
       control = select(chat.length ? chat : [{ value: "", label: t("chat.noModel") }], value, save,
@@ -184,7 +186,8 @@ const Settings = (() => {
             if (box.checked) chosen.add(m.name); else chosen.delete(m.name);
             save([...chosen]);
           });
-          return h("label.check", box, h("span", m.name), m.family ? chip(m.family) : null);
+          return h("label.check", box, h("span", m.name), m.family ? chip(m.family) : null,
+            m.remote ? chip(t("settings.cloudModel").replace("{host}", m.remote)) : null);
         }) : h("span.muted", t("chat.noModel")));
     } else if (f.type === "list") {
       control = h("textarea", { rows: 2, "aria-label": label });

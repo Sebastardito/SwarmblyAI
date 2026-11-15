@@ -6,6 +6,20 @@ Swarmbly AI 3.2. Each step is behind its own setting (`compose.*`), off by
 default, and is kept only if the open development battery of Swarmbly AI
 (`bench/dev`, fictitious material) shows it helps; F0 is 0.4.0.
 
+- **Ollama cloud models are a third-party destination** (privacy fix). An
+  Ollama on this computer forwards its cloud models ("deepseek-v4-pro:cloud",
+  "gpt-oss:120b-cloud") to ollama.com; the app saw only 127.0.0.1 and let
+  the text through with an empty receipt. Found on 15 November 2026 while
+  adding the composer model; no run had used such a model. Now the host is
+  read from Ollama's model list (`remote_host`, with the name as a fallback)
+  and the 3.0.1 policy applies to it: nothing is sent unless ollama.com is
+  authorised, documents only with the second authorisation, and the receipt
+  names ollama.com. The check is made where the bytes leave (any call: chat,
+  query expansion, fusion, composer), a cloud composer is skipped without
+  both authorisations (`meta.composer_blocked`), a node never shares a cloud
+  model with the swarm, the settings mark cloud models ("runs at ollama.com,
+  off this computer") and the third-party authorisations are shown for every
+  backend. Seven leak tests with a marker in the user's document.
 - **F1, the requirement inventory** (`compose.inventory`, `swarmbly_app/compose.py`).
   A composition request (a composing verb with a length, a table, a number of
   items or a kind of text) is read by code: the length range ("unas 200

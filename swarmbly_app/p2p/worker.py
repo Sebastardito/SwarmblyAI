@@ -82,10 +82,12 @@ class WorkerService:
     def shared_models(self) -> list[str]:
         """Models this node offers to third parties (never a personal adapter)."""
         cfg = self.config.all()
+        from .. import egress
         shared = [m for m in (cfg["swarm"].get("worker_models") or []) if m]
         if not shared and cfg["model"].get("model_name"):
             shared = [cfg["model"]["model_name"]]
-        return shared
+        # an Ollama cloud model would send other nodes' fragments to ollama.com
+        return [m for m in shared if not egress.cloud_host_by_name(m)]
 
     def policy(self) -> dict[str, Any]:
         from .. import egress
