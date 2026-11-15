@@ -535,6 +535,7 @@ const Chat = (() => {
       if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
       else if (meta.web_search) article.appendChild(h("p.note.web-results",
         t("chat.webNone").replace("{q}", meta.web_search.query || "")));
+      if (meta.conflicts?.length) article.appendChild(conflictBox(meta.conflicts));
       if (meta.coverage?.missing?.length) article.appendChild(coverageBox(meta.coverage.missing));
       if (meta.memory_proposals) article.appendChild(memoryCard(m));
       article.appendChild(footer(m));
@@ -727,6 +728,14 @@ const Chat = (() => {
       h("summary", t("chat.coverageTitle").replace("{n}", missing.length)),
       h("ul.sources", missing.map((f) => h("li", h("strong", `[${f.label}] `), f.text))),
       h("p.muted", t("chat.coverageNote")));
+  }
+
+  /* 3.2: documents that disagree on what was asked, both shown with labels. */
+  function conflictBox(found) {
+    return h("details.coverage", { open: true },
+      h("summary", t("chat.conflictTitle")),
+      h("ul.sources", found.flatMap((c) => [c.a, c.b]).map((f) => h("li", h("strong", `[${f.label}] `), f.text))),
+      h("p.muted", t("chat.conflictNote")));
   }
 
   function webResults(found) {

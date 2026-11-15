@@ -6,6 +6,20 @@ Swarmbly AI 3.2. Each step is behind its own setting (`compose.*`), off by
 default, and is kept only if the open development battery of Swarmbly AI
 (`bench/dev`, fictitious material) shows it helps; F0 is 0.4.0.
 
+- **Sources that disagree, and questions outside the sources.** The April
+  minutes set the harvest of both lots for the second week of June and a
+  later e-mail moved AB2 to the third; every 7B answer gave the e-mail's
+  date and said nothing of the change. The code now finds sentences of
+  different documents about the same thing (a word of the question's topic
+  in both, the question's lot or "ambos/todos"), each with a date or an
+  amount of the same kind, whose values differ; the model is told to give
+  both, and the app shows them under the answer (`meta.conflicts`). Two
+  reports about different lots do not disagree. Offline on every open
+  battery answer so far: CX-01 flagged, nothing else. When nothing retrieved
+  shares a word with an impersonal question ("¿Cuál es la capital de
+  Perú?" got two crop reports), the documents are left out and the
+  question is answered as one outside them (`meta.sources_unrelated`); a
+  question about the user ("¿qué idiomas hablo?") is never treated so.
 - **Retrieval for compositions and documents named by file.** Of 59 key
   data missing in the open battery, 18 never reached the model. A request
   that names a file ("resume mis notas de campo" → notas_campo_varias.md)

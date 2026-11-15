@@ -61,6 +61,14 @@ _FIRST_PERSON = re.compile(
     r"my|mine|myself|about me|meu|minha|meus|minhas)\b", re.I)
 
 
+# a question about the user ("¿qué idiomas hablo?") may share no word with the
+# passage that answers it ("Español (nativo), inglés (avanzado)…"): never
+# treated as unrelated to the user's documents
+_ABOUT_ME = re.compile(
+    r"\b(yo|me|soy|estoy|tengo|tuve|hablo|trabaj[eé]|trabajo|hice|hago|escrib[ií]|publiqu[eé]|estudi[eé]|"
+    r"viv[oí]|fui|he|hab[ií]a|i|i'm|i've|am|have|my|mine)\b", re.I)
+
+
 class ChatService:
     def __init__(self, db: Database, bus: EventBus,
                  registry: BackendRegistry, config_getter: Callable[[], dict[str, Any]],
@@ -474,10 +482,18 @@ class ChatService:
                     sources = self.retriever(user_text, extra_terms, request.project_id) or []
                 except Exception:
                     sources = []
-                from .compose import is_composition
+                from .compose import is_composition, related
+                named_docs = self._named_documents(user_text, request.project_id)
+                if sources and not named_docs and not _ABOUT_ME.search(user_text) \
+                        and not _FIRST_PERSON.search(user_text) and not related(
+                        f"{user_text} {extra_terms}", sources):
+                    # 3.2: nothing retrieved shares a word with the question: the
+                    # question is not about the user's documents
+                    request.receipt_ctx["sources_unrelated"] = len(sources)
+                    sources = []
                 sources = self._whole_small_documents(
                     sources, request.project_id,
-                    named=self._named_documents(user_text, request.project_id),
+                    named=named_docs,
                     # three documents whole only for a larger composer: the 7B
                     # lost data with them (S3 key data 63/66 → 58/66), the 27B
                     # got all of them (99/99)
@@ -655,6 +671,13 @@ class ChatService:
                 given_list = inv if (inv is not None and ccfg.get("inventory")
                                      and ccfg.get("checklist", True)) else None
                 blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=given_list))
+                from .compose import conflict_block, conflicts
+                found_conflicts = conflicts(user_text, sources)
+                if found_conflicts:
+                    # 3.2: documents that disagree on what is asked: the model
+                    # is told, and the app shows both under the answer
+                    blocks.append(conflict_block(found_conflicts, _lang(user_text)))
+                    request.receipt_ctx["conflicts"] = found_conflicts
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
                 # only), so "which sources do you have?" is not invented
@@ -744,6 +767,10 @@ class ChatService:
             extra = {}
             if request.receipt_ctx.get("scaffold"):
                 extra["scaffold"] = request.receipt_ctx["scaffold"]
+            if request.receipt_ctx.get("conflicts"):
+                extra["conflicts"] = request.receipt_ctx["conflicts"]
+            if request.receipt_ctx.get("sources_unrelated"):
+                extra["sources_unrelated"] = request.receipt_ctx["sources_unrelated"]
             if request.receipt_ctx.get("composer_missing"):
                 extra["composer_missing"] = request.receipt_ctx["composer_missing"]
             if request.receipt_ctx.get("composer_blocked"):
