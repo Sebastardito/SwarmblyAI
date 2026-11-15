@@ -604,6 +604,10 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (meta.injection?.passages?.length) chips.push(chip(
+      t("chat.injection"), "warn",
+      t(meta.injection.echoed ? "chat.injectionEchoed" : "chat.injectionTitle")
+        .replace("{labels}", meta.injection.passages.join(", "))));
     if (meta.missed_sources?.length) chips.push(chip(
       t("chat.missedSources"), "warn",
       meta.missed_sources.map((x) => t("chat.missedSourcesTitle").replace("{term}", x.term)
