@@ -398,3 +398,12 @@ def test_conflicts_and_unrelated_sources_in_the_chat(app_state, tmp_path):
     acta = [{"text": _ACTA}, {"text": _CORREO}]
     assert C.related("¿Cuál es la capital de Perú? Peru, capital", acta) is False
     assert C.related("¿Cuándo se cosecha AB2?", acta) is True
+
+
+def test_a_heading_shown_with_its_paragraph_is_not_part_of_the_first_fact():
+    src = [{"label": "D1 p2", "rel": "informe_lote_AB2.md",
+            "text": "Siembra y germinación — El lote AB2 se sembró el 20 de febrero con 10 kg por hectárea. "
+                    "La germinación a los diez días fue del 90 % en la Parcela Norte."}]
+    q = "Escribe un párrafo de 150 a 200 palabras que compare la germinación de AB1 y AB2 en cada sitio."
+    texts = [f["text"] for f in C.facts(q, src, C.inventory(q, [src[0]["text"]]))]
+    assert texts == ["La germinación a los diez días fue del 90 % en la Parcela Norte."]
