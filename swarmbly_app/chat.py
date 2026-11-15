@@ -567,7 +567,7 @@ class ChatService:
             elif sources:
                 inv = None
                 ccfg = cfg.get("compose") or {}
-                if ccfg.get("inventory") or ccfg.get("repair"):
+                if ccfg.get("inventory") or ccfg.get("repair") or ccfg.get("coverage"):
                     from . import compose
                     if compose.is_composition(user_text):
                         inv = compose.inventory(user_text, [str(x.get("text", "")) for x in sources])
@@ -752,6 +752,12 @@ class ChatService:
             if inv:
                 from . import compose
                 extra["requirements"] = {"inventory": inv, "check": compose.check(answer_text, inv)}
+                if ccfg.get("coverage", True) and sources and not public_hits:
+                    # F3a (3.2): facts of the passages that bear on the request and
+                    # that the text does not mention, shown under the answer
+                    listed = compose.facts(user_text, sources, inv, answer_text)
+                    missing = compose.uncovered(answer_text, listed)
+                    extra["coverage"] = {"facts": len(listed), "missing": missing}
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:

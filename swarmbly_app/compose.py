@@ -214,7 +214,10 @@ def _canon(num: str) -> str:
     """"1.150" and "1,150" (thousands) → "1150"; "2,8" and "2.8" → "2.8"."""
     if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", num):
         return re.sub(r"[.,]", "", num)
-    return num.replace(",", ".")
+    num = num.replace(",", ".")
+    if re.fullmatch(r"\d+\.\d+", num):          # "2,80" is the "2,8" of the sources
+        num = num.rstrip("0").rstrip(".")
+    return num
 
 
 def _figures(text: str) -> set[str]:
@@ -445,3 +448,106 @@ def accept_repair(draft: str, repaired: str, inv: dict[str, Any], passages: list
     if new:
         return False, "new figures not in the sources: " + ", ".join(new[:5])
     return True, ""
+
+
+# --- F3a: what the text leaves out -------------------------------------------------
+#
+# Diagnosis of the open battery runs (15 November 2026, all runs so far): of 59
+# key data missing from answers, 41 were in the passages the model was given
+# and 18 never reached it (the farmers' text got the minutes only, never the
+# report with the chlorosis). Omission did not grow with the size of the
+# context; facts of the same kind in parallel documents were merged or
+# dropped (chlorosis in 15 % of AB1's plants and 22 % of AB2's: one of them
+# kept). The code lists the facts of the passages that bear on the request
+# and, after the answer, those it does not mention; the app shows them under
+# the answer with their labels (``meta.coverage``). Nothing is rewritten.
+
+_INSTRUCTION = {"escri", "redac", "prepa", "elabo", "inclu", "palab", "fuent", "citas", "cita", "dato",
+                "datos", "tabla", "texto", "parra", "resum", "ejecu", "unas", "entre", "sobre", "para",
+                "segun", "como", "cada", "cifra", "cuatr", "cinco", "siete", "nueve", "three", "four", "afirm", "relac", "compa", "expli", "haz", "write",
+                "words", "table", "cite", "sourc", "summa", "inclu", "infor", "nota", "notas"}
+
+
+_GROUP_STEMS = {"sitio", "lote", "lotes", "parce", "isla", "islas", "espec", "docum", "pobla", "varie", "sites",
+                "plots", "speci", "tres", "ambos", "todos", "todas"}
+
+
+def _request_stems(text: str) -> set[str]:
+    return {s for s in _stems(text) if s not in _INSTRUCTION}
+
+
+def _units(text: str) -> list[str]:
+    """Sentences of a passage, and the rows of its tables with their header
+    ("Sitio: Parcela Norte · Rendimiento medio (t/ha): 2,8 …")."""
+    out, header = [], None
+    prose = []
+    for line in (text or "").split("\n"):
+        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else None
+        if cells is None:
+            header = None
+            prose.append(line)
+            continue
+        if all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
+            continue
+        if header is None:
+            header = cells
+            continue
+        out.append(" · ".join(f"{h}: {c}" for h, c in zip(header, cells) if c))
+    for sentence in re.split(r"(?<=[.;])\s+", " ".join(prose)):
+        if sentence.strip():
+            out.append(sentence.strip())
+    return out
+
+
+def facts(request: str, sources: list[dict[str, Any]], inv: dict[str, Any] | None = None,
+          answer: str = "", limit: int = 10) -> list[dict[str, Any]]:
+    """Facts of the passages that bear on the request: sentences or table rows
+    with a figure or one of the request's entities that share a word of its
+    topic, best first."""
+    entities = [e.lower() for e in (inv or {}).get("entities") or []]
+    # the topic: the request's words without its entities and group nouns
+    # ("compare la germinación de AB1 y AB2 en cada sitio" → germinación)
+    topic = _request_stems(request) - _stems(" ".join(entities)) - _GROUP_STEMS
+    scored: list[tuple[float, int, dict[str, Any]]] = []
+    seen: set[str] = set()
+    for order, s in enumerate(sources):
+        label = " ".join(str(s.get("label", "")).split())
+        for unit in _units(str(s.get("text", ""))):
+            if len(unit.split()) < 5 or unit.startswith("#"):
+                continue
+            key = _fold(unit)[:120]
+            if key in seen:
+                continue
+            figs = {f for f in _figures(unit) if not _YEAR.fullmatch(f)}
+            has_entity = any(e in unit.lower() for e in entities)
+            on_topic = len(_stems(unit) & topic)
+            score = 2 * on_topic + (1 if has_entity else 0)
+            if not ((figs or has_entity) and on_topic):
+                continue
+            seen.add(key)
+            scored.append((score, -order, {"text": unit[:240], "label": label, "figures": sorted(figs)}))
+    if not scored:
+        return []
+    top = max(x[0] for x in scored)
+    scored = [x for x in scored if x[0] >= 0.6 * top]
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return [f for _, _, f in scored[:limit]]
+
+
+def uncovered(answer: str, fact_list: list[dict[str, Any]], limit: int = 6) -> list[dict[str, Any]]:
+    """The facts the answer does not mention: one with figures is covered when
+    at least half of them are in the answer; one without, when most of its
+    words are."""
+    figs = _figures(answer)
+    words = _stems(answer)
+    out = []
+    for f in fact_list:
+        if f["figures"]:
+            if len(set(f["figures"]) & figs) * 2 >= len(f["figures"]):
+                continue
+        else:
+            st = _stems(f["text"])
+            if st and len(st & words) / len(st) >= 0.6:
+                continue
+        out.append({"text": f["text"], "label": f["label"]})
+    return out[:limit]

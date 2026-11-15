@@ -44,6 +44,22 @@ default, and is kept only if the open development battery of Swarmbly AI
   67 → 52, no category worse. A label written after the full stop
   ("…(administración). [D1 p2]") now counts for the sentence before it (it
   was doubled in that run). **On by default.**
+- **F3a, what the text leaves out** (`compose.coverage`, on). Diagnosis of
+  every open-battery run so far: of 59 key data missing from answers, 41
+  were in the passages the model was given and 18 never reached it (the
+  farmers' text got the minutes only). Omission did not grow with the size
+  of the context; facts of the same kind in parallel documents were dropped
+  (chlorosis in 15 % of AB1's plants and 22 % of AB2's: one kept). For a
+  composition the code lists the facts of the passages that bear on the
+  request (sentences and table rows with a figure or an entity of the
+  request and a word of its topic) and, after the answer, those the text
+  does not mention; they are shown under the answer with their labels
+  (`meta.coverage`). Nothing is rewritten. Offline on the 42 compositions
+  already answered: notices on 8 (7 of them the dropped chlorosis figure),
+  none on the others, and 9 of 27 missing key data surfaced; what it cannot
+  see is a decision the model did not pick as a recommendation, or a
+  paragraph that retrieval never brought. Decimals with trailing zeros
+  ("2,80") are the figure of the sources ("2,8") for F2 and F3a.
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,

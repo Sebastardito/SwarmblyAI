@@ -133,6 +133,7 @@ DEFAULTS: dict[str, Any] = {
         "checklist": True,            # F1: with inventory on, the requirements also go to the model
         "attach_citations": True,     # F2: labels added by code where a sentence's figures are in a passage
         "repair": False,              # F4: one rewrite when the length is out of range (needs inventory)
+        "coverage": True,             # F3a: facts of the sources the composition leaves out, shown under it
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,
