@@ -887,7 +887,7 @@ class ChatService:
                 # F3c (3.2): the facts the draft left out (F3a) are written as one
                 # short closing paragraph, kept only with no figure of its own
                 from . import compose
-                gaps = compose.uncovered(answer_text, compose.facts(user_text, sources, inv, answer_text), limit=4)
+                gaps = compose.gap_candidates(answer_text, compose.facts(user_text, sources, inv, answer_text))
                 if gaps:
                     t0 = time.monotonic()
                     try:
@@ -902,6 +902,8 @@ class ChatService:
                                 on_delta=on_delta, interrupt=request.stop_event.is_set)
                         addition = (getattr(more, "text", "") or "").strip()
                         kept, why = compose.accept_gap(answer_text, addition, gaps)
+                        if kept and _lang(addition) != _lang(user_text):
+                            kept, why = False, "another language"
                     except Interrupted:
                         raise
                     except Exception as exc:

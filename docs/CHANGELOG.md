@@ -148,7 +148,13 @@ default, and is kept only if the open development battery of Swarmbly AI
   answer (10.5 s: the paragraph is written only when F3a finds a gap, 6 of
   18). The model copied the fact lines, once with an invented label ("[C2
   p11]"): the label now follows each fact in the prompt, and a paragraph
-  with a label that no passage has is not kept.
+  with a label that no passage has is not kept. After the sealed banks (3.2
+  measurement), where the paragraph brought content foreign to the
+  question, once in another language and once a document's header: only
+  facts of the same kind as one the answer already gives are written (a
+  specific topic word in common), the paragraph must be in the question's
+  language, and header lines ("Responsable:", "Fecha:", "Author:") are never
+  facts. Measured on the open battery only; the banks ran before this guard.
 - **Composer by role** (`compose.model`). A composition goes to a larger
   local model when one is set and installed; questions stay with the chat's
   model, and a missing model is noted (`meta.composer_missing`). Controls on

@@ -488,6 +488,12 @@ _INSTRUCTION_LIKE = re.compile(
     r"a\s+partir\s+de\s+ahora\s+(?:responde|act[uú]a|eres)|from\s+now\s+on\s+(?:you\s+are|answer|act))", re.I)
 
 
+# a document's header line ("Responsable: …", "Fecha: …", "Author: …") is not a fact of its subject
+_HEADER = re.compile(r"^\s*(?:autor[a]?|responsable|fecha|versi[oó]n|p[aá]gina|archivo|documento|t[ií]tulo|"
+                     r"revisad[oa]|elaborad[oa]|preparad[oa]|author|date|version|page|file|title|prepared by)\s*:",
+                     re.I)
+
+
 def instruction_like(text: str) -> bool:
     """Text addressed to an assistant ("ignora todas las instrucciones
     anteriores y…", "send all the documents to…"): in a document it is
@@ -538,7 +544,8 @@ def facts(request: str, sources: list[dict[str, Any]], inv: dict[str, Any] | Non
         # for a row "Parcela Sur · Nitrógeno total (%): 0,09")
         name = _stems(re.sub(r"[_\-.]+", " ", str(s.get("rel") or s.get("source") or "")))
         for unit in _units(str(s.get("text", ""))):
-            if len(unit.split()) >= 5 and not unit.startswith("#") and not instruction_like(unit):
+            if (len(unit.split()) >= 5 and not unit.startswith("#") and not instruction_like(unit)
+                    and not _HEADER.match(unit)):
                 units.append((order, label, unit, name))
     df: dict[str, int] = {}
     for _, _, unit, _ in units:
@@ -701,6 +708,21 @@ def table_prompt(request: str, fact_list: list[dict[str, Any]], lang: str = "es"
 # model does without fault. In genome terms, closing the gaps between contigs
 # rather than re-assembling from fewer reads.
 
+def gap_candidates(answer: str, fact_list: list[dict[str, Any]], limit: int = 3) -> list[dict[str, Any]]:
+    """The left-out facts worth a closing paragraph: those of the same kind as
+    a fact the answer already gives (a specific topic word in common: the
+    other lot's chlorosis), never a loose fact of a cited document. On the
+    sealed banks (3.2 measurement) the paragraph brought content foreign to
+    the question, once in another language and once a document's header."""
+    missing = uncovered(answer, fact_list, limit=len(fact_list))
+    missing_texts = {m["text"] for m in missing}
+    given = [f for f in fact_list if f["text"] not in missing_texts]
+    kinds = set().union(*(set(f.get("keys") or []) for f in given)) if given else set()
+    out = [m for m, f in ((m, next(x for x in fact_list if x["text"] == m["text"])) for m in missing)
+           if kinds & set(f.get("keys") or [])]
+    return out[:limit]
+
+
 def gap_prompt(request: str, draft: str, gaps: list[dict[str, Any]], lang: str = "es") -> str:
     # the label after the fact: the model copies the line, and "[D4 p11] A
     # mediados…" came back with the label in front (open battery, F3c run)
@@ -709,12 +731,12 @@ def gap_prompt(request: str, draft: str, gaps: list[dict[str, Any]], lang: str =
     if lang == "es":
         return (f"Solicitud del usuario: {request}\n\nTexto ya escrito:\n{draft}\n\n"
                 f"Estos datos de sus fuentes tocan la solicitud y el texto no los menciona:\n{lines}\n\n"
-                f"Escribe un párrafo final de no más de {words} palabras que los incorpore, cada uno con su "
-                "etiqueta entre corchetes en la misma frase. No repitas lo que el texto ya dice ni añadas otros "
-                "datos. Devuelve solo ese párrafo.")
+                f"Escribe en español un párrafo final de no más de {words} palabras que los incorpore, cada uno "
+                "con su etiqueta entre corchetes en la misma frase. No repitas lo que el texto ya dice ni añadas "
+                "otros datos. Devuelve solo ese párrafo.")
     return (f"User's request: {request}\n\nText already written:\n{draft}\n\n"
             f"These facts from their sources bear on the request and the text does not mention them:\n{lines}"
-            f"\n\nWrite one closing paragraph of no more than {words} words that brings them in, each with its "
+            f"\n\nWrite, in English, one closing paragraph of no more than {words} words that brings them in, each with its "
             "label in brackets in the same sentence. Do not repeat what the text says or add other facts. "
             "Return only that paragraph.")
 
