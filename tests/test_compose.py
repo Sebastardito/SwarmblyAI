@@ -268,13 +268,17 @@ def test_gap_closing_paragraph_is_checked():
                         gaps) == (True, "")
     assert C.accept_gap(draft, "En abril llegó al 31 % [D2 p11].", gaps)[0] is False
     assert C.accept_gap(draft, "Esto muestra un problema serio de manejo.", gaps) == (False, "brings none of the facts")
+    assert C.accept_gap(draft, "[C2 p11] El 28 de febrero hubo un 15 % de plantas con clorosis.", gaps)[0] is False
+    assert "plantas [D2 p11]." in C.gap_prompt("Resume la clorosis.", draft, gaps)
 
 
 def test_f3c_in_the_chat(app_state, tmp_path):
     class Gap(FakeBackend):
         def stream_chat(self, messages, **kw):
             last = messages[-1]["content"]
-            self.reply = ("Ya el 28 de febrero se había observado clorosis en el 15 % de las plantas [D1 p1]."
+            import re as _re
+            gap = _re.findall(r"plantas[^\n]*\[(D\d+ p\d+)\]\.", last)
+            self.reply = (f"Ya el 28 de febrero se había observado clorosis en el 15 % de las plantas [{gap[-1]}]."
                           if "Texto ya escrito" in last else
                           "La clorosis afectó al 22 % de las plantas de la Parcela Sur [D2 p1].")
             return super().stream_chat(messages, **kw)
@@ -288,7 +292,8 @@ def test_f3c_in_the_chat(app_state, tmp_path):
     app_state.chat.send(conv["id"], "Escribe un párrafo de 60 a 80 palabras sobre la clorosis observada en "
                         "la Parcela Sur.", mode="local", run_async=False)
     msg = app_state.chat.get_messages(conv["id"])[-1]
-    assert msg["meta"]["gap_fill"]["kept"] is True and "15 %" in msg["content"]
+    assert msg["meta"]["gap_fill"]["kept"] is True, msg["meta"]["gap_fill"]
+    assert "15 %" in msg["content"]
     assert not msg["meta"]["coverage"]["missing"]
 
 

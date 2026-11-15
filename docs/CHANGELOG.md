@@ -80,11 +80,17 @@ default, and is kept only if the open development battery of Swarmbly AI
   the table task, without the second lot's rows, invented them. The idea is
   not refuted, the fragmenter is: a lexical selector has too little
   coverage to be the only reader. Off.
-- **F3c, closing the gaps** (`compose.gap_fill`, off until measured). The
+- **F3c, closing the gaps** (`compose.gap_fill`, on). The
   draft is written in one pass as before; the facts F3a finds missing (up
   to four) are written as one short closing paragraph, a task the size of a
   simple question, kept only if it brings at least one of them and no figure
-  of its own (`meta.gap_fill`).
+  of its own (`meta.gap_fill`). **Measured** (S3 × 3, 7B): passed 7/18 →
+  9/18, key data 90/99 → 93/99, unsupported sentences 73 → 61, the soil and
+  chlorosis summary 7/7 in 3 of 3 (2 of 3 below 7/7 before), same time per
+  answer (10.5 s: the paragraph is written only when F3a finds a gap, 6 of
+  18). The model copied the fact lines, once with an invented label ("[C2
+  p11]"): the label now follows each fact in the prompt, and a paragraph
+  with a label that no passage has is not kept.
 - **Composer by role** (`compose.model`). A composition goes to a larger
   local model when one is set and installed; questions stay with the chat's
   model, and a missing model is noted (`meta.composer_missing`). Controls on
@@ -94,6 +100,10 @@ default, and is kept only if the open development battery of Swarmbly AI
   in range 13/18, 22.9 s, against 90/99, 7/18, 73, 7/18 and 10.6 s for the
   7B. The farmers' text found the chlorosis with the 27B in 3 of 3: the
   query expansion is written by the model, so retrieval improves with it.
+  **Measured** with the 7B as the chat's model and the 27B as composer:
+  passed 12/18, key data 94/99, unsupported 50, length in range 15/18, 19.3 s;
+  the farmers' text lost the chlorosis in 3 of 3 again (the expansion was
+  the 7B's), which confirms where that gain came from.
 - **F4, one bounded repair** (`compose.repair`). When the code's check finds
   the length out of range, the model gets its text back once with the count
   and the range; the rewrite is kept only if it lands closer to the range,
