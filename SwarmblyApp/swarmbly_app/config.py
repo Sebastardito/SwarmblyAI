@@ -157,7 +157,7 @@ DEFAULTS: dict[str, Any] = {
         "conflicts_web": True,        # 3.3 recipe 3: results of an approved search that disagree with the documents
         "compare_by_code": True,      # 3.3 recipe 3: a comparison asked between a document and a public result, by code
         "web_missing_names": True,    # 3.3 recipe 3: each result says which asked names it does not mention
-        "web_after_sources": False,   # 3.3 recipe 3: the approved search's results after the documents, by the question
+        "web_after_sources": True,    # 3.3 recipe 3: the approved search's results after the documents, by the question
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,

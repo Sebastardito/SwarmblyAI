@@ -193,3 +193,7 @@ def test_figures_the_program_computed_and_sentences_on_disagreeing_sources():
     assert report["claims"] == 1 and report["about_sources"] == 1 and report["flagged"] == []
     flagged = V.verify("El costo del lote AB1 fue de 1.150 dólares, un 6 % más que el de AB2 [D1 p17].", SOURCES)
     assert flagged["flagged"][0]["figures"] == ["6"]
+
+
+def test_saying_that_two_sources_disagree_is_about_the_sources():
+    assert V.split("No coinciden en esta recomendación [D1 p6] [W1].")[0].get("absence") is True

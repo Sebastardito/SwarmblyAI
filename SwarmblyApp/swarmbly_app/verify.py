@@ -46,7 +46,7 @@ _ABSENCE = re.compile(r"\bno\s+(?:se\s+)?(?:menciona\w*|indica\w*|dice\w*|regist
                       r"(?:datos|informaci[oó]n|registros?|menci[oó]n)\b|\bsin\s+(?:datos|menci[oó]n)\b|"
                       r"\b(?:does|do)\s+not\s+(?:mention|say|state|report)\b|\bno\s+(?:data|mention)\b|"
                       # "Las fuentes no coinciden en este punto. [D1 p6]": about the sources
-                      r"\bfuentes?\b[^.]{0,30}\bno\s+coincid\w*|\bsources?\b[^.]{0,30}\b(?:disagree|differ)\b", re.I)
+                      r"\bno\s+coincid\w*|\bsources?\b[^.]{0,30}\b(?:disagree|differ)\b", re.I)
 _LABEL = re.compile(r"\[\s*((?:[A-Z]\d+\s*p\d+)|(?:W\d+))[^\]]{0,40}\]")
 YES, PARTLY, NO = "yes", "partly", "no"
 
