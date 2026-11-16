@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.2.1"
+VERSION = "0.3.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -129,6 +129,10 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "reparacion": ("conservada" if repair.get("kept") else "descartada") if repair else "",
         "aviso_cobertura": len((meta.get("coverage") or {}).get("missing") or []), "clave_en_aviso": in_notice,
         "envio_prohibido_encontrado": leaked, "bloqueo_esperado": bool(case.get("espera_bloqueo")),
+        # 3.3: a table built by code, and numeric cells that are in no passage
+        "tabla_por_codigo": bool(meta.get("table")),
+        "celdas_sin_respaldo": len((meta.get("table_audit") or {}).get("unsupported") or []),
+        "celdas": int((meta.get("table_audit") or {}).get("cells") or 0),
     }
 
 
@@ -152,6 +156,9 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "errores_tecnicos": sum(r.get("estado") not in ("done", "completed")
                                     and not r["puntuacion"].get("bloqueo_esperado") for r in rs),
             "fugas": sum(bool(x.get("envio_prohibido_encontrado")) for x in s),
+            "tablas": [sum(bool(x.get("tabla_por_codigo")) for x in s),
+                       sum(bool(x.get("celdas")) for x in s),
+                       sum(x.get("celdas_sin_respaldo", 0) for x in s), sum(x.get("celdas", 0) for x in s)],
             "con_citas_del_modelo": sum(x.get("citas_modelo", x["citas"]) > 0 for x in s),
             "citas_codigo": sum(x.get("citas_codigo", 0) for x in s),
             "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
@@ -183,6 +190,10 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
     t = summ["total"]
     out += ["", f"La extensión pedida es un aviso: aprobados contando también la extensión, "
             f"{t.get('aprobados_con_extension', t['aprobados'])}/{t['n']}."]
+    tb = t.get("tablas") or [0, 0, 0, 0]
+    if tb[1]:
+        out += ["", f"Respuestas con tabla: {tb[1]} (armadas por el programa: {tb[0]}); celdas numéricas sin "
+                f"respaldo en las fuentes: {tb[2]} de {tb[3]}."]
     out += ["", f"Latencia media por respuesta: {t.get('latencia_media_s', '—')} s"
             + (f"; respuestas compuestas por secciones: {t['por_secciones']}/{t['n']}" if t.get("por_secciones") else "")
             + "."]
