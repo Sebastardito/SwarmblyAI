@@ -988,7 +988,8 @@ class ChatService:
                 # F3c (3.2): the facts the draft left out (F3a) are written as one
                 # short closing paragraph, kept only with no figure of its own
                 from . import compose
-                gaps = compose.gap_candidates(answer_text, compose.facts(user_text, sources, inv, answer_text))
+                gaps = compose.gap_candidates(answer_text, compose.facts(user_text, sources, inv, answer_text),
+                                              request=user_text)
                 if gaps:
                     t0 = time.monotonic()
                     try:
@@ -1067,7 +1068,10 @@ class ChatService:
                                 for c in request.receipt_ctx.get("comparisons") or []]
                     found = verify.verify(answer_text, given, _judge if (checker.own or not elsewhere) else None,
                                           _lang(user_text), limit=int(ccfg.get("verify_limit", 24)),
-                                          computed=computed)
+                                          computed=computed, earlier={
+                                              " ".join(str(x.get("label", "")).split())
+                                              for m in history for x in
+                                              (((m.get("meta") or {}).get("lce") or {}).get("sources") or [])})
                 except Interrupted:
                     raise
                 except egress.EgressDenied:

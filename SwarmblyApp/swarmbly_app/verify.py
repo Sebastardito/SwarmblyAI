@@ -46,7 +46,10 @@ _ABSENCE = re.compile(r"\bno\s+(?:se\s+)?(?:menciona\w*|indica\w*|dice\w*|regist
                       r"(?:datos|informaci[oó]n|registros?|menci[oó]n)\b|\bsin\s+(?:datos|menci[oó]n)\b|"
                       r"\b(?:does|do)\s+not\s+(?:mention|say|state|report)\b|\bno\s+(?:data|mention)\b|"
                       # "Las fuentes no coinciden en este punto. [D1 p6]": about the sources
-                      r"\bno\s+coincid\w*|\bsources?\b[^.]{0,30}\b(?:disagree|differ)\b", re.I)
+                      r"\bno\s+coincid\w*|"
+                      # "Solo se indica que…", "No se encuentra información sobre Zafira [W1]"
+                      r"^\W*s[oó]lo\s+(?:se\s+)?(?:menciona|indica|habla|dice|registra)\w*\b|"
+                      r"\bno\s+se\s+(?:encuentr|encontr)\w*|\bsources?\b[^.]{0,30}\b(?:disagree|differ)\b", re.I)
 _LABEL = re.compile(r"\[\s*((?:[A-Z]\d+\s*p\d+)|(?:W\d+))[^\]]{0,40}\]")
 YES, PARTLY, NO = "yes", "partly", "no"
 
@@ -129,7 +132,7 @@ def _presented_as_computed(sentence: str, figure: str) -> bool:
 
 
 def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
-            computed: set[str] | None = None) -> dict[str, Any]:
+            computed: set[str] | None = None, earlier: set[str] | None = None) -> dict[str, Any]:
     """What the code can say about a labelled sentence: figures that are not
     in the paragraphs it cites, the paragraphs that have them (``complete``:
     labels that complete the citation), figures computed from sourced ones,
@@ -228,7 +231,7 @@ def parse(text: str) -> str | None:
 
 def check(sentence: str, labels: list[str], sources: list[dict[str, Any]],
           generate: Callable[[str, int], str] | None = None, lang: str = "es",
-          computed: set[str] | None = None) -> dict[str, Any]:
+          computed: set[str] | None = None, earlier: set[str] | None = None) -> dict[str, Any]:
     """The verdict on one labelled sentence: ``ok`` is False when the code or
     the model found it unsupported, None when nobody could tell (no model, or
     a reply that is not a verdict). ``added``: labels that complete its
@@ -236,6 +239,11 @@ def check(sentence: str, labels: list[str], sources: list[dict[str, Any]],
     code = by_code(sentence, labels, sources, computed)
     out: dict[str, Any] = {"text": sentence[:300], "labels": labels, "by": "code", "ok": None}
     if code["unknown"] and not code["cited"]:
+        if earlier and set(code["unknown"]) <= earlier:
+            # a paragraph given in an earlier turn of the conversation: its text
+            # is not at hand, so it is not checked (FU-02 cited the minutes
+            # retrieved for the first question)
+            return {**out, "why": "earlier_turn"}
         return {**out, "ok": False, "why": "unknown_label", "unknown": code["unknown"]}
     cited = list(code["cited"])
     if code["missing_figures"]:
@@ -272,7 +280,8 @@ def _with_labels(sentence: str, added: list[str]) -> str:
 
 
 def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, int], str] | None = None,
-           lang: str = "es", limit: int = 24, computed: list[str] | None = None) -> dict[str, Any]:
+           lang: str = "es", limit: int = 24, computed: list[str] | None = None,
+           earlier: set[str] | None = None) -> dict[str, Any]:
     """Every labelled sentence of the answer, checked. ``limit`` bounds the
     model's jobs (a long composition has about fifteen labelled sentences).
     ``text`` is the answer with the citations the code completed."""
@@ -284,7 +293,7 @@ def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, 
             about += 1          # what the sources do not say: not a claim from them
             continue
         use = generate if asked < limit else None
-        r = check(c["text"], c["labels"], sources, use, lang, done)
+        r = check(c["text"], c["labels"], sources, use, lang, done, earlier)
         asked += r["by"] == "model"
         if r.get("added") and c["text"] in text:
             text = text.replace(c["text"], _with_labels(c["text"], r["added"]), 1)

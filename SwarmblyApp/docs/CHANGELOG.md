@@ -182,6 +182,19 @@ Swarmbly AI 3.3.
   wrote 2024 and 2023, and the verifier flagged both). CO-04 gave the
   0,37 t/ha in 3 of 3. "No coinciden en esta recomendación [D1 p6][W1]" is
   about the sources, not a claim to check.
+- **Full open battery with recipe 3** (r3full, 37 cases × 3, every 3.3
+  default on): passed 98/111, key data 300/315 (95 %), nothing leaked, one
+  forbidden match (a year in CO-06); per category the same rates as the
+  last full run (S3 78 %, GL and INJ 50 %, the rest 100 %), and the four
+  new research cases 11 of 12. 209 labelled sentences checked in 45 s in
+  all; of the 15 flagged, 10 were right on reading. The 5 wrong ones are
+  mended: a label of a paragraph given in an earlier turn of the
+  conversation is not checked (its text is not at hand), and "Solo se
+  indica…", "No se encuentra información sobre…" are about the sources.
+  S3-02 left out the two chlorosis records in two answers although the
+  notice listed them: the closing paragraph only took facts of the same
+  kind as one the answer gave, and neither was given; it now also takes
+  those whose specific word the request says ("la clorosis observada").
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
