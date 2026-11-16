@@ -10,9 +10,9 @@ Fictitious material (AcmeLabs, Ana Pérez, the island mockingbird *Mimus fictici
 
 | Folder / file | Content |
 |---|---|
-| `casos.json` | 33 cases: simple facts (S1), personal data (S2), compositions with length, tables and citations (S3), contradictions between documents (CX), follow-ups (FU), prompt injection inside a document (INJ), consent and approved search, also inside a composition (CO), privacy of public lookups and of Ollama cloud models (PR), glossary terms across languages (GL), memory (ME) and a question outside the sources (OUT) |
+| `casos.json` | 37 cases: simple facts (S1), personal data (S2), compositions with length, tables and citations (S3), contradictions between documents (CX), follow-ups (FU), prompt injection inside a document (INJ), consent and approved search, also inside a composition, and research that joins the user's documents with public sources: a difference, a disagreement, an older and a newer figure, a result about something else (CO), privacy of public lookups and of Ollama cloud models (PR), glossary terms across languages (GL), memory (ME) and a question outside the sources (OUT) |
 | `corpus/` | The user's documents: every case mounts all of them |
-| `publico/` | The public snapshot served by the simulated registry (only when a search is approved) |
+| `publico/` | The public snapshots served by the simulated registry (only when a search is approved): a variety register entry, a seed catalogue entry, a fertilisation guide and a conservation sheet, all fictitious |
 | `verificador.json` | 73 sentences with the paragraphs they cite and a gold label ("si": the paragraphs say everything the sentence states; "no": they do not, say a part, or say something else). 43 are answers of `qwen2.5:7b` in this battery, read by hand; 30 were written by hand over the same corpus. Measured with `bench/run_verifier.py` |
 | `ejecuciones/` | Run folders (not versioned): every answer with its metadata, `resumen.md` and `resumen.json` |
 
@@ -42,9 +42,9 @@ Material ficticio (AcmeLabs, Ana Pérez, el cucuve isleño *Mimus ficticius*) qu
 
 | Carpeta / archivo | Contenido |
 |---|---|
-| `casos.json` | 33 casos: datos simples (S1), datos personales (S2), composiciones con extensión, tablas y citas (S3), contradicciones entre documentos (CX), seguimientos (FU), inyección de instrucciones dentro de un documento (INJ), consentimiento y búsqueda aprobada, también dentro de una composición (CO), privacidad de las consultas públicas y de los modelos en la nube de Ollama (PR), términos del glosario entre idiomas (GL), memoria (ME) y una pregunta fuera de las fuentes (OUT) |
+| `casos.json` | 37 casos: datos simples (S1), datos personales (S2), composiciones con extensión, tablas y citas (S3), contradicciones entre documentos (CX), seguimientos (FU), inyección de instrucciones dentro de un documento (INJ), consentimiento y búsqueda aprobada, también dentro de una composición, e investigación que une tus documentos con fuentes públicas: una diferencia, un desacuerdo, una cifra antigua y una reciente, un resultado sobre otra cosa (CO), privacidad de las consultas públicas y de los modelos en la nube de Ollama (PR), términos del glosario entre idiomas (GL), memoria (ME) y una pregunta fuera de las fuentes (OUT) |
 | `corpus/` | Los documentos del usuario: cada caso los monta todos |
-| `publico/` | La instantánea pública que sirve el registro simulado (solo si se aprueba una búsqueda) |
+| `publico/` | Las instantáneas públicas que sirve el registro simulado (solo si se aprueba una búsqueda): una ficha del registro de variedades, una del catálogo de semillas, una guía de fertilización y una ficha de conservación, todas ficticias |
 | `verificador.json` | 73 frases con los párrafos que citan y una etiqueta de oro («si»: los párrafos dicen todo lo que la frase afirma; «no»: no lo dicen, dicen una parte o dicen otra cosa). 43 son respuestas de `qwen2.5:7b` en esta batería, leídas a mano; 30 se escribieron a mano sobre el mismo corpus. Se mide con `bench/run_verifier.py` |
 | `ejecuciones/` | Carpetas de cada corrida (no se versionan): cada respuesta con sus metadatos, `resumen.md` y `resumen.json` |
 
