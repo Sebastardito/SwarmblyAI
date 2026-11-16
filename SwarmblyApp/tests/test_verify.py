@@ -13,7 +13,11 @@ SOURCES = [
     {"label": "D1 p17", "rel": "informe_lote_AB1.md",
      "text": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha. El costo de producción "
              "fue de 1.150 dólares por hectárea."},
+    {"label": "D2 p16", "rel": "informe_lote_AB2.md",
+     "text": "| Sitio | Repeticiones | Rendimiento medio (t/ha) |\n|---|---|---|\n| Parcela Norte | 4 | 3,1 |\n| Parcela Sur | 4 | 2,2 |"},
     {"label": "D2 p17", "rel": "informe_lote_AB2.md", "text": "El costo de producción fue de 1.080 dólares por hectárea."},
+    {"label": "D2 p9", "rel": "informe_lote_AB2.md",
+     "text": "| Fecha | Mínima (°C) | Máxima (°C) | Lluvia (mm) |\n|---|---|---|---|\n| 1 de marzo | 12 | 22 | 70 |"},
     {"label": "D3 p3", "rel": "acta_reunion_abril.md", "doc_title": "Acta de la reunión técnica del 15 de abril de 2026",
      "text": "Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras."},
     {"label": "D3 p4", "rel": "acta_reunion_abril.md", "doc_title": "Acta de la reunión técnica del 15 de abril de 2026",
@@ -35,20 +39,38 @@ def test_sentences_with_a_label_are_the_claims():
 
 
 def test_a_figure_has_to_be_in_the_paragraph_the_sentence_cites():
-    wrong = V.check("Según el informe [D1 p16], el rendimiento medio del lote AB1 fue de 2,37 t/ha.", ["D1 p16"], SOURCES)
-    assert wrong["ok"] is False and wrong["why"] == "figure_not_in_cited"
-    assert wrong["figures"] == ["2.37"] and wrong["elsewhere"] == ["D1 p17"]
+    # in no paragraph that was given: flagged
+    public = V.check("El registro da un rendimiento de referencia de 3,6 t/ha [W1].", ["W1"], SOURCES)
+    assert public["ok"] is False and public["why"] == "figure_not_in_cited" and public["figures"] == ["3.6"]
     right = V.check("La Parcela Norte rindió 2,8 t/ha y la Parcela Sur 2,4 t/ha [D1 p16].", ["D1 p16"], SOURCES)
-    assert right["ok"] is None and right["by"] == "code"        # nothing against it; the model has not been asked
+    assert right["ok"] is None and right["by"] == "code" and "added" not in right    # nothing against it
     # a difference of two figures the paragraphs give needs no paragraph of its own
-    diff = V.check("AB1 costó 1.150 dólares y AB2 1.080, una diferencia de 70 dólares [D1 p17][D2 p17].",
-                   ["D1 p17", "D2 p17"], SOURCES)
-    assert diff["ok"] is None
+    # (a rain table that happens to hold a 70 is not where it comes from)
+    diff = V.by_code("AB1 costó 1.150 dólares y AB2 1.080, una diferencia de 70 dólares [D1 p17][D2 p17].",
+                     ["D1 p17", "D2 p17"], SOURCES)
+    assert diff["missing_figures"] == [] and diff["derived"] == ["70"] and diff["complete"] == []
     # the date of the meeting is in the title of the minutes
     dated = V.check("En la reunión del 15 de abril de 2026 se acordó aplicar 40 kg N/ha [D3 p4].", ["D3 p4"], SOURCES)
-    assert dated["ok"] is None
-    public = V.check("El registro da un rendimiento de referencia de 3,6 t/ha [W1].", ["W1"], SOURCES)
-    assert public["ok"] is False and public["figures"] == ["3.6"]
+    assert dated["ok"] is None and "added" not in dated
+
+
+def test_a_citation_is_completed_with_the_paragraph_that_has_the_figure():
+    # the fact is right, its citation is not: 2,37 is in the next paragraph
+    wrong = V.check("Según el informe [D1 p16], el rendimiento medio del lote AB1 fue de 2,37 t/ha.", ["D1 p16"], SOURCES)
+    assert wrong["ok"] is None and wrong["added"] == ["D1 p17"]
+    # 3,1 is in AB2's table, though it is also 2,8 plus the 0,3 of a deviation in the cited one
+    both = V.check("En la Parcela Norte, el rendimiento medio del lote AB2 fue de 3,1 t/ha, 0,3 más que el AB1, "
+                   "con 2,8 [D1 p16].", ["D1 p16"], SOURCES)
+    assert both["added"] == ["D2 p16"]
+    seen = []
+    V.check("En la Parcela Norte, el rendimiento medio del lote AB2 fue de 3,1 t/ha, 0,3 más que el AB1, con 2,8 [D1 p16].",
+            ["D1 p16"], SOURCES, lambda prompt, n: seen.append(prompt) or "SÍ")
+    assert "[D2 p16] (informe lote AB2)" in seen[0] and "Nota:" not in seen[0]
+    # the model is told which figures the code computed
+    V.check("AB1 costó 1.150 dólares y AB2 1.080, una diferencia de 70 dólares [D1 p17][D2 p17].",
+            ["D1 p17", "D2 p17"], SOURCES, lambda prompt, n: seen.append(prompt) or "SÍ")
+    assert "Nota: 70 se calcula con cifras de los párrafos" in seen[1]
+    assert V._with_labels("Rindió 3,1 t/ha [D1 p16].", ["D2 p16"]) == "Rindió 3,1 t/ha [D1 p16][D2 p16]."
 
 
 def test_a_paragraph_about_something_else_and_a_label_that_was_not_given():
@@ -90,13 +112,21 @@ def test_the_report_counts_and_the_code_goes_first():
         return "NO" if "optimizar" in prompt else "SÍ"
 
     answer = ("El rendimiento medio del lote AB1 fue de 2,37 t/ha [D1 p16]. La Parcela Norte rindió 2,8 t/ha [D1 p16]. "
+              "El registro da un rendimiento de referencia de 3,6 t/ha [W1]. "
               "Se acordó aplicar 40 kg N/ha, lo que permitirá optimizar el cultivo [D3 p4].")
     report = V.verify(answer, SOURCES, judge)
-    assert report["claims"] == 3 and report["supported"] == 1 and report["asked"] == 2    # the first never reached the model
+    assert report["claims"] == 4 and report["supported"] == 2 and report["asked"] == 3    # the 3,6 never reached the model
     assert [f["why"] for f in report["flagged"]] == ["figure_not_in_cited", "not_in_cited"]
+    assert report["completed"] == [{"text": "El rendimiento medio del lote AB1 fue de 2,37 t/ha [D1 p16].",
+                                    "added": ["D1 p17"]}]
+    assert report["text"].startswith("El rendimiento medio del lote AB1 fue de 2,37 t/ha [D1 p16][D1 p17]. La Parcela")
+    assert report["text"].replace("[D1 p17]", "", 1) == answer                            # labels only
     # past the limit the sentences are left unchecked, not passed
     limited = V.verify(answer, SOURCES, judge, limit=1)
-    assert limited["asked"] == 1 and limited["unchecked"] == 1
+    assert limited["asked"] == 1 and limited["unchecked"] == 2
+    # without a model the code still flags and completes
+    alone = V.verify(answer, SOURCES)
+    assert alone["asked"] == 0 and len(alone["flagged"]) == 1 and len(alone["completed"]) == 1
 
 
 class _Writer(FakeBackend):

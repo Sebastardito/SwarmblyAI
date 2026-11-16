@@ -71,25 +71,37 @@ Swarmbly AI 3.3.
   rows of a table count when the request asks for a table, names what the
   rows are ("por sitio") or names the row.
 - **Claim verifier, first step of recipe 3** (`swarmbly_app/verify.py`,
-  `compose.verify`, off until measured in the chat). A label says where the
-  model claims a sentence comes from, not that the paragraph supports it:
-  read by hand, 16 of 43 labelled sentences of the open battery (x33) were
-  not supported by what they cite (the figure was in another paragraph, the
-  paragraph was about something else, the sentence added an opinion or
-  changed a "will present" into a "presented"). Each labelled sentence is
-  now checked in two steps. By code: its figures have to be in the
-  paragraphs it cites, with the title of their document (or be the
-  difference or sum of two that are); a figure found in another paragraph
-  is reported with that paragraph; a cited paragraph that shares no word
-  with the sentence is reported. Then by a model, one short job per
-  sentence (the `verifier` role, without reasoning): the cited paragraphs,
-  the sentence, one word back (SÍ / PARTE / NO). Nothing is rewritten; the
-  report goes under the answer (`meta.verification`). On the open set of
-  73 claims (`bench/dev/verificador.json` in the distribution) the code
-  alone flags 5 of the 31 unsupported sentences and none of the 42
-  supported ones. Pilot of the model step on 16 of them, one run each:
-  qwen2.5:7b 13 right (0.5 s per sentence), qwen2.5:14b 14, qwen3.8:27b 16
-  (1.6 s); the full measurement is `bench/run_verifier.py`.
+  `compose.verify`, off until the full battery is run with it). A label
+  says where the model claims a sentence comes from, not that the paragraph
+  supports it: read by hand, 16 of 43 labelled sentences of the open
+  battery (x33) were not supported by what they cite (the figure was in
+  another paragraph, the paragraph was about something else, the sentence
+  added an opinion or changed a "will present" into a "presented"). Each
+  labelled sentence is now checked in two steps. By code: its figures have
+  to be in the paragraphs it cites, with the title of their document (or be
+  the difference or sum of two that are); when a figure is in another
+  paragraph that was given and bears on the sentence, the citation is
+  completed with that label ("[D1 p16]" → "[D1 p16][D1 p17]": the fact was
+  right, its citation was not); a cited paragraph that shares no word with
+  the sentence is reported. Then by a model, one short job per sentence
+  (the `verifier` role, without reasoning): the cited paragraphs, the
+  sentence, one word back (SÍ / PARTE / NO). No sentence is rewritten; the
+  report goes under the answer (`meta.verification`, a chip and a list).
+  A conversation model at a third party is not asked once more per
+  sentence unless the verifier role names a model.
+  Measured on the open set of 73 claims (`bench/dev/verificador.json` and
+  `bench/run_verifier.py` in the distribution, one run): the code alone
+  flags 5 of the 31 unsupported sentences and none of the 42 supported;
+  code and qwen2.5:7b 23 of 31 and none (0.2 s per sentence); with
+  qwen2.5:14b 29 and 2 (0.5 s); with qwen3.8:27b 31 and 2 (0.7 s). In the
+  chat (8 compositions, one run): with the 7B, 5 of 40 labelled sentences
+  flagged in 9 s in all; with the 27B as verifier, 15 of 41 in 41 s (the
+  two models take turns in memory), every one of them read and found
+  right, four of them a right fact with its citation incomplete (what the
+  completion by code now mends). After that run: a figure another
+  paragraph gives counts as a citation missing, not as a calculation; the
+  model is told which figures the code computed; a cited paragraph that
+  cannot bear on the sentence is not shown to it.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
