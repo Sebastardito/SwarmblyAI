@@ -119,7 +119,7 @@ def test_recipe_2_in_the_chat(app_state, tmp_path):
     assert meta["table"]["rows"] == 3 and meta["table"]["computed"] == 1
     assert any(d["why"] == "key not in the document" for d in meta["table"]["dropped"])
     assert meta["table_audit"]["unsupported"] == []
-    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    system = " ".join(m["content"] for m in [c for c in fake.calls if not c["messages"][-1]["content"].startswith("Párrafos:")][-1]["messages"] if m["role"] == "system")
     assert "ya armó esta tabla" in system
 
 

@@ -68,6 +68,10 @@ def app_state(tmp_path: Path) -> AppState:
     # Public evidence is on by default; tests stay off the network unless
     # they turn it on with fake providers.
     state.config.update({"evidence.enabled": False})
+    # The claim verifier (3.3) is on by default and adds one short call per
+    # labelled sentence after the answer; tests that read the answer's call
+    # (fake.calls[-1]) keep it off, and tests/test_verify.py turns it on.
+    state.config.update({"compose.verify": False})
     yield state
     state.stop()
 

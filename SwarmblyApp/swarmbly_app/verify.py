@@ -38,6 +38,13 @@ from typing import Any, Callable
 
 from .compose import _CITE, _OUTSIDE, _derived, _figures, _stems, unflatten_tables
 
+# a sentence about what the sources do not say ("no se menciona clorosis en
+# la Parcela Norte [D1 p11]") is about the sources, not a claim from them: a
+# 7B verifier answered NO to it (open battery, vf33)
+_ABSENCE = re.compile(r"\bno\s+(?:se\s+)?(?:menciona\w*|indica\w*|dice\w*|registra\w*|especifica\w*|"
+                      r"aparece\w*|recoge\w*|informa\w*)\b|\bno\s+(?:hay|figura\w*|consta\w*)\s+"
+                      r"(?:datos|informaci[oó]n|registros?|menci[oó]n)\b|\bsin\s+(?:datos|menci[oó]n)\b|"
+                      r"\b(?:does|do)\s+not\s+(?:mention|say|state|report)\b|\bno\s+(?:data|mention)\b", re.I)
 _LABEL = re.compile(r"\[\s*((?:[A-Z]\d+\s*p\d+)|(?:W\d+))[^\]]{0,40}\]")
 YES, PARTLY, NO = "yes", "partly", "no"
 
@@ -72,7 +79,10 @@ def split(answer: str) -> list[dict[str, Any]]:
                 sentence = sentence.strip()
                 labels = list(dict.fromkeys(_norm(m) for m in _LABEL.findall(sentence)))
                 if labels and len(_CITE.sub(" ", sentence).split()) >= 5:
-                    out.append({"text": sentence, "labels": labels})
+                    item = {"text": sentence, "labels": labels}
+                    if _ABSENCE.search(sentence):
+                        item["absence"] = True
+                    out.append(item)
     return out
 
 
@@ -85,6 +95,24 @@ def _passage(source: dict[str, Any]) -> tuple[str, str, str]:
         title = re.sub(r"[_-]+", " ", title)
     text = str(source.get("text") or source.get("snippet") or "")
     return label, title.strip(), unflatten_tables(text)
+
+
+_COMPUTED = re.compile(r"(diferencia|m[aá]s|menos|superior|inferior|por\s+encima|por\s+debajo|total|suma|"
+                       r"difference|more|less|higher|lower|above|below|sum)[^\w,;]+(?:\w+[^\w,;]+){0,3}$", re.I)
+
+
+def _presented_as_computed(sentence: str, figure: str) -> bool:
+    """Whether the sentence writes this figure as a difference or a sum
+    ("una diferencia de 0,3", "0,3 t/ha más")."""
+    from .compose import _NUMBER, _canon
+    for m in _NUMBER.finditer(_CITE.sub(" ", sentence)):
+        if _canon(m.group(1)) == figure:
+            before = _CITE.sub(" ", sentence)[max(0, m.start() - 60):m.start()]
+            after = _CITE.sub(" ", sentence)[m.end():m.end() + 30]
+            if _COMPUTED.search(before) or re.match(r"\s*(?:%|t/ha|kg\S*|\w+/\w+)?\s*(m[aá]s|menos|more|less)\b",
+                                                    after, re.I):
+                return True
+    return False
 
 
 def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]]) -> dict[str, Any]:
@@ -109,6 +137,16 @@ def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]]) -> 
     elsewhere = {f for f in absent if any(f in fg for fg in near.values())}
     derived = _derived(figs, have) - elsewhere
     derived |= _derived(figs, have | elsewhere) - elsewhere
+    # "3,1 frente a 2,8, una diferencia de 0,3": the 0,3 is also a deviation
+    # in the cited table, but in the sentence it is the difference of two of
+    # its figures; the model is told so (a 7B and a 14B verifier answered
+    # PARTE to right sentences like this one, vf33 and vf14)
+    # (only the figure the sentence presents as one: each of three figures is
+    # the difference of the other two)
+    for f in figs & have:
+        rest = (figs & (have | elsewhere)) - {f}
+        if f in _derived({f} | rest, rest) and _presented_as_computed(sentence, f):
+            derived.add(f)
     missing = absent - derived
     complete: list[str] = []
     left = set(missing)
@@ -221,8 +259,11 @@ def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, 
     model's jobs (a long composition has about fifteen labelled sentences).
     ``text`` is the answer with the citations the code completed."""
     claims = split(answer)
-    checked, asked, text, completed = [], 0, answer or "", []
+    checked, asked, text, completed, about = [], 0, answer or "", [], 0
     for c in claims:
+        if c.get("absence"):
+            about += 1          # what the sources do not say: not a claim from them
+            continue
         use = generate if asked < limit else None
         r = check(c["text"], c["labels"], sources, use, lang)
         asked += r["by"] == "model"
@@ -233,4 +274,4 @@ def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, 
     flagged = [r for r in checked if r["ok"] is False]
     return {"claims": len(checked), "supported": sum(1 for r in checked if r["ok"]),
             "flagged": flagged, "unchecked": sum(1 for r in checked if r["ok"] is None), "asked": asked,
-            "completed": completed, "text": text}
+            "completed": completed, "about_sources": about, "text": text}
