@@ -1006,7 +1006,6 @@ class ChatService:
                 # assistant, that they were not followed, and whether the
                 # answer repeats them
                 extra["injection"] = {"passages": flagged, "echoed": instruction_like(answer_text)}
-            extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if ccfg.get("verify") and (sources or (web_found or {}).get("results")) and not public_hits:
                 # recipe 3 (3.3): every labelled sentence against the paragraphs
                 # it cites, by code and then by the verifier in one short job each
@@ -1015,6 +1014,10 @@ class ChatService:
                 given += [{"label": str(h.get("label", "")), "title": str(h.get("title", "")),
                            "text": str(h.get("snippet", ""))} for h in (web_found or {}).get("results") or []]
                 checker = roles.choose("verifier", cfg, backend, model, self.registry)
+                # the conversation's model at a third party is not asked once
+                # more per sentence unless the user gave the verifier a model
+                elsewhere = ((request.receipt_ctx.get("model_destination") or {}).get("clase")
+                             == egress.THIRD_PARTY)
                 judge_kind = egress.PASSAGES if sources else egress.QUESTION
 
                 def _judge(prompt: str, max_tokens: int) -> str:
@@ -1027,20 +1030,30 @@ class ChatService:
                     return getattr(r, "text", "") or ""
                 t0 = time.monotonic()
                 try:
-                    found = verify.verify(answer_text, given, _judge, _lang(user_text),
-                                          limit=int(ccfg.get("verify_limit", 24)))
+                    found = verify.verify(answer_text, given, _judge if (checker.own or not elsewhere) else None,
+                                          _lang(user_text), limit=int(ccfg.get("verify_limit", 24)))
                 except Interrupted:
                     raise
                 except egress.EgressDenied:
                     raise
                 except Exception as exc:
                     found = {"claims": 0, "supported": 0, "flagged": [], "unchecked": 0, "asked": 0,
-                             "failed": str(exc)[:200]}
+                             "completed": [], "failed": str(exc)[:200]}
+                completed_text = found.pop("text", "")
+                if found.get("completed") and completed_text:
+                    # citations completed by code: the labels of the paragraphs
+                    # that hold the sentence's figures
+                    answer_text = completed_text
+                    try:
+                        result.text = completed_text
+                    except Exception:
+                        pass
                 found["model"] = checker.model
                 found["seconds"] = round(time.monotonic() - t0, 1)
                 if checker.note:
                     found["role_note"] = checker.note
                 extra["verification"] = found
+            extra["citations"] = _check_citations(answer_text, sources, history, web_found)
             if inv:
                 from . import compose
                 extra["requirements"] = {"inventory": inv, "check": compose.check(answer_text, inv)}

@@ -615,6 +615,14 @@ const Chat = (() => {
       t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
       t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported
         .map((c) => `${c.row} · ${c.column}: ${c.value}`).join("\n")));
+    // 3.3, recipe 3: labelled sentences checked against what they cite
+    if (meta.verification?.claims) {
+      const v = meta.verification;
+      chips.push(chip(t("chat.verifyChip").replace("{ok}", v.supported).replace("{n}", v.claims),
+        v.flagged?.length ? "warn" : "ok",
+        t("chat.verifyChipTitle").replace("{model}", v.model || "").replace("{flagged}", (v.flagged || []).length)
+          .replace("{completed}", (v.completed || []).length).replace("{unchecked}", v.unchecked || 0)));
+    }
     // 3.3: who wrote this answer, when it was not the conversation's model
     for (const [role, r] of Object.entries(meta.roles || {})) {
       if (role === "search_terms") continue;

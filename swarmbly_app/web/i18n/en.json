@@ -221,7 +221,9 @@
   "verifyUnrelated": "the cited paragraph is about something else",
   "verifyUnknown": "it cites a paragraph that was not given",
   "verifyPartly": "the cited paragraph says only a part",
-  "verifyNo": "the cited paragraph does not say it"
+  "verifyNo": "the cited paragraph does not say it",
+  "verifyChip": "Citations checked: {ok} of {n}",
+  "verifyChipTitle": "Each labelled sentence was compared with the paragraph it cites ({model}). {flagged} are not supported by their citation; {completed} citations were completed with the paragraph that has the figure; {unchecked} were left unchecked."
  },
  "explore": {
   "title": "How this answer was made",
