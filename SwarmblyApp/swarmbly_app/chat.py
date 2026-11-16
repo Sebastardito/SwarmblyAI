@@ -698,7 +698,18 @@ class ChatService:
                                      and ccfg.get("checklist", True)) else None
                 blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=given_list))
                 from .compose import conflict_block, conflicts
-                found_conflicts = conflicts(user_text, sources)
+                compared = list(sources)
+                if (ccfg.get("conflicts_web") and (web_found or {}).get("results")
+                        and not _COMPARE.search(user_text)):
+                    # recipe 3 (3.3): a result of the approved search that gives
+                    # another amount or date than the user's documents for what
+                    # is asked is shown with them, like two documents that
+                    # disagree. Not when the user asks to compare them: the lot's
+                    # 2,37 t/ha and the register's 2,6 t/ha are two measures
+                    compared += [{"label": str(h.get("label", "")), "rel": str(h.get("url") or h.get("label")),
+                                  "text": f"{h.get('title', '')}. {h.get('snippet', '')}", "public": True}
+                                 for h in web_found["results"]]
+                found_conflicts = conflicts(user_text, compared)
                 if found_conflicts:
                     # 3.2: documents that disagree on what is asked: the model
                     # is told, and the app shows both under the answer
@@ -1673,6 +1684,7 @@ def _check_citations(answer: str, sources: list[dict[str, Any]],
     return out
 
 
+_COMPARE = re.compile(r"\b(compar\w*|diferencia\w*|frente\s+a|versus|vs\.?|contrast\w*|difference)\b", re.I)
 _OUTSIDE = re.compile(r"^\W*(fuera\s+de\s+tus\s+fuentes|outside\s+your\s+sources)\b", re.I)
 _ABOUT_SOURCES = re.compile(r"\b(fuentes?|documentos?|sources?|documents?|guardar\s+en\s+memoria|"
                             r"save\s+to\s+memory|buscar\s+en\s+l[ií]nea|search\s+online)\b", re.I)

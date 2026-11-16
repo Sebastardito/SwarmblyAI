@@ -874,30 +874,54 @@ def conflicts(question: str, sources: list[dict[str, Any]], limit: int = 2) -> l
     topic = _request_stems(question) - _GROUP_STEMS - _QUESTION_WORDS - _stems(" ".join(q_names))
     if not topic:
         return []
-    found: list[tuple[str, str, str, set[str], dict[str, set[str]]]] = []
+    found: list[tuple[str, str, str, set[str], dict[str, set[str]], bool]] = []
+    found_public = {str(s.get("rel") or s.get("source") or ""): bool(s.get("public")) for s in sources}
     for s in sources:
         label = " ".join(str(s.get("label", "")).split())
         rel = str(s.get("rel") or s.get("source") or "")
+        public = bool(s.get("public"))
         name_codes = _codes(re.sub(r"[_.]+", " ", rel))
+        whole = str(s.get("text", "")).lower()
         for unit in _units(str(s.get("text", ""))):
             if instruction_like(unit) or not (_stems(unit) & topic):
                 continue
             low = unit.lower()
             codes = _codes(unit) | name_codes
             about = (bool(q_codes & codes) or any(n in low for n in q_names) or bool(_COLLECTIVE.search(unit))
-                     or (not q_codes and not q_names))
+                     or (not q_codes and not q_names)
+                     # a public source speaks in general ("para suelos con
+                     # nitrógeno bajo se recomiendan 60 kg N/ha"), not of the
+                     # user's plot or lot by name
+                     or public)
+            # against a public result, a sentence of the paragraph that names
+            # the place counts ("El sector oeste de la Parcela Sur tiene
+            # nitrógeno bajo… Se recomienda una fertilización nitrogenada de
+            # 40 kg N/ha")
+            in_paragraph = about or any(n in whole for n in q_names) or bool(q_codes & codes)
             if q_codes and codes and not (q_codes & codes):
-                about = False                # another lot's document
+                about = in_paragraph = False     # another lot's document
             values = _values(unit)
-            if about and values:
-                found.append((rel, label, unit, codes, values))
+            if in_paragraph and values:
+                found.append((rel, label, unit, codes, values, about))
     out: list[dict[str, Any]] = []
-    for i, (ra, la, ua, ca, va) in enumerate(found):
-        for rb, lb, ub, cb, vb in found[i + 1:]:
+    for i, (ra, la, ua, ca, va, sa) in enumerate(found):
+        for rb, lb, ub, cb, vb, sb in found[i + 1:]:
             if ra == rb or (ca and cb and not (ca & cb)):
                 continue
-            if not (_stems(ua) & _stems(ub) & topic):
+            pa, pb = found_public.get(ra), found_public.get(rb)
+            if pa and pb:
+                continue                     # two public results: not the user's sources against each other
+            if not (pa or pb) and not (sa and sb):
+                continue                     # two documents: each sentence names what is asked
+            shared = _stems(ua) & _stems(ub) & topic
+            if not shared:
                 continue                     # not about the same thing
+            if pa != pb and len(shared) < 2:
+                # a public result against a document: the same measure, not only
+                # the same word ("rendimiento medio del lote" is not the
+                # register's "rendimiento de referencia"; "se recomienda…
+                # nitrogenada" is the guide's "se recomiendan… nitrógeno")
+                continue
             kinds = [k for k in va if k in vb and va[k] != vb[k]]
             if kinds:
                 out.append({"a": {"label": la, "text": ua[:240]}, "b": {"label": lb, "text": ub[:240]},

@@ -431,3 +431,56 @@ def test_facts_leave_out_another_lot_the_rows_nobody_asked_for_and_reference_lin
     both = "Haz una tabla con el rendimiento medio de AB1 y AB2."
     texts = [f["text"] for f in C.facts(both, sources, C.inventory(both))]
     assert any("2,8" in t for t in texts) and any("3,1" in t for t in texts)
+
+
+def test_a_result_of_the_approved_search_that_disagrees_with_the_documents(app_state, tmp_path, monkeypatch):
+    from swarmbly_app import web_search as W
+    fake = FakeBackend(reply="Tu análisis recomienda 40 kg N/ha [D1 p1]; la guía, 60 kg N/ha [W1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("X", parent=tmp_path / "p")
+    (p.sources / "analisis_suelo.md").write_text(
+        "El sector oeste tiene nitrógeno bajo. Se recomienda una fertilización nitrogenada de 40 kg N/ha.\n",
+        encoding="utf-8")
+
+    def fetch(url, timeout, ua):
+        return {"results": [{"title": "Guía de fertilización de cultivos andinos (ficticia)",
+                             "content": "Para suelos con nitrógeno total por debajo de 0,12 % se recomiendan "
+                                        "60 kg N/ha, repartidos en dos aplicaciones.",
+                             "url": "https://suelos-altura.invalid/guia"}]}
+    monkeypatch.setattr(W, "_get", fetch)
+    monkeypatch.setattr(W, "_reachable", lambda url: True)
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "evidence.providers": ["web"],
+                             "evidence.searxng_url": "http://127.0.0.1:9", "evidence.searxng_managed": ""})
+    q = "¿Cuánto nitrógeno recomienda mi análisis de suelo y cuánto la guía pública de fertilización?"
+    for on in (False, True):
+        app_state.config.update({"compose.conflicts_web": on})
+        conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+        app_state.chat.send(conv["id"], q, mode="local", run_async=False, allow_public=True,
+                            web_query="guía fertilización nitrógeno")
+        meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+        assert meta["web_search"]["results"][0]["label"] == "W1"
+        system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+        if not on:
+            assert not meta.get("conflicts") and "no coinciden" not in system
+        else:
+            labels = {meta["conflicts"][0]["a"]["label"], meta["conflicts"][0]["b"]["label"]}
+            assert labels == {"D1 p1", "W1"} and meta["conflicts"][0]["kind"].startswith("kg")
+            assert "no coinciden" in system and "60 kg N/ha" in system
+
+
+def test_a_public_result_disagrees_only_on_the_same_measure():
+    analysis = {"label": "D1 p6", "rel": "analisis_suelo.md",
+                "text": "El sector oeste de la Parcela Sur tiene nitrógeno bajo. Se recomienda una fertilización "
+                        "nitrogenada de 40 kg N/ha y repetir el análisis."}
+    report = {"label": "D2 p17", "rel": "informe_lote_AB1.md",
+              "text": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha."}
+    guide = {"label": "W1", "rel": "https://suelos.invalid/guia", "public": True,
+             "text": "Guía. Para suelos con nitrógeno total bajo se recomiendan 60 kg N/ha."}
+    register = {"label": "W2", "rel": "https://registro.invalid/zafira", "public": True,
+                "text": "Kanela. Su rendimiento de referencia en el registro es de 2,6 t/ha."}
+    q = "¿Cuánto nitrógeno recomienda mi análisis para el sector oeste de la Parcela Sur, y cuánto la guía pública?"
+    found = C.conflicts(q, [analysis, report, guide, register])
+    assert [(c["a"]["label"], c["b"]["label"], c["kind"]) for c in found] == [("D1 p6", "W1", "kgn/ha")]
+    # the lot's mean yield is not the register's reference yield
+    assert C.conflicts("¿Qué rendimiento de referencia tiene la variedad Zafira en el registro?",
+                       [analysis, report, guide, register]) == []
