@@ -91,14 +91,16 @@ def header_prompt(request: str, inv: dict[str, Any], lang: str = "es") -> str:
     elif len(group) >= 2:
         hint = (f"Usa una fila por cada uno de: {', '.join(group)}." if es else
                 f"Use one row for each of: {', '.join(group)}.")
+    wants_difference = bool(_DERIVED.search(request or ""))
     if es:
+        diff = " Añade al final una columna «Diferencia»." if wants_difference else ""
         return (f"Solicitud del usuario: {request}\n\nEscribe solo la fila de encabezado de la tabla que pide, en "
                 "Markdown (| Columna 1 | Columna 2 | …). La primera columna nombra lo que distingue cada fila. "
-                f"{hint} Si pide una diferencia, añade una columna «Diferencia». No escribas filas de datos ni "
-                "nada más.")
+                f"{hint}{diff} No escribas filas de datos ni nada más.")
+    diff = " Add a last column \"Difference\"." if wants_difference else ""
     return (f"User's request: {request}\n\nWrite only the header row of the table it asks for, in Markdown "
             "(| Column 1 | Column 2 | …). The first column names what tells the rows apart. "
-            f"{hint} If it asks for a difference, add a \"Difference\" column. Write no data rows and nothing else.")
+            f"{hint}{diff} Write no data rows and nothing else.")
 
 
 def parse_header(text: str) -> list[str] | None:
@@ -111,9 +113,54 @@ def parse_header(text: str) -> list[str] | None:
     return None
 
 
-def extract_prompt(request: str, header: list[str], doc: dict[str, Any], lang: str = "es") -> str:
+def tidy_header(header: list[str], request: str, docs: list[dict[str, Any]]) -> list[str]:
+    """The header the model wrote, without what it added on its own: a
+    "difference" column the request does not ask for (it answered the
+    example of the prompt), and units of its own in brackets ("Nitrógeno
+    total (mg/kg)" for a source column "Nitrógeno total (%)": the unit comes
+    from the source's table, or goes)."""
+    if not _DERIVED.search(request or ""):
+        header = [c for i, c in enumerate(header) if i == 0 or not _DERIVED.search(c)]
+    source_cols = [c for d in docs for _, text in d["passages"] for _, _, head, _ in find_tables(text) for c in head]
+    out = []
+    for i, col in enumerate(header):
+        m = re.search(r"\s*\(([^)]*)\)\s*$", col)
+        if i and m and _fold(m.group(1)) not in _fold(request or ""):
+            name = col[:m.start()].strip()
+            unit = ""
+            for sc in source_cols:
+                sm = re.search(r"\(([^)]*)\)\s*$", sc)
+                if sm and _stems(name) and _stems(name) <= _stems(sc):
+                    unit = sm.group(1)
+                    break
+            col = f"{name} ({unit})" if unit else name
+        out.append(col)
+    return out
+
+
+def relevant_passages(request: str, header: list[str], doc: dict[str, Any],
+                      entities: list[str]) -> list[tuple[str, str]]:
+    """The paragraphs of a document given to the extraction: those that share
+    a word with the request's topic or the table's columns; without any,
+    those that name one of the request's entities; without any, all. With a
+    whole report of filler, a 7B model answered that the document gave no
+    row (open battery, recipe 2, first run); with the two paragraphs that
+    bear on the table it filled it right."""
+    wanted = (_request_stems(request) | _stems(" ".join(header[1:]))) - _GROUP_STEMS \
+        - _stems(" ".join(entities))
+    by_topic = [(label, text) for label, text in doc["passages"] if _stems(text) & wanted]
+    if by_topic:
+        return by_topic
+    named = [(label, text) for label, text in doc["passages"]
+             if any(_fold(e) in _fold(text) for e in entities)]
+    return named or list(doc["passages"])
+
+
+def extract_prompt(request: str, header: list[str], doc: dict[str, Any], lang: str = "es",
+                   entities: list[str] | None = None) -> str:
     head = "| " + " | ".join(header) + " |"
-    body = "\n".join(f"[{label}] {text}" for label, text in doc["passages"])
+    body = "\n".join(f"[{label}] {text}"
+                     for label, text in relevant_passages(request, header, doc, entities or []))
     if lang == "es":
         return (f"Solicitud del usuario: {request}\n\nLa tabla tendrá estas columnas:\n{head}\n\n"
                 f"Documento «{doc['rel']}»:\n{body}\n\n"
@@ -145,7 +192,7 @@ def documents(request: str, sources: list[dict[str, Any]], limit: int = 4) -> li
     """The documents among the passages that share a word of the request's
     topic, in retrieval order, each with all its passages."""
     topic = _request_stems(request) - _GROUP_STEMS
-    docs: dict[str, dict[str, Any]] = {}
+    docs: dict[str, dict[str, Any]] = {}  # in retrieval order
     for s in sources:
         key = str(s.get("doc_id") or s.get("rel") or s.get("source") or "")
         d = docs.setdefault(key, {"rel": str(s.get("rel") or s.get("source") or ""), "passages": [], "hit": False})
@@ -153,17 +200,88 @@ def documents(request: str, sources: list[dict[str, Any]], limit: int = 4) -> li
         d["passages"].append((" ".join(str(s.get("label", "")).split()), text))
         if _stems(text) & topic:
             d["hit"] = True
-    return [d for d in docs.values() if d["hit"]][:limit]
+    # a document the search brought with several paragraphs counts too: a CV
+    # holds the user's positions without the word "cargo"
+    return [d for d in docs.values() if d["hit"] or len(d["passages"]) >= 2][:limit]
 
 
-def parse_rows(text: str, ncols: int) -> list[list[str]]:
+def _name(col: str) -> str:
+    return _fold(re.sub(r"\([^)]*\)", " ", col)).strip()
+
+
+def _match(target: str, source: str, entities: list[str]) -> float:
+    """How well a column of the wanted table matches a column of a table in
+    the source: shared word stems, or the same short name ("pH")."""
+    t = _name(target)
+    for e in entities:
+        t = t.replace(_fold(e), " ")
+    t = " ".join(t.split())
+    src = _name(source)
+    if not t:
+        return 0.0
+    if t == src or (len(t) <= 3 and re.search(rf"\b{re.escape(t)}\b", src)):
+        return 1.0
+    ts, ss = _stems(t), _stems(src)
+    return len(ts & ss) / len(ts | ss) if ts and ss else 0.0
+
+
+def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]) -> list[list[str]]:
+    """Rows read by code from the tables a document already has. Asked to
+    fill a table from a source table, a 7B model answered that the document
+    gave no row, or copied one row of four (open battery, recipe 2); a source
+    table needs no model. Each wanted column takes the source column it
+    matches best; a source column wanted by two columns named after
+    different entities goes to the one this document mentions."""
+    whole = _fold(re.sub(r"[_.-]+", " ", doc["rel"]) + "\n" + "\n".join(t for _, t in doc["passages"]))
+    mentioned = [e for e in entities if _fold(e) in whole]
+    out: list[list[str]] = []
+    for _, text in doc["passages"]:
+        for _, _, head, rows in find_tables(text):
+            if len(head) < 2 or not rows:
+                continue
+            mapping: dict[int, int] = {}
+            for j, col in enumerate(header[1:], 1):
+                if _DERIVED.search(col):
+                    continue
+                best = max(range(1, len(head)), key=lambda k: _match(col, head[k], entities))
+                if _match(col, head[best], entities) > 0:
+                    mapping[j] = best
+            # the same source column for two wanted columns: only the one named
+            # after an entity this document mentions
+            for src_col in set(mapping.values()):
+                wanting = [j for j, k in mapping.items() if k == src_col]
+                if len(wanting) > 1:
+                    mine = [j for j in wanting if any(_fold(e) in _fold(header[j]) for e in mentioned)]
+                    for j in wanting:
+                        if len(mine) != 1 or j != mine[0]:
+                            del mapping[j]
+            if not mapping:
+                continue
+            key_ok = (_match(header[0], head[0], []) > 0
+                      or any(_fold(e) in _fold(r[0]) for r in rows for e in entities))
+            if not key_ok:
+                continue
+            for r in rows:
+                cells = ["—"] * len(header)
+                cells[0] = r[0]
+                for j, k in mapping.items():
+                    if k < len(r):
+                        cells[j] = r[k]
+                out.append(cells)
+    return out
+
+
+def parse_rows(text: str, ncols: int, header: list[str] | None = None) -> list[list[str]]:
     rows = []
+    head = [_fold(c) for c in header or []]
     for line in (text or "").split("\n"):
         line = line.strip()
         if not line or _NONE.match(line) or _is_rule(line) or "|" not in line:
             continue
         cells = [re.sub(r"\*\*|`", "", c).strip() for c in _cells(line)]
         cells = [re.sub(r"\s*\[[A-Z]\d+\s*p\d+\]", "", c).strip() for c in cells]
+        if head and [_fold(c) for c in cells[:len(head)]] == head:
+            continue                     # the header again
         if len(cells) > ncols:
             cells = cells[:ncols]
         if len(cells) < ncols:
@@ -188,6 +306,28 @@ def _in_text(cell: str, text: str, figs: set[str], stems: set[str]) -> bool:
     if cell_figs - figs - {_canon(m.group(1)) for m in _NUMBER.finditer(text)}:
         return False
     return not words or len(words & stems) / len(words) >= 0.8
+
+
+def _as_written(cell: str, text: str, key: str = "") -> str:
+    """The value as the document writes it: a bare number ("1150" → "1.150",
+    "87" → "87 %"), or dates the model abbreviated ("Mar 2019 - Jul 2022" →
+    "de marzo de 2019 a julio de 2022": the clause of the row's line that
+    holds the cell's figures)."""
+    if re.fullmatch(r"\d+(?:[.,]\d+)*", cell.strip()):
+        for m in _NUMBER.finditer(text):
+            if _canon(m.group(1)) == _canon(cell.strip()):
+                return m.group(1) + (" %" if m.group(2) else "")
+        return cell
+    figs = {_canon(m.group(1)) for m in _NUMBER.finditer(cell)}
+    if not figs or _fold(cell) in _fold(text) or not key:
+        return cell
+    for line in text.split("\n"):
+        if _fold(key) not in _fold(line):
+            continue
+        for clause in re.split(r"[,.;:()]\s+|\s[—–-]\s", line):
+            if figs <= {_canon(m.group(1)) for m in _NUMBER.finditer(clause)} and len(clause) <= 80:
+                return clause.strip(" -.")
+    return cell
 
 
 def _label_for(cell: str, key: str, doc: dict[str, Any]) -> str:
@@ -233,6 +373,7 @@ def validate(rows: list[list[str]], header: list[str], doc: dict[str, Any],
                 dropped.append({"row": key, "col": col, "value": cell, "why": "value not in the document",
                                 "doc": doc["rel"]})
                 continue
+            cell = _as_written(cell, text, key)
             cells.append(cell)
             label = _label_for(cell, key, doc)
             if label and label not in labels:
@@ -344,10 +485,19 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     docs = documents(request, sources)
     if not header or not docs:
         return None
+    header = tidy_header(header, request, docs)
+    if len(header) < 2:
+        return None
     entities = list(inv.get("entities") or [])
     found, dropped = [], []
+    by_code = 0
     for doc in docs:
-        rows = parse_rows(generate(extract_prompt(request, header, doc, lang), 400), len(header))
+        rows = rows_from_tables(header, doc, entities)      # a source table needs no model
+        if rows:
+            by_code += len(rows)
+        else:
+            rows = parse_rows(generate(extract_prompt(request, header, doc, lang, entities), 400),
+                              len(header), header)
         kept, bad = validate(rows, header, doc, entities)
         found += kept
         dropped += bad
@@ -358,6 +508,7 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     empty = sum(1 for r in rows for c in r["cells"][1:] if not c)
     return {"markdown": render(header, rows, lang), "header": header, "rows": len(rows),
             "documents": [d["rel"] for d in docs], "computed": computed, "empty": empty,
+            "rows_by_code": by_code,
             "dropped": dropped[:12]}
 
 
