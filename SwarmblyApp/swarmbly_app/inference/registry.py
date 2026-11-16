@@ -49,5 +49,15 @@ class BackendRegistry:
             "No inference backend is reachable. Start Ollama or configure an "
             "OpenAI-compatible URL in Settings → Models.")
 
+    def build(self, kind: str, url: str, api_key: str = "", think: bool | None = None) -> StreamBackend:
+        """A backend for a role that runs on its own server (3.3)."""
+        if kind == "openai_compat":
+            if not url:
+                raise IncompleteSettings("OpenAI-compatible backend needs a URL")
+            return OpenAICompatBackend(url, api_key=api_key)
+        candidate = OllamaBackend(url or DEFAULT_URL)
+        candidate.think = think
+        return candidate
+
     def last(self) -> StreamBackend | None:
         return self._last_backend

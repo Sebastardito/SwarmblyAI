@@ -442,35 +442,39 @@ class ChatService:
                 # authorised for questions only: the documents stay out of the call
                 lce_on = False
                 request.receipt_ctx["passages_withheld"] = dest_host
-            composer_ready = ""
-            composer_name = str((cfg.get("compose") or {}).get("model") or "")
-            if composer_name and lce_on:
+            # 3.3: models by role. The writer is chosen once for a composition;
+            # when the policy or the installation does not allow it, the
+            # conversation's model writes and the answer says so.
+            from . import roles
+            used_roles: dict[str, roles.Choice] = {}
+            writer = None
+            if lce_on:
                 from .compose import is_composition
-                if is_composition(user_text) and not _remote_host(backend, composer_name):
-                    try:
-                        if composer_name in (backend.list_models() or []):
-                            composer_ready = composer_name
-                    except Exception:
-                        pass
+                if is_composition(user_text):
+                    writer = roles.choose("writer", cfg, backend, model, self.registry)
+            composer_ready = writer if (writer is not None and writer.own) else None
             if (lce_on and (cfg.get("lce") or {}).get("query_expansion", True)) or want_public:
                 from .local_context import expand_query
                 # Keywords come from the small default model even when the
                 # conversation uses a large one: fast, and a reasoning model
                 # returned nothing in 90 tokens (P2e round 6).
-                exp_model = ((cfg.get("lce") or {}).get("expansion_model")
-                             or (cfg.get("model") or {}).get("model_name") or model)
-                if composer_ready:
+                terms = roles.choose("search_terms", cfg, backend,
+                                     (cfg.get("model") or {}).get("model_name") or model,
+                                     self.registry, passages=False)
+                if composer_ready is not None and not terms.own and not terms.note:
                     # 3.2: the composer also writes the search terms of a
                     # composition: with the 7B's terms the farmers' text never
                     # found the chlorosis report, with the 27B's it did (3 of 3)
-                    exp_model = composer_ready
+                    terms = roles.Choice("search_terms", composer_ready.model, composer_ready.backend,
+                                         composer_ready.think, own=True, where=composer_ready.where)
+                used_roles["search_terms"] = terms
                 # a short follow-up ("¿puedes extenderlo?") is expanded with the
                 # previous question; alone it gave unrelated keywords (3.1 test)
                 prev_q = _previous_user_turn(context)
                 exp_text = (f"{prev_q}\n{user_text}" if prev_q and _is_follow_up(user_text)
                             else user_text)
                 with egress.purpose(egress.QUESTION):
-                    expansion = expand_query(backend, exp_model, exp_text)
+                    expansion = expand_query(terms, terms.model, exp_text)
             if lce_on:
                 # 3.1: a short follow-up ("¿qué aplicaciones necesita este
                 # proceso?") is searched with the previous question as well
@@ -646,11 +650,14 @@ class ChatService:
                                    if g.get("distinct") or g.get("avoid") or g.get("equivalents")]
                 if det["glossary"]:
                     proposals = {**det, "notes": [], "asked": False}
-            answer_model = model
-            if public_hits and ev_cfg.get("fusion_model"):
+            answering = roles.Choice("chat", model, backend)
+            if public_hits:
                 # P2e: a larger local model writes only the answers that fuse the
                 # user's sources with public evidence (few, and quality matters).
-                answer_model = str(ev_cfg["fusion_model"])
+                fusion = roles.choose("fusion", cfg, backend, model, self.registry)
+                used_roles["fusion"] = fusion
+                if fusion.own:
+                    answering = fusion
             if public_hits:
                 # P2e fusion template: both kinds of source in the user's turn,
                 # labelled, with the answer's structure; a 3B model mixed them up
@@ -706,25 +713,21 @@ class ChatService:
                     else "sensible"
             if public_report is not None:
                 request.receipt_ctx["public_lookup"] = True
-            composer = str((cfg.get("compose") or {}).get("model") or "")
-            if composer and composer != model and request.receipt_ctx.get("inventory") and sources \
-                    and not public_hits:
-                # providers by role (3.2): a composition goes to a larger local
-                # model when one is set and installed (27B against 7B on the open
-                # battery: key data 90/99 → 96/99, ~2× the time)
-                try:
-                    installed = composer in (backend.list_models() or [])
-                except Exception:
-                    installed = False
-                remote = _remote_host(backend, composer) if installed else ""
-                if remote and not (egress.policy().authorised(remote) and egress.policy().third_party_passages):
-                    # a cloud composer would take the user's passages off this
-                    # computer: only with both authorisations
-                    request.receipt_ctx["composer_blocked"] = f"{composer} runs at {remote}"
-                elif installed:
-                    answer_model = composer
-                else:
-                    request.receipt_ctx["composer_missing"] = composer
+            if writer is not None and request.receipt_ctx.get("inventory") and sources and not public_hits:
+                # the writer (3.2: a 27B against a 7B on the open battery took the
+                # key data of compositions from 90/99 to 96/99, at ~2× the time)
+                used_roles["writer"] = writer
+                if writer.own:
+                    answering = writer
+                elif writer.note.startswith("blocked"):
+                    # a writer off this computer would take the user's passages
+                    # with it: only with both authorisations
+                    request.receipt_ctx["composer_blocked"] = writer.note.split(": ", 1)[-1]
+                elif writer.note:
+                    request.receipt_ctx["composer_missing"] = writer.asked
+            answer_model = answering.model
+            request.receipt_ctx["roles"] = {name: c.to_meta() for name, c in used_roles.items()
+                                            if c.own or c.note}
             # the language rule of the answer: the stopword vote said "en" for short
             # Spanish requests and gave them the English token rate
             budget = answer_budget(user_text, int(self.config()["model"].get("max_tokens", 1024)),
@@ -742,13 +745,13 @@ class ChatService:
                 # F3b (3.2): the code plans the sections, the model writes each
                 # one from its facts, the code assembles them
                 result, scaffold_meta = _compose_by_sections(
-                    backend, scaffold, user_text, model=answer_model,
+                    answering, scaffold, user_text, model=answer_model,
                     temperature=float(self.config()["model"].get("temperature", 0.2)),
                     on_delta=on_delta, interrupt=request.stop_event.is_set, kind=answer_kind)
                 request.receipt_ctx["scaffold"] = scaffold_meta
             else:
                 with egress.purpose(answer_kind):
-                    result = backend.stream_chat(
+                    result = answering.stream_chat(
                         context, model=answer_model, max_tokens=budget,
                         temperature=float(self.config()["model"].get("temperature", 0.2)),
                         on_delta=on_delta,
@@ -759,6 +762,7 @@ class ChatService:
                 # out of 18): the conversation's model answers the same prompt.
                 fusion_fallback = f"{answer_model} returned an empty answer"
                 answer_model = model
+                answering = roles.Choice("chat", model, backend)
                 with egress.purpose(answer_kind):
                     result = backend.stream_chat(
                         context, model=model, max_tokens=budget // 2,
@@ -771,6 +775,8 @@ class ChatService:
                 extra["conflicts"] = request.receipt_ctx["conflicts"]
             if request.receipt_ctx.get("sources_unrelated"):
                 extra["sources_unrelated"] = request.receipt_ctx["sources_unrelated"]
+            if request.receipt_ctx.get("roles"):
+                extra["roles"] = request.receipt_ctx["roles"]
             if request.receipt_ctx.get("composer_missing"):
                 extra["composer_missing"] = request.receipt_ctx["composer_missing"]
             if request.receipt_ctx.get("composer_blocked"):
@@ -860,7 +866,7 @@ class ChatService:
                     t0 = time.monotonic()
                     try:
                         with egress.purpose(answer_kind):
-                            second = backend.stream_chat(
+                            second = answering.stream_chat(
                                 [*context, {"role": "assistant", "content": answer_text},
                                  {"role": "user", "content": compose.repair_message(first, _lang(user_text))}],
                                 model=answer_model, max_tokens=budget,
@@ -894,7 +900,7 @@ class ChatService:
                         if on_delta:
                             on_delta("\n\n")
                         with egress.purpose(answer_kind):
-                            more = backend.stream_chat(
+                            more = answering.stream_chat(
                                 [{"role": "user", "content": compose.gap_prompt(user_text, answer_text, gaps,
                                                                                  _lang(user_text))}],
                                 model=answer_model, max_tokens=320,

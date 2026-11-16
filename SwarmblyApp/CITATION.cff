@@ -1,9 +1,9 @@
 cff-version: 1.2.0
-# Each release gets a version DOI from the Zenodo GitHub integration. Until
-# the DOI of v0.5.0 is minted, the DOI below is the concept DOI (all versions,
-# resolves to the latest); it is replaced by the version DOI after the release.
-# Previous releases: v0.4.0, 10.5281/zenodo.24070622; v0.3.1 (version DOI to
-# be added); v0.2.0, 10.5281/zenodo.23322639.
+# Each release gets a version DOI from the Zenodo GitHub integration. The DOI
+# below is the record of v0.5.0; the concept DOI (all versions, resolves to the
+# latest) is 10.5281/zenodo.23322638. Previous releases: v0.4.0,
+# 10.5281/zenodo.24070622; v0.3.1 (version DOI to be added); v0.2.0,
+# 10.5281/zenodo.23322639.
 message: "If you use Swarmbly App in your research or infrastructure, please cite it with the DOI below, and the integrated projects."
 title: "Swarmbly App: desktop client and network dashboard for decentralized problem-fragmenting inference"
 type: software
@@ -15,8 +15,11 @@ authors:
 version: 0.5.0
 date-released: "2026-11-15"
 license: AGPL-3.0-or-later
-doi: "10.5281/zenodo.23322638"   # concept DOI until the v0.5.0 record is minted
+doi: "10.5281/zenodo.24265875"   # version 0.5.0
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24265875"
+    description: "Version 0.5.0 (this release)"
   - type: doi
     value: "10.5281/zenodo.24070622"
     description: "Version 0.4.0 (earlier release)"

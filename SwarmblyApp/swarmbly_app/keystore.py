@@ -17,7 +17,10 @@ from pathlib import Path
 from typing import Any
 
 SERVICE = "Swarmbly"
-SECRET_KEYS = ("model.api_key", "evidence.google_cse_key")
+SECRET_KEYS = ("model.api_key", "evidence.google_cse_key",
+               # 3.3: a role on another server may need its own key
+               "roles.writer.api_key", "roles.search_terms.api_key", "roles.fusion.api_key",
+               "roles.verifier.api_key")
 
 _lock = threading.Lock()
 _fallback_path: Path | None = None
@@ -144,9 +147,12 @@ def redact(cfg: dict[str, Any]) -> dict[str, Any]:
     out = copy.deepcopy(cfg)
     flags = {}
     for key in SECRET_KEYS:
-        section, _, leaf = key.partition(".")
-        if isinstance(out.get(section), dict):
-            out[section][leaf] = ""
+        *path, leaf = key.split(".")
+        node: Any = out
+        for part in path:
+            node = node.get(part) if isinstance(node, dict) else None
+        if isinstance(node, dict):
+            node[leaf] = ""
         flags[key] = storage(key)
     out["_secrets"] = flags
     return out

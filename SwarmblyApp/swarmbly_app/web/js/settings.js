@@ -30,6 +30,18 @@ const Settings = (() => {
       { key: "privacy.third_party_models", type: "list" },
       { key: "privacy.third_party_passages", type: "bool" },
       { key: "model.model_name", type: "model" },
+      // 3.3: models by role. Empty = the conversation's model.
+      { key: "roles.writer.model", type: "model", allowEmpty: true, group: "roles",
+        textIf: (c) => !!c.roles?.writer?.backend },
+      { key: "roles.writer.think", type: "tri", group: "roles" },
+      { key: "roles.search_terms.model", type: "model", allowEmpty: true, group: "roles" },
+      { key: "roles.fusion.model", type: "model", allowEmpty: true, group: "roles" },
+      { key: "roles.writer.backend", type: "select", group: "roles", advanced: true,
+        options: [["", "settings.sameServer"], ["ollama", "Ollama"], ["openai_compat", "backend.openai"]] },
+      { key: "roles.writer.backend_url", type: "text", group: "roles", advanced: true,
+        showIf: (c) => !!c.roles?.writer?.backend },
+      { key: "roles.writer.api_key", type: "password", group: "roles", advanced: true,
+        showIf: (c) => c.roles?.writer?.backend === "openai_compat" },
       { key: "model.multi_model", type: "bool" },
       { key: "model.local_models", type: "models", showIf: (c) => c.model?.multi_model },
       { key: "model.local_parallel", type: "number", min: 1, max: 4, showIf: (c) => c.model?.multi_model },
@@ -69,7 +81,6 @@ const Settings = (() => {
       { key: "evidence.max_items", type: "number", min: 1, max: 100, group: "evidence", advanced: true },
       { key: "evidence.local_answers", type: "bool", group: "evidence" },
       { key: "evidence.local_max_entities", type: "number", min: 1, max: 6, group: "evidence", advanced: true },
-      { key: "evidence.fusion_model", type: "model", allowEmpty: true, group: "evidence", advanced: true },
       { key: "evidence.providers", type: "list", group: "evidence", advanced: true },
       { key: "evidence.searxng_url", type: "text", group: "evidence", advanced: true },
       { key: "evidence.google_cse_key", type: "password", group: "evidence", advanced: true },
@@ -155,12 +166,23 @@ const Settings = (() => {
     const save = (v) => {
       if (f.key === "language") return App.setLanguage(v);
       return App.saveConfig(nested(f.key, v)).then(() => {
-        if (["model.multi_model", "profile"].includes(f.key)) renderTab();
+        if (["model.multi_model", "profile", "roles.writer.backend"].includes(f.key)) renderTab();
       }).catch(() => renderTab());
     };
     let control;
     if (f.type === "bool") {
       control = toggle(!!value, save, null, { "aria-label": label });
+    } else if (f.type === "tri") {
+      // yes / no / leave the model's default (null)
+      const opts = [["", "settings.modelDefault"], ["true", "common.yes"], ["false", "common.no"]];
+      control = select(opts.map(([v, l]) => ({ value: v, label: t(l, l) })),
+        value === true ? "true" : value === false ? "false" : "",
+        (v) => save(v === "" ? null : v === "true"), { "aria-label": label });
+    } else if (f.type === "model" && f.textIf && f.textIf(App.state.config || {})) {
+      // a model on another server: its name is typed, this computer cannot list it
+      control = h("input", { type: "text", "aria-label": label, autocomplete: "off" });
+      control.value = value ?? "";
+      control.addEventListener("change", () => save(control.value.trim()));
     } else if (f.type === "select") {
       control = select(f.options.map(([v, l]) => ({ value: v, label: t(l, l) })), value, save,
         { "aria-label": label });

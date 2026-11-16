@@ -87,7 +87,8 @@
   "total_ms": "total ms",
   "group": {
    "worker": "Sharing this computer (worker)",
-   "evidence": "Public evidence"
+   "evidence": "Public evidence",
+   "roles": "Models by role"
   }
  },
  "node": {
@@ -202,7 +203,13 @@
   "missedSources": "Your sources do cover it",
   "missedSourcesTitle": "The answer says your sources do not discuss \"{term}\", but they use \"{found}\", which your glossary gives as an equivalent.",
   "unsupported": "{n} sentences not backed by your sources",
-  "unsupportedTitle": "Underlined in the answer: they carry no citation and no \"Outside your sources:\" mark. They may be true, but they do not come from your documents or a search you approved; check them before using them."
+  "unsupportedTitle": "Underlined in the answer: they carry no citation and no \"Outside your sources:\" mark. They may be true, but they do not come from your documents or a search you approved; check them before using them.",
+  "roleBy": "Written by {model}",
+  "roleLocal": "A model on this computer or your network wrote this answer instead of the conversation's model.",
+  "roleWhere": "A model at {host}, off this computer, wrote this answer with your authorisation. The receipt says what was sent.",
+  "roleFallback": "Writer not used",
+  "roleMissing": "The model {model} is not installed: the conversation's model answered.",
+  "roleBlocked": "The model {model} is off this computer and is not authorised for this: the conversation's model answered and nothing was sent."
  },
  "explore": {
   "title": "How this answer was made",
@@ -462,7 +469,9 @@
   "secretStored": {
    "keychain": "stored in the system keychain",
    "file": "stored in a protected file on this computer"
-  }
+  },
+  "sameServer": "The conversation's",
+  "modelDefault": "Model default"
  },
  "profile": {
   "automatic": "Automatic",
@@ -715,6 +724,34 @@
   "privacy__third_party_passages": {
    "label": "Allow sending passages of my documents to those services",
    "help": "Off: the service only gets your question and answers without your documents. Turn it on only if you accept that organisation receiving parts of your files."
+  },
+  "roles__writer__model": {
+   "label": "Writer model",
+   "help": "Writes compositions (reports, summaries, tables) from your sources. A larger model leaves out fewer facts and takes longer; questions stay with the conversation's model. Empty: the conversation's model."
+  },
+  "roles__writer__think": {
+   "label": "Writer's reasoning",
+   "help": "Some models reason before answering and spend the answer's room on it. \"No\" turns it off for the writer; \"Model default\" leaves the model as it is."
+  },
+  "roles__search_terms__model": {
+   "label": "Model for search terms",
+   "help": "Writes the terms your documents are searched with. Empty: the default model; in a composition, the writer if there is one."
+  },
+  "roles__fusion__model": {
+   "label": "Model for answers with public evidence",
+   "help": "Writes the answers that join your sources with public evidence. Empty: the conversation's model."
+  },
+  "roles__writer__backend": {
+   "label": "Writer's server",
+   "help": "By default the writer uses the conversation's server. Another server follows the same policy as any model: outside your network it receives nothing unless you authorise it, and your documents only with the second authorisation."
+  },
+  "roles__writer__backend_url": {
+   "label": "Address of the writer's server",
+   "help": "For example http://192.168.1.20:11434 or https://…/v1."
+  },
+  "roles__writer__api_key": {
+   "label": "Key of the writer's server",
+   "help": "Kept in the system keychain, not in the configuration file."
   }
  },
  "models": {

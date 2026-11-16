@@ -35,6 +35,7 @@ class OllamaBackend:
         self.url = url.rstrip("/")
         self.timeout = timeout
         self.think: bool | None = None   # Ollama "think": None leaves the model's default
+        self.accepts_think = True        # stream_chat(think=…) per call (roles, 3.3)
 
     def remote_host(self, model: str) -> str:
         """Where Ollama really runs ``model``: "" on this computer, or the host
@@ -78,6 +79,7 @@ class OllamaBackend:
                     on_delta: Callable[[str], None] | None = None,
                     interrupt: Callable[[], bool] | None = None,
                     system: str | None = None,
+                    think: bool | None = None,
                     ) -> GenerationResult:
         payload: dict[str, Any] = {
             "model": model,
@@ -89,8 +91,11 @@ class OllamaBackend:
                 "temperature": temperature,
             },
         }
-        if self.think is not None:
-            payload["think"] = bool(self.think)
+        # the call's own setting (a role, 3.3) comes before the backend's
+        if think is None:
+            think = self.think
+        if think is not None:
+            payload["think"] = bool(think)
         # Policy and record at the point where the bytes leave (3.0.1).
         nbytes = len(__import__("json").dumps(payload).encode("utf-8"))
         egress.check_call(self.url, nbytes, reason=f"modelo {model}")
