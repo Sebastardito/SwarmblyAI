@@ -614,7 +614,15 @@ class ChatService:
                                                   groups=groups)
                 if (cfg.get("compose") or {}).get("web_missing_names"):
                     web_search.mark_missing(web_found, user_text)
-                blocks.append(web_search.results_block(web_found, lang_now))
+                if sources and (cfg.get("compose") or {}).get("web_after_sources"):
+                    # recipe 3 (3.3): after the user's documents, next to the
+                    # question. Before them, the 7B gave the public figure as
+                    # the user's notes' (45 adults "según mis notas") in 6 of 6
+                    # answers; after them, the notes' 60 and the sheet's 45, each
+                    # with its year, in 3 of 3 (replayed prompt, open battery CO-06)
+                    late_blocks.append(web_search.results_block(web_found, lang_now))
+                else:
+                    blocks.append(web_search.results_block(web_found, lang_now))
             elif want_public or _ASKS_REFERENCES.search(user_text):
                 # placed after the sources, next to the question: before a long
                 # sources block it was forgotten and an answer said it had
@@ -712,6 +720,10 @@ class ChatService:
                                   "text": f"{h.get('title', '')}. {h.get('snippet', '')}", "public": True}
                                  for h in web_found["results"]]
                 found_conflicts = conflicts(user_text, compared)
+                # with the results after the documents, what is said about them
+                # goes after them too
+                about_web = (late_blocks if (ccfg.get("web_after_sources") and (web_found or {}).get("results"))
+                             else blocks)
                 if ccfg.get("compare_by_code") and (web_found or {}).get("results") and _COMPARE.search(user_text):
                     # recipe 3 (3.3): the comparison asked between a figure of the
                     # documents and one of a public result, computed by code
@@ -721,12 +733,13 @@ class ChatService:
                               for h in web_found["results"]]
                     compared_now = comparisons(user_text, list(sources) + public, _lang(user_text))
                     if compared_now:
-                        blocks.append(comparison_block(compared_now, _lang(user_text)))
+                        about_web.append(comparison_block(compared_now, _lang(user_text)))
                         request.receipt_ctx["comparisons"] = compared_now
                 if found_conflicts:
                     # 3.2: documents that disagree on what is asked: the model
                     # is told, and the app shows both under the answer
-                    blocks.append(conflict_block(found_conflicts, _lang(user_text)))
+                    (about_web if any(c[k]["label"].startswith("W") for c in found_conflicts for k in ("a", "b"))
+                     else blocks).append(conflict_block(found_conflicts, _lang(user_text)))
                     request.receipt_ctx["conflicts"] = found_conflicts
             if lce_on and request.project_id and self.document_list is not None:
                 # 3.1: the model knows which documents this project has (names
@@ -1050,8 +1063,11 @@ class ChatService:
                     return getattr(r, "text", "") or ""
                 t0 = time.monotonic()
                 try:
+                    computed = [f"{c['difference']} {c.get('percent', '')} %"
+                                for c in request.receipt_ctx.get("comparisons") or []]
                     found = verify.verify(answer_text, given, _judge if (checker.own or not elsewhere) else None,
-                                          _lang(user_text), limit=int(ccfg.get("verify_limit", 24)))
+                                          _lang(user_text), limit=int(ccfg.get("verify_limit", 24)),
+                                          computed=computed)
                 except Interrupted:
                     raise
                 except egress.EgressDenied:
