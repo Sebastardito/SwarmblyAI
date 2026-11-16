@@ -389,7 +389,7 @@ def test_conflicts_and_unrelated_sources_in_the_chat(app_state, tmp_path):
     app_state.chat.send(conv["id"], "¿Cuándo será la cosecha del lote AB2?", mode="local", run_async=False)
     meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
     assert meta["conflicts"] and "no coinciden" in " ".join(
-        m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+        m["content"] for m in [c for c in fake.calls if not c["messages"][-1]["content"].startswith("Párrafos:")][-1]["messages"] if m["role"] == "system")
     fake.reply = "Fuera de tus fuentes: Lima."                     # also the search terms of the fake
     conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
     app_state.chat.send(conv["id"], "¿Cuál es la capital de Perú?", mode="local", run_async=False)

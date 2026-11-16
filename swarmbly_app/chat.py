@@ -308,15 +308,10 @@ class ChatService:
         return out
 
     def _with_titles(self, sources: list[dict[str, Any]], project_id: str) -> list[dict[str, Any]]:
-        """The passages with the title of their document (its first heading):
-        "la reunión del 15 de abril" is in the title of the minutes, not in
-        the paragraph of the agreements."""
+        """The passages with the title of their document (its first heading,
+        or its file name): "la reunión del 15 de abril" is in the title of the
+        minutes, not in the paragraph of the agreements."""
         titles: dict[str, str] = {}
-        for s in sources:
-            doc = str(s.get("doc_id") or "")
-            text = str(s.get("text", "")).strip()
-            if doc and doc not in titles and text.startswith("#") and "\n" not in text:
-                titles[doc] = text.lstrip("# ").strip()
         out = []
         for s in sources:
             doc = str(s.get("doc_id") or "")
@@ -326,10 +321,9 @@ class ChatService:
                     spans = self.document_spans(project_id, doc) if self.document_spans else []
                 except Exception:
                     spans = []
-                first = str(spans[0].get("text", "")).strip() if spans else ""
-                if first.startswith("#") or (first and len(first) <= 160 and "\n" not in first):
-                    titles[doc] = first.lstrip("# ").strip()
-            out.append({**s, "doc_title": titles[doc]} if titles.get(doc) else dict(s))
+                titles[doc] = str((spans[0] if spans else {}).get("doc_title") or "")
+            title = titles.get(doc) or str(s.get("doc_title") or "")
+            out.append({**s, "doc_title": title} if title else dict(s))
         return out
 
     def _personal_request(self, text: str, project_id: str = "") -> bool:

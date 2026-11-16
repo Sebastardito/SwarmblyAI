@@ -65,7 +65,7 @@ def test_a_citation_is_completed_with_the_paragraph_that_has_the_figure():
     seen = []
     V.check("En la Parcela Norte, el rendimiento medio del lote AB2 fue de 3,1 t/ha, 0,3 más que el AB1, con 2,8 [D1 p16].",
             ["D1 p16"], SOURCES, lambda prompt, n: seen.append(prompt) or "SÍ")
-    assert "[D2 p16] (informe lote AB2)" in seen[0] and "Nota:" not in seen[0]
+    assert "[D2 p16] (informe lote AB2)" in seen[0] and "Nota: 0,3 se calcula" in seen[0]
     # the model is told which figures the code computed
     V.check("AB1 costó 1.150 dólares y AB2 1.080, una diferencia de 70 dólares [D1 p17][D2 p17].",
             ["D1 p17", "D2 p17"], SOURCES, lambda prompt, n: seen.append(prompt) or "SÍ")
@@ -148,6 +148,7 @@ def test_verification_in_the_chat(app_state, tmp_path):
     app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
     p = app_state.projects.create("T", parent=tmp_path / "p")
     (p.sources / "informe_lote_AB1.md").write_text(
+        "# Informe de campo del lote AB1, temporada 2025-2026\n\nResponsable: Ana Pérez. Variedad Kanela.\n\n"
         "El costo de producción del lote AB1 fue de 1.150 dólares por hectárea.\n", encoding="utf-8")
     app_state.config.update({"lce.enabled": True, "lce.level": "C1", "compose.verify": True})
     conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
@@ -158,8 +159,24 @@ def test_verification_in_the_chat(app_state, tmp_path):
     assert [f["why"] for f in found["flagged"]] == ["not_in_cited"]
     assert found["flagged"][0]["text"].startswith("Ese costo de producción nos ayudará")
     assert "nos ayudará" in msg["content"]                       # nothing is rewritten
+    judged = [c["messages"][-1]["content"] for c in fake.calls if c["messages"][-1]["content"].startswith("Párrafos:")]
+    assert judged and all("(Informe de campo del lote AB1, temporada 2025-2026)" in j for j in judged)
+    assert not any("(Responsable" in j for j in judged)            # the first paragraph is not the title
     # off by default
     app_state.config.update({"compose.verify": False})
     conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
     app_state.chat.send(conv["id"], "¿Cuánto costó producir el lote AB1?", mode="local", run_async=False)
     assert "verification" not in app_state.chat.get_messages(conv["id"])[-1]["meta"]
+
+
+def test_what_the_sources_do_not_say_is_not_a_claim_and_computed_figures_are_named():
+    answer = ("Según el informe [D1 p17], no se menciona clorosis en la Parcela Norte. "
+              "En la Parcela Norte, el lote AB2 rindió 3,1 t/ha frente a 2,8 t/ha del AB1, una diferencia de 0,3 t/ha "
+              "[D2 p16][D1 p16].")
+    seen = []
+    report = V.verify(answer, SOURCES, lambda prompt, n: seen.append(prompt) or "SÍ")
+    assert report["claims"] == 1 and report["about_sources"] == 1 and report["asked"] == 1
+    # 0,3 is also a deviation of the cited table; in the sentence it is 3,1 minus 2,8
+    assert "Nota: 0,3 se calcula" in seen[0]
+    assert V.split("Las fuentes no mencionan el riego [D1 p2].")[0]["absence"] is True
+    assert "absence" not in V.split("Se observó clorosis en la Ladera Este, pero no en la Parcela Norte [D1 p11].")[0]

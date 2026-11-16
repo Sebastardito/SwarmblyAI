@@ -71,7 +71,7 @@ Swarmbly AI 3.3.
   rows of a table count when the request asks for a table, names what the
   rows are ("por sitio") or names the row.
 - **Claim verifier, first step of recipe 3** (`swarmbly_app/verify.py`,
-  `compose.verify`, off until the full battery is run with it). A label
+  `compose.verify`, on by default since the full battery was run with it). A label
   says where the model claims a sentence comes from, not that the paragraph
   supports it: read by hand, 16 of 43 labelled sentences of the open
   battery (x33) were not supported by what they cite (the figure was in
@@ -103,6 +103,21 @@ Swarmbly AI 3.3.
   paragraph gives counts as a citation missing, not as a calculation; the
   model is told which figures the code computed; a cited paragraph that
   cannot bear on the sentence is not shown to it.
+  Full battery with the verifier on (33 cases × 2, qwen2.5:7b checking its
+  own answers, vf33): passed 58/66 and key data 180/188, as without it; 132
+  labelled sentences checked in 26.8 s in all (0.4 s per answer), 9 flagged,
+  4 citations completed. Read by hand, 6 of the 9 flags were right; the 3
+  wrong ones are mended: a sentence about what the sources do not say ("no
+  se menciona clorosis en la Parcela Norte [D1 p11]") is not a claim from
+  them and is not checked (`about_sources`); a figure the sentence presents
+  as a difference of two of its figures is named to the model even when it
+  also appears in the cited table (the 0,3 of a deviation); and a document's
+  title is its first heading, which C1 keeps only in its search index (the
+  first paragraph, "Responsable: Ana Pérez. Temporada 2025-2026…", was shown
+  as the title). With the paragraphs and title the app gave, the 7B answered
+  PARTE to the right sentence on 3,1 and 2,8 t/ha; with the title or the
+  note, SÍ. With qwen2.5:14b as verifier on the compositions (vf14), 8 flags
+  in 38 sentences, two of them wrong in the same way.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

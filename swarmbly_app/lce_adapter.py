@@ -167,10 +167,18 @@ class LCEAdapter:
 
     def document_spans(self, doc_id: str, extra_dirs: list[str] | tuple[str, ...] = (),
                        roots: list[Path] | None = None) -> list[dict[str, Any]]:
-        """Every paragraph of one document (by content hash), in order."""
-        return [{k: v for k, v in s.items() if k != "index"}
-                for s in self.index.spans(self._roots(extra_dirs, roots))
-                if s.get("doc_id") == doc_id]
+        """Every paragraph of one document (by content hash), in order, each
+        with ``doc_title``: the document's first Markdown heading (C1 keeps it
+        only in its search index; the claim verifier shows it with the
+        paragraph, "Acta de la reunión técnica del 15 de abril de 2026")."""
+        all_roots = self._roots(extra_dirs, roots)
+        spans = [{k: v for k, v in s.items() if k != "index"}
+                 for s in self.index.spans(all_roots) if s.get("doc_id") == doc_id]
+        if spans:
+            title = _first_heading(all_roots, str(spans[0].get("rel") or ""))
+            for s in spans:
+                s["doc_title"] = title
+        return spans
 
     def resolve(self, cite: str, extra_dirs: list[str] | tuple[str, ...] = (),
                 roots: list[Path] | None = None) -> dict[str, Any] | None:
@@ -204,3 +212,21 @@ class LCEAdapter:
             return WorkerGuard(declared_model=declared_model)
         except Exception:
             return None
+
+
+def _first_heading(roots: list[Path], rel: str) -> str:
+    """The first "# " line of a Markdown or text file under one of the roots."""
+    if not rel or Path(rel).suffix.lower() not in (".md", ".markdown", ".txt"):
+        return ""
+    for root in roots:
+        path = Path(root).expanduser() / rel
+        try:
+            with path.open(encoding="utf-8", errors="replace") as fh:
+                for n, line in enumerate(fh):
+                    if line.startswith("# "):
+                        return line[2:].strip()[:200]
+                    if n > 40:
+                        break
+        except OSError:
+            continue
+    return ""
