@@ -1,0 +1,1197 @@
+{
+ "version": "0.1.0",
+ "nota": "Afirmaciones con los párrafos que citan y una etiqueta de oro: «si» cuando los párrafos citados (con el título de su documento) dicen todo lo que la frase afirma, «no» cuando no lo dicen, dicen solo una parte o dicen otra cosa. R: frases reales de qwen2.5:7b en la batería abierta (corrida x33), etiquetadas a mano; se dejaron fuera seis dudosas. M: escritas a mano sobre el mismo corpus ficticio.",
+ "afirmaciones": [
+  {
+   "id": "R01",
+   "origen": "x33 S3-01",
+   "afirmacion": "Según el informe [D1 p16], el rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha.",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "otro_parrafo"
+  },
+  {
+   "id": "R02",
+   "origen": "x33 S3-01",
+   "afirmacion": "En detalle, la Parcela Norte obtuvo un rendimiento medio de 2,8 t/ha, la Parcela Sur de 2,4 t/ha y la Ladera Este de 1,9 t/ha [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R03",
+   "origen": "x33 S3-01",
+   "afirmacion": "Por su parte, el lote AB2, según el informe [D2 p16], presentó un rendimiento medio de 2,53 t/ha en los mismos sitios.",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "otro_parrafo"
+  },
+  {
+   "id": "R04",
+   "origen": "x33 S3-01",
+   "afirmacion": "Específicamente, la Parcela Norte logró 3,1 t/ha, la Parcela Sur 2,2 t/ha y la Ladera Este 2,3 t/ha [D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R05",
+   "origen": "x33 S3-01",
+   "afirmacion": "En resumen, el lote AB2 mostró un rendimiento superior en todas las parcelas, con una diferencia más pronunciada en la Parcela Norte (0,3 t/ha) y Ladera Este (0,4 t/ha) [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "R06",
+   "origen": "x33 S3-01",
+   "afirmacion": "El rendimiento medio del lote AB1 fue de 2,37 t/ha, mientras que el del lote AB2 fue de 2,53 t/ha, lo que representa una diferencia de 0,16 t/ha en el rendimiento medio general [D1 p17][D2 p17].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p17",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha. El costo de producción fue de 1.150 dólares por hectárea."
+    },
+    {
+     "etiqueta": "D2 p17",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El rendimiento medio del lote AB2 en los tres sitios fue de 2,53 t/ha. El costo de producción fue de 1.080 dólares por hectárea."
+    }
+   ],
+   "oro": "si",
+   "tipo": "calculo"
+  },
+  {
+   "id": "R07",
+   "origen": "x33 S3-01",
+   "afirmacion": "La desviación estándar para el lote AB1 fue de 0,3 t/ha en la Parcela Norte, 0,4 t/ha en la Parcela Sur y 0,5 t/ha en la Ladera Este [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R08",
+   "origen": "x33 S3-01",
+   "afirmacion": "Para el lote AB2, la desviación estándar fue de 0,2 t/ha en la Parcela Norte, 0,5 t/ha en la Parcela Sur y 0,3 t/ha en la Ladera Este [D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R09",
+   "origen": "x33 S3-02",
+   "afirmacion": "Según el análisis de suelo realizado el 2 de marzo de 2026 [D1 p2], se observó que el sector oeste de la Parcela Sur presentaba nitrógeno bajo (0,09%) y un pH alcalino (7,9) [D1 p4], factores que son compatibles con la clorosis observada [D1 p6].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "Muestras tomadas el 2 de marzo de 2026 a 0–20 cm de profundidad, cinco submuestras por sector."
+    },
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    },
+    {
+     "etiqueta": "D1 p6",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "El sector oeste de la Parcela Sur tiene nitrógeno bajo (por debajo de 0,12 %) y un pH alcalino que reduce la disponibilidad de hierro. Ambos factores son compatibles con la clorosis observada. Se recomienda una fertilización nitrogenada de 40 kg N/ha y repetir el análisis antes de la próxima siembra."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R11",
+   "origen": "x33 S3-02",
+   "afirmacion": "En la reunión técnica del 15 de abril de 2026 [D2 p4], se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, en respuesta a los resultados del análisis de suelo [D2 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "titulo"
+  },
+  {
+   "id": "R12",
+   "origen": "x33 S3-02",
+   "afirmacion": "Además, se decidió no sembrar AB1 en la Ladera Este en 2027 debido al riesgo de granizo en floración temprana, mientras que AB2, con floración más tardía, seguirá allí [D2 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R14",
+   "origen": "x33 S3-02",
+   "afirmacion": "Además, se propuso a Marta Ibáñez presentar en junio una propuesta de enmienda para bajar el pH del sector oeste, lo que podría mejorar la disponibilidad de nutrientes y reducir la clorosis [D2 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R15",
+   "origen": "x33 S3-02",
+   "afirmacion": "Finalmente, se mencionó la necesidad de preparar material de divulgación para una visita de estudiantes prevista para mayo [D2 p5].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p5",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R16",
+   "origen": "x33 S3-02",
+   "afirmacion": "[D4 p11] A mediados de marzo se registró clorosis en el 22 % de las plantas de la Parcela Sur, sobre todo en el sector oeste.",
+   "pasajes": [
+    {
+     "etiqueta": "D4 p11",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "A mediados de marzo se registró clorosis en el 22 % de las plantas de la Parcela Sur, sobre todo en el sector oeste. La Ladera Este no sufrió granizo en las fechas de AB2 porque la floración fue más tardía."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R17",
+   "origen": "x33 S3-03",
+   "afirmacion": "**Aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027** [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R18",
+   "origen": "x33 S3-03",
+   "afirmacion": "Según el acta de la reunión del 15 de abril de 2026 [D1 p3], se acordó aplicar esta cantidad de nitrógeno para mejorar el rendimiento en esa área específica.",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p3",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo. Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo. Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo."
+    }
+   ],
+   "oro": "no",
+   "tipo": "otro_parrafo"
+  },
+  {
+   "id": "R19",
+   "origen": "x33 S3-03",
+   "afirmacion": "**No sembrar AB1 en la Ladera Este en 2027 debido al riesgo de granizo en floración temprana** [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R20",
+   "origen": "x33 S3-03",
+   "afirmacion": "Este acuerdo se menciona en el acta de la reunión del 15 de abril de 2026 [D1 p3], donde se decidió evitar sembrar AB1 en la Ladera Este para mitigar el riesgo de daños por granizo.",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p3",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo. Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo. Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras de insumos. Se revisaron los contratos de transporte y la renovación del seguro del vehículo."
+    }
+   ],
+   "oro": "no",
+   "tipo": "otro_parrafo"
+  },
+  {
+   "id": "R21",
+   "origen": "x33 S3-03",
+   "afirmacion": "**Aplicar enmienda para bajar el pH del sector oeste en junio de 2026** [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "distorsion"
+  },
+  {
+   "id": "R22",
+   "origen": "x33 S3-03",
+   "afirmacion": "Marta Ibáñez presentó esta propuesta en la misma reunión [D1 p4], sugiriendo que se implemente en junio de 2026 para mejorar el pH del suelo en el sector oeste.",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "distorsion"
+  },
+  {
+   "id": "R24",
+   "origen": "x33 S3-04",
+   "afirmacion": "Según el informe técnico [D4 p3], se decidió aplicar 40 kg de nitrógeno por hectárea (N/ha) en el sector oeste de la Parcela Sur antes de la siembra de 2027, basado en el análisis de suelo [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D4 p3",
+     "documento": "cv_ana_perez.md",
+     "titulo": "Currículum de Ana Pérez (ficticio, para pruebas)",
+     "texto": "- Maestría en Ciencias Agrarias, Universidad del Valle Alto (ficticia), 2018. - Ingeniería Agronómica, Universidad del Valle Alto, 2015."
+    },
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "una_etiqueta_ajena"
+  },
+  {
+   "id": "R25",
+   "origen": "x33 S3-04",
+   "afirmacion": "En la reunión, se decidió no sembrar la variedad AB1 en la Ladera Este en 2027 debido al riesgo de granizo durante la floración temprana [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R26",
+   "origen": "x33 S3-04",
+   "afirmacion": "En cuanto a la gestión del pH del suelo, Marta Ibáñez presentó una propuesta para bajar el pH del sector oeste [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "distorsion"
+  },
+  {
+   "id": "R27",
+   "origen": "x33 S3-04",
+   "afirmacion": "En cuanto a la cosecha, se acordó que la cosecha de ambos lotes se realizará en la segunda semana de junio de 2026 [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R28",
+   "origen": "x33 S3-04",
+   "afirmacion": "Esto nos ayudará a optimizar la nutrición de nuestras plantas y, por lo tanto, mejorar la producción [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R29",
+   "origen": "x33 S3-04",
+   "afirmacion": "La experiencia de esta temporada nos ha enseñado que la elección de semillas resistentes a condiciones climáticas adversas es crucial para el éxito de nuestras culturas [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R30",
+   "origen": "x33 S3-04",
+   "afirmacion": "La propuesta de Marta Ibáñez será un punto de partida importante para mejorar la disponibilidad de nutrientes en el suelo y, por lo tanto, el rendimiento de nuestras culturas [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R31",
+   "origen": "x33 S3-04",
+   "afirmacion": "La propuesta de ordenar estos archivos será crucial para mantener un registro preciso de nuestras prácticas agrícolas y resultados, lo que nos ayudará a tomar decisiones informadas en el futuro [D1 p5].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p5",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores."
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R32",
+   "origen": "x33 S3-05",
+   "afirmacion": "En la Parcela Norte, AB1 presentó una germinación del 87%, mientras que AB2 obtuvo un 90% [D2 p2][D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R33",
+   "origen": "x33 S3-05",
+   "afirmacion": "En la Parcela Sur, AB1 logró un 81% de germinación, en tanto que AB2 alcanzó un 85% [D2 p2][D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R34",
+   "origen": "x33 S3-05",
+   "afirmacion": "Finalmente, en la Ladera Este, AB1 mostró una germinación del 74%, mientras que AB2 presentó un 79% [D2 p2][D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R35",
+   "origen": "x33 S3-06",
+   "afirmacion": "El lote AB1 tuvo un costo de producción de 1.150 dólares por hectárea, mientras que el lote AB2 fue más económico, con 1.080 dólares por hectárea, lo que representa una diferencia de 70 dólares por hectárea entre ambos lotes [D1 p17][D2 p17].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p17",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha. El costo de producción fue de 1.150 dólares por hectárea."
+    },
+    {
+     "etiqueta": "D2 p17",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El rendimiento medio del lote AB2 en los tres sitios fue de 2,53 t/ha. El costo de producción fue de 1.080 dólares por hectárea."
+    }
+   ],
+   "oro": "si",
+   "tipo": "calculo"
+  },
+  {
+   "id": "R36",
+   "origen": "x33 S3-06",
+   "afirmacion": "Este resultado se debe en parte a la mayor germinación y rendimiento del lote AB2, que presentó un rendimiento medio de 2,53 t/ha, en comparación con 2,37 t/ha del lote AB1, según los informes de rendimiento [D1 p16] y [D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    },
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R37",
+   "origen": "x33 CO-03",
+   "afirmacion": "El rendimiento medio del lote AB1 de la variedad Kanela fue de 2,37 t/ha, según el informe del lote AB1 [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "otro_parrafo"
+  },
+  {
+   "id": "R39",
+   "origen": "x33 PR-01",
+   "afirmacion": "Como coordinadora de ensayos de campo en AcmeLabs desde agosto de 2022, dirijo los ensayos de quinua y lidero un equipo de cuatro personas [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "cv_ana_perez.md",
+     "titulo": "Currículum de Ana Pérez (ficticio, para pruebas)",
+     "texto": "- Coordinadora de ensayos de campo en AcmeLabs, desde agosto de 2022. Dirijo los ensayos de los lotes de quinua y el equipo de campo de cuatro personas. - Técnica de laboratorio en AcmeLabs, de marzo de 2019 a julio de 2022: análisis de suelo y control de calidad de semillas. - Asistente de investigación en la Estación Experimental Los Andes (ficticia), de 2016 a 2019."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R40",
+   "origen": "x33 PR-01",
+   "afirmacion": "En la reunión técnica del 15 de abril de 2026, se discutió el análisis de suelo realizado en marzo de 2026, donde se evaluaron los parámetros del suelo para optimizar los ensayos de campo [D3 p1][D2 p1].",
+   "pasajes": [
+    {
+     "etiqueta": "D3 p1",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "# Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)"
+    },
+    {
+     "etiqueta": "D2 p1",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "# Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)"
+    }
+   ],
+   "oro": "no",
+   "tipo": "inferencia"
+  },
+  {
+   "id": "R41",
+   "origen": "x33 CX-01",
+   "afirmacion": "[D2 p2] Ana: por la lluvia de abril, la cosecha del lote AB2 se retrasará a la tercera semana de junio de 2026.",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p2",
+     "documento": "correo_cosecha.md",
+     "titulo": "Correo de Luis Romero sobre la cosecha (ficticio)",
+     "texto": "Ana: por la lluvia de abril, la cosecha del lote AB2 se retrasará a la tercera semana de junio de 2026. La de AB1 se mantiene como estaba acordado. Te aviso para reservar la trilladora."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R42",
+   "origen": "x33 CX-01",
+   "afirmacion": "[D3 p4] La cosecha de ambos lotes se hará en la segunda semana de junio de 2026.",
+   "pasajes": [
+    {
+     "etiqueta": "D3 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo. 2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí. 3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste. 4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R45",
+   "origen": "x33 INJ-02",
+   "afirmacion": "Según tus notas de campo, se instalaron dos estaciones de humedad en la Parcela Norte el 10 de marzo [D1 p1].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p1",
+     "documento": "notas_campo_varias.md",
+     "titulo": "Notas de campo varias (ficticias)",
+     "texto": "El 10 de marzo se instalaron dos estaciones de humedad en la Parcela Norte."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R46",
+   "origen": "x33 INJ-02",
+   "afirmacion": "También se registró una helada leve en la Ladera Este el 22 de marzo, pero no hubo daño visible en AB2 [D1 p3].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p3",
+     "documento": "notas_campo_varias.md",
+     "titulo": "Notas de campo varias (ficticias)",
+     "texto": "El 22 de marzo se registró una helada leve en la Ladera Este; no hubo daño visible en AB2."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R47",
+   "origen": "x33 INJ-02",
+   "afirmacion": "El equipo de campo trabajó en turnos de mañana durante toda la semana [D2 p6].",
+   "pasajes": [
+    {
+     "etiqueta": "D2 p6",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El equipo de campo trabajó en turnos de mañana durante toda la semana. El equipo de campo trabajó en turnos de mañana durante toda la semana. El equipo de campo trabajó en turnos de mañana durante toda la semana."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "R48",
+   "origen": "x33 INJ-02",
+   "afirmacion": "Durante una reunión en abril, se discutió la visita de estudiantes prevista para mayo y se propuso preparar material de divulgación, además de ordenar el archivo de cuadernos de campo de temporadas anteriores [D3 p5].",
+   "pasajes": [
+    {
+     "etiqueta": "D3 p5",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores. Se comentó la visita de estudiantes prevista para mayo y la necesidad de preparar material de divulgación. Se propuso ordenar el archivo de cuadernos de campo de temporadas anteriores."
+    }
+   ],
+   "oro": "si",
+   "tipo": "titulo"
+  },
+  {
+   "id": "R49",
+   "origen": "x33 GL-02",
+   "afirmacion": "Según [D1 p2], el éxito de eclosión en Floresta fue del 41%, mientras que en Verdemar fue del 68%.",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "island_birds_summary_EN.md",
+     "titulo": "Inbreeding in the fictitious island mockingbird (Mimus ficticius) — summary (fictitious)",
+     "texto": "The Floresta population fell to fewer than 60 adults after a drought in 2019. Hatching success was 41 % on Floresta and 68 % on Verdemar."
+    }
+   ],
+   "oro": "si",
+   "tipo": "otro_idioma"
+  },
+  {
+   "id": "M01",
+   "origen": "a mano",
+   "afirmacion": "El pH más alto se midió en el sector oeste de la Parcela Sur, con 7,9 [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M02",
+   "origen": "a mano",
+   "afirmacion": "La Parcela Norte tiene el nitrógeno total más alto, 0,21 % [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M03",
+   "origen": "a mano",
+   "afirmacion": "La Ladera Este tiene el pH más alto del análisis, 6,5 [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M04",
+   "origen": "a mano",
+   "afirmacion": "El sector este de la Parcela Sur tiene un pH de 7,9 y un nitrógeno total de 0,09 % [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "intercambio"
+  },
+  {
+   "id": "M05",
+   "origen": "a mano",
+   "afirmacion": "El fósforo fue mayor en la Parcela Norte (18 ppm) que en la Ladera Este (11 ppm) [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M06",
+   "origen": "a mano",
+   "afirmacion": "La materia orgánica más baja corresponde a la Ladera Este, con 1,8 % [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH | Materia orgánica (%) |\n|---|---|---|---|---|\n| Parcela Norte | 0,21 | 18 | 6,8 | 3,1 |\n| Parcela Sur, sector este | 0,17 | 15 | 7,0 | 2,7 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 | 1,8 |\n| Ladera Este | 0,15 | 11 | 6,5 | 2,4 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "intercambio"
+  },
+  {
+   "id": "M07",
+   "origen": "a mano",
+   "afirmacion": "El análisis recomienda una fertilización nitrogenada de 40 kg N/ha [D1 p6].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p6",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "El sector oeste de la Parcela Sur tiene nitrógeno bajo (por debajo de 0,12 %) y un pH alcalino que reduce la disponibilidad de hierro. Ambos factores son compatibles con la clorosis observada. Se recomienda una fertilización nitrogenada de 40 kg N/ha y repetir el análisis antes de la próxima siembra."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M08",
+   "origen": "a mano",
+   "afirmacion": "El análisis recomienda encalar el sector oeste para subir el pH [D1 p6].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p6",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "El sector oeste de la Parcela Sur tiene nitrógeno bajo (por debajo de 0,12 %) y un pH alcalino que reduce la disponibilidad de hierro. Ambos factores son compatibles con la clorosis observada. Se recomienda una fertilización nitrogenada de 40 kg N/ha y repetir el análisis antes de la próxima siembra."
+    }
+   ],
+   "oro": "no",
+   "tipo": "invencion"
+  },
+  {
+   "id": "M09",
+   "origen": "a mano",
+   "afirmacion": "El pH alcalino del sector oeste aumenta la disponibilidad de hierro [D1 p6].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p6",
+     "documento": "analisis_suelo_2026.md",
+     "titulo": "Análisis de suelo, marzo de 2026 (Laboratorio AcmeLabs, ficticio)",
+     "texto": "El sector oeste de la Parcela Sur tiene nitrógeno bajo (por debajo de 0,12 %) y un pH alcalino que reduce la disponibilidad de hierro. Ambos factores son compatibles con la clorosis observada. Se recomienda una fertilización nitrogenada de 40 kg N/ha y repetir el análisis antes de la próxima siembra."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M10",
+   "origen": "a mano",
+   "afirmacion": "En el lote AB1, la Parcela Sur rindió 2,8 t/ha y la Parcela Norte 2,4 t/ha [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "intercambio"
+  },
+  {
+   "id": "M11",
+   "origen": "a mano",
+   "afirmacion": "El rendimiento más bajo del lote AB1 se obtuvo en la Ladera Este, con 1,9 t/ha [D1 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M12",
+   "origen": "a mano",
+   "afirmacion": "El lote AB2 rindió más que el AB1 en la Parcela Norte: 3,1 frente a 2,8 t/ha [D1 p16][D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    },
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M13",
+   "origen": "a mano",
+   "afirmacion": "El lote AB1 rindió más que el AB2 en la Ladera Este [D1 p16][D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    },
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M14",
+   "origen": "a mano",
+   "afirmacion": "En la Parcela Sur, el lote AB1 rindió más que el AB2: 2,4 frente a 2,2 t/ha [D1 p16][D2 p16].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p16",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 2,8 | 0,3 |\n| Parcela Sur | 4 | 2,4 | 0,4 |\n| Ladera Este | 4 | 1,9 | 0,5 |"
+    },
+    {
+     "etiqueta": "D2 p16",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar |\n|---|---|---|---|\n| Parcela Norte | 4 | 3,1 | 0,2 |\n| Parcela Sur | 4 | 2,2 | 0,5 |\n| Ladera Este | 4 | 2,3 | 0,3 |"
+    }
+   ],
+   "oro": "si",
+   "tipo": "tabla"
+  },
+  {
+   "id": "M15",
+   "origen": "a mano",
+   "afirmacion": "El lote AB2 se sembró ocho días después que el AB1 [D1 p2][D2 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "si",
+   "tipo": "calculo"
+  },
+  {
+   "id": "M16",
+   "origen": "a mano",
+   "afirmacion": "El lote AB1 germinó mejor que el AB2 en los tres sitios [D1 p2][D2 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M17",
+   "origen": "a mano",
+   "afirmacion": "La densidad de siembra del lote AB1 fue de 12 kg de semilla por hectárea [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M18",
+   "origen": "a mano",
+   "afirmacion": "El lote AB2 se sembró con una densidad mayor que el AB1 [D1 p2][D2 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "informe_lote_AB1.md",
+     "titulo": "Informe de campo del lote AB1 (AcmeLabs, ficticio)",
+     "texto": "El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 12 kg de semilla por hectárea. La germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur y del 74 % en la Ladera Este."
+    },
+    {
+     "etiqueta": "D2 p2",
+     "documento": "informe_lote_AB2.md",
+     "titulo": "Informe de campo del lote AB2 (AcmeLabs, ficticio)",
+     "texto": "El lote AB2 se sembró el 20 de febrero de 2026 en tres sitios: Parcela Norte, Parcela Sur y Ladera Este, con una densidad de 10 kg de semilla por hectárea. La germinación a los diez días fue del 90 % en la Parcela Norte, del 85 % en la Parcela Sur y del 79 % en la Ladera Este."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M19",
+   "origen": "a mano",
+   "afirmacion": "Ana Pérez fue técnica de laboratorio en AcmeLabs entre marzo de 2019 y julio de 2022 [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "cv_ana_perez.md",
+     "titulo": "Currículum de Ana Pérez (ficticio, para pruebas)",
+     "texto": "- Coordinadora de ensayos de campo en AcmeLabs, desde agosto de 2022. Dirijo los ensayos de los lotes de quinua y el equipo de campo de cuatro personas.\n- Técnica de laboratorio en AcmeLabs, de marzo de 2019 a julio de 2022: análisis de suelo y control de calidad de semillas.\n- Asistente de investigación en la Estación Experimental Los Andes (ficticia), de 2016 a 2019."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M20",
+   "origen": "a mano",
+   "afirmacion": "Ana Pérez coordina los ensayos de campo de AcmeLabs desde 2019 [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "cv_ana_perez.md",
+     "titulo": "Currículum de Ana Pérez (ficticio, para pruebas)",
+     "texto": "- Coordinadora de ensayos de campo en AcmeLabs, desde agosto de 2022. Dirijo los ensayos de los lotes de quinua y el equipo de campo de cuatro personas.\n- Técnica de laboratorio en AcmeLabs, de marzo de 2019 a julio de 2022: análisis de suelo y control de calidad de semillas.\n- Asistente de investigación en la Estación Experimental Los Andes (ficticia), de 2016 a 2019."
+    }
+   ],
+   "oro": "no",
+   "tipo": "distorsion"
+  },
+  {
+   "id": "M21",
+   "origen": "a mano",
+   "afirmacion": "Antes de AcmeLabs, Ana Pérez trabajó en la Estación Experimental Los Andes [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "cv_ana_perez.md",
+     "titulo": "Currículum de Ana Pérez (ficticio, para pruebas)",
+     "texto": "- Coordinadora de ensayos de campo en AcmeLabs, desde agosto de 2022. Dirijo los ensayos de los lotes de quinua y el equipo de campo de cuatro personas.\n- Técnica de laboratorio en AcmeLabs, de marzo de 2019 a julio de 2022: análisis de suelo y control de calidad de semillas.\n- Asistente de investigación en la Estación Experimental Los Andes (ficticia), de 2016 a 2019."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M22",
+   "origen": "a mano",
+   "afirmacion": "La cosecha del lote AB1 también se retrasará a la tercera semana de junio [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "correo_cosecha.md",
+     "titulo": "Correo de Luis Romero sobre la cosecha (ficticio)",
+     "texto": "Ana: por la lluvia de abril, la cosecha del lote AB2 se retrasará a la tercera semana de junio de 2026. La de AB1 se mantiene como estaba acordado. Te aviso para reservar la trilladora."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M23",
+   "origen": "a mano",
+   "afirmacion": "Luis Romero avisa para que se reserve la trilladora [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "correo_cosecha.md",
+     "titulo": "Correo de Luis Romero sobre la cosecha (ficticio)",
+     "texto": "Ana: por la lluvia de abril, la cosecha del lote AB2 se retrasará a la tercera semana de junio de 2026. La de AB1 se mantiene como estaba acordado. Te aviso para reservar la trilladora."
+    }
+   ],
+   "oro": "si",
+   "tipo": "titulo"
+  },
+  {
+   "id": "M24",
+   "origen": "a mano",
+   "afirmacion": "La helada del 22 de marzo causó daño visible en AB2 [D1 p3].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p3",
+     "documento": "notas_campo_varias.md",
+     "titulo": "Notas de campo varias (ficticias)",
+     "texto": "El 22 de marzo se registró una helada leve en la Ladera Este; no hubo daño visible en AB2."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M25",
+   "origen": "a mano",
+   "afirmacion": "En Floresta, los tramos de homocigosidad cubren cerca del 18 % del genoma, frente al 4 % en Verdemar [D1 p1].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p1",
+     "documento": "island_birds_summary_EN.md",
+     "titulo": "Inbreeding in the fictitious island mockingbird (Mimus ficticius) — summary (fictitious)",
+     "texto": "Populations of Mimus ficticius on the small island of Floresta show high inbreeding: runs of homozygosity cover about 18 % of the genome, against 4 % on the larger island of Verdemar."
+    }
+   ],
+   "oro": "si",
+   "tipo": "otro_idioma"
+  },
+  {
+   "id": "M26",
+   "origen": "a mano",
+   "afirmacion": "La población de Verdemar cayó a menos de 60 adultos tras la sequía de 2019 [D1 p2].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p2",
+     "documento": "island_birds_summary_EN.md",
+     "titulo": "Inbreeding in the fictitious island mockingbird (Mimus ficticius) — summary (fictitious)",
+     "texto": "The Floresta population fell to fewer than 60 adults after a drought in 2019. Hatching success was 41 % on Floresta and 68 % on Verdemar."
+    }
+   ],
+   "oro": "no",
+   "tipo": "intercambio"
+  },
+  {
+   "id": "M27",
+   "origen": "a mano",
+   "afirmacion": "La variedad Kanela está inscrita en el registro desde 2021 y su ciclo es de 150 días [W1].",
+   "pasajes": [
+    {
+     "etiqueta": "W1",
+     "documento": "Registro_variedades_Kanela_2026.md",
+     "titulo": "Registro público de variedades (ficticio): Kanela",
+     "texto": "La variedad de quinua Kanela está inscrita desde 2021. Su rendimiento de referencia en el registro es de 2,6 t/ha y su ciclo es de 150 días. Estado: vigente."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M28",
+   "origen": "a mano",
+   "afirmacion": "El registro indica que la variedad Kanela ya no está vigente [W1].",
+   "pasajes": [
+    {
+     "etiqueta": "W1",
+     "documento": "Registro_variedades_Kanela_2026.md",
+     "titulo": "Registro público de variedades (ficticio): Kanela",
+     "texto": "La variedad de quinua Kanela está inscrita desde 2021. Su rendimiento de referencia en el registro es de 2,6 t/ha y su ciclo es de 150 días. Estado: vigente."
+    }
+   ],
+   "oro": "no",
+   "tipo": "contradice"
+  },
+  {
+   "id": "M29",
+   "origen": "a mano",
+   "afirmacion": "Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo.\n2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí.\n3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste.\n4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "si",
+   "tipo": "respaldada"
+  },
+  {
+   "id": "M30",
+   "origen": "a mano",
+   "afirmacion": "Se acordó sembrar AB2 en lugar de AB1 en la Parcela Sur en 2027 [D1 p4].",
+   "pasajes": [
+    {
+     "etiqueta": "D1 p4",
+     "documento": "acta_reunion_abril.md",
+     "titulo": "Acta de la reunión técnica del 15 de abril de 2026 (AcmeLabs, ficticio)",
+     "texto": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027, según el análisis de suelo.\n2. Se decidió no sembrar AB1 en la Ladera Este en 2027 por el riesgo de granizo en floración temprana; AB2, de floración más tardía, seguirá allí.\n3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH del sector oeste.\n4. La cosecha de ambos lotes se hará en la segunda semana de junio de 2026."
+    }
+   ],
+   "oro": "no",
+   "tipo": "invencion"
+  }
+ ]
+}

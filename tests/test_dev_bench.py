@@ -80,3 +80,35 @@ def test_privacy_checks_read_what_left():
     meta = {"status": "failed", "receipt": {"bloqueados": [{"destino": "ollama.com"}]}}
     assert rd.score(blocked, "", meta, 0, {})["aprobado"]
     assert not rd.score(blocked, "Respuesta.", {"status": "done", "receipt": {}}, 0, {})["aprobado"]
+
+
+def test_the_set_of_claims_is_well_formed_and_the_code_flags_no_supported_sentence():
+    spec = importlib.util.spec_from_file_location("run_verifier", ROOT / "bench" / "run_verifier.py")
+    rv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rv)
+    items = rv.load(ROOT / "bench" / "dev" / "verificador.json")
+    ids = [i["id"] for i in items]
+    assert len(ids) == len(set(ids)) >= 70
+    assert sum(1 for i in items if i["oro"] == "no") >= 25
+    try:
+        from swarmbly_app import verify
+    except ImportError:                      # the app is not next to bench in this checkout
+        return
+    for it in items:
+        cited = verify.split(it["afirmacion"])
+        assert cited, it["id"]
+        assert set(cited[0]["labels"]) <= {p["etiqueta"] for p in it["pasajes"]}, it["id"]
+    asked = []
+
+    def always_yes(prompt, max_tokens):
+        asked.append(prompt)
+        return "SÍ"
+
+    rows = rv.measure(items, always_yes, verify)
+    code = rv.tally(rows, "marcada_codigo")
+    assert code["falsas"] == 0 and code["detectadas"] >= 5          # figures in another paragraph, another subject
+    assert len(asked) == len(items) and all(p.startswith("Párrafos:") for p in asked)
+    summary = rv.summarise("m", [rows])
+    assert summary["ambos"]["detectadas"] == code["detectadas"] and summary["solo_modelo"]["detectadas"] == 0
+    text = rv.report("r", len(items), [summary], {"m": [rows]}, items)
+    assert "| Código y modelo |" in text and "Fallos de la primera repetición" in text
