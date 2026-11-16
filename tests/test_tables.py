@@ -163,3 +163,19 @@ def test_header_is_tidied_and_values_are_as_the_document_writes_them():
                                               ("D1 p17", "El costo de producción fue de 1.150 dólares.")]}
     assert [lab for lab, _ in T.relevant_passages("Tabla con el costo de producción de AB1 y AB2.",
                                                   ["Lote", "Costo"], doc, ["AB1", "AB2"])] == ["D1 p17"]
+
+
+def test_a_table_that_arrives_on_one_line_gets_its_lines_back():
+    from swarmbly_app.compose import _units, unflatten_tables
+    flat = ("Resultados — | Sitio | Nitrógeno total (%) | pH | |---|---|---| | Parcela Norte | 0,21 | 6,8 | "
+            "| Parcela Sur, sector oeste | 0,09 | 7,9 |")
+    assert unflatten_tables(flat).split("\n") == [
+        "Resultados", "| Sitio | Nitrógeno total (%) | pH |", "|---|---|---|",
+        "| Parcela Norte | 0,21 | 6,8 |", "| Parcela Sur, sector oeste | 0,09 | 7,9 |"]
+    assert unflatten_tables("Sin tabla | ni regla.") == "Sin tabla | ni regla."
+    assert unflatten_tables(unflatten_tables(flat)) == unflatten_tables(flat)
+    assert _units(flat)[0] == "Sitio: Parcela Norte · Nitrógeno total (%): 0,21 · pH: 6,8"
+    doc = T.documents("Tabla con el nitrógeno total y el pH de cada sitio.",
+                      [{"label": "D1 p4", "rel": "suelo.md", "doc_id": "s", "text": flat}])[0]
+    assert T.rows_from_tables(["Sitio", "Nitrógeno total", "pH"], doc, []) == [
+        ["Parcela Norte", "0,21", "6,8"], ["Parcela Sur, sector oeste", "0,09", "7,9"]]

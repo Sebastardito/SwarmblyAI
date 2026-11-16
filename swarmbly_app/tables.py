@@ -30,7 +30,8 @@ from __future__ import annotations
 import re
 from typing import Any, Callable
 
-from .compose import _NUMBER, _canon, _figures, _fold, _request_stems, _stems, _GROUP_STEMS
+from .compose import (_GROUP_STEMS, _NUMBER, _canon, _figures, _fold, _request_stems, _stems,
+                      unflatten_tables)
 
 _DERIVED = re.compile(r"\b(diferenc\w*|difference|variaci[oó]n|cambio|change|delta)\b", re.I)
 _SOURCE_COL = re.compile(r"^\s*(fuentes?|sources?|citas?|referenc\w*)\s*$", re.I)
@@ -196,7 +197,7 @@ def documents(request: str, sources: list[dict[str, Any]], limit: int = 4) -> li
     for s in sources:
         key = str(s.get("doc_id") or s.get("rel") or s.get("source") or "")
         d = docs.setdefault(key, {"rel": str(s.get("rel") or s.get("source") or ""), "passages": [], "hit": False})
-        text = str(s.get("text", ""))
+        text = unflatten_tables(str(s.get("text", "")))
         d["passages"].append((" ".join(str(s.get("label", "")).split()), text))
         if _stems(text) & topic:
             d["hit"] = True

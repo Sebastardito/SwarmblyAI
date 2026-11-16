@@ -501,6 +501,37 @@ def instruction_like(text: str) -> bool:
     return bool(_INSTRUCTION_LIKE.search(text or ""))
 
 
+_RULE_RUN = re.compile(r"\|(?:\s*:?-{3,}:?\s*\|)+")
+
+
+def unflatten_tables(text: str) -> str:
+    """A Markdown table that arrives on one line gets its lines back. LCE
+    joins the lines of a paragraph, so a table of the user's document reached
+    the model, and the code, as "Resultados — | Sitio | pH | |---|---| |
+    Parcela Norte | 6,8 | | …": the code found no table to read (recipe 2,
+    open battery) and the model had to count cells."""
+    out = []
+    for line in (text or "").split("\n"):
+        m = _RULE_RUN.search(line)
+        start = line.find("|")
+        if not m or start < 0 or start >= m.start():
+            out.append(line)
+            continue
+        n = len([c for c in m.group(0).strip().strip("|").split("|")])
+        head = [c.strip() for c in line[start:m.start()].strip().strip("|").split("|")]
+        cells = [c.strip() for c in line[m.end():].split("|") if c.strip()]
+        if len(head) != n or not cells or len(cells) % n:
+            out.append(line)
+            continue
+        lead = line[:start].rstrip(" —–-:")
+        if lead:
+            out.append(lead)
+        out.append("| " + " | ".join(head) + " |")
+        out.append("|" + "---|" * n)
+        out += ["| " + " | ".join(cells[i:i + n]) + " |" for i in range(0, len(cells), n)]
+    return "\n".join(out)
+
+
 def _units(text: str) -> list[str]:
     """Sentences of a passage, and the rows of its tables with their header
     ("Sitio: Parcela Norte · Rendimiento medio (t/ha): 2,8 …")."""
@@ -509,7 +540,7 @@ def _units(text: str) -> list[str]:
     # LCE shows the paragraph under a heading with it ("Siembra y germinación —
     # El lote AB2 se sembró…"): the heading is context, not part of the first
     # sentence (it made the sowing sentence a germination fact, open battery u32)
-    text = re.sub(r"^[^.!?\n|]{1,90}?\s—\s", "", text or "", count=1)
+    text = re.sub(r"^[^.!?\n|]{1,90}?\s—\s", "", unflatten_tables(text or ""), count=1)
     for line in (text or "").split("\n"):
         cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else None
         if cells is None:
