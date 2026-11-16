@@ -768,16 +768,21 @@ def table_prompt(request: str, fact_list: list[dict[str, Any]], lang: str = "es"
 # model does without fault. In genome terms, closing the gaps between contigs
 # rather than re-assembling from fewer reads.
 
-def gap_candidates(answer: str, fact_list: list[dict[str, Any]], limit: int = 3) -> list[dict[str, Any]]:
+def gap_candidates(answer: str, fact_list: list[dict[str, Any]], limit: int = 3,
+                   request: str = "") -> list[dict[str, Any]]:
     """The left-out facts worth a closing paragraph: those of the same kind as
     a fact the answer already gives (a specific topic word in common: the
-    other lot's chlorosis), never a loose fact of a cited document. On the
-    sealed banks (3.2 measurement) the paragraph brought content foreign to
-    the question, once in another language and once a document's header."""
+    other lot's chlorosis), or whose specific word the request itself says
+    ("relacione la clorosis observada…": both chlorosis records were left out
+    and neither was given, so none was "of the same kind"; open battery,
+    r3full), never a loose fact of a cited document. On the sealed banks (3.2
+    measurement) the paragraph brought content foreign to the question, once
+    in another language and once a document's header."""
     missing = uncovered(answer, fact_list, limit=len(fact_list))
     missing_texts = {m["text"] for m in missing}
     given = [f for f in fact_list if f["text"] not in missing_texts]
     kinds = set().union(*(set(f.get("keys") or []) for f in given)) if given else set()
+    kinds |= _request_stems(request) - _GROUP_STEMS if request else set()
     out = [m for m, f in ((m, next(x for x in fact_list if x["text"] == m["text"])) for m in missing)
            if kinds & set(f.get("keys") or [])]
     return out[:limit]

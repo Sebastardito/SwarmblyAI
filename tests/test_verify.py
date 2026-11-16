@@ -197,3 +197,12 @@ def test_figures_the_program_computed_and_sentences_on_disagreeing_sources():
 
 def test_saying_that_two_sources_disagree_is_about_the_sources():
     assert V.split("No coinciden en esta recomendación [D1 p6] [W1].")[0].get("absence") is True
+
+
+def test_a_label_of_an_earlier_turn_and_more_sentences_about_the_sources():
+    r = V.check("Se acordó aplicar 40 kg N/ha en el sector oeste [D7 p4].", ["D7 p4"], SOURCES, earlier={"D7 p4"})
+    assert r["ok"] is None and r["why"] == "earlier_turn"
+    assert V.check("Se acordó aplicar 40 kg N/ha en el sector oeste [D7 p4].", ["D7 p4"], SOURCES)["ok"] is False
+    for s in ("Solo se indica que en la Parcela Sur se observó clorosis [D1 p11].",
+              "No se encuentra información relevante sobre la variedad Zafira en la fuente consultada [W1]."):
+        assert V.split(s)[0].get("absence") is True, s
