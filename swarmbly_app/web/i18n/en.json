@@ -223,7 +223,9 @@
   "verifyPartly": "the cited paragraph says only a part",
   "verifyNo": "the cited paragraph does not say it",
   "verifyChip": "Citations checked: {ok} of {n}",
-  "verifyChipTitle": "Each labelled sentence was compared with the paragraph it cites ({model}). {flagged} are not supported by their citation; {completed} citations were completed with the paragraph that has the figure; {unchecked} were left unchecked."
+  "verifyChipTitle": "Each labelled sentence was compared with the paragraph it cites ({model}). {flagged} are not supported by their citation; {completed} citations were completed with the paragraph that has the figure; {unchecked} were left unchecked.",
+  "compareChip": "Comparison computed by the program",
+  "compareChipTitle": "The difference between your documents' figure and the public source's was computed by the program:"
  },
  "explore": {
   "title": "How this answer was made",

@@ -126,7 +126,7 @@ Swarmbly AI 3.3.
   do not mention were left out; 2 citations completed. Several labels in one
   bracket ("[D1 p3, D1 p4, D1 p5]") are now all read.
 - **Recipe 3, public sources that disagree with the user's documents**
-  (`compose.conflicts_web`, off until measured). With an approved search, a
+  (`compose.conflicts_web`, on by default since measured). With an approved search, a
   result that gives another amount or date than the documents for what is
   asked is shown with them, as two documents that disagree are since 3.2
   ("Tus fuentes no coinciden en esto: [D2 p6] … 40 kg N/ha · [W1] … 60 kg
@@ -137,7 +137,31 @@ Swarmbly AI 3.3.
   yield is not the register's reference yield). Not when the user asks to
   compare them: those are two measures, not a disagreement. Every [W]
   sentence goes through the claim verifier against the result it cites.
-  Measured on four new cases of the open battery (0.4.0: CO-04 to CO-07).
+  Measured on four new cases of the open battery (0.4.0: CO-04 to CO-07;
+  8 cases × 3, qwen2.5:7b): passed 16/24 → 18/24, key data 35/45 → 36/45;
+  the case with a disagreement (CO-05) passed 2/3 → 3/3, every answer giving
+  both figures with their labels and saying they disagree; no other case
+  got the notice.
+- **Recipe 3, a comparison computed by code** (`compose.compare_by_code`, off
+  until measured). Asked to compare a lot's 2,53 t/ha with its variety's
+  reference of 2,9 t/ha, the 7B wrote "superior" or "superando" in most
+  answers of the base run (and, replaying the same prompt, in 3 of 4); told
+  by the program "2,53 t/ha [D1 p17] es 0,37 t/ha MENOR que 2,9 t/ha [W1]
+  (un 13 % menos)", in 0 of 4. When the user asks to compare and each side,
+  the documents and the public results, gives one figure of the same unit
+  for what is asked, the code gives the two figures, the difference and its
+  direction (`meta.comparisons`, a chip under the answer).
+- **Recipe 3, a result about something else says so**
+  (`compose.web_missing_names`, off until measured). A search for a variety
+  the register does not have returned another variety's entry, and the 7B
+  gave that figure as the one asked in 6 of 6 answers. Each result now says
+  which of the names the user asked about, and approved in the query, it
+  does not mention ("(Este resultado no menciona «Zafira».)"); replaying a
+  prompt like the app's, the answer said Zafira was not in the results in
+  3 of 3 and no longer gave the other variety's figure.
+- Still open in recipe 3: a figure written in English in the user's notes
+  ("fewer than 60 adults after a drought in 2019") is left out, and the
+  public figure is given as the notes' (CO-06, as GL-01 since 3.2).
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

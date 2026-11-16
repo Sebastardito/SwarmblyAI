@@ -154,7 +154,9 @@ DEFAULTS: dict[str, Any] = {
         "table_by_code": True,        # 3.3 recipe 2: tables built by code from validated values
         "verify": True,               # 3.3 recipe 3: labelled sentences checked against what they cite
         "verify_limit": 24,           # at most this many sentences go to the verifier model
-        "conflicts_web": False,       # 3.3 recipe 3: results of an approved search that disagree with the documents
+        "conflicts_web": True,        # 3.3 recipe 3: results of an approved search that disagree with the documents
+        "compare_by_code": False,     # 3.3 recipe 3: a comparison asked between a document and a public result, by code
+        "web_missing_names": False,   # 3.3 recipe 3: each result says which asked names it does not mention
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,

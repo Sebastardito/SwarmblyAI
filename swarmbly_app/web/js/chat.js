@@ -615,6 +615,11 @@ const Chat = (() => {
       t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
       t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported
         .map((c) => `${c.row} · ${c.column}: ${c.value}`).join("\n")));
+    // 3.3, recipe 3: a comparison between the documents and a public result, by code
+    if (meta.comparisons?.length) chips.push(chip(t("chat.compareChip"), "ok",
+      t("chat.compareChipTitle") + "\n" + meta.comparisons.map((c) =>
+        `${c.a.value} ${c.a.unit} [${c.a.label}] · ${c.b.value} ${c.b.unit} [${c.b.label}] · ${c.difference} ${c.a.unit}`)
+        .join("\n")));
     // 3.3, recipe 3: labelled sentences checked against what they cite
     if (meta.verification?.claims) {
       const v = meta.verification;

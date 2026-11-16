@@ -931,6 +931,104 @@ def conflicts(question: str, sources: list[dict[str, Any]], limit: int = 2) -> l
     return out
 
 
+_COMPARE_Q = re.compile(r"\b(compar\w*|diferencia\w*|frente\s+a|versus|vs\.?|contrast\w*|difference)\b", re.I)
+
+
+def _as_float(text: str) -> float | None:
+    try:
+        return float(_canon(text))
+    except ValueError:
+        return None
+
+
+def _shown(value: float, like: str, lang: str) -> str:
+    decimals = len(re.split(r"[.,]", like)[1]) if re.search(r"[.,]\d+$", like) and not re.fullmatch(
+        r"\d{1,3}(?:[.,]\d{3})+", like) else 0
+    out = f"{value:.{max(decimals, 2 if value < 1 and value else decimals)}f}"
+    if "." in out:
+        out = out.rstrip("0").rstrip(".")
+    return out.replace(".", ",") if lang == "es" else out
+
+
+def comparisons(question: str, sources: list[dict[str, Any]], lang: str = "es",
+                limit: int = 2) -> list[dict[str, Any]]:
+    """For a request that asks to compare a figure of the user's documents
+    with one of a public result (recipe 3): the two figures, the difference
+    and its direction, computed by code. Only when each side gives one value
+    of that unit for what is asked. Asked to compare 2,53 t/ha with a
+    reference of 2,9 t/ha, a 7B model wrote "superando ligeramente" in 3 of 4
+    answers; told the difference and that it is lower, in 0 of 4."""
+    if not _COMPARE_Q.search(question or ""):
+        return []
+    q_codes = _codes(question)
+    q_names = [n.lower() for n in _PROPER.findall(question or "") if n.split()[0] not in _NOT_ENTITY]
+    topic = _request_stems(question) - _GROUP_STEMS - _QUESTION_WORDS - _stems(" ".join(q_names))
+    sides: dict[str, dict[bool, dict[float, tuple[str, str, str]]]] = {}
+    for s in sources:
+        public = bool(s.get("public"))
+        label = " ".join(str(s.get("label", "")).split())
+        rel = str(s.get("rel") or s.get("source") or "")
+        name_codes = _codes(re.sub(r"[_.]+", " ", rel))
+        whole = str(s.get("text", "")).lower()
+        for unit in _units(str(s.get("text", ""))):
+            if instruction_like(unit) or not (_stems(unit) & topic):
+                continue
+            codes = _codes(unit) | name_codes
+            if not public:
+                if q_codes and not (q_codes & codes):
+                    continue                     # another lot's document, or none named
+                if q_names and not any(n in whole for n in q_names) and not (q_codes & codes):
+                    continue
+            for m in _AMOUNT.finditer(unit):
+                kind = _fold(m.group(2)).replace(" ", "")
+                value = _as_float(m.group(1))
+                if value is None:
+                    continue
+                sides.setdefault(kind, {}).setdefault(public, {}).setdefault(value, (label, m.group(1), m.group(2)))
+    out: list[dict[str, Any]] = []
+    for kind, by in sides.items():
+        mine, theirs = by.get(False) or {}, by.get(True) or {}
+        if len(mine) != 1 or len(theirs) != 1:
+            continue                             # nothing to compare, or not one figure on each side
+        (a, (la, ta, unit)), = mine.items()
+        (b, (lb, tb, _)), = theirs.items()
+        diff = abs(a - b)
+        out.append({"a": {"label": la, "value": ta, "unit": unit}, "b": {"label": lb, "value": tb, "unit": unit},
+                    "difference": _shown(diff, ta if len(ta) >= len(tb) else tb, lang),
+                    "percent": round(100 * diff / b) if b else None,
+                    "direction": "equal" if diff < 1e-9 else ("lower" if a < b else "higher")})
+        if len(out) >= limit:
+            break
+    return out
+
+
+def comparison_block(found: list[dict[str, Any]], lang: str = "es") -> str:
+    es = lang == "es"
+    lines = ["Cálculo hecho por el programa para la comparación que se pide (las cifras son de las fuentes):"
+             if es else "Calculation made by the program for the comparison asked (the figures are the sources'):"]
+    for c in found:
+        a, b = c["a"], c["b"]
+        if c["direction"] == "equal":
+            lines.append(f"- {a['value']} {a['unit']} [{a['label']}] es igual a {b['value']} {b['unit']} [{b['label']}]."
+                         if es else f"- {a['value']} {a['unit']} [{a['label']}] equals {b['value']} {b['unit']} "
+                                    f"[{b['label']}].")
+            continue
+        low = c["direction"] == "lower"
+        pct = f" (un {c['percent']} % {'menos' if low else 'más'})" if es and c["percent"] is not None else (
+            f" ({c['percent']} % {'less' if low else 'more'})" if c["percent"] is not None else "")
+        if es:
+            lines.append(f"- {a['value']} {a['unit']} [{a['label']}] es {c['difference']} {a['unit']} "
+                         f"{'MENOR' if low else 'MAYOR'} que {b['value']} {b['unit']} [{b['label']}]{pct}.")
+        else:
+            lines.append(f"- {a['value']} {a['unit']} [{a['label']}] is {c['difference']} {a['unit']} "
+                         f"{'LOWER' if low else 'HIGHER'} than {b['value']} {b['unit']} [{b['label']}]{pct}.")
+    words = {"lower": ("menor, no superior", "lower, not higher"), "higher": ("mayor, no inferior", "higher, not lower"),
+             "equal": ("igual", "equal")}[found[0]["direction"]]
+    lines.append(f"Usa estas cifras y esta dirección ({words[0]})." if es else
+                 f"Use these figures and this direction ({words[1]}).")
+    return "\n".join(lines)
+
+
 def related(question: str, sources: list[dict[str, Any]]) -> bool:
     """Whether any retrieved passage shares a word of the question (or of its
     search terms): "¿Cuál es la capital de Perú?" got two crop reports whole,

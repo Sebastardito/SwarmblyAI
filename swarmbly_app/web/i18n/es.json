@@ -223,7 +223,9 @@
   "verifyPartly": "el párrafo citado dice solo una parte",
   "verifyNo": "el párrafo citado no lo dice",
   "verifyChip": "Citas comprobadas: {ok} de {n}",
-  "verifyChipTitle": "Cada frase con etiqueta se comparó con el párrafo que cita ({model}). {flagged} no quedan respaldadas por su cita; {completed} citas se completaron con el párrafo donde está la cifra; {unchecked} quedaron sin comprobar."
+  "verifyChipTitle": "Cada frase con etiqueta se comparó con el párrafo que cita ({model}). {flagged} no quedan respaldadas por su cita; {completed} citas se completaron con el párrafo donde está la cifra; {unchecked} quedaron sin comprobar.",
+  "compareChip": "Comparación calculada por el programa",
+  "compareChipTitle": "La diferencia entre la cifra de tus documentos y la de la fuente pública la calculó el programa:"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
