@@ -1,0 +1,135 @@
+"""3.3, recipe 3: labelled sentences checked against the paragraphs they cite."""
+
+from __future__ import annotations
+
+from conftest import FakeBackend
+from swarmbly_app import verify as V
+from swarmbly_app.inference.base import GenerationResult
+
+TABLE = ("| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar | |---|---|---|---| "
+         "| Parcela Norte | 4 | 2,8 | 0,3 | | Parcela Sur | 4 | 2,4 | 0,4 |")     # on one line, as the search gives it
+SOURCES = [
+    {"label": "D1 p16", "rel": "informe_lote_AB1.md", "text": TABLE},
+    {"label": "D1 p17", "rel": "informe_lote_AB1.md",
+     "text": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha. El costo de producción "
+             "fue de 1.150 dólares por hectárea."},
+    {"label": "D2 p17", "rel": "informe_lote_AB2.md", "text": "El costo de producción fue de 1.080 dólares por hectárea."},
+    {"label": "D3 p3", "rel": "acta_reunion_abril.md", "doc_title": "Acta de la reunión técnica del 15 de abril de 2026",
+     "text": "Jorge Salas informó del estado del presupuesto de la temporada y del calendario de compras."},
+    {"label": "D3 p4", "rel": "acta_reunion_abril.md", "doc_title": "Acta de la reunión técnica del 15 de abril de 2026",
+     "text": "1. Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur antes de la siembra de 2027. "
+             "3. Marta Ibáñez presentará en junio una propuesta de enmienda para bajar el pH."},
+    {"label": "W1", "title": "Registro público de variedades: Kanela",
+     "snippet": "Su rendimiento de referencia en el registro es de 2,6 t/ha."},
+]
+
+
+def test_sentences_with_a_label_are_the_claims():
+    answer = ("# Informe\n\nSegún el informe [D1 p16], el rendimiento medio fue de 2,37 t/ha. Fue un buen año.\n\n"
+              "| Sitio | t/ha | Fuente |\n|---|---|---|\n| Parcela Norte | 2,8 | [D1 p16] |\n\n"
+              "El costo fue de 1.150 dólares. [D1 p17] La referencia pública es de 2,6 t/ha [W1].\n\n"
+              "Fuera de tus fuentes: la quinua es un cultivo andino [D1 p2].")
+    claims = V.split(answer)
+    assert [c["labels"] for c in claims] == [["D1 p16"], ["D1 p17"], ["W1"]]
+    assert claims[1]["text"].startswith("El costo fue")       # a label after the full stop belongs to its sentence
+
+
+def test_a_figure_has_to_be_in_the_paragraph_the_sentence_cites():
+    wrong = V.check("Según el informe [D1 p16], el rendimiento medio del lote AB1 fue de 2,37 t/ha.", ["D1 p16"], SOURCES)
+    assert wrong["ok"] is False and wrong["why"] == "figure_not_in_cited"
+    assert wrong["figures"] == ["2.37"] and wrong["elsewhere"] == ["D1 p17"]
+    right = V.check("La Parcela Norte rindió 2,8 t/ha y la Parcela Sur 2,4 t/ha [D1 p16].", ["D1 p16"], SOURCES)
+    assert right["ok"] is None and right["by"] == "code"        # nothing against it; the model has not been asked
+    # a difference of two figures the paragraphs give needs no paragraph of its own
+    diff = V.check("AB1 costó 1.150 dólares y AB2 1.080, una diferencia de 70 dólares [D1 p17][D2 p17].",
+                   ["D1 p17", "D2 p17"], SOURCES)
+    assert diff["ok"] is None
+    # the date of the meeting is in the title of the minutes
+    dated = V.check("En la reunión del 15 de abril de 2026 se acordó aplicar 40 kg N/ha [D3 p4].", ["D3 p4"], SOURCES)
+    assert dated["ok"] is None
+    public = V.check("El registro da un rendimiento de referencia de 3,6 t/ha [W1].", ["W1"], SOURCES)
+    assert public["ok"] is False and public["figures"] == ["3.6"]
+
+
+def test_a_paragraph_about_something_else_and_a_label_that_was_not_given():
+    other = V.check("Esto nos ayudará a optimizar la nutrición de nuestras plantas [D3 p3].", ["D3 p3"], SOURCES)
+    assert other["ok"] is False and other["why"] == "unrelated_paragraph"
+    unknown = V.check("La cosecha se hará en la segunda semana de junio [D9 p2].", ["D9 p2"], SOURCES)
+    assert unknown["ok"] is False and unknown["why"] == "unknown_label"
+
+
+def test_the_model_reads_the_cited_paragraphs_only_and_answers_with_one_word():
+    asked = []
+
+    def judge(prompt, max_tokens):
+        asked.append((prompt, max_tokens))
+        return "PARTE: dicen una parte" if "presentó" in prompt else "Sí."
+
+    sentence = "Marta Ibáñez presentó una propuesta para bajar el pH [D3 p4]."
+    out = V.check(sentence, ["D3 p4"], SOURCES, judge)
+    assert out["ok"] is False and out["why"] == "partly" and out["by"] == "model"
+    prompt, max_tokens = asked[0]
+    assert max_tokens <= 8
+    assert "[D3 p4] (Acta de la reunión técnica del 15 de abril de 2026)" in prompt
+    assert "presupuesto" not in prompt and "1.150" not in prompt          # only what the sentence cites
+    assert f"Frase: {sentence}" in prompt
+    ok = V.check("Se acordó aplicar 40 kg N/ha en el sector oeste de la Parcela Sur [D3 p4].", ["D3 p4"], SOURCES, judge)
+    assert ok["ok"] is True
+    assert V.parse("SÍ") == V.YES and V.parse("**No**, no lo dicen") == V.NO and V.parse("Partly.") == V.PARTLY
+    assert V.parse("Los párrafos…") is None
+    # a table reaches the model with its lines
+    assert "| Parcela Norte | 4 | 2,8 | 0,3 |\n" in V.prompt("La Parcela Norte rindió 2,8 [D1 p16].", ["D1 p16"], SOURCES)
+    assert "Do the paragraphs say" in V.prompt("The north plot gave 2.8 [D1 p16].", ["D1 p16"], SOURCES, "en")
+
+
+def test_the_report_counts_and_the_code_goes_first():
+    asked = []
+
+    def judge(prompt, max_tokens):
+        asked.append(prompt)
+        return "NO" if "optimizar" in prompt else "SÍ"
+
+    answer = ("El rendimiento medio del lote AB1 fue de 2,37 t/ha [D1 p16]. La Parcela Norte rindió 2,8 t/ha [D1 p16]. "
+              "Se acordó aplicar 40 kg N/ha, lo que permitirá optimizar el cultivo [D3 p4].")
+    report = V.verify(answer, SOURCES, judge)
+    assert report["claims"] == 3 and report["supported"] == 1 and report["asked"] == 2    # the first never reached the model
+    assert [f["why"] for f in report["flagged"]] == ["figure_not_in_cited", "not_in_cited"]
+    # past the limit the sentences are left unchecked, not passed
+    limited = V.verify(answer, SOURCES, judge, limit=1)
+    assert limited["asked"] == 1 and limited["unchecked"] == 1
+
+
+class _Writer(FakeBackend):
+    """Writes the answer; as a verifier, says NO to the sentence with the opinion."""
+
+    def stream_chat(self, messages, *, model, max_tokens=1024, **kw):
+        prompt = messages[-1]["content"]
+        self.calls.append({"messages": messages, "model": model, "max_tokens": max_tokens})
+        if prompt.startswith("Párrafos:"):
+            text = "NO" if "nos ayudará" in prompt else "SÍ"
+        else:
+            text = ("El costo de producción del lote AB1 fue de 1.150 dólares por hectárea [D1 p1]. "
+                    "Ese costo de producción nos ayudará a planificar mejor la próxima temporada [D1 p1].")
+        return GenerationResult(text=text, model=model, completion_tokens=len(text.split()), total_ms=5)
+
+
+def test_verification_in_the_chat(app_state, tmp_path):
+    fake = _Writer()
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("T", parent=tmp_path / "p")
+    (p.sources / "informe_lote_AB1.md").write_text(
+        "El costo de producción del lote AB1 fue de 1.150 dólares por hectárea.\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "compose.verify": True})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "¿Cuánto costó producir el lote AB1?", mode="local", run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    found = msg["meta"]["verification"]
+    assert found["claims"] == 2 and found["supported"] == 1 and found["asked"] == 2
+    assert [f["why"] for f in found["flagged"]] == ["not_in_cited"]
+    assert found["flagged"][0]["text"].startswith("Ese costo de producción nos ayudará")
+    assert "nos ayudará" in msg["content"]                       # nothing is rewritten
+    # off by default
+    app_state.config.update({"compose.verify": False})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "¿Cuánto costó producir el lote AB1?", mode="local", run_async=False)
+    assert "verification" not in app_state.chat.get_messages(conv["id"])[-1]["meta"]

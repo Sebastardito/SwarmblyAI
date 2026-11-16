@@ -213,7 +213,15 @@
   "tableBuilt": "Table built by the program",
   "tableBuiltTitle": "The table was built from values checked in your documents: {rows} rows from {docs} documents; {empty} cells the sources do not give; {dropped} values dropped for not being in the document.",
   "tableUnsupported": "{n} unsupported cells",
-  "tableUnsupportedTitle": "These figures of the table are not in the paragraphs of your sources and do not come from a calculation between cells:"
+  "tableUnsupportedTitle": "These figures of the table are not in the paragraphs of your sources and do not come from a calculation between cells:",
+  "verifyTitle": "Sentences their citation does not support ({n} of {m})",
+  "verifyNote": "Each labelled sentence was compared with the paragraph it cites: figures by code and the rest with {model}. The check can be wrong; open the citation to see it. Nothing was rewritten.",
+  "verifyFigure": "the figure {f} is not in the cited paragraph",
+  "verifyElsewhere": "it is in {l}",
+  "verifyUnrelated": "the cited paragraph is about something else",
+  "verifyUnknown": "it cites a paragraph that was not given",
+  "verifyPartly": "the cited paragraph says only a part",
+  "verifyNo": "the cited paragraph does not say it"
  },
  "explore": {
   "title": "How this answer was made",
