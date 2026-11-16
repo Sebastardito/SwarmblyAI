@@ -179,3 +179,35 @@ def test_a_table_that_arrives_on_one_line_gets_its_lines_back():
                       [{"label": "D1 p4", "rel": "suelo.md", "doc_id": "s", "text": flat}])[0]
     assert T.rows_from_tables(["Sitio", "Nitrógeno total", "pH"], doc, []) == [
         ["Parcela Norte", "0,21", "6,8"], ["Parcela Sur, sector oeste", "0,09", "7,9"]]
+
+
+def test_the_layout_is_the_models_unless_the_request_names_both_sides():
+    # told "one row for each of AB1, AB2", a 7B model wrote "| Lote | Sitio 1 | Sitio 2 | Sitio 3 |"
+    codes = T.header_prompt("Tabla con el rendimiento medio de cada lote por sitio, AB1 y AB2.", {"entities": ["AB1", "AB2"]})
+    people = T.header_prompt("Compara a Ana Pérez y Luis Soto en una tabla.", {"entities": ["Ana Pérez", "Luis Soto"]})
+    assert "Usa una" not in codes and "Usa una" not in people
+
+
+def test_a_column_named_only_after_a_lot_takes_what_the_request_asks_about():
+    request = ("Compara los rendimientos de los lotes AB1 y AB2. Incluye una tabla con el rendimiento medio "
+               "de cada lote por sitio y la diferencia absoluta.")
+    weather = "| Fecha | Mínima (°C) | Máxima (°C) | Lluvia (mm) |\n|---|---|---|---|\n| 1 de marzo | 12 | 22 | 0 |"
+    yields = ("| Sitio | Repeticiones | Rendimiento medio (t/ha) | Desviación estándar | |---|---|---|---| "
+              "| Parcela Norte | 4 | {} | 0,3 | | Parcela Sur | 4 | {} | 0,4 |")   # on one line, as the search gives it
+    sources = []
+    for n, (lot, a, b) in enumerate((("AB1", "2,8", "2,4"), ("AB2", "3,1", "2,2")), 1):
+        for p, text in ((5, weather), (16, yields.format(a, b)),
+                        (17, f"El rendimiento medio del lote {lot} fue alto; el otro lote se describe en su informe.")):
+            sources.append({"rel": f"informe_lote_{lot}.md", "doc_id": lot, "label": f"D{n} p{p}", "text": text})
+    asked = []
+
+    def generate(prompt, max_tokens):
+        asked.append(prompt)
+        return "| Sitio | Lote AB1 | Lote AB2 | Diferencia |"
+
+    built = T.build(request, sources, {"entities": ["AB1", "AB2"], "table": True}, generate)
+    assert len(asked) == 1 and built["rows_by_code"] == 4            # the model wrote the header, nothing else
+    assert built["header"] == ["Sitio", "Rendimiento medio AB1 (t/ha)", "Rendimiento medio AB2 (t/ha)", "Diferencia"]
+    assert "| Parcela Norte | 2,8 | 3,1 | 0,3 | [D1 p16] [D2 p16] |" in built["markdown"]
+    assert "| Parcela Sur | 2,4 | 2,2 | 0,2 | [D1 p16] [D2 p16] |" in built["markdown"]
+    assert "marzo" not in built["markdown"]

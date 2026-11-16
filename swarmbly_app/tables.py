@@ -81,17 +81,18 @@ def header_prompt(request: str, inv: dict[str, Any], lang: str = "es") -> str:
     codes = [e for e in inv.get("entities") or [] if re.fullmatch(r"[A-Z]{1,4}-?\d{1,4}", e)]
     group = [e for e in inv.get("entities") or [] if e not in codes]
     es = lang == "es"
+    # the layout is the model's, except when the request names both sides of
+    # the table. Told "one row for each of AB1, AB2", a 7B model wrote
+    # "| Lote | Sitio 1 | Sitio 2 | Sitio 3 | Diferencia |" for "el rendimiento
+    # medio de cada lote por sitio", and "| Variable | Ana Pérez | Luis Soto |"
+    # for two people; without the hint, "| Sitio | Lote AB1 | Lote AB2 |
+    # Diferencia |" and "| Individuo | Cargo actual | Institución | … |"
+    # (open battery x33 and single prompts, one run each)
     hint = ""
     if len(codes) >= 2 and len(group) >= 2:
         hint = (f"Usa una fila por cada uno de: {', '.join(group)}; y una columna por cada uno de: "
                 f"{', '.join(codes)}." if es else
                 f"Use one row for each of: {', '.join(group)}; and one column for each of: {', '.join(codes)}.")
-    elif len(codes) >= 2:
-        hint = (f"Usa una fila por cada uno de: {', '.join(codes)}." if es else
-                f"Use one row for each of: {', '.join(codes)}.")
-    elif len(group) >= 2:
-        hint = (f"Usa una fila por cada uno de: {', '.join(group)}." if es else
-                f"Use one row for each of: {', '.join(group)}.")
     wants_difference = bool(_DERIVED.search(request or ""))
     if es:
         diff = " Añade al final una columna «Diferencia»." if wants_difference else ""
@@ -226,15 +227,38 @@ def _match(target: str, source: str, entities: list[str]) -> float:
     return len(ts & ss) / len(ts | ss) if ts and ss else 0.0
 
 
-def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]) -> list[list[str]]:
+def _entity_only(col: str, entities: list[str]) -> bool:
+    """A column named after an entity and nothing else ("AB1", "Lote AB1")."""
+    name = _name(col)
+    if not any(_fold(e) in name for e in entities):
+        return False
+    for e in entities:
+        name = name.replace(_fold(e), " ")
+    return not (_stems(name) - _GROUP_STEMS)
+
+
+def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str],
+                     request: str = "") -> list[list[str]]:
     """Rows read by code from the tables a document already has. Asked to
     fill a table from a source table, a 7B model answered that the document
     gave no row, or copied one row of four (open battery, recipe 2); a source
     table needs no model. Each wanted column takes the source column it
     matches best; a source column wanted by two columns named after
-    different entities goes to the one this document mentions."""
-    whole = _fold(re.sub(r"[_.-]+", " ", doc["rel"]) + "\n" + "\n".join(t for _, t in doc["passages"]))
-    mentioned = [e for e in entities if _fold(e) in whole]
+    different entities goes to the one this document is about (the one its
+    file is named after, or the ones it mentions). A column named only after
+    an entity ("Lote AB1") takes the source column the request asks about
+    ("el rendimiento medio de cada lote" → "Rendimiento medio (t/ha)")."""
+    file_name = _fold(re.sub(r"[_.-]+", " ", doc["rel"]))
+    whole = file_name + "\n" + _fold("\n".join(t for _, t in doc["passages"]))
+    mentioned = [e for e in entities if _fold(e) in file_name] or [e for e in entities if _fold(e) in whole]
+    topic = (_request_stems(request) - _GROUP_STEMS - _stems(" ".join(entities))) if request else set()
+
+    def score(col: str, source: str) -> float:
+        direct = _match(col, source, entities)
+        if direct or not topic or not _entity_only(col, entities):
+            return direct
+        named = _stems(_name(source))
+        return len(named & topic) / len(named) if named else 0.0
     out: list[list[str]] = []
     for _, text in doc["passages"]:
         for _, _, head, rows in find_tables(text):
@@ -244,8 +268,8 @@ def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]
             for j, col in enumerate(header[1:], 1):
                 if _DERIVED.search(col):
                     continue
-                best = max(range(1, len(head)), key=lambda k: _match(col, head[k], entities))
-                if _match(col, head[best], entities) > 0:
+                best = max(range(1, len(head)), key=lambda k: score(col, head[k]))
+                if score(col, head[best]) > 0:
                     mapping[j] = best
             # the same source column for two wanted columns: only the one named
             # after an entity this document mentions
@@ -262,6 +286,9 @@ def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]
                       or any(_fold(e) in _fold(r[0]) for r in rows for e in entities))
             if not key_ok:
                 continue
+            for j, k in mapping.items():
+                if _entity_only(header[j], entities):
+                    doc.setdefault("named_after", {})[j] = head[k]
             for r in rows:
                 cells = ["—"] * len(header)
                 cells[0] = r[0]
@@ -493,7 +520,7 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     found, dropped = [], []
     by_code = 0
     for doc in docs:
-        rows = rows_from_tables(header, doc, entities)      # a source table needs no model
+        rows = rows_from_tables(header, doc, entities, request)      # a source table needs no model
         if rows:
             by_code += len(rows)
         else:
@@ -505,6 +532,16 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     rows = merge(found, entities)
     if len(rows) < 2:
         return None
+    # a column the model named only after an entity says what it measures, in
+    # the words of the source's table: "Lote AB1" → "Rendimiento medio AB1 (t/ha)"
+    header = list(header)
+    for doc in docs:
+        for j, source_col in (doc.get("named_after") or {}).items():
+            entity = next((e for e in entities if _fold(e) in _fold(header[j])), "")
+            unit = re.search(r"\s*(\([^)]*\))\s*$", source_col)
+            name = source_col[:unit.start()].strip() if unit else source_col.strip()
+            if entity and name and _entity_only(header[j], entities):
+                header[j] = f"{name} {entity}" + (f" {unit.group(1)}" if unit else "")
     header, rows, computed = derive(header, rows, lang)
     empty = sum(1 for r in rows for c in r["cells"][1:] if not c)
     return {"markdown": render(header, rows, lang), "header": header, "rows": len(rows),
