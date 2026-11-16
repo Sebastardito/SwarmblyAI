@@ -125,6 +125,19 @@ Swarmbly AI 3.3.
   that cites only one lot's table); the 3 sentences about what the sources
   do not mention were left out; 2 citations completed. Several labels in one
   bracket ("[D1 p3, D1 p4, D1 p5]") are now all read.
+- **Recipe 3, public sources that disagree with the user's documents**
+  (`compose.conflicts_web`, off until measured). With an approved search, a
+  result that gives another amount or date than the documents for what is
+  asked is shown with them, as two documents that disagree are since 3.2
+  ("Tus fuentes no coinciden en esto: [D2 p6] … 40 kg N/ha · [W1] … 60 kg
+  N/ha"), and the model is told to give both with their labels. A public
+  result speaks in general, so it is not required to name the user's plot
+  or lot; the document's sentence may take the place from its paragraph; and
+  the two have to share two words of what is asked, not one (the lot's mean
+  yield is not the register's reference yield). Not when the user asks to
+  compare them: those are two measures, not a disagreement. Every [W]
+  sentence goes through the claim verifier against the result it cites.
+  Measured on four new cases of the open battery (0.4.0: CO-04 to CO-07).
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
