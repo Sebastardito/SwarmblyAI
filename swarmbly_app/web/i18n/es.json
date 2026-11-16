@@ -213,7 +213,15 @@
   "tableBuilt": "Tabla armada por el programa",
   "tableBuiltTitle": "La tabla se armó con valores comprobados en tus documentos: {rows} filas de {docs} documentos; {empty} celdas sin dato en las fuentes; {dropped} valores descartados por no estar en el documento.",
   "tableUnsupported": "{n} celdas sin respaldo",
-  "tableUnsupportedTitle": "Estas cifras de la tabla no están en los párrafos de tus fuentes ni salen de un cálculo entre celdas:"
+  "tableUnsupportedTitle": "Estas cifras de la tabla no están en los párrafos de tus fuentes ni salen de un cálculo entre celdas:",
+  "verifyTitle": "Frases que su cita no respalda ({n} de {m})",
+  "verifyNote": "Cada frase con etiqueta se comparó con el párrafo que cita: las cifras por código y el resto con {model}. La comprobación puede equivocarse; abre la cita para verla. No se ha reescrito nada.",
+  "verifyFigure": "la cifra {f} no está en el párrafo citado",
+  "verifyElsewhere": "está en {l}",
+  "verifyUnrelated": "el párrafo citado trata de otra cosa",
+  "verifyUnknown": "cita un párrafo que no se dio",
+  "verifyPartly": "el párrafo citado dice solo una parte",
+  "verifyNo": "el párrafo citado no lo dice"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",

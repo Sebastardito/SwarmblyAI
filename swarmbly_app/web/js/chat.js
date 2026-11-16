@@ -537,6 +537,7 @@ const Chat = (() => {
         t("chat.webNone").replace("{q}", meta.web_search.query || "")));
       if (meta.conflicts?.length) article.appendChild(conflictBox(meta.conflicts));
       if (meta.coverage?.missing?.length) article.appendChild(coverageBox(meta.coverage.missing));
+      if (meta.verification?.flagged?.length) article.appendChild(verificationBox(meta.verification));
       if (meta.memory_proposals) article.appendChild(memoryCard(m));
       article.appendChild(footer(m));
     }
@@ -745,6 +746,26 @@ const Chat = (() => {
       h("summary", t("chat.coverageTitle").replace("{n}", missing.length)),
       h("ul.sources", missing.map((f) => h("li", h("strong", `[${f.label}] `), f.text))),
       h("p.muted", t("chat.coverageNote")));
+  }
+
+  /* 3.3, recipe 3: labelled sentences that the paragraph they cite does not
+     support (a figure that is not there, another subject, a part only), as
+     the code and the verifier model found them. Nothing is rewritten. */
+  function verificationBox(v) {
+    const why = (f) => {
+      if (f.why === "figure_not_in_cited") {
+        const where = f.elsewhere?.length
+          ? ` (${t("chat.verifyElsewhere").replace("{l}", f.elsewhere.map((l) => `[${l}]`).join(" "))})` : "";
+        return t("chat.verifyFigure").replace("{f}", (f.figures || []).join(", ")) + where;
+      }
+      if (f.why === "unrelated_paragraph") return t("chat.verifyUnrelated");
+      if (f.why === "unknown_label") return t("chat.verifyUnknown");
+      return t(f.why === "partly" ? "chat.verifyPartly" : "chat.verifyNo");
+    };
+    return h("details.coverage",
+      h("summary", t("chat.verifyTitle").replace("{n}", v.flagged.length).replace("{m}", v.claims)),
+      h("ul.sources", v.flagged.map((f) => h("li", f.text, h("span.muted", ` — ${why(f)}`)))),
+      h("p.muted", t("chat.verifyNote").replace("{model}", v.model || "")));
   }
 
   /* 3.2: documents that disagree on what was asked, both shown with labels. */

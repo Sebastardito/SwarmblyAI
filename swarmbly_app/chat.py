@@ -307,6 +307,31 @@ class ChatService:
                 out.append(s)
         return out
 
+    def _with_titles(self, sources: list[dict[str, Any]], project_id: str) -> list[dict[str, Any]]:
+        """The passages with the title of their document (its first heading):
+        "la reunión del 15 de abril" is in the title of the minutes, not in
+        the paragraph of the agreements."""
+        titles: dict[str, str] = {}
+        for s in sources:
+            doc = str(s.get("doc_id") or "")
+            text = str(s.get("text", "")).strip()
+            if doc and doc not in titles and text.startswith("#") and "\n" not in text:
+                titles[doc] = text.lstrip("# ").strip()
+        out = []
+        for s in sources:
+            doc = str(s.get("doc_id") or "")
+            if doc and doc not in titles:
+                titles[doc] = ""
+                try:
+                    spans = self.document_spans(project_id, doc) if self.document_spans else []
+                except Exception:
+                    spans = []
+                first = str(spans[0].get("text", "")).strip() if spans else ""
+                if first.startswith("#") or (first and len(first) <= 160 and "\n" not in first):
+                    titles[doc] = first.lstrip("# ").strip()
+            out.append({**s, "doc_title": titles[doc]} if titles.get(doc) else dict(s))
+        return out
+
     def _personal_request(self, text: str, project_id: str = "") -> bool:
         """A first-person request about the user's own material ("mi carrera",
         "mis artículos", "my thesis") while C1 has sources for it. Such a request
@@ -982,6 +1007,40 @@ class ChatService:
                 # answer repeats them
                 extra["injection"] = {"passages": flagged, "echoed": instruction_like(answer_text)}
             extra["citations"] = _check_citations(answer_text, sources, history, web_found)
+            if ccfg.get("verify") and (sources or (web_found or {}).get("results")) and not public_hits:
+                # recipe 3 (3.3): every labelled sentence against the paragraphs
+                # it cites, by code and then by the verifier in one short job each
+                from . import verify
+                given = self._with_titles(sources, request.project_id)
+                given += [{"label": str(h.get("label", "")), "title": str(h.get("title", "")),
+                           "text": str(h.get("snippet", ""))} for h in (web_found or {}).get("results") or []]
+                checker = roles.choose("verifier", cfg, backend, model, self.registry)
+                judge_kind = egress.PASSAGES if sources else egress.QUESTION
+
+                def _judge(prompt: str, max_tokens: int) -> str:
+                    kw: dict[str, Any] = {"max_tokens": max_tokens, "temperature": 0.0,
+                                          "interrupt": request.stop_event.is_set}
+                    if checker.think is None and getattr(checker.backend, "accepts_think", False):
+                        kw["think"] = False          # one word back: nothing to reason about
+                    with egress.purpose(judge_kind):
+                        r = checker.stream_chat([{"role": "user", "content": prompt}], **kw)
+                    return getattr(r, "text", "") or ""
+                t0 = time.monotonic()
+                try:
+                    found = verify.verify(answer_text, given, _judge, _lang(user_text),
+                                          limit=int(ccfg.get("verify_limit", 24)))
+                except Interrupted:
+                    raise
+                except egress.EgressDenied:
+                    raise
+                except Exception as exc:
+                    found = {"claims": 0, "supported": 0, "flagged": [], "unchecked": 0, "asked": 0,
+                             "failed": str(exc)[:200]}
+                found["model"] = checker.model
+                found["seconds"] = round(time.monotonic() - t0, 1)
+                if checker.note:
+                    found["role_note"] = checker.note
+                extra["verification"] = found
             if inv:
                 from . import compose
                 extra["requirements"] = {"inventory": inv, "check": compose.check(answer_text, inv)}
