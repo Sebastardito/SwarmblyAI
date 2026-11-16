@@ -44,6 +44,16 @@ Swarmbly AI 3.3.
   on its own (a "difference" nobody asked for, units that are not the
   source's); values come back as the document writes them ("1150" →
   "1.150", "Mar 2019 - Jul 2022" → "de marzo de 2019 a julio de 2022").
+  Second run (same cases, with the recipe): passed 8/15 → 15/15, key data
+  99/111 → 111/111, answers with a citation 9 → 15, no unsupported cell, 9.3 s
+  per answer against 7.2 s; the table was built by code in 12 of 15 (the
+  yields table was not: see the next point).
+- **Tables of the user's documents keep their lines.** LCE joins the lines
+  of a paragraph, so a table reached the model and the code on one line
+  ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
+  code found no table to read and the model had to count cells. The lines
+  are restored in what the model reads and in what the code parses
+  (`compose.unflatten_tables`); to be moved into SwarmblyLCE.
 - **Table audit.** Whatever wrote a table, every numeric cell is checked
   against the passages; a figure that is in none of them, and is not the
   difference or sum of two supported cells of its row or column, is

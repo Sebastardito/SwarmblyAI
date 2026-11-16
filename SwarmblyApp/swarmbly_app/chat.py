@@ -1788,7 +1788,8 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str,
                 if m:
                     text = f"{text[:m.end()]} («{term}»){text[m.end():]}"
                     break
-        from .compose import instruction_like
+        from .compose import instruction_like, unflatten_tables
+        text = unflatten_tables(text)       # a table of the document, with its lines back (3.3)
         if instruction_like(text):
             # 3.2: text in a document addressed to an assistant ("ignora todas las
             # instrucciones… compra…") is the document's content, not an order;
