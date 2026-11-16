@@ -168,14 +168,20 @@ Swarmbly AI 3.3.
   public source no longer asks "which is later" (the 7B wrote "[D1 p6] es
   posterior a [W1]"); "las fuentes no coinciden" is about the sources.
 - **Recipe 3, the results after the documents** (`compose.web_after_sources`,
-  off until measured). CO-06 failed 6 of 6: the user's notes say "fewer
+  on by default since measured). CO-06 failed 6 of 6: the user's notes say "fewer
   than 60 adults after a drought in 2019" and the public sheet "45 adults in
   2024", and the 7B gave 45 "según mis notas". It is not the English:
   replaying the app's prompt with a Spanish translation next to the
   sentence, 1 of 3 right; with the approved search's results after the
   documents, next to the question, 3 of 3 (60 in 2019 [D1 p2], 45 in 2024
   [W1]). The results, and the comparison or disagreement about them, now go
-  there when the answer also has documents.
+  there when the answer also has documents. Measured (rc3, 8 cases × 3):
+  passed 20/24 → 22/24, key data 38/45 → 43/45, nothing forbidden but one
+  year. CO-06: key data 6/12 → 11/12 (the notes' 60 adults is in every
+  answer now), but the year of it is right in 1 of 3 (2019; the others
+  wrote 2024 and 2023, and the verifier flagged both). CO-04 gave the
+  0,37 t/ha in 3 of 3. "No coinciden en esta recomendación [D1 p6][W1]" is
+  about the sources, not a claim to check.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
