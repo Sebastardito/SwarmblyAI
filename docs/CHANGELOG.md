@@ -142,8 +142,8 @@ Swarmbly AI 3.3.
   the case with a disagreement (CO-05) passed 2/3 → 3/3, every answer giving
   both figures with their labels and saying they disagree; no other case
   got the notice.
-- **Recipe 3, a comparison computed by code** (`compose.compare_by_code`, off
-  until measured). Asked to compare a lot's 2,53 t/ha with its variety's
+- **Recipe 3, a comparison computed by code** (`compose.compare_by_code`, on
+  by default since measured). Asked to compare a lot's 2,53 t/ha with its variety's
   reference of 2,9 t/ha, the 7B wrote "superior" or "superando" in most
   answers of the base run (and, replaying the same prompt, in 3 of 4); told
   by the program "2,53 t/ha [D1 p17] es 0,37 t/ha MENOR que 2,9 t/ha [W1]
@@ -152,16 +152,30 @@ Swarmbly AI 3.3.
   for what is asked, the code gives the two figures, the difference and its
   direction (`meta.comparisons`, a chip under the answer).
 - **Recipe 3, a result about something else says so**
-  (`compose.web_missing_names`, off until measured). A search for a variety
+  (`compose.web_missing_names`, on by default since measured). A search for a variety
   the register does not have returned another variety's entry, and the 7B
   gave that figure as the one asked in 6 of 6 answers. Each result now says
   which of the names the user asked about, and approved in the query, it
   does not mention ("(Este resultado no menciona «Zafira».)"); replaying a
   prompt like the app's, the answer said Zafira was not in the results in
   3 of 3 and no longer gave the other variety's figure.
-- Still open in recipe 3: a figure written in English in the user's notes
-  ("fewer than 60 adults after a drought in 2019") is left out, and the
-  public figure is given as the notes' (CO-06, as GL-01 since 3.2).
+  Measured with both (rc2, 8 cases × 3): passed 18/24 → 20/24, key data
+  36/45 → 38/45. CO-07 0/3 → 3/3 ("El registro público de variedades no
+  menciona la variedad Zafira"); CO-04 and CO-03 gave the direction right in
+  6 of 6 (two answers gave "un 13 % menos" without the 0,37 t/ha: the block
+  now asks for the difference itself). The verifier counts the figures the
+  program computed (it flagged "un 13 % menos"); a disagreement with a
+  public source no longer asks "which is later" (the 7B wrote "[D1 p6] es
+  posterior a [W1]"); "las fuentes no coinciden" is about the sources.
+- **Recipe 3, the results after the documents** (`compose.web_after_sources`,
+  off until measured). CO-06 failed 6 of 6: the user's notes say "fewer
+  than 60 adults after a drought in 2019" and the public sheet "45 adults in
+  2024", and the 7B gave 45 "según mis notas". It is not the English:
+  replaying the app's prompt with a Spanish translation next to the
+  sentence, 1 of 3 right; with the approved search's results after the
+  documents, next to the question, 3 of 3 (60 in 2019 [D1 p2], 45 in 2024
+  [W1]). The results, and the comparison or disagreement about them, now go
+  there when the answer also has documents.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

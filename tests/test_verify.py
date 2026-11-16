@@ -185,3 +185,11 @@ def test_what_the_sources_do_not_say_is_not_a_claim_and_computed_figures_are_nam
 def test_several_labels_in_one_bracket_are_all_cited():
     claims = V.split("Ajustar nuestras prácticas será crucial para el próximo año [D1 p3, D1 p4; D1 p5].")
     assert claims[0]["labels"] == ["D1 p3", "D1 p4", "D1 p5"]
+
+
+def test_figures_the_program_computed_and_sentences_on_disagreeing_sources():
+    report = V.verify("El costo del lote AB1 fue de 1.150 dólares, un 6 % más que el de AB2 [D1 p17]. "
+                      "Las fuentes no coinciden en este punto. [D1 p17]", SOURCES, computed=["70 6 %"])
+    assert report["claims"] == 1 and report["about_sources"] == 1 and report["flagged"] == []
+    flagged = V.verify("El costo del lote AB1 fue de 1.150 dólares, un 6 % más que el de AB2 [D1 p17].", SOURCES)
+    assert flagged["flagged"][0]["figures"] == ["6"]

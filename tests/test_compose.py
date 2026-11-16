@@ -500,7 +500,7 @@ def test_a_comparison_with_a_public_result_is_computed_by_code(app_state, tmp_pa
                       "difference": "0,37", "percent": 13, "direction": "lower"}]
     block = C.comparison_block(found)
     assert "2,53 t/ha [D1 p17] es 0,37 t/ha MENOR que 2,9 t/ha [W1] (un 13 % menos)" in block
-    assert "menor, no superior" in block
+    assert "Da la diferencia (0,37 t/ha) y usa esta dirección (menor, no superior)." in block
     assert C.comparisons("¿Cuál es el rendimiento de referencia de Altiva?", [lot, sheet]) == []   # nothing to compare
     # two figures of the same unit on the documents' side: not guessed
     assert C.comparisons("Compara el rendimiento de los lotes con el de referencia.", [lot, other, sheet]) == []
@@ -539,3 +539,28 @@ def test_a_result_that_does_not_mention_the_asked_name_says_so():
                                                      "url": "https://registro.invalid/kanela"}]}
     W.mark_missing(kept, "¿Qué rendimiento tiene la variedad Kanela?")
     assert "missing" not in kept["results"][0]
+
+
+def test_the_results_of_an_approved_search_can_go_after_the_documents(app_state, tmp_path, monkeypatch):
+    from swarmbly_app import web_search as W
+    fake = FakeBackend(reply="Tus notas dicen menos de 60 adultos en 2019 [D1 p1]; la ficha, 45 en 2024 [W1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("X", parent=tmp_path / "p")
+    (p.sources / "aves.md").write_text("The Floresta population fell to fewer than 60 adults after a drought in 2019.\n",
+                                       encoding="utf-8")
+    monkeypatch.setattr(W, "_get", lambda url, timeout, ua: {"results": [
+        {"title": "Mimus ficticius: ficha de Floresta", "content": "En Floresta quedaban unos 45 adultos en 2024.",
+         "url": "https://lista-roja.invalid/mimus"}]})
+    monkeypatch.setattr(W, "_reachable", lambda url: True)
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "evidence.providers": ["web"],
+                             "evidence.searxng_url": "http://127.0.0.1:9", "evidence.searxng_managed": ""})
+    q = "Según mis notas, ¿cuántos adultos quedaban en Floresta, y qué cifra da la ficha pública?"
+    for after in (False, True):
+        app_state.config.update({"compose.web_after_sources": after})
+        conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+        app_state.chat.send(conv["id"], q, mode="local", run_async=False, allow_public=True,
+                            web_query="Mimus ficticius Floresta")
+        system = [m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system"]
+        web = next(i for i, b in enumerate(system) if b.startswith("Resultados de la búsqueda"))
+        docs = next(i for i, b in enumerate(system) if "[D1 p1]" in b and "fewer than 60" in b)
+        assert (web > docs) is after

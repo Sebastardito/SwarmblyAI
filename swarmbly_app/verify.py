@@ -44,7 +44,9 @@ from .compose import _CITE, _OUTSIDE, _derived, _figures, _stems, unflatten_tabl
 _ABSENCE = re.compile(r"\bno\s+(?:se\s+)?(?:menciona\w*|indica\w*|dice\w*|registra\w*|especifica\w*|"
                       r"aparece\w*|recoge\w*|informa\w*)\b|\bno\s+(?:hay|figura\w*|consta\w*)\s+"
                       r"(?:datos|informaci[oó]n|registros?|menci[oó]n)\b|\bsin\s+(?:datos|menci[oó]n)\b|"
-                      r"\b(?:does|do)\s+not\s+(?:mention|say|state|report)\b|\bno\s+(?:data|mention)\b", re.I)
+                      r"\b(?:does|do)\s+not\s+(?:mention|say|state|report)\b|\bno\s+(?:data|mention)\b|"
+                      # "Las fuentes no coinciden en este punto. [D1 p6]": about the sources
+                      r"\bfuentes?\b[^.]{0,30}\bno\s+coincid\w*|\bsources?\b[^.]{0,30}\b(?:disagree|differ)\b", re.I)
 _LABEL = re.compile(r"\[\s*((?:[A-Z]\d+\s*p\d+)|(?:W\d+))[^\]]{0,40}\]")
 YES, PARTLY, NO = "yes", "partly", "no"
 
@@ -126,7 +128,8 @@ def _presented_as_computed(sentence: str, figure: str) -> bool:
     return False
 
 
-def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]]) -> dict[str, Any]:
+def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
+            computed: set[str] | None = None) -> dict[str, Any]:
     """What the code can say about a labelled sentence: figures that are not
     in the paragraphs it cites, the paragraphs that have them (``complete``:
     labels that complete the citation), figures computed from sourced ones,
@@ -147,6 +150,9 @@ def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]]) -> 
     # in AB2's table, though it is also 2,8 plus the 0,3 of a deviation)
     elsewhere = {f for f in absent if any(f in fg for fg in near.values())}
     derived = _derived(figs, have) - elsewhere
+    # figures the program itself computed for this answer (a comparison's
+    # difference and percentage, recipe 3): the verifier flagged "un 13 % menos"
+    derived |= figs & (computed or set())
     derived |= _derived(figs, have | elsewhere) - elsewhere
     # "3,1 frente a 2,8, una diferencia de 0,3": the 0,3 is also a deviation
     # in the cited table, but in the sentence it is the difference of two of
@@ -221,12 +227,13 @@ def parse(text: str) -> str | None:
 
 
 def check(sentence: str, labels: list[str], sources: list[dict[str, Any]],
-          generate: Callable[[str, int], str] | None = None, lang: str = "es") -> dict[str, Any]:
+          generate: Callable[[str, int], str] | None = None, lang: str = "es",
+          computed: set[str] | None = None) -> dict[str, Any]:
     """The verdict on one labelled sentence: ``ok`` is False when the code or
     the model found it unsupported, None when nobody could tell (no model, or
     a reply that is not a verdict). ``added``: labels that complete its
     citation (its figures are in those paragraphs)."""
-    code = by_code(sentence, labels, sources)
+    code = by_code(sentence, labels, sources, computed)
     out: dict[str, Any] = {"text": sentence[:300], "labels": labels, "by": "code", "ok": None}
     if code["unknown"] and not code["cited"]:
         return {**out, "ok": False, "why": "unknown_label", "unknown": code["unknown"]}
@@ -265,18 +272,19 @@ def _with_labels(sentence: str, added: list[str]) -> str:
 
 
 def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, int], str] | None = None,
-           lang: str = "es", limit: int = 24) -> dict[str, Any]:
+           lang: str = "es", limit: int = 24, computed: list[str] | None = None) -> dict[str, Any]:
     """Every labelled sentence of the answer, checked. ``limit`` bounds the
     model's jobs (a long composition has about fifteen labelled sentences).
     ``text`` is the answer with the citations the code completed."""
     claims = split(answer)
+    done = set().union(*(_figures(str(x)) for x in computed)) if computed else set()
     checked, asked, text, completed, about = [], 0, answer or "", [], 0
     for c in claims:
         if c.get("absence"):
             about += 1          # what the sources do not say: not a claim from them
             continue
         use = generate if asked < limit else None
-        r = check(c["text"], c["labels"], sources, use, lang)
+        r = check(c["text"], c["labels"], sources, use, lang, done)
         asked += r["by"] == "model"
         if r.get("added") and c["text"] in text:
             text = text.replace(c["text"], _with_labels(c["text"], r["added"]), 1)

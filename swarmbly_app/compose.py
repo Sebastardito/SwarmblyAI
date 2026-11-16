@@ -1024,8 +1024,12 @@ def comparison_block(found: list[dict[str, Any]], lang: str = "es") -> str:
                          f"{'LOWER' if low else 'HIGHER'} than {b['value']} {b['unit']} [{b['label']}]{pct}.")
     words = {"lower": ("menor, no superior", "lower, not higher"), "higher": ("mayor, no inferior", "higher, not lower"),
              "equal": ("igual", "equal")}[found[0]["direction"]]
-    lines.append(f"Usa estas cifras y esta dirección ({words[0]})." if es else
-                 f"Use these figures and this direction ({words[1]}).")
+    first = found[0]
+    diff = f"{first['difference']} {first['a']['unit']}"
+    # the difference itself, not only the percentage: three answers in five
+    # gave "un 13 % menos" and no 0,37 t/ha (open battery rc2)
+    lines.append(f"Da la diferencia ({diff}) y usa esta dirección ({words[0]})." if es else
+                 f"Give the difference ({diff}) and use this direction ({words[1]}).")
     return "\n".join(lines)
 
 
@@ -1049,8 +1053,16 @@ def conflict_block(found: list[dict[str, Any]], lang: str = "es") -> str:
     for c in found:
         lines.append(f"- [{c['a']['label']}] {c['a']['text']}")
         lines.append(f"- [{c['b']['label']}] {c['b']['text']}")
-    lines.append("Da los dos datos, cada uno con su etiqueta, y di cuál es posterior si las fuentes lo indican; no "
-                 "elijas uno en silencio." if es else
-                 "Give both, each with its label, and say which is later if the sources show it; do not pick one "
-                 "silently.")
+    if any(c[k]["label"].startswith("W") for c in found for k in ("a", "b")):
+        # a public source against the user's documents: no "which is later"
+        # (the 7B wrote "[D1 p6] es posterior a [W1]", open battery rc2)
+        lines.append("Da los dos datos, cada uno con su etiqueta, y di que no coinciden: la fuente pública habla en "
+                     "general y los documentos del usuario de su caso. No elijas uno en silencio." if es else
+                     "Give both, each with its label, and say they disagree: the public source speaks in general and "
+                     "the user's documents of their case. Do not pick one silently.")
+    else:
+        lines.append("Da los dos datos, cada uno con su etiqueta, y di cuál es posterior si las fuentes lo indican; no "
+                     "elijas uno en silencio." if es else
+                     "Give both, each with its label, and say which is later if the sources show it; do not pick one "
+                     "silently.")
     return "\n".join(lines)
