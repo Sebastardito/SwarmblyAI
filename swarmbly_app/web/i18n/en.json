@@ -209,7 +209,11 @@
   "roleWhere": "A model at {host}, off this computer, wrote this answer with your authorisation. The receipt says what was sent.",
   "roleFallback": "Writer not used",
   "roleMissing": "The model {model} is not installed: the conversation's model answered.",
-  "roleBlocked": "The model {model} is off this computer and is not authorised for this: the conversation's model answered and nothing was sent."
+  "roleBlocked": "The model {model} is off this computer and is not authorised for this: the conversation's model answered and nothing was sent.",
+  "tableBuilt": "Table built by the program",
+  "tableBuiltTitle": "The table was built from values checked in your documents: {rows} rows from {docs} documents; {empty} cells the sources do not give; {dropped} values dropped for not being in the document.",
+  "tableUnsupported": "{n} unsupported cells",
+  "tableUnsupportedTitle": "These figures of the table are not in the paragraphs of your sources and do not come from a calculation between cells:"
  },
  "explore": {
   "title": "How this answer was made",

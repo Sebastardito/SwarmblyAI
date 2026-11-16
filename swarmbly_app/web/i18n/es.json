@@ -209,7 +209,11 @@
   "roleWhere": "Esta respuesta la escribió un modelo en {host}, fuera de tu computadora, con tu autorización. El recibo dice qué se envió.",
   "roleFallback": "Redactor no usado",
   "roleMissing": "El modelo {model} no está instalado: respondió el modelo de la conversación.",
-  "roleBlocked": "El modelo {model} está fuera de tu computadora y no tiene autorización para esto: respondió el modelo de la conversación y no se envió nada."
+  "roleBlocked": "El modelo {model} está fuera de tu computadora y no tiene autorización para esto: respondió el modelo de la conversación y no se envió nada.",
+  "tableBuilt": "Tabla armada por el programa",
+  "tableBuiltTitle": "La tabla se armó con valores comprobados en tus documentos: {rows} filas de {docs} documentos; {empty} celdas sin dato en las fuentes; {dropped} valores descartados por no estar en el documento.",
+  "tableUnsupported": "{n} celdas sin respaldo",
+  "tableUnsupportedTitle": "Estas cifras de la tabla no están en los párrafos de tus fuentes ni salen de un cálculo entre celdas:"
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
