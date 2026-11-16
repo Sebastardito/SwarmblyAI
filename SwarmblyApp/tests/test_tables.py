@@ -211,3 +211,14 @@ def test_a_column_named_only_after_a_lot_takes_what_the_request_asks_about():
     assert "| Parcela Norte | 2,8 | 3,1 | 0,3 | [D1 p16] [D2 p16] |" in built["markdown"]
     assert "| Parcela Sur | 2,4 | 2,2 | 0,2 | [D1 p16] [D2 p16] |" in built["markdown"]
     assert "marzo" not in built["markdown"]
+
+
+def test_a_header_that_mixes_a_measure_with_columns_per_lot_keeps_the_measure():
+    header = ["Cultivo", "Costo de Producción por Hectárea", "AB1", "AB2", "Diferencia"]
+    request = "Haz una tabla con el costo de producción por hectárea de AB1 y AB2 y la diferencia entre ambos."
+    assert T.tidy_header(header, request, [AB1, AB2], ["AB1", "AB2"]) == [
+        "Cultivo", "Costo de Producción por Hectárea", "Diferencia"]
+    assert T.tidy_header(["Sitio", "Lote AB1", "Lote AB2", "Diferencia"], request, [AB1, AB2], ["AB1", "AB2"]) == [
+        "Sitio", "Lote AB1", "Lote AB2", "Diferencia"]
+    prompt = T.header_prompt(request, {"entities": ["AB1", "AB2"]})
+    assert "  " not in prompt and prompt.endswith("columna «Diferencia». No escribas filas de datos ni nada más.")

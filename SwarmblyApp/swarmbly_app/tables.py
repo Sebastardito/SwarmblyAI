@@ -94,15 +94,19 @@ def header_prompt(request: str, inv: dict[str, Any], lang: str = "es") -> str:
                 f"{', '.join(codes)}." if es else
                 f"Use one row for each of: {', '.join(group)}; and one column for each of: {', '.join(codes)}.")
     wants_difference = bool(_DERIVED.search(request or ""))
+    # one space between the sentences: with two, the same model wrote another
+    # header for the same request (single prompts, one run each)
     if es:
-        diff = " Añade al final una columna «Diferencia»." if wants_difference else ""
-        return (f"Solicitud del usuario: {request}\n\nEscribe solo la fila de encabezado de la tabla que pide, en "
-                "Markdown (| Columna 1 | Columna 2 | …). La primera columna nombra lo que distingue cada fila. "
-                f"{hint}{diff} No escribas filas de datos ni nada más.")
-    diff = " Add a last column \"Difference\"." if wants_difference else ""
-    return (f"User's request: {request}\n\nWrite only the header row of the table it asks for, in Markdown "
-            "(| Column 1 | Column 2 | …). The first column names what tells the rows apart. "
-            f"{hint}{diff} Write no data rows and nothing else.")
+        parts = [f"Solicitud del usuario: {request}\n\nEscribe solo la fila de encabezado de la tabla que pide, en "
+                 "Markdown (| Columna 1 | Columna 2 | …). La primera columna nombra lo que distingue cada fila.",
+                 hint, "Añade al final una columna «Diferencia»." if wants_difference else "",
+                 "No escribas filas de datos ni nada más."]
+    else:
+        parts = [f"User's request: {request}\n\nWrite only the header row of the table it asks for, in Markdown "
+                 "(| Column 1 | Column 2 | …). The first column names what tells the rows apart.",
+                 hint, "Add a last column \"Difference\"." if wants_difference else "",
+                 "Write no data rows and nothing else."]
+    return " ".join(p for p in parts if p)
 
 
 def parse_header(text: str) -> list[str] | None:
@@ -115,7 +119,8 @@ def parse_header(text: str) -> list[str] | None:
     return None
 
 
-def tidy_header(header: list[str], request: str, docs: list[dict[str, Any]]) -> list[str]:
+def tidy_header(header: list[str], request: str, docs: list[dict[str, Any]],
+                entities: list[str] | None = None) -> list[str]:
     """The header the model wrote, without what it added on its own: a
     "difference" column the request does not ask for (it answered the
     example of the prompt), and units of its own in brackets ("Nitrógeno
@@ -123,6 +128,13 @@ def tidy_header(header: list[str], request: str, docs: list[dict[str, Any]]) -> 
     from the source's table, or goes)."""
     if not _DERIVED.search(request or ""):
         header = [c for i, c in enumerate(header) if i == 0 or not _DERIVED.search(c)]
+    # "| Cultivo | Costo de producción | AB1 | AB2 | Diferencia |": the rows are
+    # the lots already, their columns go
+    if entities:
+        named = [i for i, c in enumerate(header) if i and _entity_only(c, entities)]
+        measures = [i for i, c in enumerate(header) if i and i not in named and not _DERIVED.search(c)]
+        if named and measures:
+            header = [c for i, c in enumerate(header) if i not in named]
     source_cols = [c for d in docs for _, text in d["passages"] for _, _, head, _ in find_tables(text) for c in head]
     out = []
     for i, col in enumerate(header):
@@ -513,10 +525,10 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     docs = documents(request, sources)
     if not header or not docs:
         return None
-    header = tidy_header(header, request, docs)
+    entities = list(inv.get("entities") or [])
+    header = tidy_header(header, request, docs, entities)
     if len(header) < 2:
         return None
-    entities = list(inv.get("entities") or [])
     found, dropped = [], []
     by_code = 0
     for doc in docs:
