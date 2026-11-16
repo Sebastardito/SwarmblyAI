@@ -121,3 +121,45 @@ def test_recipe_2_in_the_chat(app_state, tmp_path):
     assert meta["table_audit"]["unsupported"] == []
     system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
     assert "ya armó esta tabla" in system
+
+
+SUELO = {"rel": "analisis_suelo_2026.md", "passages": [
+    ("D1 p4", "| Sitio | Nitrógeno total (%) | Fósforo (ppm) | pH |\n|---|---|---|---|\n"
+              "| Parcela Norte | 0,21 | 18 | 6,8 |\n| Parcela Sur, sector oeste | 0,09 | 14 | 7,9 |"),
+    ("D1 p9", "| Fecha | Mínima (°C) | Lluvia (mm) |\n|---|---|---|\n| 1 de marzo | 12 | 0 |")]}
+
+
+def test_a_source_table_is_read_by_code_not_by_the_model():
+    rows = T.rows_from_tables(["Sitio", "Nitrógeno total (%)", "pH"], SUELO, [])
+    assert rows == [["Parcela Norte", "0,21", "6,8"], ["Parcela Sur, sector oeste", "0,09", "7,9"]]
+    # the same source column wanted for two lots: only this document's lot gets it
+    rows = T.rows_from_tables(HEAD, AB2, ENT)
+    assert rows == [["Parcela Norte", "—", "3,1", "—"], ["Parcela Sur", "—", "2,2", "—"]]
+    called = []
+
+    def generate(prompt, n):
+        called.append(prompt)
+        return "| Sitio | Rendimiento AB1 (kg) | Rendimiento AB2 (kg) | Diferencia |" if "encabezado" in prompt else "NINGUNA"
+    src = [{"label": lab, "rel": d["rel"], "doc_id": d["rel"], "text": t} for d in (AB1, AB2) for lab, t in d["passages"]]
+    q = "Escribe un informe que compare los rendimientos de AB1 y AB2 por sitio, con una tabla y la diferencia."
+    built = T.build(q, src, {"entities": ENT}, generate)
+    assert len(called) == 1 and built["rows_by_code"] == 4            # only the header was asked of the model
+    assert "| Parcela Norte | 2,8 | 3,1 | 0,3 | [D1 p16] [D2 p16] |" in built["markdown"]
+    assert "(t/ha)" in built["markdown"] and "(kg)" not in built["markdown"]   # the unit is the source's
+
+
+def test_header_is_tidied_and_values_are_as_the_document_writes_them():
+    docs = [SUELO]
+    assert T.tidy_header(["Sitio", "Nitrógeno total (mg/kg)", "pH", "Diferencia"],
+                         "Tabla con el nitrógeno total y el pH de cada sitio.", docs) == \
+        ["Sitio", "Nitrógeno total (%)", "pH"]
+    cv = ("- Coordinadora de ensayos de campo en AcmeLabs, desde agosto de 2022. Dirijo los ensayos.\n"
+          "- Técnica de laboratorio en AcmeLabs, de marzo de 2019 a julio de 2022: análisis de suelo.")
+    assert T._as_written("Ago 2022 -", cv, "Coordinadora de ensayos de campo") == "desde agosto de 2022"
+    assert T._as_written("Mar 2019 - Jul 2022", cv, "Técnica de laboratorio") == "de marzo de 2019 a julio de 2022"
+    assert T._as_written("1150", "costó 1.150 dólares") == "1.150" and T._as_written("87", "del 87 % en") == "87 %"
+    assert T.parse_rows("| Sitio | pH |\n| Norte | 6,8 |", 2, ["Sitio", "pH"]) == [["Norte", "6,8"]]
+    doc = {"rel": "informe.md", "passages": [("D1 p3", "El caudal medio se mantuvo estable."),
+                                              ("D1 p17", "El costo de producción fue de 1.150 dólares.")]}
+    assert [lab for lab, _ in T.relevant_passages("Tabla con el costo de producción de AB1 y AB2.",
+                                                  ["Lote", "Costo"], doc, ["AB1", "AB2"])] == ["D1 p17"]

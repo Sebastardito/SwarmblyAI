@@ -33,7 +33,17 @@ Swarmbly AI 3.3.
   several documents by their key, computes differences, adds a "Fuente"
   column with the paragraphs each row came from and writes "—" for what the
   sources do not give. The model then writes the text around the finished
-  table; a table of its own is removed (`meta.table`).
+  table; a table of its own is removed (`meta.table`). First run on the open
+  battery (5 table cases × 3, qwen2.5:7b): no table built in 15 of 15. With
+  a whole report of filler the model answered that the document gave no
+  row; with a source table it answered the same, or copied one row of four.
+  So: a table the document already has is read by code (each wanted column
+  takes the source column it matches; one wanted by two lots goes to the
+  lot the document mentions), the model reads only the paragraphs that bear
+  on the table, and only for prose; the header loses what the model added
+  on its own (a "difference" nobody asked for, units that are not the
+  source's); values come back as the document writes them ("1150" →
+  "1.150", "Mar 2019 - Jul 2022" → "de marzo de 2019 a julio de 2022").
 - **Table audit.** Whatever wrote a table, every numeric cell is checked
   against the passages; a figure that is in none of them, and is not the
   difference or sum of two supported cells of its row or column, is
