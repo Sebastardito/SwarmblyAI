@@ -612,6 +612,8 @@ class ChatService:
                     web_found = web_search.search(request.web_query, ev_cfg, lang_now,
                                                   recent=web_search.wants_recent(user_text),
                                                   groups=groups)
+                if (cfg.get("compose") or {}).get("web_missing_names"):
+                    web_search.mark_missing(web_found, user_text)
                 blocks.append(web_search.results_block(web_found, lang_now))
             elif want_public or _ASKS_REFERENCES.search(user_text):
                 # placed after the sources, next to the question: before a long
@@ -710,6 +712,17 @@ class ChatService:
                                   "text": f"{h.get('title', '')}. {h.get('snippet', '')}", "public": True}
                                  for h in web_found["results"]]
                 found_conflicts = conflicts(user_text, compared)
+                if ccfg.get("compare_by_code") and (web_found or {}).get("results") and _COMPARE.search(user_text):
+                    # recipe 3 (3.3): the comparison asked between a figure of the
+                    # documents and one of a public result, computed by code
+                    from .compose import comparison_block, comparisons
+                    public = [{"label": str(h.get("label", "")), "rel": str(h.get("url") or h.get("label")),
+                               "text": f"{h.get('title', '')}. {h.get('snippet', '')}", "public": True}
+                              for h in web_found["results"]]
+                    compared_now = comparisons(user_text, list(sources) + public, _lang(user_text))
+                    if compared_now:
+                        blocks.append(comparison_block(compared_now, _lang(user_text)))
+                        request.receipt_ctx["comparisons"] = compared_now
                 if found_conflicts:
                     # 3.2: documents that disagree on what is asked: the model
                     # is told, and the app shows both under the answer
@@ -832,6 +845,8 @@ class ChatService:
                 extra["scaffold"] = request.receipt_ctx["scaffold"]
             if request.receipt_ctx.get("conflicts"):
                 extra["conflicts"] = request.receipt_ctx["conflicts"]
+            if request.receipt_ctx.get("comparisons"):
+                extra["comparisons"] = request.receipt_ctx["comparisons"]
             if request.receipt_ctx.get("sources_unrelated"):
                 extra["sources_unrelated"] = request.receipt_ctx["sources_unrelated"]
             if request.receipt_ctx.get("roles"):

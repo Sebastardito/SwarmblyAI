@@ -484,3 +484,58 @@ def test_a_public_result_disagrees_only_on_the_same_measure():
     # the lot's mean yield is not the register's reference yield
     assert C.conflicts("¿Qué rendimiento de referencia tiene la variedad Zafira en el registro?",
                        [analysis, report, guide, register]) == []
+
+
+def test_a_comparison_with_a_public_result_is_computed_by_code(app_state, tmp_path, monkeypatch):
+    lot = {"label": "D1 p17", "rel": "informe_lote_AB2.md",
+           "text": "El rendimiento medio del lote AB2 en los tres sitios fue de 2,53 t/ha. El costo fue de 1.080 dólares."}
+    other = {"label": "D2 p17", "rel": "informe_lote_AB1.md",
+             "text": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha."}
+    sheet = {"label": "W1", "rel": "https://catalogo.invalid/altiva", "public": True,
+             "text": "Ficha de Altiva. Su rendimiento de referencia es de 2,9 t/ha, con un ciclo de 165 días."}
+    q = "Compara el rendimiento medio del lote AB2 con el rendimiento de referencia de su variedad, y di la diferencia."
+    found = C.comparisons(q, [lot, other, sheet])
+    assert found == [{"a": {"label": "D1 p17", "value": "2,53", "unit": "t/ha"},
+                      "b": {"label": "W1", "value": "2,9", "unit": "t/ha"},
+                      "difference": "0,37", "percent": 13, "direction": "lower"}]
+    block = C.comparison_block(found)
+    assert "2,53 t/ha [D1 p17] es 0,37 t/ha MENOR que 2,9 t/ha [W1] (un 13 % menos)" in block
+    assert "menor, no superior" in block
+    assert C.comparisons("¿Cuál es el rendimiento de referencia de Altiva?", [lot, sheet]) == []   # nothing to compare
+    # two figures of the same unit on the documents' side: not guessed
+    assert C.comparisons("Compara el rendimiento de los lotes con el de referencia.", [lot, other, sheet]) == []
+    # in the chat
+    from swarmbly_app import web_search as W
+    fake = FakeBackend(reply="AB2 rindió 2,53 t/ha [D1 p1], 0,37 t/ha menos que la referencia de 2,9 t/ha [W1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("X", parent=tmp_path / "p")
+    (p.sources / "informe_lote_AB2.md").write_text(lot["text"] + "\n", encoding="utf-8")
+    monkeypatch.setattr(W, "_get", lambda url, timeout, ua: {"results": [
+        {"title": "Ficha de Altiva (catálogo de semillas)", "content": sheet["text"], "url": "https://catalogo.invalid/altiva"}]})
+    monkeypatch.setattr(W, "_reachable", lambda url: True)
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1", "evidence.providers": ["web"],
+                             "evidence.searxng_url": "http://127.0.0.1:9", "evidence.searxng_managed": "",
+                             "compose.compare_by_code": True})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], q, mode="local", run_async=False, allow_public=True,
+                        web_query="Altiva catálogo semillas")
+    meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    assert meta["comparisons"][0]["difference"] == "0,37" and not meta.get("conflicts")
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    assert "es 0,37 t/ha MENOR que 2,9 t/ha [W1]" in system
+
+
+def test_a_result_that_does_not_mention_the_asked_name_says_so():
+    from swarmbly_app import web_search as W
+    found = {"query": "Zafira variedad quinua registro", "results": [
+        {"label": "W1", "title": "Registro: Kanela", "snippet": "Su rendimiento de referencia es de 2,6 t/ha.",
+         "url": "https://registro.invalid/kanela"}]}
+    q = "¿Qué rendimiento de referencia tiene la variedad Zafira en el registro público de variedades?"
+    W.mark_missing(found, q)
+    assert found["results"][0]["missing"] == ["Zafira"]
+    assert "(Este resultado no menciona «Zafira».)" in W.results_block(found, "es")
+    assert W.asked_names("¿Qué sabes de Floresta?", "Mimus ficticius") == []        # not approved in the query
+    kept = {"query": "Kanela variedad", "results": [{"label": "W1", "title": "Registro: Kanela", "snippet": "2,6 t/ha.",
+                                                     "url": "https://registro.invalid/kanela"}]}
+    W.mark_missing(kept, "¿Qué rendimiento tiene la variedad Kanela?")
+    assert "missing" not in kept["results"][0]

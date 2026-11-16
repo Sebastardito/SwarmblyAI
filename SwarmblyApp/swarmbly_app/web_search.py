@@ -323,6 +323,33 @@ def _searxng(query: str, url: str, lang: str, fetch: Fetch, timeout: float) -> l
             for r in (data.get("results") or [])[:4] if r.get("url")]
 
 
+def asked_names(question: str, query: str) -> list[str]:
+    """Names the user asked about and approved in the query ("la variedad
+    Zafira" → Zafira): capitalised words inside the question that the query
+    also has."""
+    words = {w.lower() for w in re.findall(r"\w+", query or "")}
+    out = []
+    for m in re.finditer(r"(?<=[^\W\d_])[\s,;:(«\"']+([A-ZÁÉÍÓÚÑ][\wáéíóúñü-]{3,})", question or ""):
+        name = m.group(1)
+        if name.lower() in words and name not in out:
+            out.append(name)
+    return out
+
+
+def mark_missing(found: dict[str, Any], question: str) -> dict[str, Any]:
+    """Each result is told which of the asked names it does not mention. A
+    search for "Zafira variedad quinua registro" returned the register's
+    entry for another variety, and a 7B model gave that variety's figure as
+    Zafira's in 6 of 6 answers (open battery, CO-07)."""
+    names = asked_names(question, found.get("query", ""))
+    for h in found.get("results") or []:
+        text = f"{h.get('title', '')} {h.get('snippet', '')}".lower()
+        missing = [n for n in names if n.lower() not in text]
+        if missing:
+            h["missing"] = missing
+    return found
+
+
 def results_block(found: dict[str, Any], lang: str) -> str:
     head = {"es": ("Resultados de la búsqueda en línea que el usuario aprobó (consulta: «{q}»). "
                    "Son las ÚNICAS referencias en línea que puedes citar, como [W1], [W2]…; no "
@@ -337,6 +364,10 @@ def results_block(found: dict[str, Any], lang: str) -> str:
         meta = " · ".join(x for x in (h.get("authors"), h.get("year"), h.get("source")) if x)
         lines.append(f"[{h['label']}] {h['title']}" + (f" — {meta}" if meta else "")
                      + f" <{h['url']}>" + (f": {h['snippet']}" if h.get("snippet") else ""))
+        if h.get("missing"):
+            names = ", ".join(f"«{n}»" for n in h["missing"])
+            lines.append(f"(Este resultado no menciona {names}.)" if lang == "es"
+                         else f"(This result does not mention {names}.)")
     if not found.get("results"):
         lines.append("(sin resultados)" if lang == "es" else "(no results)")
     return "\n".join(lines)
