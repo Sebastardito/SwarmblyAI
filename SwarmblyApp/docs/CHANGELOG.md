@@ -118,6 +118,13 @@ Swarmbly AI 3.3.
   PARTE to the right sentence on 3,1 and 2,8 t/ha; with the title or the
   note, SÍ. With qwen2.5:14b as verifier on the compositions (vf14), 8 flags
   in 38 sentences, two of them wrong in the same way.
+  Check after the fixes (7 cases × 2, vf33b): 70 sentences checked in 13.9 s
+  in all, 8 flagged and all 8 right on reading (a "presentó" for the
+  minutes' "presentará en junio", a 2027 that is not there, labels of
+  paragraphs that do not exist, opinions cited to the minutes, a comparison
+  that cites only one lot's table); the 3 sentences about what the sources
+  do not mention were left out; 2 citations completed. Several labels in one
+  bracket ("[D1 p3, D1 p4, D1 p5]") are now all read.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the
