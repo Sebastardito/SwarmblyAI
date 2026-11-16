@@ -180,3 +180,8 @@ def test_what_the_sources_do_not_say_is_not_a_claim_and_computed_figures_are_nam
     assert "Nota: 0,3 se calcula" in seen[0]
     assert V.split("Las fuentes no mencionan el riego [D1 p2].")[0]["absence"] is True
     assert "absence" not in V.split("Se observó clorosis en la Ladera Este, pero no en la Parcela Norte [D1 p11].")[0]
+
+
+def test_several_labels_in_one_bracket_are_all_cited():
+    claims = V.split("Ajustar nuestras prácticas será crucial para el próximo año [D1 p3, D1 p4; D1 p5].")
+    assert claims[0]["labels"] == ["D1 p3", "D1 p4", "D1 p5"]

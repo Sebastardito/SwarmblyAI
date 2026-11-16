@@ -49,6 +49,17 @@ _LABEL = re.compile(r"\[\s*((?:[A-Z]\d+\s*p\d+)|(?:W\d+))[^\]]{0,40}\]")
 YES, PARTLY, NO = "yes", "partly", "no"
 
 
+_ONE = re.compile(r"\b([A-Z]\d+\s*p\d+|W\d+)\b")
+
+
+def _labels(sentence: str) -> list[str]:
+    """Every label of the sentence, also several in one bracket ("[D1 p3, D1 p4]")."""
+    out: list[str] = []
+    for m in _LABEL.finditer(sentence):
+        out += [_norm(x) for x in _ONE.findall(m.group(0))]
+    return list(dict.fromkeys(out))
+
+
 def _norm(label: str) -> str:
     return " ".join(re.sub(r"([A-Z]\d+)\s*(p\d+)", r"\1 \2", label).split())
 
@@ -77,7 +88,7 @@ def split(answer: str) -> list[dict[str, Any]]:
                         parts[i] = parts[i][m.end():]
             for sentence in parts:
                 sentence = sentence.strip()
-                labels = list(dict.fromkeys(_norm(m) for m in _LABEL.findall(sentence)))
+                labels = _labels(sentence)
                 if labels and len(_CITE.sub(" ", sentence).split()) >= 5:
                     item = {"text": sentence, "labels": labels}
                     if _ABSENCE.search(sentence):
