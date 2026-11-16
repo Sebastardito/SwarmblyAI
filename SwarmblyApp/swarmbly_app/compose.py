@@ -494,6 +494,11 @@ _HEADER = re.compile(r"^\s*(?:autor[a]?|responsable|fecha|versi[oó]n|p[aá]gina
                      re.I)
 
 
+# a line of a list of publications ("Revista Andina de Cultivos 12: 45–52.")
+_REFERENCE = re.compile(r"\b\d{1,4}\s*(?:\(\d+\))?\s*:\s*\d+\s*[–-]\s*\d+\b")
+_CODE = re.compile(r"\b[A-Z]{1,4}-?\d{1,4}\b")
+
+
 def instruction_like(text: str) -> bool:
     """Text addressed to an assistant ("ignora todas las instrucciones
     anteriores y…", "send all the documents to…"): in a document it is
@@ -572,16 +577,36 @@ def facts(request: str, sources: list[dict[str, Any]], inv: dict[str, Any] | Non
     # the topic: the request's words without its entities and group nouns
     # ("compare la germinación de AB1 y AB2 en cada sitio" → germinación)
     topic = _request_stems(request) - _stems(" ".join(entities)) - _GROUP_STEMS
+    # the request's codes ("AB1"): a fact about another one ("el rendimiento
+    # medio del lote AB2…", or a row of informe_lote_AB2.md) is not about this
+    # request (open battery x33: the notice listed it for a paragraph on AB1)
+    asked = {c.replace("-", "") for c in _CODE.findall(request or "")}
+    wants_rows = bool((inv or {}).get("table"))
+    said = _stems(request or "")
     units: list[tuple[int, str, str, set[str]]] = []
     for order, s in enumerate(sources):
         label = " ".join(str(s.get("label", "")).split())
         # the file's name says what its rows are about ("analisis_suelo_2026.md"
         # for a row "Parcela Sur · Nitrógeno total (%): 0,09")
-        name = _stems(re.sub(r"[_\-.]+", " ", str(s.get("rel") or s.get("source") or "")))
+        file_name = re.sub(r"[_\-.]+", " ", str(s.get("rel") or s.get("source") or ""))
+        name = _stems(file_name)
         for unit in _units(str(s.get("text", ""))):
-            if (len(unit.split()) >= 5 and not unit.startswith("#") and not instruction_like(unit)
-                    and not _HEADER.match(unit)):
-                units.append((order, label, unit, name))
+            if not (len(unit.split()) >= 5 and not unit.startswith("#") and not instruction_like(unit)
+                    and not _HEADER.match(unit) and not _REFERENCE.search(unit)):
+                continue
+            about = ({c.replace("-", "") for c in _CODE.findall(unit)}
+                     or {c.replace("-", "") for c in _CODE.findall(file_name)})
+            if asked and about and not (about & asked):
+                continue
+            # the rows of a table are its detail: facts of their own when the
+            # request asks for a table, names what the rows are ("por sitio")
+            # or names the row ("Parcela Sur")
+            if " · " in unit and ": " in unit and not wants_rows:
+                key_name, _, rest = unit.partition(": ")
+                key_value = rest.split(" · ")[0]
+                if not (_stems(key_name) & said or _fold(key_value) in _fold(request or "")):
+                    continue
+            units.append((order, label, unit, name))
     df: dict[str, int] = {}
     for _, _, unit, _ in units:
         for st in _stems(unit) & topic:

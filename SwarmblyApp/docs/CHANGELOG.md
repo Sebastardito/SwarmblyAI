@@ -23,7 +23,7 @@ Swarmbly AI 3.3.
   the composition and the receipt with both, questions never. Settings nest
   to any depth (`roles.writer.model`), and role keys go to the keychain.
 - **Recipe 2, a table built by code** (`swarmbly_app/tables.py`,
-  `compose.table_by_code`, off until measured). Compositions that ask for a
+  `compose.table_by_code`). Compositions that ask for a
   table were still annulled in the sealed banks for an invented row or a
   wrong value. Now the model does only short jobs: it writes the header the
   request asks for, and fills, for each document that bears on the request,
@@ -48,6 +48,28 @@ Swarmbly AI 3.3.
   99/111 → 111/111, answers with a citation 9 → 15, no unsupported cell, 9.3 s
   per answer against 7.2 s; the table was built by code in 12 of 15 (the
   yields table was not: see the next point).
+  Full battery with the recipe (33 cases × 2, x33): on the 30 cases of the
+  earlier run, passed 52/60 → 52/60 and key data 129/138 → 130/138; the five
+  table cases passed 10 of 10 with no unsupported cell in 64, the table
+  built by code in 8. The yields table was still the model's: told "one row
+  for each of AB1, AB2", it wrote the header "| Lote | Sitio 1 | Sitio 2 |
+  Sitio 3 | Diferencia |". The hint now goes only when the request names
+  both sides of the table (single prompts, one run each: without it the
+  model wrote "| Sitio | Lote AB1 | Lote AB2 | Diferencia |", and for two
+  people "| Individuo | Cargo actual | Institución | … |" where the hint
+  gave "| Variable | Ana Pérez | Luis Soto |"). A column named only after
+  an entity ("Lote AB1") takes the source column the request asks about and
+  its name ("Rendimiento medio AB1 (t/ha)"), and a document is about the
+  entity its file is named after. **On by default** since that run
+  (`compose.table_by_code`).
+- **The notice of facts not mentioned lists less.** With the rows of tables
+  visible, the notice appeared in 6 of 66 answers and none of the 8 missing
+  key data was in it (x33): it listed the rows of a table for a paragraph
+  that asked for a mean, the mean of another lot, and a line of a list of
+  publications. A fact about another code than the ones the request names
+  is left out, so is a reference line ("Revista … 12: 45–52."), and the
+  rows of a table count when the request asks for a table, names what the
+  rows are ("por sitio") or names the row.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

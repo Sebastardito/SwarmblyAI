@@ -151,7 +151,7 @@ DEFAULTS: dict[str, Any] = {
         "scaffold": False,            # F3b: sections planned by code, each written from its facts, joined
         "gap_fill": True,             # F3c: the facts the draft left out, written as one closing paragraph
         "model": "",                  # a larger local model for compositions only (empty: the chat's model)
-        "table_by_code": False,       # 3.3 recipe 2: tables built by code from validated values
+        "table_by_code": True,        # 3.3 recipe 2: tables built by code from validated values
     },
     "evidence": {
         # On by default since P2e round 12: with operation-aware lookups,

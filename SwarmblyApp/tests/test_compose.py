@@ -407,3 +407,27 @@ def test_a_heading_shown_with_its_paragraph_is_not_part_of_the_first_fact():
     q = "Escribe un párrafo de 150 a 200 palabras que compare la germinación de AB1 y AB2 en cada sitio."
     texts = [f["text"] for f in C.facts(q, src, C.inventory(q, [src[0]["text"]]))]
     assert texts == ["La germinación a los diez días fue del 90 % en la Parcela Norte."]
+
+
+def test_facts_leave_out_another_lot_the_rows_nobody_asked_for_and_reference_lines():
+    table = ("| Sitio | Repeticiones | Rendimiento medio (t/ha) |\n|---|---|---|\n| Parcela Norte | 4 | 2,8 |\n"
+             "| Parcela Sur | 4 | 2,4 |")
+    sources = [
+        {"rel": "informe_lote_AB1.md", "label": "D1 p16", "text": table},
+        {"rel": "informe_lote_AB1.md", "label": "D1 p17",
+         "text": "El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha."},
+        {"rel": "informe_lote_AB2.md", "label": "D2 p16", "text": table.replace("2,8", "3,1")},
+        {"rel": "informe_lote_AB2.md", "label": "D2 p17",
+         "text": "El rendimiento medio del lote AB2 en los tres sitios fue de 2,53 t/ha."},
+        {"rel": "cv.md", "label": "D3 p4", "text": "Rendimiento de la quinua en ladera. Revista Andina de Cultivos 12: 45–52."}]
+    one = "Escribe un párrafo que compare el rendimiento medio del lote AB1 con el de referencia de la variedad."
+    texts = [f["text"] for f in C.facts(one, sources, C.inventory(one))]
+    assert texts == ["El rendimiento medio del lote AB1 en los tres sitios fue de 2,37 t/ha."]
+    # the rows are facts when the request names what they are, or asks for a table
+    by_site = "Escribe un párrafo sobre el rendimiento medio del lote AB1 por sitio."
+    texts = [f["text"] for f in C.facts(by_site, sources, C.inventory(by_site))]
+    assert any(t.startswith("Sitio: Parcela Norte") and "2,8" in t for t in texts)
+    assert not any("3,1" in t or "2,53" in t or "45–52" in t for t in texts)
+    both = "Haz una tabla con el rendimiento medio de AB1 y AB2."
+    texts = [f["text"] for f in C.facts(both, sources, C.inventory(both))]
+    assert any("2,8" in t for t in texts) and any("3,1" in t for t in texts)
