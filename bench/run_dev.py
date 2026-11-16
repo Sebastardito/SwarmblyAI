@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.3.0"
+VERSION = "0.3.1"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -133,6 +133,11 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "tabla_por_codigo": bool(meta.get("table")),
         "celdas_sin_respaldo": len((meta.get("table_audit") or {}).get("unsupported") or []),
         "celdas": int((meta.get("table_audit") or {}).get("cells") or 0),
+        # 3.3: labelled sentences checked against what they cite
+        "verificadas": int((meta.get("verification") or {}).get("claims") or 0),
+        "sin_respaldo_de_su_cita": len((meta.get("verification") or {}).get("flagged") or []),
+        "citas_completadas": len((meta.get("verification") or {}).get("completed") or []),
+        "verificacion_s": float((meta.get("verification") or {}).get("seconds") or 0),
     }
 
 
@@ -159,6 +164,10 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "tablas": [sum(bool(x.get("tabla_por_codigo")) for x in s),
                        sum(bool(x.get("celdas")) for x in s),
                        sum(x.get("celdas_sin_respaldo", 0) for x in s), sum(x.get("celdas", 0) for x in s)],
+            "verificacion": [sum(x.get("verificadas", 0) for x in s),
+                             sum(x.get("sin_respaldo_de_su_cita", 0) for x in s),
+                             sum(x.get("citas_completadas", 0) for x in s),
+                             round(sum(x.get("verificacion_s", 0) for x in s), 1)],
             "con_citas_del_modelo": sum(x.get("citas_modelo", x["citas"]) > 0 for x in s),
             "citas_codigo": sum(x.get("citas_codigo", 0) for x in s),
             "reparaciones": [sum(x.get("reparacion") == "conservada" for x in s),
@@ -194,6 +203,10 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
     if tb[1]:
         out += ["", f"Respuestas con tabla: {tb[1]} (armadas por el programa: {tb[0]}); celdas numéricas sin "
                 f"respaldo en las fuentes: {tb[2]} de {tb[3]}."]
+    vf = t.get("verificacion") or [0, 0, 0, 0]
+    if vf[0]:
+        out += ["", f"Frases con cita comprobadas: {vf[0]}; su cita no las respalda: {vf[1]}; citas completadas "
+                f"por el código: {vf[2]}; tiempo de la comprobación: {vf[3]} s en total."]
     out += ["", f"Latencia media por respuesta: {t.get('latencia_media_s', '—')} s"
             + (f"; respuestas compuestas por secciones: {t['por_secciones']}/{t['n']}" if t.get("por_secciones") else "")
             + "."]

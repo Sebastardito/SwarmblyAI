@@ -112,3 +112,14 @@ def test_the_set_of_claims_is_well_formed_and_the_code_flags_no_supported_senten
     assert summary["ambos"]["detectadas"] == code["detectadas"] and summary["solo_modelo"]["detectadas"] == 0
     text = rv.report("r", len(items), [summary], {"m": [rows]}, items)
     assert "| Código y modelo |" in text and "Fallos de la primera repetición" in text
+
+
+def test_the_summary_reports_the_claim_verifier():
+    meta = {"verification": {"claims": 4, "flagged": [{"why": "partly"}], "completed": [{"added": ["D1 p17"]}],
+                             "seconds": 1.2}}
+    rows = [{"id": "A", "cat": "S3", "rep": 1, "estado": "done", "puntuacion": rd.score({"clave": [["a"]]}, "a", meta, 0)}]
+    assert rows[0]["puntuacion"]["verificadas"] == 4 and rows[0]["puntuacion"]["sin_respaldo_de_su_cita"] == 1
+    summ = rd.summarise(rows)
+    assert summ["total"]["verificacion"] == [4, 1, 1, 1.2]
+    md = rd.summary_markdown("r", {"modelo": "m", "repeticiones": 1}, summ, rows, None)
+    assert "Frases con cita comprobadas: 4; su cita no las respalda: 1; citas completadas por el código: 1" in md
