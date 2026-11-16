@@ -735,6 +735,35 @@ class ChatService:
             answer_kind = egress.PASSAGES if sources else egress.QUESTION
             if answer_model != model:
                 budget *= 2          # a reasoning model spends tokens before it answers
+            # 3.3, recipe 2: the table a composition asks for is built by code
+            # from values each document supports; the model writes around it
+            table_built = None
+            inv_now = request.receipt_ctx.get("inventory")
+            if ((self.config().get("compose") or {}).get("table_by_code") and inv_now
+                    and inv_now.get("table") and sources and not public_hits):
+                from . import tables
+
+                def _short(prompt: str, max_tokens: int) -> str:
+                    with egress.purpose(answer_kind):
+                        r = answering.stream_chat([{"role": "user", "content": prompt}], model=answer_model,
+                                                  max_tokens=max_tokens, temperature=0.0,
+                                                  interrupt=request.stop_event.is_set)
+                    return getattr(r, "text", "") or ""
+                t0 = time.monotonic()
+                try:
+                    table_built = tables.build(user_text, sources, inv_now, _short, _lang(user_text))
+                except Interrupted:
+                    raise
+                except egress.EgressDenied:
+                    raise
+                except Exception:
+                    table_built = None
+                if table_built:
+                    table_built["seconds"] = round(time.monotonic() - t0, 1)
+                    context = [*context[:-1],
+                               {"role": "system",
+                                "content": tables.table_done_block(table_built["markdown"], _lang(user_text))},
+                               context[-1]]
             scaffold = None
             ccfg_now = self.config().get("compose") or {}
             if (ccfg_now.get("scaffold") and request.receipt_ctx.get("inventory") and sources
@@ -847,6 +876,14 @@ class ChatService:
                     pass
                 answer_text = fixed_text
                 extra["glossary_fixes"] = fixes
+            if table_built:
+                from . import tables
+                answer_text = tables.place(tables.strip_tables(answer_text), table_built["markdown"], user_text)
+                try:
+                    result.text = answer_text
+                except Exception:
+                    pass
+                extra["table"] = {k: v for k, v in table_built.items() if k != "markdown"}
             conflicts = _term_conflicts(answer_text, gloss_pairs, gmeta)
             if conflicts:
                 extra["term_conflicts"] = conflicts
@@ -954,6 +991,12 @@ class ChatService:
                     listed = compose.facts(user_text, sources, inv, answer_text)
                     missing = compose.uncovered(answer_text, listed)
                     extra["coverage"] = {"facts": len(listed), "missing": missing}
+            if sources and "|" in answer_text:
+                # whoever wrote the table: numeric cells that are in no passage
+                from . import tables
+                checked = tables.audit(answer_text, sources)
+                if checked:
+                    extra["table_audit"] = checked
             if public_report is not None:
                 extra["evidence"] = public_report
             elif batch_report is not None:

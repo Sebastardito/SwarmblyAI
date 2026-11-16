@@ -605,6 +605,15 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    // 3.3: a table built by code, and cells of any table that are in no passage
+    if (meta.table) chips.push(chip(t("chat.tableBuilt"), "ok",
+      t("chat.tableBuiltTitle").replace("{rows}", meta.table.rows)
+        .replace("{docs}", (meta.table.documents || []).length)
+        .replace("{empty}", meta.table.empty).replace("{dropped}", (meta.table.dropped || []).length)));
+    if (meta.table_audit?.unsupported?.length) chips.push(chip(
+      t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
+      t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported
+        .map((c) => `${c.row} · ${c.column}: ${c.value}`).join("\n")));
     // 3.3: who wrote this answer, when it was not the conversation's model
     for (const [role, r] of Object.entries(meta.roles || {})) {
       if (role === "search_terms") continue;

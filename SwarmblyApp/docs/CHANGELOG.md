@@ -22,6 +22,22 @@ Swarmbly AI 3.3.
   nothing sent without authorisation, no document without the second one,
   the composition and the receipt with both, questions never. Settings nest
   to any depth (`roles.writer.model`), and role keys go to the keychain.
+- **Recipe 2, a table built by code** (`swarmbly_app/tables.py`,
+  `compose.table_by_code`, off until measured). Compositions that ask for a
+  table were still annulled in the sealed banks for an invented row or a
+  wrong value. Now the model does only short jobs: it writes the header the
+  request asks for, and fills, for each document that bears on the request,
+  the rows that document gives. The code keeps a cell only if its value is
+  in that document, drops a row whose key is not there or a cell in a column
+  named after an entity the document does not mention, merges the rows of
+  several documents by their key, computes differences, adds a "Fuente"
+  column with the paragraphs each row came from and writes "—" for what the
+  sources do not give. The model then writes the text around the finished
+  table; a table of its own is removed (`meta.table`).
+- **Table audit.** Whatever wrote a table, every numeric cell is checked
+  against the passages; a figure that is in none of them, and is not the
+  difference or sum of two supported cells of its row or column, is
+  reported under the answer (`meta.table_audit`).
 
 ## 0.5.0 — Grounded composition and safety (2026-11-15)
 
