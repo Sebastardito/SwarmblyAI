@@ -94,11 +94,12 @@ Swarmbly AI 3.3.
   flags 5 of the 31 unsupported sentences and none of the 42 supported;
   code and qwen2.5:7b 23 of 31 and none (0.2 s per sentence); with
   qwen2.5:14b 29 and 2 (0.5 s); with qwen3.8:27b 31 and 2 (0.7 s). In the
-  chat (8 compositions, one run): with the 7B, 5 of 40 labelled sentences
-  flagged in 9 s in all; with the 27B as verifier, 15 of 41 in 41 s (the
-  two models take turns in memory), every one of them read and found
-  right, four of them a right fact with its citation incomplete (what the
-  completion by code now mends). After that run: a figure another
+  chat (8 compositions, one run; the answers differ between the two runs):
+  with the 7B, 5 of 40 labelled sentences flagged in 9 s in all, the five
+  right on reading; with the 27B as verifier, 15 of 41 in 41 s (the two
+  models take turns in memory), 14 right on reading and one arguable, five
+  of them a right fact with its citation incomplete (what the completion by
+  code now mends). After that run: a figure another
   paragraph gives counts as a citation missing, not as a calculation; the
   model is told which figures the code computed; a cited paragraph that
   cannot bear on the sentence is not shown to it.
