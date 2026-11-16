@@ -605,6 +605,14 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    // 3.3: who wrote this answer, when it was not the conversation's model
+    for (const [role, r] of Object.entries(meta.roles || {})) {
+      if (role === "search_terms") continue;
+      if (r.own) chips.push(chip(t("chat.roleBy").replace("{model}", r.model), r.where ? "warn" : "",
+        (r.where ? t("chat.roleWhere").replace("{host}", r.where) : t("chat.roleLocal"))));
+      else if (r.note) chips.push(chip(t("chat.roleFallback"), "warn",
+        t(r.note.startsWith("missing") ? "chat.roleMissing" : "chat.roleBlocked").replace("{model}", r.asked || "")));
+    }
     if (meta.injection?.passages?.length) chips.push(chip(
       t("chat.injection"), "warn",
       t(meta.injection.echoed ? "chat.injectionEchoed" : "chat.injectionTitle")

@@ -348,6 +348,7 @@ def test_empty_fused_answer_falls_back_to_the_conversation_model(app_state, fake
         def passages(self, entity, focus):
             return {"title": "San Cristóbal mockingbird", "url": "u", "text": "Near Threatened."}
     chat.public_provider = Provider()
+    fake.list_models = lambda: ["small:3b", "big:27b"]      # 3.3: a role's model must be installed
     real = fake.stream_chat
 
     def stream(messages, *, model, **kw):

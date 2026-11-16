@@ -87,7 +87,8 @@
   "total_ms": "ms totales",
   "group": {
    "worker": "Compartir esta computadora (worker)",
-   "evidence": "Evidencia pública"
+   "evidence": "Evidencia pública",
+   "roles": "Modelos por papel"
   }
  },
  "node": {
@@ -202,7 +203,13 @@
   "missedSources": "Tus fuentes sí lo tratan",
   "missedSourcesTitle": "La respuesta dice que tus fuentes no hablan de «{term}», pero usan «{found}», que tu glosario da como equivalente.",
   "unsupported": "{n} frases sin respaldo en tus fuentes",
-  "unsupportedTitle": "Subrayadas en la respuesta: no llevan cita ni el aviso «Fuera de tus fuentes:». Pueden ser ciertas, pero no salen de tus documentos ni de una búsqueda que aprobaste; compruébalas antes de usarlas."
+  "unsupportedTitle": "Subrayadas en la respuesta: no llevan cita ni el aviso «Fuera de tus fuentes:». Pueden ser ciertas, pero no salen de tus documentos ni de una búsqueda que aprobaste; compruébalas antes de usarlas.",
+  "roleBy": "Redactó {model}",
+  "roleLocal": "Un modelo de esta computadora o de tu red escribió esta respuesta en lugar del modelo de la conversación.",
+  "roleWhere": "Esta respuesta la escribió un modelo en {host}, fuera de tu computadora, con tu autorización. El recibo dice qué se envió.",
+  "roleFallback": "Redactor no usado",
+  "roleMissing": "El modelo {model} no está instalado: respondió el modelo de la conversación.",
+  "roleBlocked": "El modelo {model} está fuera de tu computadora y no tiene autorización para esto: respondió el modelo de la conversación y no se envió nada."
  },
  "explore": {
   "title": "Cómo se construyó esta respuesta",
@@ -462,7 +469,9 @@
   "secretStored": {
    "keychain": "guardada en el llavero del sistema",
    "file": "guardada en un archivo protegido de esta computadora"
-  }
+  },
+  "sameServer": "El de la conversación",
+  "modelDefault": "Por defecto del modelo"
  },
  "profile": {
   "automatic": "Automático",
@@ -715,6 +724,34 @@
   "privacy__third_party_passages": {
    "label": "Permitir enviar pasajes de mis documentos a esos servicios",
    "help": "Desactivado: el servicio solo recibe tu pregunta y responde sin tus documentos. Actívalo solo si aceptas que esa organización reciba fragmentos de tus archivos."
+  },
+  "roles__writer__model": {
+   "label": "Modelo redactor",
+   "help": "Escribe las composiciones (informes, resúmenes, tablas) a partir de tus fuentes. Un modelo más grande omite menos datos y tarda más; las preguntas siguen con el modelo de la conversación. Vacío: el modelo de la conversación."
+  },
+  "roles__writer__think": {
+   "label": "Razonamiento del redactor",
+   "help": "Algunos modelos razonan antes de responder y gastan en eso el espacio de la respuesta. «No» lo apaga para el redactor; «Por defecto» deja lo que haga el modelo."
+  },
+  "roles__search_terms__model": {
+   "label": "Modelo para términos de búsqueda",
+   "help": "Escribe los términos con los que se buscan tus documentos. Vacío: el modelo por defecto; en una composición, el redactor si lo hay."
+  },
+  "roles__fusion__model": {
+   "label": "Modelo para respuestas con evidencia pública",
+   "help": "Redacta las respuestas que combinan tus fuentes con evidencia pública. Vacío: el modelo de la conversación."
+  },
+  "roles__writer__backend": {
+   "label": "Servidor del redactor",
+   "help": "Por defecto el redactor usa el mismo servidor que la conversación. Otro servidor sigue la misma política que cualquier modelo: fuera de tu red, no recibe nada sin autorizarlo, y tus documentos solo con la segunda autorización."
+  },
+  "roles__writer__backend_url": {
+   "label": "Dirección del servidor del redactor",
+   "help": "Por ejemplo http://192.168.1.20:11434 o https://…/v1."
+  },
+  "roles__writer__api_key": {
+   "label": "Clave del servidor del redactor",
+   "help": "Se guarda en el llavero del sistema, no en el archivo de configuración."
   }
  },
  "models": {

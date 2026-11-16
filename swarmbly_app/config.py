@@ -129,6 +129,19 @@ DEFAULTS: dict[str, Any] = {
     # to the provider, only for PUBLIC requests). Off until the user enables it.
     # 3.2: grounded composition, one step at a time, each off until the open
     # development battery (bench/dev) shows it helps. F0 is 3.1.
+    # 3.3: who does what. An empty model is the conversation's model; an empty
+    # backend is the conversation's server. A role on another server follows
+    # the same destinations policy as any model (privacy.third_party_models).
+    #   writer        compositions with the user's sources
+    #   search_terms  the short generation that writes search terms
+    #   fusion        answers that join the user's sources with public evidence
+    #   verifier      reserved for the claim verifier of the recipes
+    # Older settings still work: compose.model (writer), lce.expansion_model
+    # (search_terms), evidence.fusion_model (fusion).
+    "roles": {
+        role: {"model": "", "think": None, "backend": "", "backend_url": "", "api_key": ""}
+        for role in ("writer", "search_terms", "fusion", "verifier")
+    },
     "compose": {
         "inventory": False,           # F1: requirements read by code and checked (meta.requirements)
         "checklist": True,            # F1: with inventory on, the requirements also go to the model
@@ -247,11 +260,16 @@ class Config:
         """Deep-merge ``changes`` (dot keys or nested dicts) and persist."""
         nested: dict[str, Any] = {}
         for key, value in changes.items():
-            if "." in key:
-                top, _, rest = key.partition(".")
-                nested.setdefault(top, {})[rest] = value
+            # "roles.writer.model" nests all the way (3.3); a nested dict given
+            # under a dot key is merged as it is
+            parts = key.split(".")
+            node = nested
+            for part in parts[:-1]:
+                node = node.setdefault(part, {})
+            if isinstance(value, dict) and isinstance(node.get(parts[-1]), dict):
+                node[parts[-1]] = _deep_merge(node[parts[-1]], value)
             else:
-                nested[key] = value
+                node[parts[-1]] = value
         with self._lock:
             self._data = _deep_merge(self._data, nested)
             merged = copy.deepcopy(self._data)
@@ -281,6 +299,9 @@ _ENUMS = {
     "theme": {"dark", "light"},
     "profile": {"automatic", "custom", "advanced"},
     "model.backend": {"auto", "ollama", "openai_compat"},
+    **{f"roles.{r}.backend": {"", "ollama", "openai_compat"}
+       for r in ("writer", "search_terms", "fusion", "verifier")},
+    **{f"roles.{r}.think": {None, True, False} for r in ("writer", "search_terms", "fusion", "verifier")},
     "model.embedder": {"hash", "server"},
     "swarm.mode": {"local", "lan", "internet", "auto"},
     "privacy.tier": {"GLOBAL", "TRUSTED", "LOCAL"},

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.6.0 — Roles and recipes (unreleased)
+
+Swarmbly AI 3.3.
+
+- **Models by role** (`swarmbly_app/roles.py`, settings `roles.*`). A role
+  names a model, whether it may reason before answering and, optionally, a
+  server of its own: `writer` (compositions with the user's sources),
+  `search_terms`, `fusion` (answers that join the user's sources with public
+  evidence) and `verifier` (reserved for the recipes). An empty model is the
+  conversation's model. The older settings keep working (`compose.model`,
+  `lce.expansion_model`, `evidence.fusion_model`). A role never widens what
+  may leave the computer: its destination goes through the 3.0.1 policy
+  (a third party receives nothing unless authorised, the user's documents
+  only with the second authorisation), and when the policy does not allow
+  it, or the model is not installed, the conversation's model does the job
+  and the answer says so (`meta.roles`, a chip under the answer). Reasoning
+  is set per role (`roles.writer.think`), so a reasoning model can write
+  compositions without thinking while the conversation's model is left as it
+  is. A writer on a simulated OpenAI-compatible API is covered by tests:
+  nothing sent without authorisation, no document without the second one,
+  the composition and the receipt with both, questions never. Settings nest
+  to any depth (`roles.writer.model`), and role keys go to the keychain.
+
 ## 0.5.0 — Grounded composition and safety (2026-11-15)
 
 Swarmbly AI 3.2. Each step has its own setting (`compose.*`) and was kept
