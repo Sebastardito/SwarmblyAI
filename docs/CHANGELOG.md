@@ -195,6 +195,23 @@ Swarmbly AI 3.3.
   notice listed them: the closing paragraph only took facts of the same
   kind as one the answer gave, and neither was given; it now also takes
   those whose specific word the request says ("la clorosis observada").
+- **"¿Qué quieres hacer?"** (`swarmbly_app/recipes.py`, `/api/recipes`). A new
+  conversation shows four cards: *Preguntar a tus documentos*, *Comparar
+  documentos en una tabla*, *Investigar con fuentes públicas* and *Procesar
+  una lista* (disabled, "próximamente"). A card fills the request with a
+  template whose parts in brackets the user completes (the message is not
+  sent while one is left) and turns on what that work needs; writing freely,
+  with no card, works as before. *Documentos*: no public lookup is offered
+  for that answer. *Tabla*: the table is built by code even when the request
+  does not say "tabla". *Investigar*: before the answer, the app proposes a
+  query from the topic the user wrote for the public sources (never the
+  rest of the request: "el rendimiento del lote AB2 … sobre la variedad
+  Altiva" proposes "variedad Altiva"), the user edits and approves it, and
+  only then is anything sent. The answer carries the recipe (`meta.recipe`,
+  a chip), and a retry keeps it. A public result that does not mention what
+  was asked is not one side of a comparison by code. Measured on four new
+  cases of the open battery (0.5.0: RC-01 to RC-04), which start from a
+  card and, for research, approve the query the app proposes.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

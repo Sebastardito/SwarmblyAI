@@ -332,10 +332,34 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
                 mode=body.get("mode") or None,
                 model=body.get("model") or None,
                 allow_public=bool(body.get("allow_public")),
-                web_query=str(body.get("web_query") or ""))
+                web_query=str(body.get("web_query") or ""),
+                recipe=str(body.get("recipe") or ""))
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         return {"user_message": user_msg, "assistant_message": assistant_msg}
+
+    # ---- recipes (3.3): "¿Qué quieres hacer?" ------------------------------------
+    @app.get("/api/recipes")
+    def list_recipes() -> list[dict[str, Any]]:
+        from ..recipes import listing
+        return listing()
+
+    @app.post("/api/recipes/query")
+    def recipe_query(body: dict[str, Any]) -> dict:
+        """The query offered before a research answer. Nothing leaves the
+        computer here: the user sees it, edits it and approves it."""
+        from ..recipes import propose_query
+        text = str((body or {}).get("text") or "").strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="empty text")
+        glossary: list[tuple[str, str]] = []
+        getter = state.chat.glossary_entries
+        if getter is not None:
+            try:
+                glossary = list(getter(str((body or {}).get("project_id") or "")))
+            except Exception:
+                glossary = []
+        return {"query": propose_query(text, glossary)}
 
     @app.post("/api/conversations/{conv_id}/messages/{message_id}/retry")
     def retry_message(conv_id: str, message_id: str,
