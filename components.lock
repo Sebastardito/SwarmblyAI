@@ -29,8 +29,8 @@
       "version": "0.5.0",
       "repository": "https://github.com/Sebastardito/SwarmblyApp",
       "ref": "main",
-      "commit": "96462fc3404e5282403d5ed68ecbb59bb143e1f1",
-      "tree": "01c5582ede213c0662c05d74d9ad852e9a05c743",
+      "commit": "9217ccab36043d54122f0fbb547bbadcf0abf046",
+      "tree": "038b51235a05ca6c58ff6e1e4d6a07b28504f42d",
       "doi": "10.5281/zenodo.24265875"
     }
   }
