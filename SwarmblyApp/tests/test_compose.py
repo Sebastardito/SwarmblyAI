@@ -564,3 +564,19 @@ def test_the_results_of_an_approved_search_can_go_after_the_documents(app_state,
         web = next(i for i, b in enumerate(system) if b.startswith("Resultados de la búsqueda"))
         docs = next(i for i, b in enumerate(system) if "[D1 p1]" in b and "fewer than 60" in b)
         assert (web > docs) is after
+
+
+def test_a_comparison_of_counts_keeps_bounds_and_years():
+    notes = {"label": "D1 p2", "rel": "island_birds_summary_EN.md",
+             "text": "The Floresta population fell to fewer than 60 adults after a drought in 2019. "
+                     "Hatching success was 41 % on Floresta."}
+    sheet = {"label": "W1", "rel": "https://lista-roja.invalid/mimus", "public": True,
+             "text": "Ficha. En Floresta quedaban unos 45 adultos en el censo de 2024; en Verdemar, unos 900."}
+    q = "Compara cuántos adultos quedaban en Floresta según mis notas con lo que dicen las fuentes públicas."
+    found = C.comparisons(q, [notes, sheet])
+    assert found[0]["direction"] == "bound" and found[0]["difference"] == ""
+    assert found[0]["a"] == {"label": "D1 p2", "value": "60", "unit": "adultos", "qualifier": "menos de", "year": "2019"}
+    assert found[0]["b"]["qualifier"] == "unos" and found[0]["b"]["year"] == "2024"
+    block = C.comparison_block(found)
+    assert "- menos de 60 adultos (en 2019) [D1 p2] · unos 45 adultos (en 2024) [W1]" in block
+    assert "no atribuyas uno a la fuente del otro" in block

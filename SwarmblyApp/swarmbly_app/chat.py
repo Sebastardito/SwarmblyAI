@@ -819,7 +819,14 @@ class ChatService:
                     return getattr(r, "text", "") or ""
                 t0 = time.monotonic()
                 try:
-                    table_built = tables.build(user_text, sources, inv_now, _short, _lang(user_text))
+                    table_request = user_text
+                    if request.recipe == "table" and not re.search(r"\b(tabla|cuadro|table)\b", user_text, re.I):
+                        # the card asked for a table; the words may not (a 7B
+                        # model asked for "the header of the table it asks for"
+                        # wrote none for "Compara la germinación…", open battery RC-01)
+                        table_request = user_text.rstrip() + (" Hazlo en una tabla." if _lang(user_text) == "es"
+                                                              else " Put it in a table.")
+                    table_built = tables.build(table_request, sources, inv_now, _short, _lang(user_text))
                 except Interrupted:
                     raise
                 except egress.EgressDenied:

@@ -212,6 +212,25 @@ Swarmbly AI 3.3.
   was asked is not one side of a comparison by code. Measured on four new
   cases of the open battery (0.5.0: RC-01 to RC-04), which start from a
   card and, for research, approve the query the app proposes.
+- **After the first run of the cards** (RC-01 to RC-04 × 3, qwen2.5:7b:
+  3/12 passed, all three in *Documentos*, with nothing sent). *Tabla*: no table
+  in 3 of 3; asked to fill the rows of "Compara la germinación de AB1 y AB2…",
+  the 7B answered "NINGUNA" in 6 of 6 replays, and filled them when the request
+  began with "Arma una tabla". A sentence that gives one value per place ("del
+  87 % en la Parcela Norte, del 81 % en la Parcela Sur…") is now read by code,
+  like a source table, for the column of the code the document is about, and
+  the column takes the sentence's word ("Germinación AB1"). *Investigar*,
+  variety: the proposed query "variedad Altiva" found nothing, because the
+  fictitious catalogue entry did not say "variedad" and a web page needs both
+  words; the entry now says it, as a real one would (open battery). *Investigar*,
+  counts: "fewer than 60 adults after a drought in 2019" against "unos 45
+  adultos en el censo de 2024"; the 7B gave the 45 as the user's notes' in 3
+  of 3. The comparison by code now also takes counts of individuals (adults,
+  pairs, nests, plants…), keeps the qualifier and the year of each figure and,
+  when one is a bound ("fewer than"), gives both figures without a difference:
+  "- menos de 60 adultos (en 2019) [D1 p2] · unos 45 adultos (en 2024) [W1]".
+  Replaying the run's prompt: 45 "según tus notas" in 2 of 3 without it, both
+  figures with their years and labels in 3 of 3 with it.
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

@@ -955,6 +955,23 @@ def _shown(value: float, like: str, lang: str) -> str:
     return out.replace(".", ",") if lang == "es" else out
 
 
+# counts of individuals, for comparisons only ("fewer than 60 adults", "unos 45
+# adultos"): the notes' figure was given as the public one's (open battery RC-04)
+_COUNT = re.compile(r"(?<![\w.,])(\d+(?:[.,]\d+)?)\s+(adult(?:o|a)?s|individu(?:o|al)s|ejemplares|parejas|pairs|"
+                    r"nidos|nests|aves|birds|plantas|plants)\b", re.I)
+_COUNT_ES = {"adults": "adultos", "adultas": "adultos", "individuals": "individuos", "pairs": "parejas",
+             "nests": "nidos", "birds": "aves", "plants": "plantas"}
+_COUNT_EN = {"adultos": "adults", "adultas": "adults", "individuos": "individuals", "parejas": "pairs",
+             "nidos": "nests", "aves": "birds", "plantas": "plants"}
+_QUALIFIER = re.compile(r"(fewer\s+than|less\s+than|more\s+than|over|under|about|around|approximately|unos|unas|"
+                        r"cerca\s+de|menos\s+de|m[aá]s\s+de|alrededor\s+de|aproximadamente)\s*$", re.I)
+_BOUND = {"fewer than": ("menos de", "fewer than"), "less than": ("menos de", "fewer than"),
+          "under": ("menos de", "fewer than"), "menos de": ("menos de", "fewer than"),
+          "more than": ("más de", "more than"), "over": ("más de", "more than"), "más de": ("más de", "more than"),
+          "mas de": ("más de", "more than")}
+_ABOUT = {"about", "around", "approximately", "unos", "unas", "cerca de", "alrededor de", "aproximadamente"}
+
+
 def comparisons(question: str, sources: list[dict[str, Any]], lang: str = "es",
                 limit: int = 2) -> list[dict[str, Any]]:
     """For a request that asks to compare a figure of the user's documents
@@ -968,7 +985,7 @@ def comparisons(question: str, sources: list[dict[str, Any]], lang: str = "es",
     q_codes = _codes(question)
     q_names = [n.lower() for n in _PROPER.findall(question or "") if n.split()[0] not in _NOT_ENTITY]
     topic = _request_stems(question) - _GROUP_STEMS - _QUESTION_WORDS - _stems(" ".join(q_names))
-    sides: dict[str, dict[bool, dict[float, tuple[str, str, str]]]] = {}
+    sides: dict[str, dict[bool, dict[float, tuple[str, str, str, str, str]]]] = {}
     for s in sources:
         public = bool(s.get("public"))
         label = " ".join(str(s.get("label", "")).split())
@@ -984,24 +1001,50 @@ def comparisons(question: str, sources: list[dict[str, Any]], lang: str = "es",
                     continue                     # another lot's document, or none named
                 if q_names and not any(n in whole for n in q_names) and not (q_codes & codes):
                     continue
-            for m in _AMOUNT.finditer(unit):
-                kind = _fold(m.group(2)).replace(" ", "")
-                value = _as_float(m.group(1))
-                if value is None:
-                    continue
-                sides.setdefault(kind, {}).setdefault(public, {}).setdefault(value, (label, m.group(1), m.group(2)))
+            years = sorted({y for y in re.findall(r"\b(?:19|20)\d\d\b", unit)})
+            year = years[0] if len(years) == 1 else ""
+            for rx in (_AMOUNT, _COUNT):
+                for m in rx.finditer(unit):
+                    value = _as_float(m.group(1))
+                    if value is None or (rx is _AMOUNT and _YEAR.fullmatch(m.group(1))):
+                        continue
+                    shown_unit = m.group(2)
+                    if rx is _COUNT:
+                        word = _fold(shown_unit)
+                        kind = _COUNT_ES.get(word, word)
+                        shown_unit = kind if lang == "es" else _COUNT_EN.get(kind, kind)
+                    else:
+                        kind = _fold(shown_unit).replace(" ", "")
+                    q = _QUALIFIER.search(unit[max(0, m.start() - 30):m.start()])
+                    qualifier = " ".join(q.group(1).lower().split()) if q else ""
+                    sides.setdefault(kind, {}).setdefault(public, {}).setdefault(
+                        value, (label, m.group(1), shown_unit, qualifier, year))
     out: list[dict[str, Any]] = []
     for kind, by in sides.items():
         mine, theirs = by.get(False) or {}, by.get(True) or {}
         if len(mine) != 1 or len(theirs) != 1:
             continue                             # nothing to compare, or not one figure on each side
-        (a, (la, ta, unit)), = mine.items()
-        (b, (lb, tb, _)), = theirs.items()
+        (a, (la, ta, unit, qa, ya)), = mine.items()
+        (b, (lb, tb, _, qb, yb)), = theirs.items()
+
+        def side(label: str, value: str, qualifier: str, year: str) -> dict[str, Any]:
+            out_side: dict[str, Any] = {"label": label, "value": value, "unit": unit}
+            if qualifier in _BOUND:
+                out_side["qualifier"] = _BOUND[qualifier][0 if lang == "es" else 1]
+            elif qualifier in _ABOUT:
+                out_side["qualifier"] = "unos" if lang == "es" else "about"
+            if year:
+                out_side["year"] = year
+            return out_side
         diff = abs(a - b)
-        out.append({"a": {"label": la, "value": ta, "unit": unit}, "b": {"label": lb, "value": tb, "unit": unit},
-                    "difference": _shown(diff, ta if len(ta) >= len(tb) else tb, lang),
-                    "percent": round(100 * diff / b) if b else None,
-                    "direction": "equal" if diff < 1e-9 else ("lower" if a < b else "higher")})
+        item = {"a": side(la, ta, qa, ya), "b": side(lb, tb, qb, yb),
+                "difference": _shown(diff, ta if len(ta) >= len(tb) else tb, lang),
+                "percent": round(100 * diff / b) if b else None,
+                "direction": "equal" if diff < 1e-9 else ("lower" if a < b else "higher")}
+        if qa in _BOUND or qb in _BOUND:
+            # "fewer than 60" against 45: two figures, not a difference
+            item.update(difference="", percent=None, direction="bound")
+        out.append(item)
         if len(out) >= limit:
             break
     return out
@@ -1011,8 +1054,14 @@ def comparison_block(found: list[dict[str, Any]], lang: str = "es") -> str:
     es = lang == "es"
     lines = ["Cálculo hecho por el programa para la comparación que se pide (las cifras son de las fuentes):"
              if es else "Calculation made by the program for the comparison asked (the figures are the sources'):"]
+    def fig(x: dict[str, Any]) -> str:
+        text = " ".join(p for p in (x.get("qualifier", ""), x["value"], x["unit"]) if p)
+        return text + (f" ({'en ' if es else 'in '}{x['year']})" if x.get("year") else "")
     for c in found:
         a, b = c["a"], c["b"]
+        if c["direction"] == "bound":
+            lines.append(f"- {fig(a)} [{a['label']}] · {fig(b)} [{b['label']}]")
+            continue
         if c["direction"] == "equal":
             lines.append(f"- {a['value']} {a['unit']} [{a['label']}] es igual a {b['value']} {b['unit']} [{b['label']}]."
                          if es else f"- {a['value']} {a['unit']} [{a['label']}] equals {b['value']} {b['unit']} "
@@ -1027,9 +1076,15 @@ def comparison_block(found: list[dict[str, Any]], lang: str = "es") -> str:
         else:
             lines.append(f"- {a['value']} {a['unit']} [{a['label']}] is {c['difference']} {a['unit']} "
                          f"{'LOWER' if low else 'HIGHER'} than {b['value']} {b['unit']} [{b['label']}]{pct}.")
-    words = {"lower": ("menor, no superior", "lower, not higher"), "higher": ("mayor, no inferior", "higher, not lower"),
-             "equal": ("igual", "equal")}[found[0]["direction"]]
     first = found[0]
+    if first["direction"] == "bound":
+        lines.append("Da las dos cifras, cada una con su etiqueta y, si la tiene, su año; son dos datos distintos, no "
+                     "atribuyas uno a la fuente del otro." if es else
+                     "Give both figures, each with its label and, if it has one, its year; they are two different "
+                     "data, do not attribute one to the other's source.")
+        return "\n".join(lines)
+    words = {"lower": ("menor, no superior", "lower, not higher"), "higher": ("mayor, no inferior", "higher, not lower"),
+             "equal": ("igual", "equal")}[first["direction"]]
     diff = f"{first['difference']} {first['a']['unit']}"
     # the difference itself, not only the percentage: three answers in five
     # gave "un 13 % menos" and no 0,37 t/ha (open battery rc2)

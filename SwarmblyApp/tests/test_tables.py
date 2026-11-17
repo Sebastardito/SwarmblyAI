@@ -222,3 +222,18 @@ def test_a_header_that_mixes_a_measure_with_columns_per_lot_keeps_the_measure():
         "Sitio", "Lote AB1", "Lote AB2", "Diferencia"]
     prompt = T.header_prompt(request, {"entities": ["AB1", "AB2"]})
     assert "  " not in prompt and prompt.endswith("columna «Diferencia». No escribas filas de datos ni nada más.")
+
+
+def test_one_value_per_place_in_a_sentence_is_read_by_code():
+    ab1 = {"rel": "informe_lote_AB1.md", "passages": [
+        ("D1 p2", "Siembra y germinación — El lote AB1 se sembró el 12 de febrero de 2026 en tres sitios: Parcela Norte, "
+                  "Parcela Sur y Ladera Este. La germinación fue del 87 % en la Parcela Norte, del 81 % en la Parcela Sur "
+                  "y del 74 % en la Ladera Este.")]}
+    request = "Compara la germinación de AB1 y AB2 en cada sitio."
+    header = ["Sitio", "AB1", "AB2", "Diferencia"]
+    rows = T.rows_from_prose(header, ab1, ENT, request)
+    assert rows == [["Parcela Norte", "87 %", "—", "—"], ["Parcela Sur", "81 %", "—", "—"], ["Ladera Este", "74 %", "—", "—"]]
+    assert ab1["named_after"] == {1: "Germinación"}
+    # a document about no single code, or a sentence off the topic, gives nothing
+    assert T.rows_from_prose(header, dict(ab1, rel="notas.md"), ENT, request) == []
+    assert T.rows_from_prose(header, dict(ab1), ENT, "Compara el costo de AB1 y AB2.") == []
