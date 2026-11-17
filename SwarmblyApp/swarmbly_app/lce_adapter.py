@@ -162,8 +162,9 @@ class LCEAdapter:
                  roots: list[Path] | None = None) -> list[dict[str, Any]]:
         """Top paragraphs of the user's sources for ``query`` (local only).
         ``roots`` replaces the personal folders (a project's folders)."""
-        return self.index.retrieve(self._roots(extra_dirs, roots), query, k=k,
-                                   expansion=expansion, embed=embed)
+        all_roots = self._roots(extra_dirs, roots)
+        return _with_csv_tables(all_roots, self.index.retrieve(all_roots, query, k=k,
+                                                               expansion=expansion, embed=embed))
 
     def document_spans(self, doc_id: str, extra_dirs: list[str] | tuple[str, ...] = (),
                        roots: list[Path] | None = None) -> list[dict[str, Any]]:
@@ -178,11 +179,13 @@ class LCEAdapter:
             title = _first_heading(all_roots, str(spans[0].get("rel") or ""))
             for s in spans:
                 s["doc_title"] = title
-        return spans
+        return _with_csv_tables(all_roots, spans)
 
     def resolve(self, cite: str, extra_dirs: list[str] | tuple[str, ...] = (),
                 roots: list[Path] | None = None) -> dict[str, Any] | None:
-        return self.index.resolve(self._roots(extra_dirs, roots), cite)
+        all_roots = self._roots(extra_dirs, roots)
+        found = self.index.resolve(all_roots, cite)
+        return _with_csv_tables(all_roots, [found])[0] if found else found
 
     def glossary_terms(self, text: str, extra_dirs: list[str] | tuple[str, ...] = (),
                        roots: list[Path] | None = None) -> str:
@@ -212,6 +215,91 @@ class LCEAdapter:
             return WorkerGuard(declared_model=declared_model)
         except Exception:
             return None
+
+
+# ---- CSV files as tables (3.3, sealed banks v3) --------------------------------
+# C1 reads a CSV file as text and joins the lines of a paragraph, so a budget
+# reached the model and the code as "partida,categoria,monto_usd Sensores,
+# equipos,12600 Colonias,…": no table to read (the table by code was built in
+# 0 of 8 cases with documents like these) and sums the model had to guess. The
+# paragraph is given back as the Markdown table the file holds, read with the
+# csv module from the file itself; the citation, the paragraph and its figures
+# are the same.
+_CSV_CACHE: dict[str, tuple[float, list[dict[str, Any]]]] = {}
+_CSV_MAX_ROWS = 400
+
+
+def _csv_blocks(path: Path) -> list[dict[str, Any]]:
+    """Each block of lines of a CSV file: the paragraph as C1 joins it
+    (``flat``), where each line starts in it (``starts``), and its rows."""
+    import csv
+    import io
+    try:
+        stamp = path.stat().st_mtime
+    except OSError:
+        return []
+    key = str(path)
+    if key in _CSV_CACHE and _CSV_CACHE[key][0] == stamp:
+        return _CSV_CACHE[key][1]
+    try:
+        raw = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    out: list[dict[str, Any]] = []
+    for block in re.split(r"\n\s*\n", raw.replace("\r\n", "\n")):
+        lines = [" ".join(ln.split()) for ln in block.split("\n") if ln.strip()]
+        if len(lines) < 2:
+            continue
+        try:
+            delimiter = csv.Sniffer().sniff("\n".join(lines[:20]), delimiters=",;\t").delimiter
+        except csv.Error:
+            delimiter = ","
+        rows = [r for r in csv.reader(io.StringIO("\n".join(lines)), delimiter=delimiter)]
+        width = len(rows[0]) if rows else 0
+        if width < 2 or len(rows) != len(lines) or any(len(r) != width for r in rows):
+            continue          # a quoted field over two lines, or not a table: left as it is
+        starts, pos = [], 0
+        for ln in lines:
+            starts.append(pos)
+            pos += len(ln) + 1
+        out.append({"flat": " ".join(lines), "starts": starts, "rows": rows})
+    _CSV_CACHE[key] = (stamp, out)
+    return out
+
+
+def _csv_markdown(rows: list[list[str]]) -> str:
+    def cell(c: str) -> str:
+        return " ".join(c.replace("|", "/").split()) or "—"
+    width = len(rows[0])
+    return "\n".join(["| " + " | ".join(cell(c) for c in rows[0]) + " |", "|" + "---|" * width]
+                     + ["| " + " | ".join(cell(c) for c in r) + " |" for r in rows[1:_CSV_MAX_ROWS + 1]])
+
+
+def _with_csv_tables(roots: list[Path], spans: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The paragraphs of CSV files as Markdown tables, read with the csv module
+    from the file itself. A long block is cut by C1 into several paragraphs:
+    each keeps the header and the rows it holds."""
+    for s in spans:
+        rel = str(s.get("rel") or "")
+        if not rel.lower().endswith(".csv"):
+            continue
+        piece = " ".join(str(s.get("text", "")).split())
+        path = next((Path(r).expanduser() / rel for r in roots if (Path(r).expanduser() / rel).is_file()), None)
+        if path is None or not piece:
+            continue
+        for block in _csv_blocks(path):
+            at = block["flat"].find(piece)
+            if at < 0:
+                continue
+            end = at + len(piece)
+            starts = block["starts"] + [len(block["flat"]) + 1]
+            covered = [i for i in range(1, len(block["rows"]))
+                       if starts[i] < end and starts[i + 1] - 1 > at]
+            if covered:
+                s["text"] = _csv_markdown([block["rows"][0]] + [block["rows"][i] for i in covered])
+                s["csv_table"] = True
+            break
+    return spans
 
 
 def _first_heading(roots: list[Path], rel: str) -> str:

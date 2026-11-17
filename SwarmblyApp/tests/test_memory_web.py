@@ -303,3 +303,23 @@ def test_notes_are_not_saved_twice(tmp_path):
     save_note(tmp_path, "Referencia: un artículo — https://x")
     save_note(tmp_path, "Referencia: un artículo — https://x")
     assert (tmp_path / "notas.md").read_text(encoding="utf-8").count("un artículo") == 1
+
+
+def test_a_web_page_with_a_generic_title_is_kept_when_its_text_names_every_concept():
+    # sealed bank v3.2: 7 of 7 web results dropped, 3 of them naming every word
+    terms = W.topic_terms("variedad Lumbre rendimiento")
+    page = {"provider": "searxng", "title": "Ficha técnica 2025",
+            "snippet": "La variedad Lumbre tiene un rendimiento de referencia de 11,2 t/ha."}
+    assert W.relevant(page, terms)
+    other = {"provider": "searxng", "title": "Ficha técnica 2025",
+             "snippet": "La variedad Altiva tiene un rendimiento de referencia de 9 t/ha."}
+    assert not W.relevant(other, terms)
+    # the earlier rule still holds: a title with one concept and enough text
+    assert W.relevant({"provider": "searxng", "title": "Variedad Lumbre",
+                       "snippet": "rendimiento por hectárea"}, terms)
+
+
+def test_the_model_is_told_when_every_result_was_left_out():
+    block = W.results_block({"query": "variedad Lumbre", "results": [], "dropped_unrelated": 3}, "es")
+    assert "se descartaron 3" in block
+    assert "(sin resultados)" in W.results_block({"query": "x", "results": []}, "es")

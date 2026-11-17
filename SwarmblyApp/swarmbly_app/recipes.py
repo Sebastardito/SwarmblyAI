@@ -50,14 +50,17 @@ def propose_query(text: str, glossary: list[tuple[str, str]] | None = None) -> s
     ("Compara … con lo que dicen las fuentes públicas sobre …") are not the
     topic: the query is what follows "sobre", and the names the request gives
     ("la variedad Kanela")."""
-    from .web_search import propose_query as propose
+    from .web_search import propose_query as propose, strip_private
     m = _TOPIC.search(text or "")
     if m:
         # only the topic the user wrote for the public sources: the rest of the
         # request is about their documents ("el rendimiento del lote AB2"), and a
         # lot code or a name from it does not belong in a public query
-        return propose(m.group(1), "", glossary or [])[:200]
+        return strip_private(propose(m.group(1), "", glossary or []), text or "")[:200]
     query = propose(text or "", "", glossary or [])
     words = {w.lower() for w in query.split()}
     names = [n for n in _NAME.findall(text or "") if n.lower() not in words]
-    return " ".join([query, *names]).strip()[:200]
+    # the names go through the same filter as the rest: a plot ("la Parcela
+    # Sur"), a person ("la Dra. Ana Pérez") or a code is the user's, not a topic
+    # (sealed bank v3.2: a plot name was proposed and, approved, sent)
+    return strip_private(" ".join([query, *names]), text or "").strip()[:200]

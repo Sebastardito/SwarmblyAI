@@ -206,3 +206,22 @@ def test_a_label_of_an_earlier_turn_and_more_sentences_about_the_sources():
     for s in ("Solo se indica que en la Parcela Sur se observó clorosis [D1 p11].",
               "No se encuentra información relevante sobre la variedad Zafira en la fuente consultada [W1]."):
         assert V.split(s)[0].get("absence") is True, s
+
+
+# ---- 3.3: false alarms seen in the sealed banks v3 -------------------------------
+
+def test_a_date_written_with_numbers_matches_the_paragraphs_month_name():
+    sources = [{"label": "D3 p2", "rel": "acta_reunion.md",
+                "text": "La cosecha se adelanta al 10 de enero de 2026 por acuerdo de la reunión."}]
+    code = V.by_code("La cosecha se adelantó al 10/01/2026 según la reunión [D3 p2].", ["D3 p2"], sources)
+    assert code["missing_figures"] == []
+    code = V.by_code("La cosecha se adelantó al 12/01/2026 según la reunión [D3 p2].", ["D3 p2"], sources)
+    assert code["missing_figures"] == ["12"]
+
+
+def test_a_label_after_the_full_stop_counts_for_the_uncited_check():
+    from swarmbly_app.chat import _unsupported
+    answer = ("La cuaja de la parcela alta fue del 78 por ciento en el ensayo. [D1 p3] "
+              "La parcela media quedó algo por debajo de ese valor. [D1 p3]")
+    assert _unsupported(answer, []) == []
+    assert V.sentences("Uno dos tres. [D1 p2] Cuatro cinco.") == ["Uno dos tres. [D1 p2]", "Cuatro cinco."]

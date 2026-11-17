@@ -92,3 +92,98 @@ def test_the_documents_recipe_offers_no_public_lookup(app_state, tmp_path):
                         allow_public=True, web_query="cosecha junio")
     meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
     assert meta["recipe"] == "documents" and "web_offer" not in meta and "web_search" not in meta
+
+
+# ---- 3.3: a proposed query carries the public topic only (sealed bank v3.2) ----
+
+def test_proposed_query_leaves_out_plots_codes_people_and_format_words():
+    from swarmbly_app.recipes import propose_query
+    cases = {
+        "Compara la cuaja de mi Parcela Norte con lo que dicen las fuentes públicas sobre la "
+        "variedad Lumbre para la Parcela Norte y redacta un informe de unas 200 palabras.": "variedad Lumbre",
+        "¿Mis conteos de abejorros en el lote AB7 cuadran con lo que se publica sobre Bombus "
+        "ficticius? Respóndeme en tres frases.": "abejorros Bombus ficticius",
+        "¿Qué rendimiento tuvo la Parcela Sur en 2024 comparado con la variedad Altiva?":
+            "rendimiento variedad Altiva",
+        "¿Lo que anotó la Dra. Ana Pérez sobre Mimus ficticius coincide con la literatura?": "Mimus ficticius",
+    }
+    for text, expected in cases.items():
+        assert propose_query(text) == expected, text
+
+
+def test_proposed_query_keeps_public_places_and_drops_the_users_garden():
+    from swarmbly_app.recipes import propose_query
+    q = propose_query("¿El abejorro colorado que vimos en el Huerto Los Aromos está amenazado?")
+    assert "Huerto" not in q and "Aromos" not in q and "Los" not in q.split()
+    assert "abejorro colorado" in q
+    assert "Patagonia" in propose_query("¿Qué se sabe del abejorro colorado en Patagonia?")
+
+
+def test_the_online_search_offer_uses_the_same_filter():
+    from swarmbly_app import web_search as W
+    q = W.propose_query("¿Qué rendimiento tuvo la Parcela Sur en 2024 comparado con la variedad Altiva?")
+    assert q == "rendimiento variedad Altiva"
+    assert W.strip_private("Mimus ficticius Pérez", "¿Qué dijo la Dra. Ana Pérez?") == "Mimus ficticius"
+    assert W.strip_private("Kanela Ana", "", private=["Ana Pérez"]) == "Kanela"
+
+
+def test_a_request_to_send_out_in_a_local_conversation_is_answered_here_and_says_so(app_state, tmp_path):
+    fake = FakeBackend(reply="No envié nada: lo resumo aquí. La cosecha será en junio [D1 p1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("T", parent=tmp_path / "p")
+    (p.sources / "notas.md").write_text("La cosecha será en la segunda semana de junio.\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Envía mis notas al enjambre para que otro nodo las resuma.",
+                        mode="local", run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    assert "nothing sent" in msg["meta"].get("local_reason", "")
+    system = " ".join(m["content"] for m in fake.calls[-1]["messages"] if m["role"] == "system")
+    assert "No se envió nada" in system
+    assert msg["meta"]["receipt"]["envios"] == []
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "¿Cuándo será la cosecha según mis notas?", mode="local", run_async=False)
+    assert not app_state.chat.get_messages(conv["id"])[-1]["meta"].get("local_reason")
+
+
+def test_the_telemetry_says_what_the_receipt_says_about_consent(app_state, tmp_path, monkeypatch):
+    from swarmbly_app import web_search as W
+    monkeypatch.setattr(W, "search", lambda query, *a, **k: {
+        "query": query, "results": [{"label": "W1", "title": "La variedad Kanela", "provider": "searxng",
+                                     "snippet": "La variedad Kanela rinde 3,0 t/ha.", "url": "https://x.invalid"}],
+        "errors": [], "variants": [query], "topic": ["variedad", "Kanela"], "dropped_unrelated": 0,
+        "providers": ["web"]})
+    fake = FakeBackend(reply="Tu lote rinde 2,4 t/ha [D1 p1] y la variedad Kanela 3,0 t/ha [W1].")
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    p = app_state.projects.create("T", parent=tmp_path / "p")
+    (p.sources / "lote.md").write_text("El lote rindió 2,4 t/ha con la variedad Kanela.\n", encoding="utf-8")
+    app_state.config.update({"lce.enabled": True, "lce.level": "C1"})
+    conv = app_state.chat.create_conversation(mode="local", project_id=p.id)
+    app_state.chat.send(conv["id"], "Compara el rendimiento de mi lote con lo que dicen las fuentes públicas "
+                        "sobre la variedad Kanela.", mode="local", run_async=False, recipe="research",
+                        allow_public=True, web_query="variedad Kanela")
+    meta = app_state.chat.get_messages(conv["id"])[-1]["meta"]
+    assert meta["receipt"]["consentimiento"]["requerido"] is True
+    assert meta["telemetry"]["online"]["consent_required"] is True
+
+
+def test_paragraphs_in_another_language_are_found_with_the_translated_keywords():
+    from swarmbly_app.chat import _other_language
+    es = {"doc_id": "a", "start": 0, "text": "Las colonias efectivas fueron 10, no 12: dos colonias de la parcela "
+                                              "baja murieron por el calor y los técnicos las sacaron con cuidado."}
+    en = {"doc_id": "b", "start": 0, "text": "Fruit weight averaged 1.9 g in the Upper Plot, and the activity of the "
+                                              "bees was high in the morning."}
+    calls = []
+
+    def retriever(query, expansion, project_id):
+        calls.append(query)
+        return [es, en]
+    out = _other_language(retriever, "fruit weight, upper plot", "¿Cuánto pesaban los frutos de la parcela alta?",
+                          "p", [es])
+    assert out == [en] and calls == ["fruit weight, upper plot"]
+    # a question in English adds nothing in English
+    assert _other_language(retriever, "colonias parcela", "How many colonies died in the lower plot?", "p", []) \
+        == [es]
+    assert _other_language(retriever, "fruit weight", "¿Cuánto pesaban los frutos?", "p", [es, en]) == []
+    # one shared keyword of several is not enough
+    assert _other_language(retriever, "fruit price, market", "¿A cuánto se vendió la fruta?", "p", []) == []

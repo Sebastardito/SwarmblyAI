@@ -105,7 +105,11 @@ def relevant(hit: dict[str, Any], terms: list[str],
     need = 2 if n >= 2 else 1
     if provider.startswith("wikipedia"):
         return len(in_title) >= need or len(in_text) >= need
-    return bool(in_title) and len(in_text) >= need
+    # a web page: one concept in its title and enough in its text, or every
+    # concept of the query in its title and snippet. A page with a generic
+    # title ("Ficha técnica 2025") whose text names the variety and the measure
+    # asked about was dropped in 7 of 7 results (sealed bank v3.2)
+    return (bool(in_title) and len(in_text) >= need) or len(in_text) >= n
 
 
 def propose_query(question: str, keywords: str = "",
@@ -131,7 +135,10 @@ def propose_query(question: str, keywords: str = "",
     rest = _FIRST_PERSON.sub(" ", q)
     rest = _FILLER.sub(" ", rest)
     rest = re.sub(r"[¿?¡!.,;:()\"]", " ", rest)
-    words = [w for w in rest.split() if len(w) > 2][:6]
+    spans = private_spans(question)
+    # private words, codes, figures and format words go before the cap, so
+    # they do not take the place of the topic
+    words = [w for w in rest.split() if len(w) > 2 and _public_word(w, spans)][:6]
     # The topic, defined from the user's own material: scientific names that
     # appear next to a word of the question in the retrieved passages or notes
     # ("cucujos (cucuyos) son el género Pyrophorus de la familia Elateridae").
@@ -151,7 +158,121 @@ def propose_query(question: str, keywords: str = "",
         for w in _FILLER.sub(" ", piece).split():
             if len(w) > 2 and not any(_same_word(w, x) for x in out):
                 out.append(w)
-    return " ".join(out)[:160].strip()
+    return strip_private(" ".join(out), question)[:160].strip()
+
+
+# ---- what a proposed query must not carry (3.3, sealed bank v3.2) -------------
+# A query proposed from the user's words carried a plot name and the words of
+# the format request ("… para la Parcela Norte y redacta un informe de unas 200
+# palabras"); approved as proposed, the plot name left the computer. The
+# proposal keeps the public topic: no private places, people, codes, figures or
+# instructions. The user still sees it and may edit it before anything is sent.
+_PLACE = re.compile(
+    r"^(parcelas?|lotes?|fincas?|predios?|campos?|sectores?|sector|bloques?|canteros?|bancal(?:es)?|"
+    r"huertos?|huertas?|invernaderos?|potreros?|cuarteles?|chacras?|terrenos?|camas?|surcos?|"
+    r"tratamientos?|r[eé]plicas?|repeticiones|plots?|fields?|lots?|farms?|blocks?|beds?|"
+    r"greenhouses?|paddocks?|orchards?|treatments?|replicates?)$", re.I)
+_PLACE_TAIL = re.compile(
+    r"^(norte|sur|este|oeste|alta|alto|baja|bajo|media|medio|central|nueva|nuevo|vieja|viejo|"
+    r"grande|chica|chico|peque[nñ]a|peque[nñ]o|uno|dos|tres|cuatro|cinco|north|south|east|west|"
+    r"upper|lower|middle|new|old|big|small|one|two|three|four|five|[ivxl]+)$", re.I)
+_PERSON_CUE = re.compile(r"^(dr|dra|ing|lic|sr|sra|srta|prof|mr|mrs|ms|don|do[nñ]a)\.?$", re.I)
+_ARTICLE = re.compile(r"^(el|la|los|las|del|de|the|of)$", re.I)
+_STOP_SCOPE = re.compile(
+    r"^(de|del|con|en|y|o|para|por|sobre|frente|seg[uú]n|que|a|al|with|and|or|for|about|"
+    r"against|than|in|on|to|from|of)$", re.I)
+_POSSESSIVE = re.compile(r"^(mi|mis|nuestr[oa]s?|tu|tus|su|sus|my|our|your)$", re.I)
+_INSTRUCTION = re.compile(
+    r"^(escrib\w*|redact\w*|resum\w*|haz|hazlo|hazme|haga|explic\w*|compar\w*|indic\w*|"
+    r"señal\w*|senal\w*|menciona\w*|di|dime|da|dame|incluy\w*|añad\w*|anad\w*|agrega\w*|"
+    r"responde\w*|cont[eé]sta\w*|calcul\w*|arma|armar|ordena\w*|lista\w*|enumera\w*|"
+    r"informe|informes|p[aá]rrafos?|palabras|frases?|oraciones|l[ií]neas|tablas?|columnas?|filas?|"
+    r"vi[nñ]etas|apartados?|secci[oó]n|secciones|t[ií]tulos?|formato|extensi[oó]n|resumen|"
+    r"correo|carta|mensaje|breve|corto|corta|largo|larga|m[aá]ximo|m[ií]nimo|aproximadamente|"
+    r"unas|unos|coincid\w*|cuadra\w*|difier\w*|diferenci\w*|concuerd\w*|fuentes?|p[uú]blicas?|"
+    r"documentos?|notas|apuntes|archivos?|seg[uú]n|dicen|dice|publica|publicado|cifras?|datos|"
+    r"write|draft|summari[sz]e\w*|summary|explain|compare\w*|list|table|tables|words|sentences?|"
+    r"paragraphs?|lines|bullets?|section|sections|format|length|email|letter|short|long|"
+    r"maximum|minimum|about|roughly|approximately|match\w*|agree\w*|differ\w*|sources?|public|"
+    r"documents?|notes|files?|says?|said|figures?|data|report|reports)$", re.I)
+
+
+def private_spans(question: str) -> set[str]:
+    """Words of the question that are about the user's own material: a place of
+    theirs and its name ("la Parcela Norte", "lote AB7", "Huerto Los Aromos"),
+    what follows a possessive up to the next connector ("mis conteos" → conteos),
+    a person introduced by a title ("la Dra. Ana Pérez"), codes and figures."""
+    tokens = re.findall(r"[\wÁÉÍÓÚÑáéíóúñü'.-]+", question or "")
+    tokens = [t.strip(".'") for t in tokens]
+    tokens = [t for t in tokens if t]
+    out: set[str] = set()
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if _PLACE.match(t):
+            out.add(_fold(t))
+            j = i + 1
+            while j < len(tokens) and j <= i + 4 and (
+                    tokens[j][:1].isupper() or any(c.isdigit() for c in tokens[j])
+                    or _PLACE_TAIL.match(tokens[j])
+                    or (_ARTICLE.match(tokens[j]) and j + 1 < len(tokens) and tokens[j + 1][:1].isupper())):
+                if not _ARTICLE.match(tokens[j]):
+                    out.add(_fold(tokens[j]))
+                j += 1
+            i = j
+            continue
+        if _PERSON_CUE.match(t):
+            j = i + 1
+            while j < len(tokens) and j <= i + 3 and tokens[j][:1].isupper():
+                out.add(_fold(tokens[j]))
+                j += 1
+            i = j
+            continue
+        if _POSSESSIVE.match(t):
+            j = i + 1
+            while j < len(tokens) and j <= i + 3 and not _STOP_SCOPE.match(tokens[j]):
+                out.add(_fold(tokens[j]))
+                j += 1
+            i = j
+            continue
+        if any(c.isdigit() for c in t):
+            out.add(_fold(t))
+        i += 1
+    return out
+
+
+def strip_private(query: str, question: str = "", private: list[str] | None = None) -> str:
+    """The query without the question's private words, codes, figures and the
+    words of a format request; ``private`` adds terms known to be the user's
+    (their name, people in their documents)."""
+    spans = private_spans(question)
+    for term in private or []:
+        spans |= {_fold(w) for w in re.findall(r"[\wÁÉÍÓÚÑáéíóúñü-]+", term) if len(w) >= 3}
+    return " ".join(w for w in (query or "").split() if _public_word(w, spans))
+
+
+_VERB = re.compile(
+    r"^(es|son|era|eran|fue|fueron|ser|est[aá]|est[aá]n|estaba|estaban|estuvo|hay|hubo|habia|"
+    r"ha|han|he|hemos|tiene|tienen|tenia|tuvo|tuvieron|tenemos|tengo|sabe|saben|sabemos|"
+    r"puede|pueden|podemos|hace|hacen|hizo|hicimos|dio|dieron|dan|vimos|vi|vio|vieron|"
+    r"anot[oó]|anot[eé]|anotamos|cont[oó]|contamos|registr[oó]|registramos|midi[oó]|medimos|"
+    r"sali[oó]|salieron|dijo|dicen|qued[oó]|quedaron|obtuvo|obtuvimos|logr[oó]|lleg[oó]|"
+    r"is|are|was|were|be|been|has|have|had|did|does|do|can|could|saw|seen|got|get|counted|"
+    r"recorded|measured|found)$", re.I)
+
+
+def _public_word(w: str, spans: set[str]) -> bool:
+    f = _fold(w.strip(".,;:()«»\"'"))
+    return bool(f) and f not in spans and not any(c.isdigit() for c in f) \
+        and not _INSTRUCTION.match(f) and not _VERB.match(f) and not _PERSON_CUE.match(f) \
+        and not _NUMBER_WORD.match(f) and not _ARTICLE.match(f)
+
+
+_NUMBER_WORD = re.compile(
+    r"^(uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|veinte|treinta|"
+    r"cuarenta|cincuenta|cien|ciento|cientos|doscientas?|doscientos|trescientas?|trescientos|"
+    r"cuatrocientas?|quinientas?|mil|one|two|three|four|five|six|seven|eight|nine|ten|twenty|"
+    r"fifty|hundred|thousand|primer[oa]?|segund[oa]|tercer[oa]?|first|second|third)$", re.I)
 
 
 def _same_word(a: str, b: str) -> bool:
@@ -313,13 +434,16 @@ def _wikipedia(query: str, lang: str, fetch: Fetch, timeout: float) -> list[dict
     return out
 
 
+_WEB_SNIPPET = 600     # characters of a web result's text kept (300 cut the topic off)
+
+
 def _searxng(query: str, url: str, lang: str, fetch: Fetch, timeout: float) -> list[dict[str, Any]]:
     data = fetch(url.rstrip("/") + "/search?" + urllib.parse.urlencode(
         {"q": query, "format": "json", "language": lang, "categories": "general,science"}),
         timeout, USER_AGENT) or {}
     return [{"provider": "searxng", "title": r.get("title", ""), "authors": "", "year": "",
              "source": urllib.parse.urlparse(r.get("url", "")).netloc,
-             "snippet": (r.get("content") or "")[:300], "url": r.get("url", "")}
+             "snippet": (r.get("content") or "")[:_WEB_SNIPPET], "url": r.get("url", "")}
             for r in (data.get("results") or [])[:4] if r.get("url")]
 
 
@@ -369,7 +493,13 @@ def results_block(found: dict[str, Any], lang: str) -> str:
             lines.append(f"(Este resultado no menciona {names}.)" if lang == "es"
                          else f"(This result does not mention {names}.)")
     if not found.get("results"):
-        lines.append("(sin resultados)" if lang == "es" else "(no results)")
+        dropped = int(found.get("dropped_unrelated") or 0)
+        if dropped:
+            lines.append(f"(sin resultados: se descartaron {dropped} que no trataban del tema de la consulta)"
+                         if lang == "es" else
+                         f"(no results: {dropped} were left out because they were not about the query's topic)")
+        else:
+            lines.append("(sin resultados)" if lang == "es" else "(no results)")
     return "\n".join(lines)
 
 
