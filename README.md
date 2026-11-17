@@ -3,7 +3,7 @@
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-blue.svg)](LICENSE)
 ![Status: draft with confirmatory results](https://img.shields.io/badge/status-draft%20%2B%20confirmatory%20results-orange.svg)
 [![Whitepaper DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23150478.svg)](https://doi.org/10.5281/zenodo.23150478)
-[![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23289041.svg)](https://doi.org/10.5281/zenodo.23289041)
+[![Software DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24070616.svg)](https://doi.org/10.5281/zenodo.24070616)
 [![tests](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml/badge.svg)](https://github.com/Sebastardito/SwarmblyLCE/actions/workflows/tests.yml)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
 
@@ -282,7 +282,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 **Whitepaper:** Espinoza-Ulloa, S. A. (2026). *Local cognition and anchored transmission: A local-first cognitive extension for Swarmbly* (Version 0.1, draft). Zenodo. https://doi.org/10.5281/zenodo.23150478
 
-**Software:** Espinoza-Ulloa, S. A. (2026). *Swarmbly LCE: reference implementation, validation harness and pre-registered runs* (Version 0.1.1) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23289041
+**Software:** Espinoza-Ulloa, S. A. (2026). *Swarmbly LCE: reference implementation, validation harness and pre-registered runs* (Version 0.2.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.24070616 (previous release, 0.1.1: https://doi.org/10.5281/zenodo.23289041)
 
 Code: AGPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Texts: CC BY 4.0. Citation metadata: [`CITATION.cff`](CITATION.cff). LongMemEval (MIT) attribution in [`NOTICE`](NOTICE).
 
@@ -561,7 +561,7 @@ Swarmbly se desarrolla de forma independiente, sin financiación institucional, 
 
 **Whitepaper:** Espinoza-Ulloa, S. A. (2026). *Local cognition and anchored transmission: A local-first cognitive extension for Swarmbly* (Version 0.1, draft). Zenodo. https://doi.org/10.5281/zenodo.23150478
 
-**Software:** Espinoza-Ulloa, S. A. (2026). *Swarmbly LCE: reference implementation, validation harness and pre-registered runs* (Version 0.1.1) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23289041
+**Software:** Espinoza-Ulloa, S. A. (2026). *Swarmbly LCE: reference implementation, validation harness and pre-registered runs* (Version 0.2.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.24070616 (previous release, 0.1.1: https://doi.org/10.5281/zenodo.23289041)
 
 Código: AGPL-3.0-or-later ([`LICENSE`](LICENSE), [`NOTICE`](NOTICE)). Textos: CC BY 4.0. Metadatos de cita: [`CITATION.cff`](CITATION.cff). Atribución de LongMemEval (MIT) en [`NOTICE`](NOTICE).
 

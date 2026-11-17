@@ -213,3 +213,54 @@ tokens = _tokens
 fold = _fold
 BM25 = _BM25
 GLOSS_LINE = _GLOSS_LINE
+
+_PAIR = re.compile(r"^\s*(.{1,80}?)\s*(?:=|→|->)\s*(.{1,200}?)\s*$")
+_RULE_CELLS = re.compile(r"^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$")
+
+
+def _clean_term(term: str) -> str:
+    """``P1``, **P1**, «P1» → P1 (a term written as code or in bold)."""
+    return term.strip().strip("`*_\"'«»“”").strip()
+
+
+def glossary_lines(text: str) -> list[tuple[str, str]]:
+    """``(term, right side)`` of a glossary file. Besides one pair per line
+    (``term = equivalent, equivalent``, also ``→`` and ``->``, with a leading
+    "- "), it reads what people also write: a Markdown table whose first
+    column is the term and the second its equivalent, several pairs on one
+    line separated by ";", a term written as code or in bold, and an indented
+    line that continues the equivalents of the entry above. Two glossaries of
+    the sealed banks v3 were a table and a list with three pairs on one line
+    and code-formatted terms: C1 read none of their entries, and the
+    questions that used a term of theirs failed."""
+    lines = (text or "").splitlines()
+    out: list[tuple[str, str]] = []
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("|"):
+            if _RULE_CELLS.match(stripped):
+                continue
+            if i + 1 < len(lines) and _RULE_CELLS.match(lines[i + 1].strip()):
+                continue                      # the table's header row
+            cells = [c.strip() for c in stripped.strip("|").split("|")]
+            if len(cells) >= 2 and _clean_term(cells[0]) and cells[1]:
+                out.append((_clean_term(cells[0]), cells[1]))
+            continue
+        body = re.sub(r"^\s*[-*•]\s*", "", line)
+        separators = len(re.findall(r"=|→|->", body))
+        if separators >= 2 and ";" in body:
+            for piece in body.split(";"):
+                m = _PAIR.match(piece)
+                if m and _clean_term(m.group(1)):
+                    out.append((_clean_term(m.group(1)), m.group(2).strip()))
+            continue
+        m = _GLOSS_LINE.match(line)
+        if m:
+            out.append((_clean_term(m.group(1)), m.group(2).strip()))
+            continue
+        if line[:1].isspace() and out and separators == 0:
+            term, right = out[-1]              # the entry above goes on
+            out[-1] = (term, f"{right.rstrip(' ,;')}, {stripped.lstrip('-*• ')}")
+    return out

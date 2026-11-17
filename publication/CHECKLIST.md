@@ -53,6 +53,7 @@ Este repositorio se publica en dos depósitos de Zenodo, igual que Swarmbly v2: 
 - [ ] Re-correr C2-bis con homogeneidad entre usuarios, brazo sin contrato y placebo neutro, por enmienda.
 - [ ] Cierre de H-C2 con adherencia por tarea y Δρ del packer real, con la regla de compensación reescrita por enmienda antes de correr.
 - [x] Release `v0.1.1` (resultados y benchmarks), push y DOI del software: `10.5281/zenodo.23289041` (el tag apunta a `1c5e3f5`; su `CITATION.cff` aún decía 0.1.0, corregido en el commit siguiente).
+- [x] Release `v0.2.0` (nivel C1 en el paquete, 2026-11-09), DOI del software: `10.5281/zenodo.24070616`; `CITATION.cff` y README apuntan a él y conservan el de v0.1.1 como versión anterior.
 - [ ] Verificación del conjunto canario por tres o más hablantes nativos (`lce_validation/data/canary_verification/`), y `python -m lce_validation.canary_verify verificador_*.csv`.
 - [ ] Issue de discusión del SWIP en Swarmbly-AI con el texto de `publication/SWIP_ISSUE_Swarmbly-AI.md`; después renombrar el SWIP con el número del issue.
 - [ ] Opcional: probar `MLXLoRATrainer` (extra `mlx`) en Apple Silicon.

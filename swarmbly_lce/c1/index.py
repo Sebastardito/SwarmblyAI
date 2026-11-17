@@ -274,12 +274,10 @@ class SourceIndex:
             key = (str(path), hashlib.sha256(data).hexdigest())
             if key not in self._cache.glossary:
                 pairs = []
-                for line in data.decode("utf-8", "replace").splitlines():
-                    m = P.GLOSS_LINE.match(line)
-                    if m:
-                        right, _avoid = _split_avoid(m.group(2))
-                        if right:
-                            pairs.append((m.group(1).strip(), right))
+                for term, raw in P.glossary_lines(data.decode("utf-8", "replace")):
+                    right, _avoid = _split_avoid(raw)
+                    if right:
+                        pairs.append((term, right))
                 self._cache.glossary[key] = pairs
             out.extend(self._cache.glossary[key])
         return out
@@ -297,13 +295,10 @@ class SourceIndex:
                 text = path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            for line in text.splitlines():
-                m = P.GLOSS_LINE.match(line)
-                if not m:
-                    continue
-                _right, avoid = _split_avoid(m.group(2))
+            for term, raw in P.glossary_lines(text):
+                _right, avoid = _split_avoid(raw)
                 for wrong in avoid:
-                    out[wrong] = m.group(1).strip()
+                    out[wrong] = term
         return out
 
     def glossary_meta(self, roots: Iterable[Path]) -> dict[str, dict[str, list[str]]]:
@@ -316,12 +311,10 @@ class SourceIndex:
                 text = path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            for line in text.splitlines():
-                m = P.GLOSS_LINE.match(line)
-                if m:
-                    _eq, meta = _split_meta(m.group(2))
-                    if meta:
-                        out.setdefault(m.group(1).strip(), {}).update(meta)
+            for term, raw in P.glossary_lines(text):
+                _eq, meta = _split_meta(raw)
+                if meta:
+                    out.setdefault(term, {}).update(meta)
         return out
 
     def glossary_terms(self, text: str, roots: Iterable[Path]) -> str:
