@@ -169,3 +169,28 @@ def test_glossary_metadata_is_never_an_equivalent(tmp_path):
     meta = index.glossary_meta([root])
     assert meta["cucujo"] == {"distinct": ["cucuve"], "wd": ["Q1"]} and meta["endogamia"] == {"wd": ["Q2"]}
     assert "cucuve" not in index.glossary_terms("¿qué es un cucujo?", [root])
+
+
+def test_glossaries_written_as_a_table_or_with_several_pairs_per_line(tmp_path):
+    """Two glossaries of the sealed banks v3: none of their entries was read."""
+    from swarmbly_lce.c1 import SourceIndex
+    from swarmbly_lce.c1.passages import glossary_lines
+    table = ("# Glosario\n\n| Término | Equivalente |\n|---|---|\n| P1 | Parcela Alta |\n"
+             "| `cuaja` | porcentaje de flores que forman fruto |\n")
+    assert glossary_lines(table) == [("P1", "Parcela Alta"), ("cuaja", "porcentaje de flores que forman fruto")]
+    listing = ("- `P1` = Parcela Alta; `P2` = Parcela Media; `P3` = Parcela Baja\n"
+               "- **abejorro nativo** = Bombus ficticius\n"
+               "- testigo = sector sin colonias,\n  parcela de control\n"
+               "- introgresión = introgression | no: introgradión\n")
+    assert glossary_lines(listing) == [
+        ("P1", "Parcela Alta"), ("P2", "Parcela Media"), ("P3", "Parcela Baja"),
+        ("abejorro nativo", "Bombus ficticius"), ("testigo", "sector sin colonias, parcela de control"),
+        ("introgresión", "introgression | no: introgradión")]
+    (tmp_path / "glosario.md").write_text(listing, encoding="utf-8")
+    (tmp_path / "informe.md").write_text("La cuaja de la Parcela Media fue del 71 %.\n", encoding="utf-8")
+    idx = SourceIndex()
+    assert ("P2", "Parcela Media") in idx.glossary_entries([tmp_path])
+    assert "Parcela Media" in idx.glossary_terms("¿Qué cuaja tuvo P2?", [tmp_path])
+    assert idx.glossary_avoid([tmp_path]) == {"introgradión": "introgresión"}
+    hits = idx.retrieve([tmp_path], "¿Qué cuaja tuvo P2?", k=2)
+    assert hits and hits[0]["rel"] == "informe.md"
