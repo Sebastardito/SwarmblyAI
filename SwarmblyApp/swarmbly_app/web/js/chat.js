@@ -10,6 +10,7 @@ const Chat = (() => {
   let active = null;
   let conversations = [];
   let attachments = [];
+  let recipe = null;             // 3.3: the recipe picked for the next message
   let projects = { items: [], active: "", default_parent: "", default_parent_warning: "" };
   const pending = {};           // message_id -> {el, partial}
   const early = {};             // message_id -> events that arrived before the element
@@ -55,8 +56,10 @@ const Chat = (() => {
     els.stop = button(t("chat.stop"), stop, "danger", { disabled: true });
     els.hint = h("p.composer-hint");
     els.mode.addEventListener("change", updateHint);
+    els.recipeTag = h("div.recipe-tag", { hidden: true });
     const composer = h("div.composer",
       els.attachList,
+      els.recipeTag,
       els.input,
       h("div.composer-bar",
         button(t("chat.attach"), () => els.file.click(), "ghost small", { title: t("chat.attachHint") }),
@@ -324,7 +327,76 @@ const Chat = (() => {
     active = null;
     els.title.textContent = t("chat.welcomeTitle");
     clear(els.thread).appendChild(h("div.empty-state",
-      h("p", t("chat.welcome")), h("p.muted", t("chat.welcomeHint"))));
+      h("p", t("chat.welcome")), recipeCards()));
+  }
+
+  // ---- recipes (3.3): "¿Qué quieres hacer?" ----------------------------------------
+  /* A recipe fills the request with a template the user completes and turns on
+     what that work needs (the table built by code, the query approved before
+     the answer). Writing freely, with no card, works as before. */
+  const RECIPES = [
+    { id: "documents", available: true },
+    { id: "table", available: true },
+    { id: "research", available: true },
+    { id: "list", available: false },
+  ];
+  const recipeKey = (id) => id.charAt(0).toUpperCase() + id.slice(1);
+
+  function recipeCards() {
+    return h("section.recipes", { "aria-label": t("chat.recipesTitle") },
+      h("h2.recipes-title", t("chat.recipesTitle")),
+      h("div.recipe-grid", RECIPES.map((r) => {
+        const k = recipeKey(r.id);
+        const card = h("button.recipe-card", { type: "button", disabled: !r.available,
+          title: r.available ? t(`chat.recipe${k}Desc`) : t("chat.recipeSoon") },
+          h("strong", t(`chat.recipe${k}`)),
+          h("span.muted", r.available ? t(`chat.recipe${k}Desc`) : t("chat.recipeSoon")));
+        if (r.available) card.addEventListener("click", () => pickRecipe(r.id));
+        return card;
+      })),
+      h("p.muted.small", t("chat.recipesHint")));
+  }
+
+  function pickRecipe(id) {
+    recipe = id;
+    const template = t(`chat.recipe${recipeKey(id)}Template`);
+    els.input.value = template;
+    els.input.focus();
+    // the first part to fill in, selected
+    const start = template.indexOf("[");
+    const end = template.indexOf("]", start);
+    if (start >= 0 && end > start) els.input.setSelectionRange(start, end + 1);
+    else els.input.setSelectionRange(template.length, template.length);
+    showRecipeTag();
+  }
+
+  function showRecipeTag() {
+    clear(els.recipeTag);
+    els.recipeTag.hidden = !recipe;
+    if (!recipe) return;
+    els.recipeTag.appendChild(h("span.chip.ok", t(`chat.recipe${recipeKey(recipe)}`),
+      h("button.chip-x", { type: "button", title: t("chat.recipeClear"), "aria-label": t("chat.recipeClear"),
+        onclick: () => { recipe = null; showRecipeTag(); } }, "×")));
+    els.recipeTag.appendChild(h("span.muted.small", t(`chat.recipe${recipeKey(recipe)}Note`)));
+  }
+
+  /* Research: the query is proposed before the answer, and nothing is sent
+     until the user approves it (and may edit it). */
+  async function approveResearch(text) {
+    let proposed = "";
+    try {
+      proposed = (await Api.post("/api/recipes/query", { text, project_id: projects.active || "" })).query || "";
+    } catch (e) { proposed = ""; }
+    const q = h("input.text", { type: "text", value: proposed, "aria-label": t("chat.webQuery") });
+    setTimeout(() => q.focus(), 50);
+    const ok = await UI.modal(t("chat.recipeResearch"), h("div.form-stack",
+      h("p", t("chat.recipeResearchAsk")),
+      h("label.stack", h("span", t("chat.webQuery")), q),
+      h("p.muted", t("chat.webHint"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.recipeResearchSend"), value: true, kind: "primary" }]);
+    if (!ok || !q.value.trim()) return null;
+    return q.value.trim();
   }
 
   async function open(id) {
@@ -337,7 +409,7 @@ const Chat = (() => {
     const messages = await Api.get(`/api/conversations/${encodeURIComponent(id)}/messages`);
     clear(els.thread);
     for (const m of messages) els.thread.appendChild(messageEl(m));
-    if (!messages.length) els.thread.appendChild(h("div.empty-state", h("p.muted", t("chat.welcomeHint"))));
+    if (!messages.length) els.thread.appendChild(h("div.empty-state", recipeCards()));
     scroll();
   }
 
@@ -402,6 +474,19 @@ const Chat = (() => {
   async function send() {
     const text = composeText();
     if (!text) return;
+    if (recipe && /\[[^\]\n]{2,60}\]/.test(els.input.value.replace(/\[(?:[A-Z]\d+\s*p\d+|W\d+)\]/g, ""))) {
+      // a part of the template still to fill in ("[qué datos]")
+      UI.toast(t("chat.recipeFill"), "error");
+      return;
+    }
+    const extra = {};
+    if (recipe) extra.recipe = recipe;
+    if (recipe === "research") {
+      const query = await approveResearch(els.input.value.trim());
+      if (!query) return;
+      extra.allow_public = true;
+      extra.web_query = query;
+    }
     if (!active) {
       const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value,
         project_id: projects.active || "" });
@@ -410,10 +495,12 @@ const Chat = (() => {
     els.input.value = "";
     attachments = [];
     renderAttachments();
+    recipe = null;
+    showRecipeTag();
     let res;
     try {
       res = await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages`,
-        { text, mode: els.mode.value, model: els.model.value });
+        { text, mode: els.mode.value, model: els.model.value, ...extra });
     } catch (err) {
       UI.toast(err.message, "error");
       return;
@@ -615,6 +702,8 @@ const Chat = (() => {
       t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
       t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported
         .map((c) => `${c.row} · ${c.column}: ${c.value}`).join("\n")));
+    if (meta.recipe) chips.push(chip(t(`chat.recipe${meta.recipe.charAt(0).toUpperCase()}${meta.recipe.slice(1)}`), "ok",
+      t("chat.recipeChipTitle")));
     // 3.3, recipe 3: a comparison between the documents and a public result, by code
     if (meta.comparisons?.length) chips.push(chip(t("chat.compareChip"), "ok",
       t("chat.compareChipTitle") + "\n" + meta.comparisons.map((c) =>

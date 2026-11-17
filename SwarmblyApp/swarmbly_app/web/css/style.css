@@ -476,3 +476,17 @@ code.cite { font-size: 11px; opacity: .75; }
   text-underline-offset: 3px;
   background-color: color-mix(in srgb, var(--pollen) 12%, transparent);
 }
+
+/* 3.3: "¿Qué quieres hacer?" */
+.recipes { margin: 18px auto 0; max-width: 760px; text-align: left; }
+.recipes-title { font-size: 15px; margin: 0 0 10px; color: var(--ink); text-align: center; }
+.recipe-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.recipe-card { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 12px; border: 1px solid var(--membrane);
+  border-radius: 6px; background: color-mix(in srgb, var(--wax) 50%, transparent); color: var(--ink); cursor: pointer; font: inherit; }
+.recipe-card:hover:not(:disabled), .recipe-card:focus-visible { border-color: var(--chlorophyll); }
+.recipe-card:disabled { opacity: .55; cursor: not-allowed; }
+.recipe-card strong { font-size: 14px; }
+.recipe-card .muted { font-size: 12px; line-height: 1.35; }
+.recipes > p.small { text-align: center; margin-top: 10px; }
+.recipe-tag { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 6px; }
+.recipe-tag[hidden] { display: none; }

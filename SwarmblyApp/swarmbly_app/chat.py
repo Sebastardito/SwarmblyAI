@@ -45,6 +45,7 @@ class ActiveRequest:
     allow_public: bool = False
     memory_saved: dict[str, Any] | None = None     # "Recuerda: …" saved before answering
     web_query: str = ""            # an online search the user approved for this question
+    recipe: str = ""               # 3.3: the recipe the user picked ("documents", "table", "research")
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -147,7 +148,7 @@ class ChatService:
              mode: str | None = None, model: str | None = None,
              run_async: bool = True,
              allow_public: bool = False,
-             web_query: str = "") -> tuple[dict[str, Any], dict[str, Any]]:
+             web_query: str = "", recipe: str = "") -> tuple[dict[str, Any], dict[str, Any]]:
         """Store the user message and start generation.
 
         Returns ``(user_message, assistant_message)``; when ``run_async`` the
@@ -184,6 +185,13 @@ class ChatService:
             mode=mode, model=model, project_id=str(conv.get("project_id") or ""),
             allow_public=bool(allow_public), memory_saved=memory_saved,
             web_query=" ".join((web_query or "").split())[:200])
+        from .recipes import valid as valid_recipe
+        request.recipe = valid_recipe(recipe)
+        if request.recipe == "documents":
+            # ask your documents: no public lookup for this answer
+            request.allow_public, request.web_query = False, ""
+        if request.recipe:
+            request.receipt_ctx["recipe"] = request.recipe
         with self._lock:
             self._active[request.request_id] = request
         self.db.add_request(request.request_id, conversation_id,
@@ -455,7 +463,7 @@ class ChatService:
             ev_cfg = cfg.get("evidence") or {}
             from .local_context import wants_public
             want_public = (bool(ev_cfg.get("enabled")) and bool(ev_cfg.get("local_answers", True))
-                           and wants_public(user_text))
+                           and wants_public(user_text) and request.recipe != "documents")
             lce_on = self.retriever is not None and self.retrieval_active(request.project_id)
             if lce_on and not passages_allowed:
                 # authorised for questions only: the documents stay out of the call
@@ -701,8 +709,10 @@ class ChatService:
                 ccfg = cfg.get("compose") or {}
                 if ccfg.get("inventory") or ccfg.get("repair") or ccfg.get("coverage"):
                     from . import compose
-                    if compose.is_composition(user_text):
+                    if compose.is_composition(user_text) or request.recipe == "table":
                         inv = compose.inventory(user_text, [str(x.get("text", "")) for x in sources])
+                        if request.recipe == "table":
+                            inv["table"] = True      # the recipe asks for a table, in any words
                         request.receipt_ctx["inventory"] = inv
                 given_list = inv if (inv is not None and ccfg.get("inventory")
                                      and ccfg.get("checklist", True)) else None
@@ -728,9 +738,11 @@ class ChatService:
                     # recipe 3 (3.3): the comparison asked between a figure of the
                     # documents and one of a public result, computed by code
                     from .compose import comparison_block, comparisons
+                    # a result that does not mention what was asked (another
+                    # variety's entry) is not one side of the comparison
                     public = [{"label": str(h.get("label", "")), "rel": str(h.get("url") or h.get("label")),
                                "text": f"{h.get('title', '')}. {h.get('snippet', '')}", "public": True}
-                              for h in web_found["results"]]
+                              for h in web_found["results"] if not h.get("missing")]
                     compared_now = comparisons(user_text, list(sources) + public, _lang(user_text))
                     if compared_now:
                         about_web.append(comparison_block(compared_now, _lang(user_text)))
@@ -795,8 +807,8 @@ class ChatService:
             # from values each document supports; the model writes around it
             table_built = None
             inv_now = request.receipt_ctx.get("inventory")
-            if ((self.config().get("compose") or {}).get("table_by_code") and inv_now
-                    and inv_now.get("table") and sources and not public_hits):
+            if (((self.config().get("compose") or {}).get("table_by_code") or request.recipe == "table")
+                    and inv_now and inv_now.get("table") and sources and not public_hits):
                 from . import tables
 
                 def _short(prompt: str, max_tokens: int) -> str:
@@ -860,6 +872,8 @@ class ChatService:
                 extra["conflicts"] = request.receipt_ctx["conflicts"]
             if request.receipt_ctx.get("comparisons"):
                 extra["comparisons"] = request.receipt_ctx["comparisons"]
+            if request.recipe:
+                extra["recipe"] = request.recipe
             if request.receipt_ctx.get("sources_unrelated"):
                 extra["sources_unrelated"] = request.receipt_ctx["sources_unrelated"]
             if request.receipt_ctx.get("roles"):
@@ -896,7 +910,7 @@ class ChatService:
                 extra["public_offer"] = {"entities": request.receipt_ctx["public_offer"]}
             if web_found is not None:
                 extra["web_search"] = web_found
-            elif request.receipt_ctx.get("web_offer") is not None:
+            elif request.receipt_ctx.get("web_offer") is not None and request.recipe != "documents":
                 extra["web_offer"] = {"query": request.receipt_ctx["web_offer"]}
             if web_found and web_found.get("results") and not proposals:
                 # references found online can be kept, with the user's yes
@@ -1321,8 +1335,13 @@ class ChatService:
         user_msg = messages[index - 1]
         if user_msg["role"] != "user":
             return None
+        # the recipe the answer was made with is kept (a search approved after a
+        # "table" answer is still a table)
+        recipe = str((messages[index].get("meta") or {}).get("recipe") or "")
+        if recipe == "documents" and (allow_public or web_query):
+            recipe = ""          # the user asked for public sources after all
         return self.send(conversation_id, user_msg["content"], allow_public=allow_public,
-                         web_query=web_query)
+                         web_query=web_query, recipe=recipe)
 
     # -- export ---------------------------------------------------------------
     def export(self, conversation_id: str, fmt: str = "markdown",
