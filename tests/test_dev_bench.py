@@ -35,7 +35,7 @@ def test_key_data_must_be_in_the_documents():
     text += " ".join(p.read_text(encoding="utf-8").lower()
                      for p in (ROOT / "bench" / "dev" / "publico").iterdir() if p.suffix == ".md")
     computed = {"S3-01", "S3-06", "S3-09", "S2-03", "CX-02", "FU-02", "OUT-01",   # differences, counts, yes/no
-                "CO-04", "CO-05", "CO-07"}                                        # a difference, "no coinciden", "no aparece"
+                "CO-04", "CO-05", "CO-07", "RC-03"}                               # a difference, "no coinciden", "no aparece"
     for c in rd.load_cases(ROOT / "bench" / "dev" / "casos.json"):
         if c["id"] in computed:
             continue

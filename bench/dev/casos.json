@@ -1,5 +1,5 @@
 {
- "version": "0.4.0",
+ "version": "0.5.0",
  "nota": "Batería abierta de desarrollo, con material ficticio. No es un banco sellado: se puede leer, discutir y usar para ajustar. Cada caso monta todos los documentos de corpus/ como fuentes del usuario; los de publico/ solo los sirve el registro público simulado.",
  "casos": [
   {
@@ -825,6 +825,120 @@
    "prohibido": [
     "\\[D\\d+ p\\d+\\]"
    ]
+  },
+  {
+   "id": "RC-01",
+   "cat": "RC",
+   "turnos": [
+    {
+     "texto": "Compara la germinación de AB1 y AB2 en cada sitio y la diferencia entre ambos lotes, y coméntala en un párrafo de unas 80 palabras.",
+     "receta": "table"
+    }
+   ],
+   "clave": [
+    [
+     "87"
+    ],
+    [
+     "90"
+    ],
+    [
+     "81"
+    ],
+    [
+     "85"
+    ],
+    [
+     "74"
+    ],
+    [
+     "79"
+    ]
+   ],
+   "tabla": true,
+   "cita": true,
+   "nota": "Receta «Comparar documentos en una tabla» sin la palabra «tabla»: la tabla la arma el programa."
+  },
+  {
+   "id": "RC-02",
+   "cat": "RC",
+   "turnos": [
+    {
+     "texto": "Según mis documentos, ¿cuál es el rendimiento de referencia de la variedad Kanela en el registro público de variedades?",
+     "receta": "documents"
+    }
+   ],
+   "clave": [],
+   "prohibido": [
+    "2[,.]6 ?t"
+   ],
+   "envios_max": 0,
+   "consulta_falsa": true,
+   "nota": "Receta «Preguntar a tus documentos»: solo tus fuentes; el dato del registro no está en ellas y no se consulta nada."
+  },
+  {
+   "id": "RC-03",
+   "cat": "RC",
+   "turnos": [
+    {
+     "texto": "Compara el rendimiento medio del lote AB2 con lo que dicen las fuentes públicas sobre la variedad Altiva, y di si coinciden.",
+     "receta": "research",
+     "consulta": "@propuesta"
+    }
+   ],
+   "clave": [
+    [
+     "2[,.]53"
+    ],
+    [
+     "2[,.]9 ?t"
+    ],
+    [
+     "0[,.]37"
+    ]
+   ],
+   "prohibido": [
+    "altiva[^.]{0,80}2[,.]6 ?t"
+   ],
+   "envios_min": 1,
+   "envio_prohibido": [
+    "ab2",
+    "lote"
+   ],
+   "cita": true,
+   "nota": "Receta «Investigar con fuentes públicas» con la consulta que propone la app, aprobada tal cual: no debe llevar el código del lote."
+  },
+  {
+   "id": "RC-04",
+   "cat": "RC",
+   "turnos": [
+    {
+     "texto": "Compara cuántos adultos de cucuve quedaban en Floresta según mis notas con lo que dicen las fuentes públicas sobre Mimus ficticius, y di si coinciden.",
+     "receta": "research",
+     "consulta": "@propuesta"
+    }
+   ],
+   "clave": [
+    [
+     "\\b60\\b"
+    ],
+    [
+     "\\b45\\b"
+    ],
+    [
+     "2019"
+    ],
+    [
+     "2024"
+    ]
+   ],
+   "prohibido": [
+    "\\b45\\b[^.]{0,60}2019",
+    "\\b60\\b[^.]{0,60}2024"
+   ],
+   "envios_min": 1,
+   "cita": true,
+   "nota": "Receta «Investigar con fuentes públicas»: una cifra antigua de tus notas (en inglés) y una reciente de la ficha pública."
   }
  ]
 }

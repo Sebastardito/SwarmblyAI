@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.3.1"
+VERSION = "0.4.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -244,6 +244,12 @@ def play(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str,
     turns, last = [], None
     for turn in case["turnos"]:
         body: dict[str, Any] = {"text": turn["texto"]}
+        if turn.get("receta"):
+            body["recipe"] = turn["receta"]          # 3.3: a card of "¿Qué quieres hacer?"
+        if turn.get("consulta") == "@propuesta":
+            # the query the app proposes before a research answer, approved as is
+            proposed = rb.http_json("POST", f"{app.base}/api/recipes/query", app.token, {"text": turn["texto"]})
+            turn = {**turn, "consulta": proposed.get("query", "")}
         if turn.get("consulta"):
             body.update(allow_public=True, web_query=turn["consulta"])
         elif turn.get("publico"):
