@@ -154,3 +154,31 @@ def test_app_receipt_is_compared_on_queries_only():
     assert out["coincide"] and out["consultas_app"] == ["Orestias ficticia"]
     observed["envios"].append({"valor": "Orestias ficticia estado"})
     assert not rb.compare_app_receipt(app, observed)["coincide"]
+
+
+def test_bank_v3_card_fields_say_how_the_question_is_asked(tmp_path):
+    cards = tmp_path / "S2_S3_reservados.md"
+    cards.write_text("""
+```text
+ID:            S3-02
+Pregunta:      Compara el rendimiento de mi lote con lo que dicen las
+               fuentes públicas sobre la variedad Zafira.
+Documentos:    informe.md, 01_MATERIALES/fixtures_publicos/Registro_publico.md
+Receta:        investigar
+Consulta aprobada: propuesta
+```
+
+```text
+ID:            S2-09
+Pregunta:      ¿Cuándo se cosecha el lote B7?
+Turno 2:       ¿Y eso cambió después?
+Turno 3:       Dímelo en una frase.
+Documentos:    acta.md
+Permiso público: no
+```
+""", encoding="utf-8")
+    research, follow = rb.parse_cases(cards)
+    assert research.recipe == "research" and research.approved_query == "propuesta"
+    assert research.question.endswith("variedad Zafira.") and not research.follow_ups
+    assert follow.follow_ups == ["¿Y eso cambió después?", "Dímelo en una frase."]
+    assert follow.recipe == "" and follow.allow_public is False

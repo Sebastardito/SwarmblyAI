@@ -23,7 +23,11 @@ What it does, in order:
 7. Verifies the seal again after the run.
 
 Banks supported (detected from the folder): Banco_SwarmblyAI 1.0.0 ("v2",
-05_SELLO/SELLO.sha256) and the v1 package (SEALED_MANIFEST.sha256).
+05_SELLO/SELLO.sha256; bank v3 uses the same layout) and the v1 package
+(SEALED_MANIFEST.sha256). From 1.2.0 a case card may also say how the question
+is asked: "Receta:" (documentos, tabla, investigar), "Consulta aprobada:" (the
+query the user approves, or "propuesta" for the one the app proposes),
+"Permiso público: sí", and "Turno 2:", "Turno 3:" for follow-ups.
 
 Standard library only. Example:
 
@@ -55,7 +59,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.1.1"
+HARNESS_VERSION = "1.2.0"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -124,6 +128,15 @@ class Case:
     case_id: str
     question: str
     documents: list[str] = field(default_factory=list)
+    # 1.2.0 (bank v3): how the question is asked
+    recipe: str = ""             # "Receta:" documentos | tabla | investigar (a card of "¿Qué quieres hacer?")
+    approved_query: str = ""     # "Consulta aprobada:" the query the user approves, or "propuesta"
+    allow_public: bool = False   # "Permiso público: sí": a public lookup allowed for this question
+    follow_ups: list[str] = field(default_factory=list)   # "Turno 2:", "Turno 3:" in the same conversation
+
+
+_RECIPES = {"documentos": "documents", "documents": "documents", "tabla": "table", "table": "table",
+            "investigar": "research", "research": "research"}
 
 
 def _field_value(block: str, name: str) -> str:
@@ -158,7 +171,11 @@ def parse_cases(path: Path) -> list[Case]:
             continue
         docs_text = _field_value(block, "Documentos")
         docs = re.findall(r"[\w./-]+\.(?:md|csv|txt|json|docx|pdf|html)|\bF\d\d\b", docs_text)
-        cases.append(Case(case_id, question, docs))
+        recipe = _RECIPES.get(_field_value(block, "Receta").split(" ")[0].strip().lower(), "")
+        query = _field_value(block, "Consulta aprobada")
+        public = _field_value(block, "Permiso público").strip().lower().startswith(("sí", "si", "yes"))
+        turns = [t for t in (_field_value(block, f"Turno {n}") for n in range(2, 6)) if t]
+        cases.append(Case(case_id, question, docs, recipe, query, public, turns))
     return cases
 
 
@@ -405,20 +422,48 @@ class AppInstance:
     def base(self) -> str:
         return f"http://127.0.0.1:{self.port}"
 
-    def ask(self, question: str, timeout: float) -> dict[str, Any]:
+    def ask(self, question: str, timeout: float, case: "Case | None" = None) -> dict[str, Any]:
+        """The case's question (and its follow-up turns) in one conversation;
+        the last answer is the one scored. With the card fields of bank v3, the
+        recipe is sent and the approved query is the card's, or the one the
+        app proposes ("propuesta"), approved as is."""
         conv = http_json("POST", f"{self.base}/api/conversations", self.token, {})
         started = time.monotonic()
-        sent = http_json("POST", f"{self.base}/api/conversations/{conv['id']}/messages",
-                         self.token, {"text": question}, timeout=60)
-        msg_id = sent["assistant_message"]["id"]
-        while time.monotonic() - started < timeout:
-            time.sleep(1.5)
-            for m in http_json("GET", f"{self.base}/api/conversations/{conv['id']}/messages",
-                               self.token):
-                if m["id"] == msg_id and (m.get("meta") or {}).get("status") not in (None, "running"):
-                    return {"message": m, "latency_s": round(time.monotonic() - started, 2),
-                            "timeout": False}
-        return {"message": None, "latency_s": round(time.monotonic() - started, 2), "timeout": True}
+        turns = [question, *((case.follow_ups if case else []) or [])]
+        earlier: list[dict[str, Any]] = []
+        message = None
+        for n, text in enumerate(turns):
+            body: dict[str, Any] = {"text": text}
+            if case and n == 0:
+                if case.recipe:
+                    body["recipe"] = case.recipe
+                query = case.approved_query
+                if query.lower().startswith("propuesta"):
+                    query = http_json("POST", f"{self.base}/api/recipes/query", self.token,
+                                      {"text": text}).get("query", "")
+                if query:
+                    body.update(allow_public=True, web_query=query)
+                elif case.allow_public:
+                    body["allow_public"] = True
+            sent = http_json("POST", f"{self.base}/api/conversations/{conv['id']}/messages",
+                             self.token, body, timeout=60)
+            msg_id = sent["assistant_message"]["id"]
+            message = None
+            while time.monotonic() - started < timeout:
+                time.sleep(1.5)
+                for m in http_json("GET", f"{self.base}/api/conversations/{conv['id']}/messages",
+                                   self.token):
+                    if m["id"] == msg_id and (m.get("meta") or {}).get("status") not in (None, "running"):
+                        message = m
+                if message is not None:
+                    break
+            if message is None:
+                return {"message": None, "latency_s": round(time.monotonic() - started, 2), "timeout": True,
+                        "turns": earlier}
+            earlier.append({"texto": text, "consulta": body.get("web_query", ""),
+                            "receta": body.get("recipe", ""), "respuesta": message.get("content", "")})
+        return {"message": message, "latency_s": round(time.monotonic() - started, 2), "timeout": False,
+                "turns": earlier}
 
     def stop(self) -> None:
         if self.proc and self.proc.poll() is None:
@@ -664,8 +709,13 @@ def main(argv: list[str] | None = None) -> int:
             user, public = case_documents(bank, c)
             missing = [d for d in c.documents if not any(d.endswith(p.name) or p.name.startswith(d[1:] + "_")
                                                          for p in user + public)]
+            how = " · ".join(x for x in (f"receta {c.recipe}" if c.recipe else "",
+                                         "consulta aprobada" if c.approved_query else "",
+                                         "permiso público" if c.allow_public else "",
+                                         f"{len(c.follow_ups) + 1} turnos" if c.follow_ups else "") if x)
             print(f"      {c.case_id:6} pregunta {len(c.question):4} caracteres · fuentes {len(user)} · "
-                  f"públicas {len(public)}" + (f" · NO ENCONTRADOS: {len(missing)}" if missing else ""))
+                  f"públicas {len(public)}" + (f" · {how}" if how else "")
+                  + (f" · NO ENCONTRADOS: {len(missing)}" if missing else ""))
         print("      Comprobación terminada; no se ejecutó nada.")
         return 0
 
@@ -729,8 +779,10 @@ def main(argv: list[str] | None = None) -> int:
             status = "error"
             try:
                 app.start()
-                result = app.ask(case.question, args.case_timeout)
+                result = app.ask(case.question, args.case_timeout, case)
                 msg = result["message"] or {}
+                if case.recipe or case.approved_query or case.follow_ups or case.allow_public:
+                    record["turnos"] = result.get("turns") or []
                 meta = msg.get("meta") or {}
                 answer = msg.get("content") or ""
                 status = "timeout" if result["timeout"] else str(meta.get("status", "?"))
