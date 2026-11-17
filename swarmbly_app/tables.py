@@ -249,6 +249,22 @@ def _entity_only(col: str, entities: list[str]) -> bool:
     return not (_stems(name) - _GROUP_STEMS)
 
 
+def _orientations(tables_found: list[tuple[int, int, list[str], list[list[str]]]]
+                  ) -> list[tuple[list[str], list[list[str]]]]:
+    """Each source table as written and turned (its rows as columns): a
+    report gave one column per lot and one row per variable while the request
+    wanted one row per lot (sealed bank v3.1: no table by code in such cases).
+    The table as written comes first."""
+    out = []
+    for _, _, head, rows in tables_found:
+        out.append((head, rows))
+        if len(head) >= 3 and 1 <= len(rows) <= 12:
+            turned_head = [head[0]] + [r[0] for r in rows]
+            turned = [[head[j]] + [r[j] if j < len(r) else "" for r in rows] for j in range(1, len(head))]
+            out.append((turned_head, turned))
+    return out
+
+
 def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str],
                      request: str = "") -> list[list[str]]:
     """Rows read by code from the tables a document already has. Asked to
@@ -273,7 +289,7 @@ def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]
         return len(named & topic) / len(named) if named else 0.0
     out: list[list[str]] = []
     for _, text in doc["passages"]:
-        for _, _, head, rows in find_tables(text):
+        for head, rows in _orientations(find_tables(text)):
             if len(head) < 2 or not rows:
                 continue
             mapping: dict[int, int] = {}
@@ -294,8 +310,12 @@ def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]
                             del mapping[j]
             if not mapping:
                 continue
+            # the rows' key: the same name, a named entity, or a value column
+            # that clearly matches (the source names its first column "Variable"
+            # or "Ítem" where the request says "Lote")
             key_ok = (_match(header[0], head[0], []) > 0
-                      or any(_fold(e) in _fold(r[0]) for r in rows for e in entities))
+                      or any(_fold(e) in _fold(r[0]) for r in rows for e in entities)
+                      or any(score(header[j], head[k]) >= 0.5 for j, k in mapping.items()))
             if not key_ok:
                 continue
             for j, k in mapping.items():
@@ -707,19 +727,33 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     if len(header) < 2:
         why["reason"] = "header_too_short"
         return None
-    found, dropped = [], []
-    by_code = 0
-    for doc in docs:
-        rows = (rows_from_tables(header, doc, entities, request)    # a source table needs no model
-                or rows_from_prose(header, doc, entities, request))   # nor one value per place in a sentence
-        if rows:
-            by_code += len(rows)
-        else:
-            rows = parse_rows(generate(extract_prompt(request, header, doc, lang, entities), 400),
-                              len(header), header)
-        kept, bad = validate(rows, header, doc, entities)
-        found += kept
-        dropped += bad
+
+    def collect(header: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]], int]:
+        found, dropped = [], []
+        by_code = 0
+        for doc in docs:
+            doc.pop("named_after", None)
+            rows = (rows_from_tables(header, doc, entities, request)    # a source table needs no model
+                    or rows_from_prose(header, doc, entities, request))   # nor one value per place in a sentence
+            if rows:
+                by_code += len(rows)
+            else:
+                rows = parse_rows(generate(extract_prompt(request, header, doc, lang, entities), 400),
+                                  len(header), header)
+            kept, bad = validate(rows, header, doc, entities)
+            found += kept
+            dropped += bad
+        return found, dropped, by_code
+
+    found, dropped, by_code = collect(header)
+    if len(merge(found, entities)) < 2 and not why.get("header_from_source"):
+        # the model's header found no rows: the source table's own header may
+        source = _source_header(request, docs)
+        if source and [_fold(c) for c in source] != [_fold(c) for c in header]:
+            again = collect(source)
+            if len(merge(again[0], entities)) >= 2:
+                header, (found, dropped, by_code) = source, again
+                why["header_from_source"] = True
     rows = merge(found, entities)
     why["rows_found"], why["cells_dropped"] = len(rows), len(dropped)
     if len(rows) < 2:

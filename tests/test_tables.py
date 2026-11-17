@@ -320,3 +320,25 @@ def test_a_header_that_says_nothing_of_the_request_gives_way_to_the_source_table
                        lambda p, n: "| Descripción | Valor |" if "encabezado" in p else "NINGUNA", "es", why)
     assert out and why.get("header_from_source") is True
     assert "| Baja | 61 (antes 64) | [D1 p3] [D2 p2] |" in out["markdown"]
+
+
+def test_a_source_table_with_one_column_per_lot_is_read_turned():
+    """Sealed bank v3.1: the report gave one column per lot and one row per
+    variable; the request wanted one row per lot."""
+    from swarmbly_app import compose, tables
+    req = "Haz una tabla con el rendimiento y el costo de cada lote."
+    src = [{"rel": "informe_comparativo.md", "label": "D1 p2", "doc_id": "a",
+            "text": "Resumen — | Variable | Lote AB1 | Lote AB2 | |---|---|---| "
+                    "| Rendimiento (t/ha) | 2,8 | 3,1 | | Costo (USD/ha) | 1.150 | 1.080 |"}]
+    inv = compose.inventory(req, [src[0]["text"]])
+    inv["table"] = True
+    calls = []
+
+    def gen(prompt, n):
+        calls.append(prompt[:40])
+        return "| Lote | Rendimiento (t/ha) | Costo (USD/ha) |" if "encabezado" in prompt else "NINGUNA"
+    out = tables.build(req, src, inv, gen)
+    assert out and out["rows_by_code"] == 2
+    assert "| Lote AB1 | 2,8 | 1.150 | [D1 p2] |" in out["markdown"]
+    assert "| Lote AB2 | 3,1 | 1.080 | [D1 p2] |" in out["markdown"]
+    assert len(calls) == 1                     # no extraction by the model was needed

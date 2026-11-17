@@ -1943,7 +1943,10 @@ def _other_language(retriever: Callable[..., list[dict[str, Any]]], keywords: st
     # such paragraph comes from, the next paragraph that shares one ("I
     # recommend doubling the colonies…" after "Fruit weight averaged…" for
     # "¿Qué aconsejó el revisor externo sobre las colonias…?", open battery v3)
-    sure = [s for n, s in candidates if n >= min(2, len(wanted))][:limit]
+    # the first two in another language, as the keywords' own search ranked
+    # them: with local embeddings that rank is by meaning, and the paragraphs a
+    # question needed shared no keyword with it (sealed bank v3.1, 0 of 9)
+    sure = [s for i, (n, s) in enumerate(candidates) if i < 2 or n >= min(2, len(wanted))][:limit]
     docs = {s.get("doc_id") for s in sure} | {s.get("doc_id") for s in sources
                                              if language_if_sure(str(s.get("text", ""))) not in ("", asked)}
     more = [s for n, s in candidates if n >= 1 and s not in sure and s.get("doc_id") in docs]
