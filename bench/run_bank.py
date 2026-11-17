@@ -59,7 +59,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.2.0"
+HARNESS_VERSION = "1.2.1"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -133,6 +133,7 @@ class Case:
     approved_query: str = ""     # "Consulta aprobada:" the query the user approves, or "propuesta"
     allow_public: bool = False   # "Permiso público: sí": a public lookup allowed for this question
     follow_ups: list[str] = field(default_factory=list)   # "Turno 2:", "Turno 3:" in the same conversation
+    documents_text: str = ""     # the "Documentos:" field as written (names with spaces, codes like W1)
 
 
 _RECIPES = {"documentos": "documents", "documents": "documents", "tabla": "table", "table": "table",
@@ -175,7 +176,7 @@ def parse_cases(path: Path) -> list[Case]:
         query = _field_value(block, "Consulta aprobada")
         public = _field_value(block, "Permiso público").strip().lower().startswith(("sí", "si", "yes"))
         turns = [t for t in (_field_value(block, f"Turno {n}") for n in range(2, 6)) if t]
-        cases.append(Case(case_id, question, docs, recipe, query, public, turns))
+        cases.append(Case(case_id, question, docs, recipe, query, public, turns, docs_text))
     return cases
 
 
@@ -185,21 +186,76 @@ def is_public_fixture(name: str) -> bool:
     return "fixtures_publicos" in low or "publico" in low or low.startswith("iucn_")
 
 
+_CODE = re.compile(r"(?<![\w-])([A-Z]{1,2}\d{1,2})(?![\w]|-\d)")
+
+
+def _bank_files(bank: Bank) -> tuple[list[Path], list[Path]]:
+    """(user documents, public fixtures) present in a v2 bank."""
+    assert bank.corpus_dir is not None
+    # The corpus folder's own readme (LEEME/README) describes the corpus for the
+    # bank's authors; it is not one of the user's documents.
+    user = sorted(p for p in bank.corpus_dir.iterdir()
+                  if p.is_file() and not p.name.startswith(".")
+                  and not p.name.upper().startswith(("LEEME", "README")))
+    folder = bank.root / "01_MATERIALES" / "fixtures_publicos"
+    public = sorted(p for p in folder.iterdir() if p.is_file() and not p.name.startswith(".")
+                    and not p.name.upper().startswith(("LEEME", "README"))) if folder.is_dir() else []
+    return user, public
+
+
+def bank_legend(bank: Bank) -> dict[str, Path]:
+    """Document codes (D1, W2…) a bank may use in "Documentos:", read from a legend:
+    any line of the cases file or of 02_CASOS_RESERVADOS/LEYENDA*.md that names
+    exactly one code and exactly one file of the bank ("W1 = Registro_X_2025.md",
+    "| D3 | informe_2024.md |")."""
+    if bank.kind != "v2":
+        return {}
+    user, public = _bank_files(bank)
+    files = user + public
+    sources = [bank.cases_file, *sorted(bank.cases_file.parent.glob("LEYENDA*.md"))]
+    legend: dict[str, Path] = {}
+    for src in sources:
+        if not src.is_file():
+            continue
+        for line in src.read_text(encoding="utf-8").splitlines():
+            codes = set(_CODE.findall(line))
+            hits = {p for p in files if p.name in line}
+            if len(codes) == 1 and len(hits) == 1:
+                legend.setdefault(codes.pop(), hits.pop())
+    return legend
+
+
+def unresolved_documents(bank: Bank, case: Case, legend: dict[str, Path] | None = None) -> list[str]:
+    """References of a case that match no file of the bank (for --check)."""
+    if bank.kind != "v2":
+        user, public = case_documents(bank, case)
+        return [d for d in case.documents if not any(d.endswith(p.name) or p.name.startswith(d[1:] + "_")
+                                                     for p in user + public)]
+    legend = bank_legend(bank) if legend is None else legend
+    user, public = _bank_files(bank)
+    names = [p.name for p in user + public]
+    missing = [d for d in case.documents
+               if not any(n == d.split("/")[-1] or n.endswith(" " + d.split("/")[-1]) for n in names)]
+    missing += [c for c in _CODE.findall(case.documents_text) if c not in legend]
+    return missing
+
+
 def case_documents(bank: Bank, case: Case) -> tuple[list[Path], list[Path]]:
     """(user documents, public fixtures) for one case."""
     user, public = [], []
     if bank.kind == "v2":
-        assert bank.corpus_dir is not None
-        # The corpus folder's own readme (LEEME/README) describes the corpus for the
-        # bank's authors; it is not one of the user's documents.
-        user = sorted(p for p in bank.corpus_dir.iterdir()
-                      if p.is_file() and not p.name.startswith(".")
-                      and not p.name.upper().startswith(("LEEME", "README")))
+        user, fixtures = _bank_files(bank)
         for ref in case.documents:
             if is_public_fixture(ref):
                 cand = bank.root / ref if "/" in ref else bank.root / "01_MATERIALES" / "fixtures_publicos" / ref
                 if cand.is_file():
                     public.append(cand)
+        # Public fixtures named with spaces, or by a code of the bank's legend.
+        text = case.documents_text
+        legend = bank_legend(bank) if _CODE.search(text) else {}
+        for p in fixtures:
+            if p not in public and (p.name in text or any(legend.get(c) == p for c in _CODE.findall(text))):
+                public.append(p)
         return user, public
     assert bank.docs_dir is not None
     for ref in case.documents:
@@ -705,10 +761,12 @@ def main(argv: list[str] | None = None) -> int:
     if not cases:
         return 2
     if args.check:
+        legend = bank_legend(bank)
+        if legend:
+            print(f"      leyenda de documentos: {len(legend)} códigos")
         for c in cases:
             user, public = case_documents(bank, c)
-            missing = [d for d in c.documents if not any(d.endswith(p.name) or p.name.startswith(d[1:] + "_")
-                                                         for p in user + public)]
+            missing = unresolved_documents(bank, c, legend)
             how = " · ".join(x for x in (f"receta {c.recipe}" if c.recipe else "",
                                          "consulta aprobada" if c.approved_query else "",
                                          "permiso público" if c.allow_public else "",

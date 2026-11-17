@@ -182,3 +182,53 @@ Permiso público: no
     assert research.question.endswith("variedad Zafira.") and not research.follow_ups
     assert follow.follow_ups == ["¿Y eso cambió después?", "Dímelo en una frase."]
     assert follow.recipe == "" and follow.allow_public is False
+
+
+def _bank_v2(tmp_path, cards: str, legend: str = ""):
+    root = tmp_path / "banco"
+    corpus = root / "01_MATERIALES" / "corpus_reservado"
+    fixtures = root / "01_MATERIALES" / "fixtures_publicos"
+    cases = root / "02_CASOS_RESERVADOS"
+    for d in (corpus, fixtures, cases, root / "05_SELLO"):
+        d.mkdir(parents=True)
+    (corpus / "apuntes sueltos marzo.md").write_text("# Apuntes\n", encoding="utf-8")
+    (corpus / "informe_2024.md").write_text("# Informe\n", encoding="utf-8")
+    (fixtures / "Registro_variedad_Lumbre_2025.md").write_text("# Registro\n", encoding="utf-8")
+    (fixtures / "Ficha_especie_2025.md").write_text("# Ficha\n", encoding="utf-8")
+    (cases / "S2_S3_reservados.md").write_text(cards, encoding="utf-8")
+    if legend:
+        (cases / "LEYENDA_DOCUMENTOS.md").write_text(legend, encoding="utf-8")
+    (root / "05_SELLO" / "SELLO.sha256").write_text("", encoding="utf-8")
+    return rb.detect_bank(root)
+
+
+def test_documents_with_spaces_and_codes_resolve(tmp_path):
+    bank = _bank_v2(tmp_path, """
+```text
+ID:            S2-01
+Pregunta:      ¿Cuántos nidos?
+Documentos:    apuntes sueltos marzo.md
+```
+
+```text
+ID:            S3-04
+Pregunta:      Compara con lo público.
+Documentos:    D2, fixtures_publicos/W1
+```
+
+```text
+ID:            S3-05
+Pregunta:      ¿Y la especie?
+Documentos:    D2, W7
+```
+""", "| Código | Archivo |\n|---|---|\n| D1 | apuntes sueltos marzo.md |\n| D2 | informe_2024.md |\n"
+         "| W1 | Registro_variedad_Lumbre_2025.md |\n")
+    spaces, codes, unknown = rb.parse_cases(bank.cases_file)
+    legend = rb.bank_legend(bank)
+    assert sorted(legend) == ["D1", "D2", "W1"]
+    assert rb.unresolved_documents(bank, spaces, legend) == []
+    user, public = rb.case_documents(bank, codes)
+    assert len(user) == 2 and [p.name for p in public] == ["Registro_variedad_Lumbre_2025.md"]
+    assert rb.unresolved_documents(bank, codes, legend) == []
+    assert rb.case_documents(bank, unknown)[1] == []
+    assert rb.unresolved_documents(bank, unknown, legend) == ["W7"]
