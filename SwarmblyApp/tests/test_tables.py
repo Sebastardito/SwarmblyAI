@@ -311,3 +311,12 @@ def test_a_csv_file_reaches_the_answer_as_its_table(tmp_path):
     assert all(s["text"].startswith("| partida | categoria | monto_usd |\n|---|---|---|") for s in spans)
     body = "\n".join(s["text"] for s in spans)
     assert "| Partida número 39 | cat0 | 2443 |" in body and "| Partida número 0 | cat0 | 1000 |" in body
+
+
+def test_a_header_that_says_nothing_of_the_request_gives_way_to_the_source_tables():
+    from swarmbly_app import tables
+    why = {}
+    out = tables.build(_CORR_REQ + " Hazlo en una tabla.", _CORR_SOURCES, _inv(_CORR_REQ),
+                       lambda p, n: "| Descripción | Valor |" if "encabezado" in p else "NINGUNA", "es", why)
+    assert out and why.get("header_from_source") is True
+    assert "| Baja | 61 (antes 64) | [D1 p3] [D2 p2] |" in out["markdown"]
