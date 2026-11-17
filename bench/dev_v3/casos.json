@@ -1,5 +1,5 @@
 {
- "version": "0.1.0",
+ "version": "0.1.1",
  "nota": "Batería abierta v3: material ficticio (Inés Carvallo, Polen Austral, variedad Lumbre, Bombus ficticius) que reproduce los patrones de fallo de los bancos sellados v3 sin su contenido. Se puede leer y usar para ajustar.",
  "casos": [
   {
@@ -95,7 +95,7 @@
      "11[,.]2"
     ],
     [
-     "menor|inferior|por debajo|menos"
+     "menor|inferior|por debajo|menos|mayor que (el|la) (rendimiento )?(de (la )?)?parcela|(referencia|lumbre)[^.]{0,60}\\bmayor\\b"
     ]
    ],
    "envios_min": 1,

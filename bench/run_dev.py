@@ -353,7 +353,10 @@ def main(argv: list[str] | None = None) -> int:
     if argv[:1] == ["--rescore"]:
         rest = argv[2:]
         cmp = rest[rest.index("--compare") + 1] if "--compare" in rest else ""
-        return rescore(Path(argv[1]).expanduser(), DEV, cmp)
+        run_dir = Path(argv[1]).expanduser()
+        # the battery the run belongs to (<battery>/ejecuciones/<run>), e.g. dev_v3
+        home = run_dir.resolve().parent.parent
+        return rescore(run_dir, home if (home / "casos.json").is_file() else DEV, cmp)
     args = ap.parse_args(argv)
 
     battery = Path(args.battery)
