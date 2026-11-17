@@ -311,6 +311,57 @@ def rows_from_tables(header: list[str], doc: dict[str, Any], entities: list[str]
     return out
 
 
+_VALUE_AT = (r"(\d+(?:[.,]\d+)?\s?(?:%|t/ha|kg(?:\s?N)?(?:/ha)?|cm|mm|d[ií]as|ppm)?)\s+"
+             r"(?:en|in|at)\s+(?:la|el|los|las|the)?\s*")
+
+
+def rows_from_prose(header: list[str], doc: dict[str, Any], entities: list[str],
+                    request: str) -> list[list[str]]:
+    """Rows read by code from a sentence that gives one value per place ("La
+    germinación a los diez días fue del 87 % en la Parcela Norte, del 81 % en
+    la Parcela Sur y del 74 % en la Ladera Este"), for the column named after
+    the code the document is about ("AB1" in informe_lote_AB1.md). Asked to
+    fill those rows, a 7B model answered "NINGUNA" for "Compara la germinación
+    de AB1 y AB2…" in 6 of 6 tries, and filled them when the request began with
+    "Arma una tabla" (open battery RC-01): the value is in the sentence; it
+    needs no model."""
+    codes = [e for e in entities if re.fullmatch(r"[A-Z]{1,4}-?\d{1,4}", e)]
+    places = [e for e in entities if e not in codes]
+    file_name = _fold(re.sub(r"[_.-]+", " ", doc["rel"]))
+    mine = [c for c in codes if _fold(c) in file_name]
+    if len(mine) != 1 or len(places) < 2:
+        return []
+    columns = [j for j, col in enumerate(header) if j and _fold(mine[0]) in _fold(col) and not _DERIVED.search(col)]
+    if len(columns) != 1:
+        return []
+    col = columns[0]
+    topic = _request_stems(request) - _GROUP_STEMS - _stems(" ".join(entities))
+    out: list[list[str]] = []
+    for _, text in doc["passages"]:
+        # the heading shown with the paragraph is not part of its first sentence
+        text = re.sub(r"^[^.!?\n|]{1,90}?\s—\s", "", text, count=1)
+        for sentence in re.split(r"(?<=[.!?])\s+", text):
+            if not (_stems(sentence) & topic):
+                continue
+            found = {}
+            for place_name in places:
+                m = re.search(_VALUE_AT + re.escape(place_name) + r"\b", sentence, re.I)
+                if m:
+                    found[place_name] = " ".join(m.group(1).split())
+            if len(found) >= 2:
+                # the column says what it measures, in the sentence's word
+                # ("AB1" → "Germinación AB1")
+                word = next((w for w in re.findall(r"[^\W\d_]{4,}", sentence) if _stems(w) & topic), "")
+                if word and _entity_only(header[col], entities):
+                    doc.setdefault("named_after", {})[col] = word[:1].upper() + word[1:]
+                for place_name, value in found.items():
+                    cells = ["—"] * len(header)
+                    cells[0], cells[col] = place_name, value
+                    out.append(cells)
+                return out
+    return out
+
+
 def parse_rows(text: str, ncols: int, header: list[str] | None = None) -> list[list[str]]:
     rows = []
     head = [_fold(c) for c in header or []]
@@ -532,7 +583,8 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     found, dropped = [], []
     by_code = 0
     for doc in docs:
-        rows = rows_from_tables(header, doc, entities, request)      # a source table needs no model
+        rows = (rows_from_tables(header, doc, entities, request)    # a source table needs no model
+                or rows_from_prose(header, doc, entities, request))   # nor one value per place in a sentence
         if rows:
             by_code += len(rows)
         else:
