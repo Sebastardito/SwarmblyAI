@@ -194,7 +194,29 @@ _INSTRUCTION = re.compile(
     r"write|draft|summari[sz]e\w*|summary|explain|compare\w*|list|table|tables|words|sentences?|"
     r"paragraphs?|lines|bullets?|section|sections|format|length|email|letter|short|long|"
     r"maximum|minimum|about|roughly|approximately|match\w*|agree\w*|differ\w*|sources?|public|"
-    r"documents?|notes|files?|says?|said|figures?|data|report|reports)$", re.I)
+    r"documents?|notes|files?|says?|said|figures?|data|report|reports|"
+    # the form of the answer and whom it is for (sealed bank v3.2: "nota" and
+    # an audience stayed in a proposed query)
+    r"nota|s[ií]ntesis|conclusi[oó]n|conclusiones|introducci[oó]n|borrador|versi[oó]n|texto|respuesta|"
+    r"jef[ea]s?|director[ae]?s?|directorio|equipo|comit[eé]|junta|gerente|gerencia|consejo|socios?|"
+    r"clientes?|estudiantes|alumn[oa]s|colegas|profesor[ae]?s?|tutor[ae]?s?|evaluador[ae]?s?|"
+    r"financiador[ae]?s?|auditor[ae]?s?|note|memo|draft|text|answer|boss|manager|board|committee|"
+    r"team|students|colleagues|reviewers?|funders?|frente|comparad[oa]s?|respecto|versus|vs|"
+    r"compared|against)$", re.I)
+
+
+# a name that follows one of these is a public entity ("la variedad Lumbre",
+# "la isla Floreana"); any other capitalised name of the question is taken as
+# the user's (sealed bank v3.2: the name of the user's site, with no word like
+# "parcela" before it, was proposed and sent)
+_PUBLIC_NOUN = re.compile(
+    r"^(variedad(?:es)?|especies?|subespecies?|g[eé]neros?|familias?|cultivares?|cultivar|razas?|cepas?|"
+    r"h[ií]bridos?|enfermedad(?:es)?|plagas?|virus|hongos?|bacterias?|compuestos?|mol[eé]culas?|"
+    r"f[aá]rmacos?|genes?|prote[ií]nas?|regi[oó]n|regiones|provincias?|pa[ií]s(?:es)?|ciudad(?:es)?|"
+    r"islas?|r[ií]os?|lagos?|volc[aá]n|volcanes|cordilleras?|desiertos?|archipi[eé]lagos?|parques?|"
+    r"reservas?|varieties|variety|species|genus|genera|family|cultivars?|breeds?|strains?|hybrids?|"
+    r"diseases?|pests?|compounds?|genes?|proteins?|regions?|provinces?|country|countries|city|cities|"
+    r"islands?|rivers?|lakes?|volcano(?:es)?|park|reserve)$", re.I)
 
 
 def private_spans(question: str) -> set[str]:
@@ -238,6 +260,29 @@ def private_spans(question: str) -> set[str]:
         if any(c.isdigit() for c in t):
             out.add(_fold(t))
         i += 1
+    # capitalised names: public only after a public noun (and the names that
+    # follow it) or as a scientific name; the first word of a sentence is not
+    # a name
+    from .local_context import binomials
+    latin = {_fold(w) for b in binomials(question or "") for w in b.split()}
+    latin |= {_fold(m) for m in re.findall(r"\b[A-Z][a-z]{3,}(?:idae|inae|aceae|ales)\b", question or "")}
+    raw = re.findall(r"[\wÁÉÍÓÚÑáéíóúñü'.-]+|[.?!¿¡]", question or "")
+    public = False
+    for j, t in enumerate(raw):
+        word = t.strip(".'")
+        if not word or not word[0].isalpha():
+            public = False
+            continue
+        if _PUBLIC_NOUN.match(word):
+            public = True
+            continue
+        if word[:1].isupper():
+            first = j == 0 or raw[j - 1] in (".", "?", "!", "¿", "¡") or raw[j - 1].endswith(".")
+            if not first and not public and _fold(word) not in latin and not _ARTICLE.match(word):
+                out.add(_fold(word))
+            continue
+        if not _ARTICLE.match(word):
+            public = False
     return out
 
 
