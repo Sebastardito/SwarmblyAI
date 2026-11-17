@@ -131,7 +131,7 @@ def test_the_v3_battery_is_well_formed_and_its_key_data_are_in_its_documents():
     battery = ROOT / "bench" / "dev_v3"
     cases = rd.load_cases(battery / "casos.json")
     ids = [c["id"] for c in cases]
-    assert len(ids) == len(set(ids)) >= 15
+    assert len(ids) == len(set(ids)) >= 19
     text = " ".join(p.read_text(encoding="utf-8").lower() for folder in ("corpus", "publico")
                     for p in (battery / folder).iterdir() if p.is_file())
     computed = {"WR-01", "WR-02", "TB-03", "NS-01", "RT-03", "RT-04", "VF-01", "XL-01", "XL-02"}  # comparisons, sums, behaviour, translations

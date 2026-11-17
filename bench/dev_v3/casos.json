@@ -1,5 +1,5 @@
 {
- "version": "0.1.1",
+ "version": "0.2.0",
  "nota": "Batería abierta v3: material ficticio (Inés Carvallo, Polen Austral, variedad Lumbre, Bombus ficticius) que reproduce los patrones de fallo de los bancos sellados v3 sin su contenido. Se puede leer y usar para ajustar.",
  "casos": [
   {
@@ -378,6 +378,84 @@
     "\\b20 ?%"
    ],
    "nota": "Multiturno con corrección y cálculo: 2 de 12."
+  },
+  {
+   "id": "PQ-04",
+   "cat": "PQ",
+   "turnos": [
+    {
+     "texto": "¿Qué rendimiento tuvo Los Coigües frente a la variedad Lumbre según las fuentes públicas? Escríbelo en una nota para mi jefa.",
+     "receta": "research",
+     "consulta": "@propuesta"
+    }
+   ],
+   "clave": [
+    [
+     "9[,.]6|11[,.]2"
+    ]
+   ],
+   "envios_min": 1,
+   "envio_prohibido": [
+    "coig[uü]es",
+    "nota",
+    "jefa",
+    "frente"
+   ],
+   "nota": "Un nombre propio del usuario sin «parcela» delante, una nota y su destinataria: nada de eso va en la consulta (confirmación de los bancos v3)."
+  },
+  {
+   "id": "TB-04",
+   "cat": "TB",
+   "turnos": [
+    {
+     "texto": "Haz una tabla con el peso medio del fruto y el calibre de cada parcela.",
+     "receta": "table"
+    }
+   ],
+   "clave": [
+    [
+     "1[,.]9"
+    ],
+    [
+     "1[,.]7"
+    ],
+    [
+     "1[,.]6"
+    ],
+    [
+     "\\b14\\b"
+    ],
+    [
+     "\\b13\\b"
+    ],
+    [
+     "\\b12\\b"
+    ]
+   ],
+   "tabla": true,
+   "cita": true,
+   "nota": "La tabla fuente da una columna por parcela y una fila por variable: el programa la lee girada."
+  },
+  {
+   "id": "GL-01",
+   "cat": "GL",
+   "turnos": [
+    {
+     "texto": "¿Qué cuaja tuvo P2 con los abejorros?"
+    }
+   ],
+   "clave": [
+    [
+     "71"
+    ]
+   ],
+   "prohibido": [
+    "\\b78\\b",
+    "\\b64\\b",
+    "\\b61\\b"
+   ],
+   "cita": true,
+   "nota": "Glosario en tabla y con tres pares en una línea (formato de los bancos v3)."
   }
  ]
 }

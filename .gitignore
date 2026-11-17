@@ -11,3 +11,4 @@ Thumbs.db
 build/
 *.egg-info/
 bench/dev/ejecuciones/
+bench/dev_v3/ejecuciones/
