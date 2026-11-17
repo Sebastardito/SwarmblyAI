@@ -59,7 +59,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.2.1"
+HARNESS_VERSION = "1.2.2"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -690,17 +690,38 @@ def find_python(explicit: str | None) -> str:
 
 
 def installed_versions(python: str) -> dict[str, str]:
-    code = ("import json, importlib.metadata as m\n"
+    """The version of the code that runs: the module's own ``__version__``
+    (an editable install keeps the metadata of the version it was installed
+    at: the v3 runs declared 0.4.0 for the 0.5.0 code), the metadata when the
+    module has none."""
+    code = ("import json, importlib, importlib.metadata as m\n"
             "out = {}\n"
-            "for p in ('swarmbly-app', 'swarmbly-lce', 'swarmbly-v0'):\n"
-            "    try: out[p] = m.version(p)\n"
-            "    except Exception: out[p] = 'no instalado'\n"
+            "for p, mod in (('swarmbly-app', 'swarmbly_app'), ('swarmbly-lce', 'swarmbly_lce'), ('swarmbly-v0', 'swarmbly_v0')):\n"
+            "    try:\n"
+            "        out[p] = getattr(importlib.import_module(mod), '__version__', '') or m.version(p)\n"
+            "    except Exception:\n"
+            "        try: out[p] = m.version(p)\n"
+            "        except Exception: out[p] = 'no instalado'\n"
             "print(json.dumps(out))")
     try:
         return json.loads(subprocess.run([python, "-c", code], capture_output=True, text=True,
                                          timeout=60).stdout.strip())
     except Exception:
         return {}
+
+
+def component_commits(umbrella: Path) -> str:
+    """The commits of the components the umbrella tested together
+    (``components.lock``): the code measured, not only the harness's."""
+    try:
+        lock = json.loads((umbrella / "components.lock").read_text(encoding="utf-8"))
+    except Exception:
+        return "desconocido"
+    parts = []
+    for name, c in (lock.get("components") or {}).items():
+        ref = str(c.get("commit") or c.get("source") or "")[:12]
+        parts.append(f"{name} {c.get('version', '?')} {ref}".strip())
+    return " · ".join(parts) or "desconocido"
 
 
 def git_commit(path: Path) -> str:
@@ -901,11 +922,12 @@ run_id:              {run_id}
 fecha_utc:           {started_at} → {utc_now()}
 proyecto:            Swarmbly AI
 version_o_commit:    {git_commit(umbrella)} (repositorio del arnés); paquetes: {json.dumps(versions, ensure_ascii=False)}
+componentes:         {component_commits(umbrella)}
 modelo(s):           {args.model} (chat) · {args.embed_model} (embeddings)
 proveedor(es):       Ollama {ollama_version} en {args.ollama}
 sistema_operativo:   {platform.platform()}
 modo:                sin_red (internet bloqueado por proxy; fuente pública = registro simulado local con la instantánea congelada)
-semilla:             no controlada (Swarmbly App 3.0.x no pasa semilla a Ollama)
+semilla:             no controlada (Swarmbly App no pasa semilla a Ollama)
 temperatura:         {args.temperature}
 casos_ejecutados:    {len(summary)}
 fallos_tecnicos:     {failures}
@@ -927,8 +949,17 @@ arnes:               bench/run_bank.py {HARNESS_VERSION}
 
 ## Recibos
 
-Los recibos los construye el arnés a partir de lo observado (registro simulado y proxy). La app 3.0.x no
-emite recibo propio, ni carril en modo local, ni consentimiento: esos campos quedan como «no informado».
+El arnés construye su propio recibo con lo que observa (registro simulado y proxy) y guarda al lado el
+recibo que emite la app (`casos/<ID>_recibo_app.json`, desde 3.1), con su carril y su consentimiento; el
+resumen dice si los dos coinciden. Los destinos que declara la app (Wikipedia, PubMed…) pueden no ser los
+observados: en la corrida, toda búsqueda va al registro simulado local.
+
+## Fichas que dicen cómo se pregunta (bancos v3)
+
+`Receta:` se envía como la tarjeta elegida; `Consulta aprobada:` se envía como la búsqueda aprobada, y
+«propuesta» aprueba tal cual la que propone la app (`/api/recipes/query`): en ese caso la clave debe juzgar
+el contenido de lo enviado (solo términos públicos), no una cadena fija; `Turno 2…5:` siguen la misma
+conversación y se puntúa la última respuesta.
 """
     (run_dir / "registro_ejecucion.md").write_text(registro, encoding="utf-8")
     print(f"[5/5] sello después: {'OK' if post['ok'] else 'FALLA'} · fallos técnicos: {failures} · resultados en {run_dir}")

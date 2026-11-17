@@ -40,7 +40,7 @@ python3 bench/run_bank.py --bank /path/to/bank --model qwen2.5:7b \
     --persona "<fictitious user's name>" --executor "<your name>"
 ```
 
-For development, the **open battery** in [`dev/`](dev/README.md) uses the same machinery with fictitious material that can be read and used for tuning: `python3 bench/run_dev.py --model qwen2.5:7b`.
+For development, the **open battery** in [`dev/`](dev/README.md) uses the same machinery with fictitious material that can be read and used for tuning: `python3 bench/run_dev.py --model qwen2.5:7b`. A second open battery, [`dev_v3/`](dev_v3/README.md), reproduces the failure patterns of the sealed banks v3 on fictitious material: `python3 bench/run_dev.py --model qwen2.5:7b --battery bench/dev_v3`. Since harness 1.2.0 a case card may also say how the question is asked (`Receta:`, `Consulta aprobada:`, `Permiso público:`, `Turno 2:`…), and since 1.2.1 `Documentos:` may name files with spaces or use codes defined in a legend (`02_CASOS_RESERVADOS/LEYENDA*.md`).
 
 Requirements: Swarmbly installed (the installer's `.venv`, or `--python`), Ollama running with the chat model and `nomic-embed-text`. Run each bank once per version; a technical failure means repeating the whole battery, never a single case.
 
@@ -72,7 +72,7 @@ python3 bench/run_bank.py --bank /ruta/al/banco --model qwen2.5:7b \
     --persona "<nombre de la persona ficticia>" --executor "<tu nombre>"
 ```
 
-Para el desarrollo, la **batería abierta** de [`dev/`](dev/README.md) usa la misma maquinaria con material ficticio que se puede leer y usar para ajustar: `python3 bench/run_dev.py --model qwen2.5:7b`.
+Para el desarrollo, la **batería abierta** de [`dev/`](dev/README.md) usa la misma maquinaria con material ficticio que se puede leer y usar para ajustar: `python3 bench/run_dev.py --model qwen2.5:7b`. Una segunda batería abierta, [`dev_v3/`](dev_v3/README.md), reproduce los patrones de fallo de los bancos sellados v3 con material ficticio: `python3 bench/run_dev.py --model qwen2.5:7b --battery bench/dev_v3`. Desde el arnés 1.2.0 una ficha puede decir también cómo se pregunta (`Receta:`, `Consulta aprobada:`, `Permiso público:`, `Turno 2:`…), y desde 1.2.1 `Documentos:` admite nombres de archivo con espacios o códigos definidos en una leyenda (`02_CASOS_RESERVADOS/LEYENDA*.md`).
 
 **Requisitos:**
 

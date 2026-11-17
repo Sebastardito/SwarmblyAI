@@ -46,7 +46,7 @@ sys.path.insert(0, str(HERE))
 import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance)
 
 DEV = HERE / "dev"
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -103,6 +103,11 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
     leaked = [p for p in case.get("envio_prohibido") or [] if re.search(r"\b" + p + r"\b", sent_text, re.I)]
     receipt = meta.get("receipt") or {}
     blocked = bool(receipt.get("bloqueados")) and meta.get("status") == "failed"
+    # 0.5.0: what the app proposes under "Buscar en línea" (not sent until approved)
+    offer = " ".join([str((meta.get("web_offer") or {}).get("query") or ""),
+                      *[str(e) for e in (meta.get("public_offer") or {}).get("entities") or []]]).strip()
+    offered = [p for p in case.get("oferta_prohibida") or [] if re.search(p, offer, re.I)]
+    table_meta = meta.get("table") or {}
     checks = {
         "clave": all(hit) if hit else True,
         "envio_prohibido": not leaked,
@@ -115,6 +120,7 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "envios_min": sends >= case["envios_min"] if "envios_min" in case else True,
         "consulta_falsa": not false_lookup,
         "memoria": memory if case.get("memoria") else True,
+        "oferta_prohibida": not offered,
     }
     # 0.2.1: the requested length is a notice, not a fail (a paragraph with every
     # figure the sources give is not wrong for being short); both are kept
@@ -130,7 +136,10 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "aviso_cobertura": len((meta.get("coverage") or {}).get("missing") or []), "clave_en_aviso": in_notice,
         "envio_prohibido_encontrado": leaked, "bloqueo_esperado": bool(case.get("espera_bloqueo")),
         # 3.3: a table built by code, and numeric cells that are in no passage
-        "tabla_por_codigo": bool(meta.get("table")),
+        "tabla_por_codigo": bool(table_meta.get("by_code", bool(table_meta))) if table_meta else False,
+        "tabla_sin_codigo_motivo": "" if table_meta.get("by_code", True) else str(table_meta.get("reason", "")),
+        "tabla_correcciones": len(table_meta.get("corrections") or []),
+        "oferta": offer, "oferta_prohibida_encontrada": offered,
         "celdas_sin_respaldo": len((meta.get("table_audit") or {}).get("unsupported") or []),
         "celdas": int((meta.get("table_audit") or {}).get("cells") or 0),
         # 3.3: labelled sentences checked against what they cite

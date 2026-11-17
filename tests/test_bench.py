@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import shutil
 import sys
 import urllib.error
@@ -232,3 +233,11 @@ Documentos:    D2, W7
     assert rb.unresolved_documents(bank, codes, legend) == []
     assert rb.case_documents(bank, unknown)[1] == []
     assert rb.unresolved_documents(bank, unknown, legend) == ["W7"]
+
+
+def test_the_record_names_the_components_measured(tmp_path):
+    (tmp_path / "components.lock").write_text(json.dumps({"components": {
+        "SwarmblyApp": {"version": "0.5.0", "commit": "b149a776f7fe0000"},
+        "SwarmblyCore": {"version": "0.1.0", "source": "in-tree"}}}), encoding="utf-8")
+    assert rb.component_commits(tmp_path) == "SwarmblyApp 0.5.0 b149a776f7fe · SwarmblyCore 0.1.0 in-tree"
+    assert rb.component_commits(tmp_path / "nada") == "desconocido"

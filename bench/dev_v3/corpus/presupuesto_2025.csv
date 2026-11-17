@@ -1,0 +1,15 @@
+partida,categoria,monto_usd,trimestre
+Sensores de humedad,equipos,"12,600",T1
+Estación meteorológica,equipos,4800,T1
+Cajas para colonias,equipos,4200,T2
+Colonias de abejorros,colonias,7200,T1
+Reposición de colonias,colonias,1800,T3
+Alimento para colonias,colonias,900,T2
+Técnico de campo,personal,30000,T1-T4
+Asistente de temporada,personal,12000,T2-T3
+Análisis de laboratorio,personal,3600,T3
+Viajes a terreno,viajes,4300,T1-T4
+Visita del revisor externo,viajes,2500,T1
+Congreso de polinización,viajes,1800,T4
+Seguro de equipos,equipos,700,T1
+Imprevistos,viajes,0,T4

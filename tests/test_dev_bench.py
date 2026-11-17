@@ -124,3 +124,34 @@ def test_the_summary_reports_the_claim_verifier():
     assert summ["total"]["verificacion"] == [4, 1, 1, 1.2]
     md = rd.summary_markdown("r", {"modelo": "m", "repeticiones": 1}, summ, rows, None)
     assert "Frases con cita comprobadas: 4; su cita no las respalda: 1; citas completadas por el código: 1" in md
+
+
+def test_the_v3_battery_is_well_formed_and_its_key_data_are_in_its_documents():
+    """bench/dev_v3: the failure patterns of the sealed banks v3, on fictitious material."""
+    battery = ROOT / "bench" / "dev_v3"
+    cases = rd.load_cases(battery / "casos.json")
+    ids = [c["id"] for c in cases]
+    assert len(ids) == len(set(ids)) >= 15
+    text = " ".join(p.read_text(encoding="utf-8").lower() for folder in ("corpus", "publico")
+                    for p in (battery / folder).iterdir() if p.is_file())
+    computed = {"WR-01", "WR-02", "TB-03", "NS-01", "RT-03", "RT-04", "VF-01", "XL-01", "XL-02"}  # comparisons, sums, behaviour, translations
+    for c in cases:
+        assert c["turnos"] and all(t["texto"] for t in c["turnos"])
+        for group in c.get("clave") or []:
+            for pattern in group:
+                re.compile(pattern)
+            if c["id"] not in computed:
+                assert any(re.search(p, text, re.I) for p in group), (c["id"], group)
+    assert (battery / "corpus" / "apuntes sueltos marzo.md").is_file()      # a name with spaces
+    assert (battery / "corpus" / "presupuesto_2025.csv").is_file()
+
+
+def test_an_offer_that_proposes_a_private_word_fails():
+    case = {"id": "PQ", "clave": [["9[,.]6"]], "oferta_prohibida": ["parcela", "\\d"]}
+    meta = {"web_offer": {"query": "rendimiento Parcela Alta 2024"}}
+    s = rd.score(case, "La Parcela Alta rindió 9,6 t/ha [D1 p2].", meta, 0)
+    assert not s["aprobado"] and s["oferta_prohibida_encontrada"] == ["parcela", "\\d"]
+    ok = rd.score(case, "La Parcela Alta rindió 9,6 t/ha [D1 p2].", {"web_offer": {"query": "rendimiento variedad Lumbre"}}, 0)
+    assert ok["aprobado"]
+    table = rd.score({"id": "T"}, "x", {"table": {"by_code": False, "reason": "no_header"}}, 0)
+    assert table["tabla_por_codigo"] is False and table["tabla_sin_codigo_motivo"] == "no_header"
