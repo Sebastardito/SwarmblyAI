@@ -231,6 +231,14 @@ Swarmbly AI 3.3.
   "- menos de 60 adultos (en 2019) [D1 p2] · unos 45 adultos (en 2024) [W1]".
   Replaying the run's prompt: 45 "según tus notas" in 2 of 3 without it, both
   figures with their years and labels in 3 of 3 with it.
+  Second run of the cards (rc2, 4 cases × 3): 3/12 → 12/12, key data 27/39 →
+  39/39, nothing leaked; the three tables built by the program (0 of 27 cells
+  unsupported), the comparison by code in the six research answers, the
+  proposed queries "variedad Altiva" and "Mimus ficticius" with no lot code.
+  One table answer said "AB1 fue superior" for 87 % against 90 %; telling the
+  model which column is larger made it worse in a replay (1 of 5 wrong against
+  0 of 5), so it is not done; the verifier now counts the differences of a
+  table the program built (it flagged "diferencias de 3 %, 4 % y 5 %").
 - **Tables of the user's documents keep their lines.** LCE joins the lines
   of a paragraph, so a table reached the model and the code on one line
   ("Resultados — | Sitio | pH | |---|---| | Parcela Norte | 6,8 | | …"): the

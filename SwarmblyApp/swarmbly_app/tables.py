@@ -607,10 +607,13 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
             if entity and name and _entity_only(header[j], entities):
                 header[j] = f"{name} {entity}" + (f" {unit.group(1)}" if unit else "")
     header, rows, computed = derive(header, rows, lang)
+    derived_cols = [i for i, c in enumerate(header) if i and _DERIVED.search(c)]
+    computed_values = [r["cells"][i] for r in rows for i in derived_cols if r["cells"][i]]
+    computed_values += [c for r in rows if r.get("key") == "_derived" for c in r["cells"][1:] if c]
     empty = sum(1 for r in rows for c in r["cells"][1:] if not c)
     return {"markdown": render(header, rows, lang), "header": header, "rows": len(rows),
             "documents": [d["rel"] for d in docs], "computed": computed, "empty": empty,
-            "rows_by_code": by_code,
+            "rows_by_code": by_code, "computed_values": computed_values,
             "dropped": dropped[:12]}
 
 

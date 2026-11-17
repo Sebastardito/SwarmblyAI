@@ -1087,6 +1087,8 @@ class ChatService:
                 try:
                     computed = [f"{c['difference']} {c.get('percent', '')} %"
                                 for c in request.receipt_ctx.get("comparisons") or []]
+                    # the differences of a table the program built
+                    computed += [str(v) for v in ((extra.get("table") or {}).get("computed_values") or [])]
                     found = verify.verify(answer_text, given, _judge if (checker.own or not elsewhere) else None,
                                           _lang(user_text), limit=int(ccfg.get("verify_limit", 24)),
                                           computed=computed, earlier={
