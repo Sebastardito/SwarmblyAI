@@ -249,6 +249,35 @@ Swarmbly AI 3.3.
   against the passages; a figure that is in none of them, and is not the
   difference or sum of two supported cells of its row or column, is
   reported under the answer (`meta.table_audit`).
+- **After the sealed banks v3** (v3.1 and v3.2, one run each, 28 cases per
+  bank, qwen2.5:7b; scored by an isolated judge, only aggregates read):
+  short answers 87/146 key data, compositions 0/16 passed with 70 % of their
+  claims supported, no passage or personal name sent. What failed, and what
+  changed (each measured on the new open battery `bench/dev_v3`, fictitious):
+  - *A private name in a proposed query* (privacy fix). The query proposed
+    for a research answer kept a plot name and the words of the format
+    request; approved as proposed, the plot name left the computer. The
+    proposal (and "Buscar en línea") now leaves out places of the user's
+    and their names, what follows a possessive, people introduced by a
+    title, codes, figures and format words (`web_search.strip_private`).
+  - *Public results dropped.* A web page needed a query word in its title;
+    7 of 7 results were dropped, 3 naming every word. A page whose title and
+    snippet name every concept of the query is now kept, 600 characters of
+    its text are read, and the answer says when every result was left out.
+  - *No table by code in 8 of 8.* CSV files reach the model and the code as
+    the Markdown table the file holds (C1 joined their lines); the header of
+    the source table is used when the model writes none; `meta.table` says
+    whether the table was built by code and why not. A value a later
+    paragraph corrects ("se recalcula en 61 %", "fueron 10, no 12") replaces
+    the one read, which stays as "(antes 64)".
+  - *False alarms.* Dates written with numbers against month names, and a
+    label after the full stop in the check for uncited sentences.
+  - *Documents in another language* were missed in 3 of 3 cases that needed
+    them: the translated keywords now search once more on their own, and up
+    to two paragraphs in another language that share two of them are added.
+  - *"Send this to the swarm"* in a local conversation now says nothing was
+    sent; the telemetry and the receipt agree on the consent of an approved
+    search.
 
 ## 0.5.0 — Grounded composition and safety (2026-11-15)
 

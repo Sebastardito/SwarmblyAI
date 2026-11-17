@@ -558,6 +558,85 @@ def derive(header: list[str], rows: list[dict[str, Any]], lang: str = "es") -> t
     return header, rows, 0
 
 
+# a sentence that corrects a value: "se recalcula en 61 %", "fueron 10, no 12"
+_CORRECTION = re.compile(r"\b(recalcul\w*|corrig\w*|correcci[oó]n|corregid\w*|rectific\w*|"
+                         r"en\s+realidad|se\s+actualiz\w*|actualizad\w*|revisad\w*|"
+                         r"recalculat\w*|correct(?:ed|ion|s)?|revised|actually|updated)\b", re.I)
+_NOT_OLD = r"(\d+(?:[.,]\d+)?)\s?%?\s*(?:,|y)?\s+(?:no|not|y\s+no|and\s+not)\s+(?:de\s+|del\s+)?(\d+(?:[.,]\d+)?)"
+
+
+_MONTH_WORDS = ("enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|"
+                "noviembre|diciembre|january|february|march|april|may|june|july|august|september|"
+                "october|november|december")
+
+
+def _close(new: str, old: str) -> bool:
+    """A corrected value of the same order as the one it replaces (not a year,
+    a day or a count that happens to follow the cue)."""
+    try:
+        a, b = float(_canon(new)), float(_canon(old))
+    except ValueError:
+        return False
+    return b == 0 or 0.2 <= a / b <= 5
+
+
+def apply_corrections(header: list[str], rows: list[dict[str, Any]],
+                      sources: list[dict[str, Any]], lang: str = "es") -> list[dict[str, Any]]:
+    """A value another paragraph corrects ("La cuaja de la Parcela Baja se
+    recalcula en 61 %", "fueron 10, no 12") replaces the one the table read,
+    which stays in the cell as the earlier value. A table built by code read
+    the report's 64 and kept it while a later minute corrected it (sealed bank
+    v3 example; the banks marked the old value as a serious error)."""
+    from .compose import unflatten_tables
+    found: list[dict[str, Any]] = []
+    passages = [(" ".join(str(s.get("label", "")).split()), unflatten_tables(str(s.get("text", ""))))
+                for s in sources]
+    for r in rows:
+        key = r["cells"][0]
+        fkey = _fold(re.sub(r"^(el|la|los|las|the)\s+", "", key.strip(), flags=re.I))
+        if len(fkey) < 3 or r.get("key") == "_derived":
+            continue
+        for j in range(1, len(header)):
+            old = r["cells"][j]
+            old_n = _NUMBER.search(old or "")
+            if not old_n or _DERIVED.search(header[j]):
+                continue
+            col_stems = _stems(re.sub(r"\([^)]*\)", " ", header[j])) - _GROUP_STEMS
+            for label, text in passages:
+                if label in r["labels"]:
+                    continue
+                for sentence in re.split(r"(?<=[.!?])\s+", text):
+                    fs = _fold(sentence)
+                    if not re.search(rf"\b{re.escape(fkey)}\b", fs) or not (_stems(sentence) & col_stems):
+                        continue
+                    new = ""
+                    m = re.search(_NOT_OLD, sentence)
+                    if m and _canon(m.group(2)) == _canon(old_n.group(1)):
+                        new = m.group(1)
+                    else:
+                        # the value a cue gives: a few words after it, after
+                        # "en", "a", ":"…, and not a date ("Con esa corrección,
+                        # la cuaja … se recalcula en 61 %": the second cue gives it)
+                        for cue in _CORRECTION.finditer(sentence):
+                            n = re.match(r"\W*(?:[\wáéíóúñ]+\W+){0,4}?(?:en|a|al|:|es|de|queda\w*|to|at|is|of)\s+"
+                                         r"(\d+(?:[.,]\d+)?)(?!\s*(?:/|de\s+(?:" + _MONTH_WORDS + r")))",
+                                         sentence[cue.end():], re.I)
+                            if n:
+                                new = n.group(1)
+                                break
+                    if new and _canon(new) != _canon(old_n.group(1)) and _close(new, old_n.group(1)):
+                        unit = old[old_n.end():].strip()
+                        earlier = "antes" if lang == "es" else "earlier"
+                        r["cells"][j] = f"{new}{(' ' + unit) if unit else ''} ({earlier} {old})"
+                        if label and label not in r["labels"]:
+                            r["labels"].append(label)
+                        found.append({"row": key, "col": header[j], "old": old, "new": new, "label": label})
+                        break
+                if found and found[-1]["row"] == key and found[-1]["col"] == header[j]:
+                    break
+    return found
+
+
 def render(header: list[str], rows: list[dict[str, Any]], lang: str = "es") -> str:
     head = [*header, "Fuente" if lang == "es" else "Source"]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
@@ -567,18 +646,47 @@ def render(header: list[str], rows: list[dict[str, Any]], lang: str = "es") -> s
     return "\n".join(lines)
 
 
+def _source_header(request: str, docs: list[dict[str, Any]]) -> list[str] | None:
+    """The header of the source table that bears most on the request, when
+    the model wrote none: a table the user already has says what its rows and
+    columns are."""
+    topic = _request_stems(request) - _GROUP_STEMS
+    best, score = None, 0
+    for doc in docs:
+        for _, text in doc["passages"]:
+            for _, _, head, rows in find_tables(text):
+                if len(head) < 2 or len(rows) < 2 or len(head) > 8:
+                    continue
+                shared = len(_stems(" ".join(head)) & topic)
+                if shared > score:
+                    best, score = [c for c in head if c], shared
+    return best if best and len(best) >= 2 else None
+
+
 def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
-          generate: Callable[[str, int], str], lang: str = "es") -> dict[str, Any] | None:
+          generate: Callable[[str, int], str], lang: str = "es",
+          why: dict[str, Any] | None = None) -> dict[str, Any] | None:
     """The table the request asks for, built from the sources, or None when
-    the code cannot build one (the request is then answered as before).
-    ``generate(prompt, max_tokens)`` is one short generation."""
-    header = parse_header(generate(header_prompt(request, inv, lang), 80))
+    the code cannot build one (the request is then answered as before, and
+    ``why["reason"]`` says why: the sealed banks v3 showed tables written by
+    the model in 8 of 8 cases and nothing said why the code had not built
+    them). ``generate(prompt, max_tokens)`` is one short generation."""
+    why = why if why is not None else {}
     docs = documents(request, sources)
-    if not header or not docs:
+    if not docs:
+        why["reason"] = "no_documents"
+        return None
+    header = parse_header(generate(header_prompt(request, inv, lang), 80))
+    if not header:
+        header = _source_header(request, docs)
+        why["header_from_source"] = bool(header)
+    if not header:
+        why["reason"] = "no_header"
         return None
     entities = list(inv.get("entities") or [])
     header = tidy_header(header, request, docs, entities)
     if len(header) < 2:
+        why["reason"] = "header_too_short"
         return None
     found, dropped = [], []
     by_code = 0
@@ -594,8 +702,11 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
         found += kept
         dropped += bad
     rows = merge(found, entities)
+    why["rows_found"], why["cells_dropped"] = len(rows), len(dropped)
     if len(rows) < 2:
+        why["reason"] = "fewer_than_two_rows"
         return None
+    corrections = apply_corrections(header, rows, sources, lang)
     # a column the model named only after an entity says what it measures, in
     # the words of the source's table: "Lote AB1" → "Rendimiento medio AB1 (t/ha)"
     header = list(header)
@@ -614,7 +725,7 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
     return {"markdown": render(header, rows, lang), "header": header, "rows": len(rows),
             "documents": [d["rel"] for d in docs], "computed": computed, "empty": empty,
             "rows_by_code": by_code, "computed_values": computed_values,
-            "dropped": dropped[:12]}
+            "dropped": dropped[:12], "corrections": corrections}
 
 
 def place(text: str, table: str, request: str) -> str:

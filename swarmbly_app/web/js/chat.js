@@ -621,7 +621,9 @@ const Chat = (() => {
     if (!streaming) {
       if (meta.web_search?.results?.length) article.appendChild(webResults(meta.web_search));
       else if (meta.web_search) article.appendChild(h("p.note.web-results",
-        t("chat.webNone").replace("{q}", meta.web_search.query || "")));
+        (meta.web_search.dropped_unrelated
+          ? t("chat.webDropped").replace("{n}", meta.web_search.dropped_unrelated)
+          : t("chat.webNone")).replace("{q}", meta.web_search.query || "")));
       if (meta.conflicts?.length) article.appendChild(conflictBox(meta.conflicts));
       if (meta.coverage?.missing?.length) article.appendChild(coverageBox(meta.coverage.missing));
       if (meta.verification?.flagged?.length) article.appendChild(verificationBox(meta.verification));
@@ -694,10 +696,14 @@ const Chat = (() => {
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
     // 3.3: a table built by code, and cells of any table that are in no passage
-    if (meta.table) chips.push(chip(t("chat.tableBuilt"), "ok",
+    if (meta.table && meta.table.by_code !== false) chips.push(chip(t("chat.tableBuilt"), "ok",
       t("chat.tableBuiltTitle").replace("{rows}", meta.table.rows)
         .replace("{docs}", (meta.table.documents || []).length)
         .replace("{empty}", meta.table.empty).replace("{dropped}", (meta.table.dropped || []).length)));
+    if (meta.table?.corrections?.length) chips.push(chip(
+      t("chat.tableCorrected").replace("{n}", meta.table.corrections.length), "",
+      t("chat.tableCorrectedTitle") + " " + meta.table.corrections
+        .map((c) => `${c.row}: ${c.old} → ${c.new} [${c.label}]`).join(" · ")));
     if (meta.table_audit?.unsupported?.length) chips.push(chip(
       t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
       t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported

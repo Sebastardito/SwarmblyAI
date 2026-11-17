@@ -385,7 +385,19 @@ class ChatService:
             personal = mode in ("lan", "internet", "auto") and (
                 request.memory_saved is not None or capture or bool(request.web_query)
                 or self._personal_request(user_text, request.project_id))
+            asked_to_send = bool(_ASKS_TO_SEND.search(user_text))
+            if asked_to_send and mode == "local":
+                # sealed bank v3.1: "send this to the swarm" with the tier LOCAL was
+                # answered on this device, rightly, but the answer did not say so
+                local_reason = ("you asked to send this out, but the conversation is local: "
+                                "answered on this device, nothing sent")
+                request.receipt_ctx["asked_to_send"] = True
+                self.bus.publish("chat.notice", request_id=request.request_id,
+                                 conversation_id=conv_id, message_id=request.message_id,
+                                 note=local_reason)
             if personal:
+                if asked_to_send:
+                    request.receipt_ctx["asked_to_send"] = True
                 local_reason = ("about you and your documents: answered on this device "
                                 "with your sources (nothing sent to the swarm)")
                 self.bus.publish("chat.notice", request_id=request.request_id,
@@ -513,6 +525,9 @@ class ChatService:
                     sources = self.retriever(user_text, extra_terms, request.project_id) or []
                 except Exception:
                     sources = []
+                if expansion and expansion.keywords:
+                    sources += _other_language(self.retriever, expansion.keywords, user_text,
+                                               request.project_id, sources)
                 from .compose import is_composition, related
                 named_docs = self._named_documents(user_text, request.project_id)
                 if sources and not named_docs and not _ABOUT_ME.search(user_text) \
@@ -612,8 +627,11 @@ class ChatService:
                 blocks.append(gblock)
             web_found = None
             late_blocks: list[str] = []
+            if request.receipt_ctx.get("asked_to_send"):
+                late_blocks.append(_NOT_SENT.get(_lang(user_text), _NOT_SENT["en"]))
             from . import web_search
             if request.web_query:
+                request.receipt_ctx["web_searched"] = True
                 with egress.purpose(egress.PUBLIC_QUERY):
                     groups = {_fold_word(n): _fold_word(t) for t, eq in gloss_pairs
                               for n in [t, *[e.strip() for e in eq.split(",") if e.strip()]]}
@@ -806,7 +824,18 @@ class ChatService:
             # 3.3, recipe 2: the table a composition asks for is built by code
             # from values each document supports; the model writes around it
             table_built = None
+            table_why: dict[str, Any] = {}
             inv_now = request.receipt_ctx.get("inventory")
+            wants_table = bool((inv_now and inv_now.get("table")) or request.recipe == "table")
+            if wants_table and not (((self.config().get("compose") or {}).get("table_by_code")
+                                     or request.recipe == "table")):
+                table_why["reason"] = "table_by_code_off"
+            elif wants_table and not sources:
+                table_why["reason"] = "no_sources"
+            elif wants_table and public_hits:
+                table_why["reason"] = "public_evidence"
+            elif wants_table and not inv_now:
+                table_why["reason"] = "no_inventory"
             if (((self.config().get("compose") or {}).get("table_by_code") or request.recipe == "table")
                     and inv_now and inv_now.get("table") and sources and not public_hits):
                 from . import tables
@@ -826,13 +855,15 @@ class ChatService:
                         # wrote none for "Compara la germinación…", open battery RC-01)
                         table_request = user_text.rstrip() + (" Hazlo en una tabla." if _lang(user_text) == "es"
                                                               else " Put it in a table.")
-                    table_built = tables.build(table_request, sources, inv_now, _short, _lang(user_text))
+                    table_built = tables.build(table_request, sources, inv_now, _short, _lang(user_text),
+                                               table_why)
                 except Interrupted:
                     raise
                 except egress.EgressDenied:
                     raise
-                except Exception:
+                except Exception as exc:
                     table_built = None
+                    table_why["reason"] = f"error: {type(exc).__name__}"
                 if table_built:
                     table_built["seconds"] = round(time.monotonic() - t0, 1)
                     context = [*context[:-1],
@@ -937,7 +968,9 @@ class ChatService:
                 "online": {"approved_query": request.web_query or None,
                            "results": len((web_found or {}).get("results") or []),
                            "offered": request.receipt_ctx.get("web_offer") is not None,
-                           "consent_required": bool(request.receipt_ctx.get("consent_required"))},
+                           # as the receipt: an approved search needed (and had) the user's yes
+                           "consent_required": bool(request.receipt_ctx.get("consent_required")
+                                                    or request.receipt_ctx.get("web_searched"))},
                 "route": "local", "model": answer_model}
             answer_text = getattr(result, "text", "") or ""
             # a correction made in this very message applies to this answer too
@@ -963,6 +996,10 @@ class ChatService:
                 except Exception:
                     pass
                 extra["table"] = {k: v for k, v in table_built.items() if k != "markdown"}
+                extra["table"]["by_code"] = True
+            elif table_why:
+                # why the code built no table: the answer's table, if any, is the model's
+                extra["table"] = {"by_code": False, **table_why}
             conflicts = _term_conflicts(answer_text, gloss_pairs, gmeta)
             if conflicts:
                 extra["term_conflicts"] = conflicts
@@ -1280,11 +1317,14 @@ class ChatService:
                 consent = {"requerido": required, "otorgado": True,
                            "alcance": "nombres de entidades públicas de la pregunta o de tus fuentes",
                            "base": base}
-                if request.web_query:
-                    # an approved search sends the text the user saw and edited
-                    consent = {"requerido": True, "otorgado": True,
-                               "alcance": f"el texto de búsqueda que aprobaste: «{request.web_query[:160]}»",
-                               "base": "lo aprobaste en el diálogo «Buscar en línea»"}
+            if request.web_query and ctx.get("web_searched"):
+                # an approved search sends the text the user saw and edited; its
+                # yes is the consent, whether or not a result came back (the
+                # telemetry and the receipt disagreed in 5 of 5 research cases,
+                # sealed bank v3.2)
+                consent = {"requerido": True, "otorgado": True,
+                           "alcance": f"el texto de búsqueda que aprobaste: «{request.web_query[:160]}»",
+                           "base": "lo aprobaste en el diálogo «Buscar en línea»"}
             if dest.get("clase") == egress.THIRD_PARTY:
                 consent["modelo_terceros"] = {
                     "host": dest.get("host", ""), "autorizado": True,
@@ -1771,7 +1811,8 @@ def _unsupported(answer: str, given: list[str] | None = None) -> list[str]:
                 outside = True
             if outside:
                 continue
-            for x in re.split(r"(?<=[.!?])\s+", line):
+            from .verify import sentences
+            for x in sentences(line):
                 x = x.strip()
                 if (len(x.split()) < 6 or x.startswith(("#", "|", ">")) or x.endswith("?")
                         or _CITE.search(x) or _ABOUT_SOURCES.search(x)):
@@ -1783,6 +1824,25 @@ def _unsupported(answer: str, given: list[str] | None = None) -> list[str]:
                     continue
                 out.append(x[:300])
     return out[:12]
+# a request to send something out of this computer (swarm, network, servers)
+_ASKS_TO_SEND = re.compile(
+    # a request (imperative or infinitive), not a report ("se enviaron a otros laboratorios")
+    r"\b(env[ií]a(?:lo|la|los|las|me|nos)?|env[ií]e|enviar(?:lo|la|los|las)?|manda(?:lo|la|los|las)?|"
+    r"mandar(?:lo|la)?|comparte(?:lo|la)?|compartir(?:lo|la)?|sube(?:lo|la)?|subir(?:lo|la)?|"
+    r"distribuye(?:lo|la)?|distribuir(?:lo|la)?|reparte(?:lo|la)?|repartir(?:lo|la)?|"
+    r"procesa(?:lo|la)?|proc[eé]sa(?:lo|la)|procesar(?:lo|la)?|usa|usar|utiliza|utilizar|"
+    r"send|share|upload|distribute|process|use)\b[^.?!\n]{0,60}?"
+    r"\b(enjambre|nodos?|otr[oa]s?\s+(?:equipos?|computadoras?|ordenadores?|nodos?)|la\s+red|"
+    r"internet|la\s+nube|terceros|servidor(?:es)?\s+extern\w*|swarm|nodes?|peers?|the\s+network|"
+    r"the\s+cloud|other\s+(?:computers?|machines?|nodes?))\b", re.I)
+_NOT_SENT = {
+    "es": ("El usuario pidió enviar o procesar algo fuera de esta computadora (el enjambre, la red u otros "
+           "equipos). No se envió nada: esta respuesta se hizo en esta computadora, con sus fuentes. Dilo "
+           "al principio de tu respuesta, sin decir que se envió, y responde aquí lo que pide."),
+    "en": ("The user asked to send or process something outside this computer (the swarm, the network or "
+           "other machines). Nothing was sent: this answer was made on this computer, with their sources. "
+           "Say so at the start of your answer, without saying it was sent, and answer here what they ask."),
+}
 _FOLLOW_UP = re.compile(r"\b(este|esta|esto|ese|esa|eso|estos|estas|anterior|lo mismo|"
                         r"this|that|these|those|it|previous|above|isso|isto)\b", re.I)
 
@@ -1853,6 +1913,38 @@ _ES_MARKS = re.compile(r"[¿¡ñáíóú]|\b(qu[eé]|c[oó]mo|cu[aá]l(?:es)?|d[
                        r"el|los|las|del|una|y|en español|"
                        # 3.2: "Resume mis notas de campo." got English instructions
                        r"mis|tus|sus|resumen|escribe|redacta|prepara|haz|lista|compara)\b", re.I)
+
+
+def _other_language(retriever: Callable[..., list[dict[str, Any]]], keywords: str, question: str,
+                    project_id: str, sources: list[dict[str, Any]], limit: int = 2) -> list[dict[str, Any]]:
+    """Paragraphs in another language than the question, found with the
+    translated keywords alone. Searched together with the question, a
+    document in English ranked below the Spanish ones and was cut: the
+    sealed bank v3.1 missed the English report in 3 of 3 cases that needed
+    it, once with its paragraph among the candidates."""
+    from .lang import language_if_sure
+    asked = _lang(question)
+    have = {(s.get("doc_id"), s.get("start"), s.get("text")) for s in sources}
+    try:
+        found = retriever(keywords, "", project_id) or []
+    except Exception:
+        return []
+    from .compose import _stems
+    wanted = _stems(keywords)
+    out = []
+    for s in found:
+        if (s.get("doc_id"), s.get("start"), s.get("text")) in have:
+            continue
+        # a paragraph that shares one keyword is not about the question: two
+        # of them, or every keyword when there is only one
+        if len(wanted & _stems(str(s.get("text", "")))) < min(2, len(wanted)):
+            continue
+        other = language_if_sure(str(s.get("text", "")))
+        if other and other != asked:
+            out.append(s)
+            if len(out) >= limit:
+                break
+    return out
 
 
 def _lang(text: str) -> str:

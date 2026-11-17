@@ -251,3 +251,63 @@ def test_the_differences_the_program_computed_are_listed():
                     {"entities": ["AB1", "AB2", "Parcela Norte", "Parcela Sur"], "table": True},
                     lambda p, n: "| Sitio | AB1 | AB2 | Diferencia |" if "encabezado" in p else "NINGUNA")
     assert built["computed_values"] == ["3", "4"]
+
+
+# ---- 3.3: corrections, a header from the source, and why no table (banks v3) ----
+
+_CORR_REQ = "Ponme la cuaja de las tres parcelas y del testigo, con el valor corregido donde lo haya."
+_CORR_SOURCES = [
+    {"rel": "informe_ensayo.md", "label": "D1 p3", "doc_id": "a",
+     "text": "Resultados — | Parcela | Cuaja con abejorros (%) | |---|---| | Alta | 78 | | Media | 71 | "
+             "| Baja | 64 | | Testigo sin abejorros | 52 |"},
+    {"rel": "acta_reunion.md", "label": "D2 p2", "doc_id": "b",
+     "text": "Las colonias efectivas fueron 10, no 12. La cuaja de la Parcela Baja se recalcula en 61 %."},
+]
+
+
+def _inv(req):
+    from swarmbly_app import compose
+    inv = compose.inventory(req, [s["text"] for s in _CORR_SOURCES])
+    inv["table"] = True
+    return inv
+
+
+def test_a_value_a_later_paragraph_corrects_replaces_the_one_read():
+    from swarmbly_app import tables
+    out = tables.build(_CORR_REQ, _CORR_SOURCES, _inv(_CORR_REQ),
+                       lambda p, n: "| Parcela | Cuaja (%) |" if "encabezado" in p else "NINGUNA")
+    assert "| Baja | 61 (antes 64) | [D1 p3] [D2 p2] |" in out["markdown"]
+    assert out["corrections"] == [{"row": "Baja", "col": "Cuaja (%)", "old": "64", "new": "61", "label": "D2 p2"}]
+    assert "| Alta | 78 | [D1 p3] |" in out["markdown"]
+
+
+def test_a_date_after_a_correction_word_is_not_a_corrected_value():
+    from swarmbly_app import tables
+    rows = [{"key": "baja", "cells": ["Baja", "64"], "labels": ["D1 p3"]},
+            {"key": "alta", "cells": ["Alta", "78"], "labels": ["D1 p3"]}]
+    found = tables.apply_corrections(["Parcela", "Cuaja (%)"], rows, [
+        {"label": "D2 p2", "text": "La cuaja de la Parcela Baja fue revisada por el técnico el 15 de marzo de 2025."}])
+    assert found == [] and rows[0]["cells"][1] == "64"
+
+
+def test_the_source_tables_header_when_the_model_writes_none_and_why_otherwise():
+    from swarmbly_app import tables
+    why = {}
+    out = tables.build(_CORR_REQ, _CORR_SOURCES, _inv(_CORR_REQ), lambda p, n: "no sé", "es", why)
+    assert out and why.get("header_from_source") is True
+    assert out["header"][:2] == ["Parcela", "Cuaja con abejorros (%)"]
+    why = {}
+    assert tables.build(_CORR_REQ, [_CORR_SOURCES[1]], _inv(_CORR_REQ), lambda p, n: "no sé", "es", why) is None
+    assert why["reason"] in ("no_header", "fewer_than_two_rows")
+
+
+def test_a_csv_file_reaches_the_answer_as_its_table(tmp_path):
+    from swarmbly_app import lce_adapter as A
+    from swarmbly_lce.c1 import SourceIndex
+    rows = ["partida,categoria,monto_usd"] + [f"Partida número {i},cat{i % 3},{1000 + 37 * i}" for i in range(40)]
+    (tmp_path / "presupuesto.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    spans = A._with_csv_tables([tmp_path], SourceIndex().spans([tmp_path]))
+    assert len(spans) >= 2 and all(s.get("csv_table") for s in spans)
+    assert all(s["text"].startswith("| partida | categoria | monto_usd |\n|---|---|---|") for s in spans)
+    body = "\n".join(s["text"] for s in spans)
+    assert "| Partida número 39 | cat0 | 2443 |" in body and "| Partida número 0 | cat0 | 1000 |" in body

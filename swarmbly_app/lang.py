@@ -49,6 +49,19 @@ def detect_language(text: str) -> str:
     return best
 
 
+def language_if_sure(text: str) -> str:
+    """The language of a paragraph when the vote is clear, otherwise "" (the
+    English default of ``detect_language`` would make an unsure Spanish
+    paragraph look English)."""
+    words = [w.lower() for w in _WORD.findall(text or "")]
+    scores = {lang: sum(1 for w in words if w in vocab and w not in _SHARED)
+              for lang, vocab in _STOPWORDS.items()}
+    ranked = sorted(scores.values(), reverse=True)
+    if not ranked or ranked[0] < 3 or ranked[0] < 2 * ranked[1]:
+        return ""
+    return max(scores, key=lambda k: scores[k])
+
+
 # Strings the pipeline itself writes into a worker prompt. English entries
 # reproduce the historical wording byte for byte (the ρ figures depend on it),
 # except "batch", reworded on 23 Oct 2026 (P3i/P3j): "answer only the numbered

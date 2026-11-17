@@ -81,17 +81,7 @@ def split(answer: str) -> list[dict[str, Any]]:
                 outside = True
             if outside or line.lstrip().startswith(("|", "#", ">")):
                 continue
-            parts = re.split(r"(?<=[.!?])\s+", line.strip())
-            if not re.match(r"(?:[-*]\s+)?\[", line.strip()):
-                # "…dólares. [D1 p17] La referencia…": a label after the full
-                # stop belongs to the sentence it closes (unless the line
-                # opens with its label: "[D2 p2] Ana: …")
-                for i in range(1, len(parts)):
-                    m = re.match(r"((?:\[[^\]]{2,50}\]\s*)+)", parts[i])
-                    if m:
-                        parts[i - 1] += " " + m.group(1).strip()
-                        parts[i] = parts[i][m.end():]
-            for sentence in parts:
+            for sentence in sentences(line):
                 sentence = sentence.strip()
                 labels = _labels(sentence)
                 if labels and len(_CITE.sub(" ", sentence).split()) >= 5:
@@ -100,6 +90,22 @@ def split(answer: str) -> list[dict[str, Any]]:
                         item["absence"] = True
                     out.append(item)
     return out
+
+
+def sentences(line: str) -> list[str]:
+    """The sentences of one line. "…dólares. [D1 p17] La referencia…": a label
+    after the full stop belongs to the sentence it closes (unless the line
+    opens with its label: "[D2 p2] Ana: …"). The citation check of the answer
+    uses the same reading (it flagged two such sentences as uncited, sealed
+    bank v3.1)."""
+    parts = re.split(r"(?<=[.!?])\s+", (line or "").strip())
+    if not re.match(r"(?:[-*]\s+)?\[", (line or "").strip()):
+        for i in range(1, len(parts)):
+            m = re.match(r"((?:\[[^\]]{2,50}\]\s*)+)", parts[i])
+            if m:
+                parts[i - 1] += " " + m.group(1).strip()
+                parts[i] = parts[i][m.end():]
+    return [p for p in parts if p.strip()]
 
 
 def _passage(source: dict[str, Any]) -> tuple[str, str, str]:
@@ -131,6 +137,34 @@ def _presented_as_computed(sentence: str, figure: str) -> bool:
     return False
 
 
+_MONTHS = {m: i for i, names in enumerate((
+    ("enero", "january", "jan", "ene"), ("febrero", "february", "feb"), ("marzo", "march", "mar"),
+    ("abril", "april", "apr", "abr"), ("mayo", "may"), ("junio", "june", "jun"), ("julio", "july", "jul"),
+    ("agosto", "august", "aug", "ago"), ("septiembre", "setiembre", "september", "sep", "sept", "set"),
+    ("octubre", "october", "oct"), ("noviembre", "november", "nov"),
+    ("diciembre", "december", "dec", "dic")), 1) for m in names}
+_NUMERIC_DATE = re.compile(r"\b(\d{1,4})[/.-](\d{1,2})[/.-](\d{1,4})\b")
+
+
+def _plain(fig: str) -> str:
+    """"04" and "4" are the same figure (a month written as a number)."""
+    return fig.lstrip("0") or "0" if fig.isdigit() else fig
+
+
+def _held(text: str) -> set[str]:
+    """The figures of a paragraph, plus the numbers its dates stand for: a
+    sentence that writes "15/04/2026" for the paragraph's "15 de abril de
+    2026" gives a 4 the paragraph only writes as "abril" (the verifier
+    flagged a date as a figure not in the cited paragraph, sealed bank v3.1)."""
+    out = {_plain(f) for f in _figures(text)}
+    for word in re.findall(r"[a-záéíóúñ]+", (text or "").lower()):
+        if word in _MONTHS and len(word) >= 3:
+            out.add(str(_MONTHS[word]))
+    for m in _NUMERIC_DATE.finditer(text or ""):
+        out |= {_plain(g) for g in m.groups()}
+    return out
+
+
 def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
             computed: set[str] | None = None, earlier: set[str] | None = None) -> dict[str, Any]:
     """What the code can say about a labelled sentence: figures that are not
@@ -141,11 +175,11 @@ def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
     known = {lab: (title, text) for lab, title, text in map(_passage, sources) if lab}
     cited = [(lab, *known[lab]) for lab in labels if lab in known]
     unknown = [lab for lab in labels if lab not in known]
-    figs = _figures(sentence)
+    figs = {_plain(f) for f in _figures(sentence)}
     words = _stems(sentence)
-    have = set().union(*(_figures(f"{title}\n{text}") for _, title, text in cited)) if cited else set()
+    have = set().union(*(_held(f"{title}\n{text}") for _, title, text in cited)) if cited else set()
     # paragraphs that were given, are not cited and bear on the sentence
-    near = {lab: _figures(f"{title}\n{text}") for lab, (title, text) in known.items()
+    near = {lab: _held(f"{title}\n{text}") for lab, (title, text) in known.items()
             if lab not in labels and len(words & _stems(text)) >= 2}
     absent = figs - have
     # a figure another paragraph gives is a figure with a citation missing, not
@@ -155,7 +189,7 @@ def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
     derived = _derived(figs, have) - elsewhere
     # figures the program itself computed for this answer (a comparison's
     # difference and percentage, recipe 3): the verifier flagged "un 13 % menos"
-    derived |= figs & (computed or set())
+    derived |= figs & {_plain(c) for c in computed or set()}
     derived |= _derived(figs, have | elsewhere) - elsewhere
     # "3,1 frente a 2,8, una diferencia de 0,3": the 0,3 is also a deviation
     # in the cited table, but in the sentence it is the difference of two of
@@ -179,7 +213,7 @@ def by_code(sentence: str, labels: list[str], sources: list[dict[str, Any]],
     if left:
         complete = []
     unrelated = [lab for lab, title, text in cited
-                 if words and not (words & _stems(f"{title} {text}")) and not (figs & _figures(text))]
+                 if words and not (words & _stems(f"{title} {text}")) and not (figs & _held(text))]
     return {"missing_figures": sorted(missing), "complete": complete, "derived": sorted(derived),
             "unknown": unknown, "unrelated": unrelated, "cited": [lab for lab, _, _ in cited]}
 
