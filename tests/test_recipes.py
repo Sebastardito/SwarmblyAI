@@ -187,3 +187,16 @@ def test_paragraphs_in_another_language_are_found_with_the_translated_keywords()
     assert _other_language(retriever, "fruit weight", "¿Cuánto pesaban los frutos?", "p", [es, en]) == []
     # one shared keyword of several is not enough
     assert _other_language(retriever, "fruit price, market", "¿A cuánto se vendió la fruta?", "p", []) == []
+
+
+def test_a_second_paragraph_of_the_same_foreign_document_needs_one_keyword():
+    from swarmbly_app.chat import _other_language
+    weight = {"doc_id": "b", "start": 0, "text": "Fruit weight averaged 1.9 g in the Upper Plot, and the activity "
+                                                 "of the bees was high in the morning."}
+    advice = {"doc_id": "b", "start": 200, "text": "I recommend doubling the colonies to 8 per plot and moving the "
+                                                   "hives closer to the hedge, where the wind is weaker."}
+    other = {"doc_id": "c", "start": 0, "text": "The colonies of the region are counted in the spring by the "
+                                                "volunteers of the network."}
+    out = _other_language(lambda q, e, p: [weight, advice, other], "reviewer, colonies, average fruit weight",
+                          "¿Qué aconsejó el revisor externo sobre las colonias y cuánto pesaban los frutos?", "p", [])
+    assert out == [weight, advice]

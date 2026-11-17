@@ -663,6 +663,18 @@ def _source_header(request: str, docs: list[dict[str, Any]]) -> list[str] | None
     return best if best and len(best) >= 2 else None
 
 
+_GENERIC_COLS = {"valor", "dato", "datos", "descr", "canti", "numer", "resul", "infor", "detal", "value",
+                 "conce", "carac", "eleme", "items", "regis", "entra"}
+
+
+def _generic(header: list[str], request: str) -> bool:
+    """A header whose value columns say nothing of what is measured ("Valor",
+    "Dato", "Cantidad"), even when the request uses the word ("con el valor
+    corregido")."""
+    cols = [_stems(re.sub(r"\([^)]*\)", " ", c)) for c in header[1:]]
+    return bool(cols) and all(c and c <= _GENERIC_COLS for c in cols)
+
+
 def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
           generate: Callable[[str, int], str], lang: str = "es",
           why: dict[str, Any] | None = None) -> dict[str, Any] | None:
@@ -677,6 +689,13 @@ def build(request: str, sources: list[dict[str, Any]], inv: dict[str, Any],
         why["reason"] = "no_documents"
         return None
     header = parse_header(generate(header_prompt(request, inv, lang), 80))
+    if header and _generic(header, request):
+        # "| Descripción | Valor |" for "Ponme la cuaja de las tres parcelas…"
+        # (3 of 3, qwen2.5:7b, open battery v3): no column says what is
+        # measured, so none matched the source table's; its own header does
+        source = _source_header(request, docs)
+        if source:
+            header, why["header_from_source"] = source, True
     if not header:
         header = _source_header(request, docs)
         why["header_from_source"] = bool(header)

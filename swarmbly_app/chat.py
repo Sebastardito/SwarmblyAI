@@ -1931,20 +1931,23 @@ def _other_language(retriever: Callable[..., list[dict[str, Any]]], keywords: st
         return []
     from .compose import _stems
     wanted = _stems(keywords)
-    out = []
+    candidates = []
     for s in found:
         if (s.get("doc_id"), s.get("start"), s.get("text")) in have:
             continue
-        # a paragraph that shares one keyword is not about the question: two
-        # of them, or every keyword when there is only one
-        if len(wanted & _stems(str(s.get("text", "")))) < min(2, len(wanted)):
-            continue
         other = language_if_sure(str(s.get("text", "")))
         if other and other != asked:
-            out.append(s)
-            if len(out) >= limit:
-                break
-    return out
+            candidates.append((len(wanted & _stems(str(s.get("text", "")))), s))
+    # a paragraph that shares one keyword is not about the question: two of
+    # them (every keyword when there is only one); then, from a document one
+    # such paragraph comes from, the next paragraph that shares one ("I
+    # recommend doubling the colonies…" after "Fruit weight averaged…" for
+    # "¿Qué aconsejó el revisor externo sobre las colonias…?", open battery v3)
+    sure = [s for n, s in candidates if n >= min(2, len(wanted))][:limit]
+    docs = {s.get("doc_id") for s in sure} | {s.get("doc_id") for s in sources
+                                             if language_if_sure(str(s.get("text", ""))) not in ("", asked)}
+    more = [s for n, s in candidates if n >= 1 and s not in sure and s.get("doc_id") in docs]
+    return sure + more[:max(0, limit + 1 - len(sure))]
 
 
 def _lang(text: str) -> str:
