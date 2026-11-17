@@ -286,7 +286,9 @@ def verify(answer: str, sources: list[dict[str, Any]], generate: Callable[[str, 
     model's jobs (a long composition has about fifteen labelled sentences).
     ``text`` is the answer with the citations the code completed."""
     claims = split(answer)
-    done = set().union(*(_figures(str(x)) for x in computed)) if computed else set()
+    # every number the program computed, short ones too ("3", a difference of 87 % and 90 %)
+    from .compose import _canon
+    done = {_canon(n) for x in computed or [] for n in re.findall(r"\d+(?:[.,]\d+)*", str(x))}
     checked, asked, text, completed, about = [], 0, answer or "", [], 0
     for c in claims:
         if c.get("absence"):

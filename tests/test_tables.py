@@ -237,3 +237,17 @@ def test_one_value_per_place_in_a_sentence_is_read_by_code():
     # a document about no single code, or a sentence off the topic, gives nothing
     assert T.rows_from_prose(header, dict(ab1, rel="notas.md"), ENT, request) == []
     assert T.rows_from_prose(header, dict(ab1), ENT, "Compara el costo de AB1 y AB2.") == []
+
+
+def test_the_differences_the_program_computed_are_listed():
+    header = ["Sitio", "Germinación AB1", "Germinación AB2", "Diferencia"]
+    rows = [{"key": "n", "cells": ["Parcela Norte", "87 %", "90 %", ""], "labels": ["D1 p2"]},
+            {"key": "s", "cells": ["Parcela Sur", "81 %", "85 %", ""], "labels": ["D1 p2"]}]
+    sources = [{"label": "D1 p2", "rel": "informe_lote_AB1.md", "doc_id": "a",
+                "text": "La germinación fue del 87 % en la Parcela Norte y del 81 % en la Parcela Sur."},
+               {"label": "D2 p2", "rel": "informe_lote_AB2.md", "doc_id": "b",
+                "text": "La germinación fue del 90 % en la Parcela Norte y del 85 % en la Parcela Sur."}]
+    built = T.build("Compara la germinación de AB1 y AB2 por sitio y la diferencia, en una tabla.", sources,
+                    {"entities": ["AB1", "AB2", "Parcela Norte", "Parcela Sur"], "table": True},
+                    lambda p, n: "| Sitio | AB1 | AB2 | Diferencia |" if "encabezado" in p else "NINGUNA")
+    assert built["computed_values"] == ["3", "4"]
