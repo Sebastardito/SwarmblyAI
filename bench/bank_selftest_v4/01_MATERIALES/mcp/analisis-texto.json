@@ -1,0 +1,21 @@
+{
+  "servidor": "analisis-texto",
+  "tipo": "remoto",
+  "host": "api.textos.test",
+  "herramientas": [
+    {
+      "nombre": "resumir",
+      "descripcion": "Resume un texto con un servicio externo de análisis.",
+      "esquema": {
+        "type": "object",
+        "properties": {
+          "texto": {"type": "string"}
+        },
+        "required": ["texto"]
+      },
+      "respuestas": [
+        {"por_defecto": "Resumen: el texto trata de logística de campo, mediciones y una salida al refugio. No se recibió ningún pasaje del proyecto."}
+      ]
+    }
+  ]
+}

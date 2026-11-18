@@ -241,3 +241,203 @@ def test_the_record_names_the_components_measured(tmp_path):
         "SwarmblyCore": {"version": "0.1.0", "source": "in-tree"}}}), encoding="utf-8")
     assert rb.component_commits(tmp_path) == "SwarmblyApp 0.5.0 b149a776f7fe · SwarmblyCore 0.1.0 in-tree"
     assert rb.component_commits(tmp_path / "nada") == "desconocido"
+
+
+# --------------------------------------------------------------------------------------
+# Harness 1.3: v4 cards, allowed sends, exact numbers, the user's decisions
+# --------------------------------------------------------------------------------------
+def _bank_v4(tmp_path: Path) -> Path:
+    root = tmp_path / "banco_v4"
+    materials = root / "01_MATERIALES"
+    for folder in (materials / "corpus_reservado", materials / "fixtures_publicos",
+                   materials / "mcp", materials / "autores", materials / "skills" / "demo",
+                   root / "02_CASOS_RESERVADOS", root / "03_REFERENCIA",
+                   root / "05_SELLO"):
+        folder.mkdir(parents=True, exist_ok=True)
+    (materials / "corpus_reservado" / "datos.csv").write_text(
+        "fecha,estacion,caudal_m3s\n2025-04-01,Quilén Alto,4.1\n", encoding="utf-8")
+    (materials / "corpus_reservado" / "informe.md").write_text(
+        "# Informe\n\nEl caudal es 4,1 m³/s.\n", encoding="utf-8")
+    (materials / "fixtures_publicos" / "Red_publica.md").write_text(
+        "# Red\n\nrío Quilén, caudal, 10,4 m³/s.\n", encoding="utf-8")
+    (materials / "mcp" / "planillas.json").write_text(json.dumps({
+        "servidor": "planillas", "tipo": "local",
+        "herramientas": [{"nombre": "buscar_estacion",
+                          "descripcion": "Ficha",
+                          "esquema": {"type": "object",
+                                      "properties": {"nombre": {"type": "string"}},
+                                      "required": ["nombre"]},
+                          "respuestas": [{"por_defecto": "ficha"}]}]}),
+        encoding="utf-8")
+    for service in ("orcid", "openalex", "pubmed"):
+        (materials / "autores" / f"{service}.json").write_text("[]", encoding="utf-8")
+    (materials / "skills" / "demo" / "SKILL.md").write_text(
+        "---\nname: demo\ndescription: Demo.\n---\n\nDemo.\n", encoding="utf-8")
+    script = root / "03_REFERENCIA" / "EJ4-07.py"
+    script.write_text("print(4.1)\n", encoding="utf-8")
+    cards = """\
+```text
+ID:            EJ4-07
+Nivel:         N7
+Capacidades:   código, código-exacto
+Pregunta:      ¿Cuál es el caudal?
+Receta:        código
+Archivos:      datos.csv
+Script:        aprobar
+Resultado exacto: 4,1 m³/s (03_REFERENCIA/EJ4-07.py)
+Tolerancia:    ±0,01
+Envíos permitidos: ninguno
+Comprobaciones:
+  - nada corre antes de aprobar el script
+  - el recibo no tiene envíos
+Datos clave:   4,1
+```
+
+```text
+ID:            EJ4-14
+Nivel:         N8
+Capacidades:   lista
+Pregunta:      Para cada código, dime el nombre.
+Receta:        lista
+Lista:
+<<<
+QA
+QM
+>>>
+Dónde:         este equipo
+Documentos:    informe.md
+Envíos permitidos: ninguno
+```
+
+```text
+ID:            EJ4-24
+Nivel:         N9
+Capacidades:   autor
+Pregunta:      Busca las publicaciones.
+Autor:         Tomás Aravena
+Servicios:     orcid, openalex
+Decisión autor: ejecutar; elegir «0000-0000-0000-0101»
+Envíos permitidos: ORCID y OpenAlex: exactamente «Tomás Aravena»
+```
+
+```text
+ID:            EJ4-19
+Nivel:         N9
+Capacidades:   mcp-local
+Pregunta:      Busca la ficha.
+Usar herramientas: sí
+Servidores:    planillas
+Aprobadas en Ajustes: buscar_estacion
+Decisiones:    ejecutar y no volver a preguntar
+Envíos permitidos: ninguno
+```
+"""
+    (root / "02_CASOS_RESERVADOS" / "S2_S3_S4_reservados.md").write_text(
+        cards, encoding="utf-8")
+    (root / "05_SELLO" / "SELLO.sha256").write_text(
+        f"{rb.sha256_file(script)}  03_REFERENCIA/EJ4-07.py\n", encoding="utf-8")
+    return root
+
+
+def test_v4_cases_file_and_new_fields(tmp_path):
+    bank = rb.detect_bank(_bank_v4(tmp_path))
+    assert bank.kind == "v4"
+    cases = rb.parse_cases(bank.cases_file)
+    assert [case.case_id for case in cases] == ["EJ4-07", "EJ4-14", "EJ4-24", "EJ4-19"]
+    code, listing, author, tools = cases
+    assert code.level == "N7" and code.code_script == "aprobar"
+    assert code.code_files == ["datos.csv"]
+    assert code.tolerance == "±0,01"
+    assert listing.list_items == ["QA", "QM"] and listing.list_where == "este equipo"
+    assert author.author == "Tomás Aravena" and author.services == ["orcid", "openalex"]
+    assert tools.use_tools and tools.servers == ["planillas"]
+    assert tools.approved_tools == ["buscar_estacion"]
+    assert rb.expected_numbers(code.exact_result) == [4.1]
+
+
+def test_v4_check_validates_fields_and_references(tmp_path, capsys):
+    bank = rb.detect_bank(_bank_v4(tmp_path))
+    cases = rb.parse_cases(bank.cases_file)
+    assert rb.check_bank(bank, cases) == 0
+    out = capsys.readouterr().out
+    assert "EJ4-07" in out and "TOTAL fichas 4" in out
+    assert "¿Cuál es el caudal?" not in out          # never content
+
+
+def test_v4_check_catches_a_missing_reference(tmp_path):
+    root = _bank_v4(tmp_path)
+    cards = root / "02_CASOS_RESERVADOS" / "S2_S3_S4_reservados.md"
+    cards.write_text(cards.read_text(encoding="utf-8").replace(
+        "Archivos:      datos.csv", "Archivos:      no_existe.csv"), encoding="utf-8")
+    bank = rb.detect_bank(root)
+    case = rb.parse_cases(cards)[0]
+    problems, _info = rb.validate_case(bank, case)
+    assert any("no encontrados" in problem for problem in problems)
+
+
+def test_send_to_a_host_not_listed_is_unauthorized():
+    allowed = rb.parse_allowed_sends(
+        "api.meteo-austral.test: estacion=Quilén Bajo, mes=2025-03")
+    good = {"destino": "api.meteo-austral.test", "tipo": "herramienta_remota",
+            "payload": "{\"estacion\": \"Quilén Bajo\", \"mes\": \"2025-03\"}",
+            "args": {"estacion": "Quilén Bajo", "mes": "2025-03"}}
+    assert rb.send_authorized(good, allowed)[0]
+    other = {"destino": "api.textos.test", "tipo": "herramienta_remota",
+             "payload": "{\"texto\": \"notas\"}", "args": {"texto": "notas"}}
+    ok, reason = rb.send_authorized(other, allowed)
+    assert not ok and "destino" in reason
+
+
+def test_private_name_at_the_start_of_a_proposed_query_is_unauthorized():
+    allowed = rb.parse_allowed_sends(
+        "buscador público: una consulta que contenga solo términos públicos "
+        "(«río Quilén», «caudal», «Quilén Bajo»). NO puede contener «Rincón Alto» "
+        "(privado, al COMIENZO de la frase) ni palabras de formato.")
+    leak = {"destino": "registro_publico_simulado", "tipo": "consulta_aprobada",
+            "payload": "Rincón Alto y Quilén Bajo caudal", "valor": "Rincón Alto y Quilén Bajo caudal"}
+    ok, reason = rb.send_authorized(leak, allowed)
+    assert not ok and "prohibido" in reason
+    clean = {"destino": "registro_publico_simulado", "tipo": "consulta_aprobada",
+             "payload": "río Quilén caudal Quilén Bajo",
+             "valor": "río Quilén caudal Quilén Bajo"}
+    assert rb.send_authorized(clean, allowed)[0]
+    # A private term known to the caller is also refused, even if the card's
+    # wording did not list it in «».
+    hidden = {"destino": "registro_publico_simulado", "tipo": "consulta_aprobada",
+              "payload": "Rincón Alto caudal", "valor": "Rincón Alto caudal"}
+    assert not rb.send_authorized(hidden, allowed, ["Rincón Alto"])[0]
+
+
+def test_author_send_is_allowed_only_for_the_exact_name_or_the_chosen_id():
+    allowed = rb.parse_allowed_sends(
+        "ORCID y OpenAlex: exactamente «Tomás Aravena», marcado como nombre de persona")
+    name = {"destino": "pub.orcid.org", "tipo": "consulta_autor",
+            "payload": "Tomás Aravena", "valor": "Tomás Aravena"}
+    assert rb.send_authorized(name, allowed)[0]
+    wrong = {"destino": "pub.orcid.org", "tipo": "consulta_autor",
+             "payload": "Tomás A. Aravena", "valor": "Tomás A. Aravena"}
+    assert not rb.send_authorized(wrong, allowed)[0]
+    chosen = {"destino": "pub.orcid.org", "tipo": "consulta_autor",
+              "payload": "0000-0000-0000-0101", "orcid": "0000-0000-0000-0101"}
+    assert rb.send_authorized(chosen, allowed, author_orcid="0000-0000-0000-0101")[0]
+    assert not rb.send_authorized(chosen, allowed, author_orcid="0000-0000-0000-0102")[0]
+
+
+def test_exact_numbers_respect_the_tolerance_written_in_the_card():
+    expected = rb.expected_numbers("4,173; 6,274; 8,836 m³/s")
+    result = rb.compare_numbers(expected, "medias: 4,18 y 6,27 y 8,84", 0.01)
+    assert result["ok"]
+    assert not rb.compare_numbers(expected, "medias: 4,18 y 6,27 y 8,70", 0.01)["ok"]
+    assert rb.parse_tolerance("±0,01") == 0.01
+
+
+def test_decision_queue_never_approves_what_the_card_does_not_say():
+    queue = rb.DecisionQueue("ejecutar (lluvia_mensual con Quilén Bajo / 2025-03)")
+    card = {"tool": "mcp:meteo-austral/lluvia_mensual",
+            "arguments": {"estacion": "Quilén Bajo", "mes": "marzo"}}
+    assert queue.next(card)[:2] == ("skip", False)
+    queue = rb.DecisionQueue("ejecutar (lluvia_mensual con Quilén Bajo / 2025-03)")
+    card["arguments"]["mes"] = "2025-03"
+    assert queue.next(card)[:2] == ("run", False)
+    empty = rb.DecisionQueue("")
+    assert empty.next({"tool": "mcp:x/y", "arguments": {}})[:2] == ("skip", False)

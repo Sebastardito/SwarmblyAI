@@ -149,7 +149,7 @@
       "kind": "code",
       "question": "Abre produccion.xlsx, hoja Cosecha, y calcula el total de kg_miel de todas las filas. Imprime el total.",
       "files": [
-        "produccion.csv"
+        "produccion.xlsx"
       ],
       "expected_numbers": [
         {
@@ -158,10 +158,7 @@
         }
       ],
       "expected_text": [],
-      "nota": "Hoja de un XLSX. La lista de fuentes de la App no incluye .xlsx; el arnés crea un alias .csv que resuelve al XLSX real, de modo que el script lee la hoja con openpyxl.",
-      "aliases": {
-        "produccion.csv": "produccion.xlsx"
-      }
+      "nota": "Hoja de un XLSX. La App selecciona .xlsx directamente; no hay alias .csv."
     },
     {
       "id": "DT-01",

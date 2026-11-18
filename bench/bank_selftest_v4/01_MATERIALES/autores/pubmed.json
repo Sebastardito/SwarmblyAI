@@ -1,0 +1,14 @@
+[
+  {
+    "nombre": "Tomás Aravena",
+    "obras": [
+      {"titulo": "Sensores de bajo costo para cuencas andinas pequeñas", "anio": 2023, "revista": "Cuadernos de Campo Ficticios", "doi": "10.0000/fict.2023.07"}
+    ]
+  },
+  {
+    "nombre": "Clara Montiel",
+    "obras": [
+      {"titulo": "Muestreo de nieve y agua equivalente en parcelas pequeñas", "anio": 2024, "revista": "Revista de Suelos Ficticia", "doi": "10.0000/fict.2024.22"}
+    ]
+  }
+]

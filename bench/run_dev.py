@@ -1066,12 +1066,12 @@ def main(argv: list[str] | None = None) -> int:
         for case in cases:
             for rep in range(1, args.repeat + 1):
                 work = Path(tempfile.mkdtemp(prefix=f"swarmbly-dev-{case['id']}-"))
-                sources = work / "fuentes"
-                sources.mkdir()
+                # The App's personal code path reads <data-dir>/sources; the
+                # documents and spreadsheets live there (no alias needed).
+                sources = work / "datos" / "sources"
+                sources.mkdir(parents=True)
                 for p in corpus:
                     shutil.copy2(p, sources / p.name)
-                for alias, target in (case.get("aliases") or {}).items():
-                    (sources / alias).symlink_to(sources / target)
                 settings = {
                     "setup_completed": True, "language": "es",
                     "model.backend": "ollama", "model.backend_url": args.ollama,

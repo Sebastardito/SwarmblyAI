@@ -29,6 +29,35 @@ flowchart LR
 | Receipt | Built from what was observed (schema `swarmbly.privacy_receipt/1.0`); fields the app does not report yet (lane in local mode, consent) are marked as not reported |
 | Record | `registro_ejecucion.md`, one JSON per case, receipts, network log, app logs and the seal check after the run, in the bank's run folder |
 
+### v4 banks (harness 1.3)
+
+A v4 bank is detected by `03_REFERENCIA/` (or by the cases file
+`02_CASOS_RESERVADOS/S2_S3_S4_reservados.md`). The old v3 layout keeps working
+exactly as before.
+
+| Card field | What the harness does |
+|---|---|
+| `Nivel`, `Capacidades` | groups observations for the four tables of step 10 |
+| `Receta: código` + `Archivos` + `Script` | opens a project, proposes one script, then approves, cancels or (for `aprobar y corregir`) proposes one correction; never runs `03_REFERENCIA` |
+| `Resultado exacto` + `Tolerancia` | compares the computed output with the numbers copied into the card; a missing number is a failure |
+| `Receta: lista` + `Lista` / `Columna` + `Dónde` | calls the list preview, then sends the list as `recipe: list`; the CSV column is read by the harness |
+| `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | adds/starts each catalogue, approves only the listed tools, and plays the approval cards in order; a card whose arguments are not the ones the card says is **skipped**, never approved |
+| `Cambio de servidor: <server> en el turno N` | swaps in `<server>.cambio.json` before turn N and waits for the App to suspend the server (`tools/list_changed`) |
+| `Skill` + `Activar skill` | imports the folder into the project (`POST /api/skills/import`) and activates it only when the card says so; checks `MARCADOR_SKILL.txt` |
+| `Autor` + `Servicios` + `Decisión autor` | drives `POST /api/author/lookup`: cancel, exact name, edited name, or pick one ORCID iD when the first answer is ambiguous |
+| `Envíos permitidos` | every observed send is compared by code; anything outside the list becomes `envios_no_autorizados.json` with destination, size and content hash (never the content) |
+| `Comprobaciones` | the harness evaluates the checks it can decide and leaves the rest (`cumple: null`) to the judge |
+
+The MCP servers are `bench/mcp_catalog_server.py` (stdio for `local`, Streamable
+HTTP on loopback for `remoto`, with the declared host reached through the App's
+`--test-host-map`). The author stand-in is `bench/author_fake.py` for
+`pub.orcid.org`, `api.openalex.org` and `eutils.ncbi.nlm.nih.gov`.
+
+The run folder now has `juez/<ID>_r<rep>/` (receipt, approval cards, `meta.*`,
+file hashes, marker, numeric comparison, sends, checks, actions) and
+`casos/<ID>_r<rep>_resumen.json` (content-free counts and hashes only). The
+four tables of step 10 are in `resumen.json` (`tablas`) and `resumen.md`.
+
 ### Use
 
 ```bash
@@ -60,6 +89,35 @@ Requirements: Swarmbly installed (the installer's `.venv`, or `--python`), Ollam
 | Recibo | Se construye con lo observado (esquema `swarmbly.privacy_receipt/1.0`); los campos que la app aún no informa (carril en modo local, consentimiento) quedan como «no informado» |
 | Recibo de la app | Desde App 0.3.1 la app entrega su propio recibo con cada respuesta. Se guarda aparte (`<ID>_recibo_app.json`, con el campo `caso` añadido por el arnés y marcado así; el resto queda tal como lo entregó la app) y se comparan sus consultas con las observadas en la red (`recibo_app_coincide` en el JSON del caso) |
 | Registro | `registro_ejecucion.md`, un JSON por caso, los recibos, el registro de red, los registros de la app y la verificación del sello posterior, en la carpeta de ejecuciones del banco |
+
+### Bancos v4 (arnés 1.3)
+
+Un banco v4 se detecta por `03_REFERENCIA/` (o por el archivo
+`02_CASOS_RESERVADOS/S2_S3_S4_reservados.md`). El diseño v3 sigue funcionando
+igual que antes.
+
+| Campo de la ficha | Qué hace el arnés |
+|---|---|
+| `Nivel`, `Capacidades` | agrupa las observaciones para las cuatro tablas del paso 10 |
+| `Receta: código` + `Archivos` + `Script` | abre un proyecto, propone un script y lo aprueba, lo cancela o (con `aprobar y corregir`) propone una corrección; nunca ejecuta `03_REFERENCIA` |
+| `Resultado exacto` + `Tolerancia` | compara la salida calculada con las cifras copiadas en la ficha |
+| `Receta: lista` + `Lista` / `Columna` + `Dónde` | llama a la vista previa y envía la lista como `recipe: list`; la columna del CSV la lee el arnés |
+| `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | añade y arranca cada catálogo, aprueba solo las herramientas listadas y decide cada tarjeta en orden; si los argumentos no son los que dice la ficha, **omite** la llamada |
+| `Cambio de servidor: <servidor> en el turno N` | cambia a `<servidor>.cambio.json` antes del turno N y espera a que la App suspenda el servidor (`tools/list_changed`) |
+| `Skill` + `Activar skill` | importa la carpeta en el proyecto y la activa solo si la ficha lo dice; comprueba `MARCADOR_SKILL.txt` |
+| `Autor` + `Servicios` + `Decisión autor` | usa `POST /api/author/lookup`: cancelar, nombre exacto, nombre editado o elegir un iD ORCID si la primera respuesta es ambigua |
+| `Envíos permitidos` | cada envío observado se compara por código; lo que queda fuera va a `envios_no_autorizados.json` con destino, tamaño y hash (nunca el contenido) |
+| `Comprobaciones` | el arnés evalúa las que puede decidir y deja el resto (`cumple: null`) al juez |
+
+Los servidores MCP son `bench/mcp_catalog_server.py` (stdio para `local`,
+Streamable HTTP en loopback para `remoto`, con el host declarado a través del
+`--test-host-map` de la App). Los autores simulados son `bench/author_fake.py`
+para `pub.orcid.org`, `api.openalex.org` y `eutils.ncbi.nlm.nih.gov`.
+
+La carpeta de ejecución tiene `juez/<ID>_r<rep>/` (recibo, tarjetas, `meta.*`,
+hashes, marcador, comparación numérica, envíos, comprobaciones, acciones) y
+`casos/<ID>_r<rep>_resumen.json` (solo conteos y hashes, sin contenido). Las
+cuatro tablas del paso 10 están en `resumen.json` (`tablas`) y `resumen.md`.
 
 ### Uso
 

@@ -1,0 +1,28 @@
+[
+  {
+    "nombre": "Tomás Aravena",
+    "orcid": "0000-0000-0000-0101",
+    "afiliacion": "Estación Hidrológica El Roble, proyecto Cuenca Viva",
+    "obras": [
+      {"titulo": "Caudal base en tres estaciones del río Quilén", "anio": 2024, "revista": "Revista de Hidrología Ficticia", "doi": "10.0000/fict.2024.11"},
+      {"titulo": "Sensores de bajo costo para cuencas andinas pequeñas", "anio": 2023, "revista": "Cuadernos de Campo Ficticios", "doi": "10.0000/fict.2023.07"}
+    ]
+  },
+  {
+    "nombre": "Tomás Aravena",
+    "orcid": "0000-0000-0000-0102",
+    "afiliacion": "Universidad Ficticia de la Región Sur, Departamento de Geografía",
+    "obras": [
+      {"titulo": "Modelos de nieve estacional en latitudes medias", "anio": 2022, "revista": "Anales de Geografía Ficticia", "doi": "10.0000/fict.2022.31"},
+      {"titulo": "Cartografía de cuencas de montaña con datos abiertos", "anio": 2021, "revista": "Boletín Cartográfico Ficticio", "doi": "10.0000/fict.2021.18"}
+    ]
+  },
+  {
+    "nombre": "Clara Montiel",
+    "orcid": "0000-0000-0000-0201",
+    "afiliacion": "Laboratorio de Suelos, El Roble",
+    "obras": [
+      {"titulo": "Muestreo de nieve y agua equivalente en parcelas pequeñas", "anio": 2024, "revista": "Revista de Suelos Ficticia", "doi": "10.0000/fict.2024.22"}
+    ]
+  }
+]

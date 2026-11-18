@@ -66,16 +66,13 @@ def test_the_battery_is_well_formed():
     for case in cases:
         assert case["question"].strip() and case["files"]
         for name in case["files"]:
-            if case.get("aliases"):
-                assert (corpus / case["aliases"][name]).is_file()
-            else:
-                assert (corpus / name).is_file()
+            assert (corpus / name).is_file()
         for spec in case.get("expected_numbers") or []:
             assert isinstance(spec["value"], (int, float))
             assert float(spec["tolerance"]) >= 0
     xl = CASES["XL-01"]
-    assert xl["aliases"] == {"produccion.csv": "produccion.xlsx"}
-    assert xl["files"] == ["produccion.csv"]
+    assert "aliases" not in xl
+    assert xl["files"] == ["produccion.xlsx"]
     assert (corpus / "produccion.xlsx").is_file()
     with zipfile.ZipFile(corpus / "produccion.xlsx") as archive:
         workbook = archive.read("xl/workbook.xml").decode("utf-8")
