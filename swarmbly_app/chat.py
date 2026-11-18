@@ -990,7 +990,9 @@ class ChatService:
                 extra["glossary_fixes"] = fixes
             if table_built:
                 from . import tables
-                answer_text = tables.place(tables.strip_tables(answer_text), table_built["markdown"], user_text)
+                answer_text = tables.place(tables.drop_repeated_list(tables.strip_tables(answer_text),
+                                                                     table_built["markdown"]),
+                                           table_built["markdown"], user_text)
                 try:
                     result.text = answer_text
                 except Exception:

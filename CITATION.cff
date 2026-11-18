@@ -1,7 +1,8 @@
 cff-version: 1.2.0
-# Each release gets a version DOI from the Zenodo GitHub integration. The DOI
-# below is the record of v0.5.0; the concept DOI (all versions, resolves to the
-# latest) is 10.5281/zenodo.23322638. Previous releases: v0.4.0,
+# Each release gets a version DOI from the Zenodo GitHub integration. Until
+# the DOI of v0.6.0 is minted, the DOI below is the concept DOI (all versions,
+# resolves to the latest); it is replaced by the version DOI after the release.
+# Previous releases: v0.5.0, 10.5281/zenodo.24265875; v0.4.0,
 # 10.5281/zenodo.24070622; v0.3.1 (version DOI to be added); v0.2.0,
 # 10.5281/zenodo.23322639.
 message: "If you use Swarmbly App in your research or infrastructure, please cite it with the DOI below, and the integrated projects."
@@ -12,14 +13,14 @@ authors:
     given-names: "Sebastián A."
     email: sebas_saeu@hotmail.com
     orcid: "https://orcid.org/0000-0003-1497-356X"
-version: 0.5.0
-date-released: "2026-11-15"
+version: 0.6.0
+date-released: "2026-11-17"
 license: AGPL-3.0-or-later
-doi: "10.5281/zenodo.24265875"   # version 0.5.0
+doi: "10.5281/zenodo.23322638"   # concept DOI until the v0.6.0 record is minted
 identifiers:
   - type: doi
     value: "10.5281/zenodo.24265875"
-    description: "Version 0.5.0 (this release)"
+    description: "Version 0.5.0 (earlier release)"
   - type: doi
     value: "10.5281/zenodo.24070622"
     description: "Version 0.4.0 (earlier release)"
