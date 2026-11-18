@@ -1,10 +1,16 @@
 #!/usr/bin/env python3
-"""Run the open development battery (bench/dev) against Swarmbly AI and score it.
+"""Run an open development battery against Swarmbly AI and score it.
 
 The open battery is fictitious material that anyone may read, discuss and
 use to tune the system. It is the instrument for 3.2's step-by-step work
 (F0 = 3.1, then each addition behind a flag); the sealed banks stay the
 final measure, run once per version.
+
+A battery whose cases carry ``expected_items`` is a recipe 4 (list) battery:
+the case is driven through ``/api/recipes/list/preview`` and then a local
+``recipe: "list"`` message, and scored on the table it returns (order, stable
+ids, duplicates, status column, per-cell regex, preview privacy and zero
+sends).  ``bench/dev_list`` is the open battery for that recipe.
 
 For each case the script starts a fresh Swarmbly App instance (own data
 folder, no history) with every document of ``bench/dev/corpus`` as the
@@ -47,6 +53,7 @@ import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance
 
 DEV = HERE / "dev"
 VERSION = "0.5.0"
+LIST_VERSION = "0.1.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -62,8 +69,14 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
     data = json.loads(path.read_text(encoding="utf-8"))
     cases = data["casos"]
     for c in cases:
-        c["turnos"] = [t if isinstance(t, dict) else {"texto": t} for t in c["turnos"]]
+        c["turnos"] = [t if isinstance(t, dict) else {"texto": t}
+                       for t in c.get("turnos", [])]
     return cases
+
+
+def is_list_case(case: dict[str, Any]) -> bool:
+    """A recipe 4 case: the expected per-item cells are fixed in the file."""
+    return "expected_items" in case
 
 
 # --------------------------------------------------------------------------- scoring
@@ -148,6 +161,232 @@ def score(case: dict[str, Any], answer: str, meta: dict[str, Any], sends: int,
         "citas_completadas": len((meta.get("verification") or {}).get("completed") or []),
         "verificacion_s": float((meta.get("verification") or {}).get("seconds") or 0),
     }
+
+
+# --------------------------------------------------------------------------- list scoring
+def list_preview_payload(case: dict[str, Any]) -> dict[str, Any]:
+    """The body of ``POST /api/recipes/list/preview`` for one case.
+
+    A pasted case sends its raw text (blank lines included); a CSV case sends
+    only the file and column, so the App itself resolves and reads the file.
+    """
+    source = case.get("source") or {"kind": "pasted"}
+    return {
+        "items": "" if source.get("kind") == "csv" else case.get("items", ""),
+        "operation": case.get("operation", ""),
+        "where": case.get("preview_where", "local"),
+        "source": source,
+    }
+
+
+def _expected_duplicates(case: dict[str, Any]) -> dict[int, int]:
+    return {int(d["n"]): int(d["of"]) for d in case.get("expected_duplicates") or []}
+
+
+def score_list(case: dict[str, Any], preview: dict[str, Any], meta: dict[str, Any],
+               sends: int, red: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Score one recipe 4 answer against the cells fixed in the case file.
+
+    A wrong row, a reordered table, an invented value where the case expects
+    ``missing`` and a non-zero send each fail a named check; the cell count is
+    reported apart so a partially correct table is visible.
+    """
+    preview = preview or {}
+    meta = meta or {}
+    table = meta.get("table") or {}
+    list_meta = meta.get("list") or {}
+    receipt = meta.get("receipt") or {}
+    rows = table.get("rows_data") or []
+    expected_items = [str(x) for x in case.get("expected_items") or []]
+    expected = list(case.get("expected") or [])
+    expected_dups = _expected_duplicates(case)
+    total = len(expected)
+    by_n = {r.get("n"): r for r in rows
+            if isinstance(r, dict) and isinstance(r.get("n"), int)}
+    got_dups = {n: d.get("duplicate_of") for n, d in by_n.items()
+                if d.get("duplicate_of")}
+    ids = [r.get("n") for r in rows if isinstance(r, dict)]
+    got_items = [str(r.get("item") or "") for r in rows if isinstance(r, dict)]
+
+    def duplicate_marked(n: int, of: int) -> bool:
+        row = by_n.get(n) or {}
+        cell = str(row.get("item_cell") or "").lower()
+        return row.get("duplicate_of") == of and f"#{of}" in cell and (
+            "duplicad" in cell or "duplicate" in cell)
+
+    header = table.get("header") or []
+    cells = table.get("cells") or []
+    column_ok = (
+        len(header) == 4
+        and str(header[-1]).strip().lower() in ("estado", "status")
+        and len(cells) == total
+        and all(isinstance(c, list) and len(c) == 4 for c in cells)
+        and all(str(c[3]) in ("answered", "missing", "disagreement") for c in cells)
+        and all(str(c[0]) == str(i) and str(c[1]) == str((by_n.get(i) or {}).get("item_cell"))
+                for i, c in enumerate(cells, 1))
+    )
+
+    cell_ok, failures = 0, []
+    for n, (row, wanted) in enumerate(zip(rows, expected), 1):
+        value = str((row or {}).get("answer") or "").strip()
+        status = str((row or {}).get("status") or "")
+        if wanted is None:
+            ok = status == "missing" and value == "—"
+        else:
+            ok = (status == "answered" and value not in ("", "—")
+                  and bool(re.search(str(wanted), value, re.I)))
+        cell_ok += int(ok)
+        if not ok:
+            failures.append({"n": n, "esperado": wanted if wanted is not None else "missing",
+                             "valor": value or "", "estado": status})
+
+    missing_expected = sum(1 for x in expected if x is None)
+    answered_expected = total - missing_expected
+    waves = int(case.get("expected_waves") or 1)
+    meta_ok = (
+        list_meta.get("count") == total
+        and list_meta.get("answered") == answered_expected
+        and list_meta.get("missing") == missing_expected
+        and list_meta.get("disagreement") == 0
+        and list_meta.get("where") == "local"
+        and list_meta.get("executed") == "local"
+        and list_meta.get("waves") == waves
+        and list_meta.get("duplicates") == len(expected_dups)
+        and table.get("rows") == total
+        and table.get("empty") == missing_expected
+        and table.get("duplicates") == len(expected_dups)
+    )
+
+    preview_items = [str(x) for x in preview.get("items") or []]
+    leaves = preview.get("what_leaves") or {}
+    preview_ok = (
+        preview_items == expected_items
+        and preview.get("count") == total
+        and preview.get("duplicates") == len(expected_dups)
+        and leaves.get("count") == total
+        and [str(x) for x in leaves.get("items") or []] == expected_items
+    )
+    if case.get("preview_local_only"):
+        privacy = preview.get("privacy") or {}
+        preview_ok = preview_ok and (
+            preview.get("default_where") == "local"
+            and bool(str(preview.get("local_only_reason") or "").strip())
+            and privacy.get("sensitive") is True
+            and bool(privacy.get("items_flagged"))
+        )
+
+    observed = len((red or {}).get("registro") or []) + len((red or {}).get("proxy") or [])
+    checks = {
+        "tabla_por_codigo": table.get("by_code") is True,
+        "filas": len(rows) == total and ids == list(range(1, total + 1))
+                 and got_items == expected_items,
+        "duplicados": got_dups == expected_dups
+                      and all(duplicate_marked(n, of) for n, of in expected_dups.items())
+                      and table.get("duplicates") == len(expected_dups),
+        "columnas": column_ok,
+        "celdas": cell_ok == total and total > 0,
+        "metadatos": meta_ok,
+        "vista_previa": preview_ok,
+        "recibo": receipt.get("recipe") == "list" and receipt.get("recipe_where") == "local",
+        "envios": sends == 0 and observed == 0 and not (receipt.get("envios") or []),
+    }
+    return {
+        "aprobado": all(checks.values()), "comprobaciones": checks,
+        "celdas_ok": cell_ok, "celdas_total": total, "celdas_fallidas": failures,
+        "faltantes": missing_expected, "filas": len(rows),
+        "duplicados": len(expected_dups), "envios": sends,
+        "vista_previa_default": preview.get("default_where"),
+    }
+
+
+def _list_agg(rs: list[dict[str, Any]]) -> dict[str, Any]:
+    scores = [r["puntuacion"] for r in rs]
+    names = sorted({k for s in scores for k in (s.get("comprobaciones") or {})})
+    return {
+        "n": len(scores),
+        "aprobados": sum(bool(s.get("aprobado")) for s in scores),
+        "celdas": [sum(int(s.get("celdas_ok") or 0) for s in scores),
+                   sum(int(s.get("celdas_total") or 0) for s in scores)],
+        "por_comprobacion": {
+            name: [sum(bool((s.get("comprobaciones") or {}).get(name)) for s in scores), len(scores)]
+            for name in names
+        },
+        "faltantes": sum(int(s.get("faltantes") or 0) for s in scores),
+        "envios": sum(int(s.get("envios") or 0) for s in scores),
+        "latencia_media_s": round(
+            sum(float((r.get("turnos") or [{}])[-1].get("latencia_s") or 0) for r in rs)
+            / max(1, len(rs)), 1),
+    }
+
+
+def summarise_list(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Totals overall, per category, per check and per case (rows = reps)."""
+    categories = sorted({r["cat"] for r in rows})
+    cases = sorted({r["id"] for r in rows})
+    return {
+        "total": _list_agg(rows),
+        "por_categoria": {c: _list_agg([r for r in rows if r["cat"] == c]) for c in categories},
+        "por_caso": {
+            cid: {
+                "n": len([r for r in rows if r["id"] == cid]),
+                "aprobados": sum(bool(r["puntuacion"].get("aprobado"))
+                                 for r in rows if r["id"] == cid),
+                "celdas": [
+                    sum(int(r["puntuacion"].get("celdas_ok") or 0)
+                        for r in rows if r["id"] == cid),
+                    sum(int(r["puntuacion"].get("celdas_total") or 0)
+                        for r in rows if r["id"] == cid),
+                ],
+            }
+            for cid in cases
+        },
+    }
+
+
+def list_summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
+                          rows: list[dict[str, Any]],
+                          previous: dict[str, Any] | None) -> str:
+    def pct(a: int, b: int) -> str:
+        return f"{a}/{b} ({100 * a / b:.0f} %)" if b else "—"
+    t = summ["total"]
+    out = [
+        f"# Batería abierta de listas · {run_id}", "",
+        f"App {info.get('versiones', {}).get('swarmbly-app', '?')} · modelo {info.get('modelo')} · "
+        f"n={info.get('repeticiones')} por caso · batería abierta, no una medición sellada.", "",
+        "## Total", "",
+        f"- Casos aprobados: {pct(t['aprobados'], t['n'])}",
+        f"- Celdas correctas: {pct(*t['celdas'])}",
+        f"- Valores faltantes esperados encontrados: {t['faltantes']}",
+        f"- Envíos observados: {t['envios']}",
+        f"- Latencia media por caso: {t['latencia_media_s']} s", "",
+        "## Comprobaciones", "", "| Comprobación | Aprobadas |", "|---|---|",
+    ]
+    for name, (ok, n) in sorted(t["por_comprobacion"].items()):
+        out.append(f"| {name} | {pct(ok, n)} |")
+    out += ["", "## Por caso", "", "| Caso | Reps | Aprobados | Celdas |", "|---|---|---|---|"]
+    for cid, data in summ["por_caso"].items():
+        out.append(f"| {cid} | {data['n']} | {data['aprobados']}/{data['n']} | "
+                   f"{pct(*data['celdas'])} |")
+    out += ["", "## Fallos", "", "| Caso | Rep. | Comprobaciones | Celdas fallidas |",
+            "|---|---|---|---|"]
+    any_failure = False
+    for r in rows:
+        s = r["puntuacion"]
+        failed = [k for k, v in s["comprobaciones"].items() if not v]
+        cells = "; ".join(
+            f"#{f['n']} esperado {f['esperado']} valor {f['valor'] or '—'} ({f['estado']})"
+            for f in s.get("celdas_fallidas") or [])
+        if failed or cells:
+            any_failure = True
+            out.append(f"| {r['id']} | {r['rep']} | {', '.join(failed) or '—'} | {cells or '—'} |")
+    if not any_failure:
+        out.append("| — | — | — | — |")
+    if previous:
+        p = previous["total"]
+        out += ["", f"Frente a la corrida anterior: casos {p['aprobados']}/{p['n']} → "
+                f"{t['aprobados']}/{t['n']}; celdas {p['celdas'][0]}/{p['celdas'][1]} → "
+                f"{t['celdas'][0]}/{t['celdas'][1]}; envíos {p['envios']} → {t['envios']}."]
+    return "\n".join(out) + "\n"
 
 
 def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -284,6 +523,45 @@ def play(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str,
     return {"turnos": turns, "mensaje": last}
 
 
+def play_list(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str, Any]:
+    """Preview one list case, then run it locally in one conversation.
+
+    The preview is the App's own read of the pasted text or CSV column and is
+    what the case's privacy check scores. The message sends the previewed items
+    with ``where: "local"``; no public lookup is requested or allowed.
+    """
+    preview = rb.http_json("POST", f"{app.base}/api/recipes/list/preview",
+                           app.token, list_preview_payload(case), timeout=60)
+    conv = rb.http_json("POST", f"{app.base}/api/conversations", app.token, {})
+    body = {
+        "text": case["operation"],
+        "recipe": "list",
+        "list_job": {
+            "items": preview.get("items") or [],
+            "operation": case["operation"],
+            "where": "local",
+            "source": case.get("source") or {"kind": "pasted"},
+        },
+    }
+    started = time.monotonic()
+    sent = rb.http_json("POST", f"{app.base}/api/conversations/{conv['id']}/messages",
+                        app.token, body, timeout=60)
+    msg_id = sent["assistant_message"]["id"]
+    last = None
+    while time.monotonic() - started < timeout:
+        time.sleep(1.0)
+        for m in rb.http_json("GET", f"{app.base}/api/conversations/{conv['id']}/messages", app.token):
+            if m["id"] == msg_id and (m.get("meta") or {}).get("status") not in (None, "running"):
+                last = m
+        if last is not None:
+            break
+    turn = {"texto": case["operation"], "consulta": "",
+            "latencia_s": round(time.monotonic() - started, 2),
+            "respuesta": (last or {}).get("content", ""),
+            "estado": ((last or {}).get("meta") or {}).get("status", "timeout")}
+    return {"preview": preview, "turnos": [turn], "mensaje": last}
+
+
 def parse_set(items: list[str]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for item in items:
@@ -307,7 +585,9 @@ def find_run(battery: Path, compare: str, exclude: Path | None = None) -> Path:
 def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
     """Score a finished run again with the current cases (after a case is
     corrected); answers are not regenerated."""
-    cases = {c["id"]: c for c in load_cases(battery / "casos.json")}
+    loaded = load_cases(battery / "casos.json")
+    cases = {c["id"]: c for c in loaded}
+    list_mode = any(is_list_case(c) for c in loaded)
     info = json.loads((run_dir / "resumen.json").read_text(encoding="utf-8"))["info"]
     rows = []
     for f in sorted((run_dir / "casos").glob("*.json")):
@@ -315,13 +595,18 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         case = cases.get(row["id"])
         if case is None:
             continue
-        row["puntuacion"] = score(case, row.get("respuesta", ""), row.get("meta") or {},
-                                  row["puntuacion"]["envios"], row.get("red"))
+        sends = int((row.get("puntuacion") or {}).get("envios") or 0)
+        if is_list_case(case):
+            row["puntuacion"] = score_list(case, row.get("preview") or {},
+                                           row.get("meta") or {}, sends, row.get("red"))
+        else:
+            row["puntuacion"] = score(case, row.get("respuesta", ""), row.get("meta") or {},
+                                      sends, row.get("red"))
         f.write_text(json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
         rows.append(row)
     order = {cid: i for i, cid in enumerate(cases)}
     rows.sort(key=lambda r: (order.get(r["id"], 999), r["rep"]))
-    summ = summarise(rows)
+    summ = summarise_list(rows) if list_mode else summarise(rows)
     info["repuntuada_utc"] = rb.utc_now()
     previous = None
     if compare:
@@ -329,8 +614,14 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         previous = json.loads((target / "resumen.json").read_text(encoding="utf-8"))["resumen"]
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (run_dir / "resumen.md").write_text(summary_markdown(run_dir.name, info, summ, rows, previous), encoding="utf-8")
-    print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} aprobados")
+    markdown = list_summary_markdown(run_dir.name, info, summ, rows, previous) if list_mode \
+        else summary_markdown(run_dir.name, info, summ, rows, previous)
+    (run_dir / "resumen.md").write_text(markdown, encoding="utf-8")
+    if list_mode:
+        print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} casos · "
+              f"celdas {summ['total']['celdas'][0]}/{summ['total']['celdas'][1]}")
+    else:
+        print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} aprobados")
     return 0
 
 
@@ -364,8 +655,14 @@ def main(argv: list[str] | None = None) -> int:
     if args.only:
         wanted = {x.strip() for x in args.only.split(",") if x.strip()}
         cases = [c for c in cases if c["id"] in wanted]
+    list_mode = any(is_list_case(c) for c in cases)
+    if list_mode and not all(is_list_case(c) for c in cases):
+        print("La batería mezcla casos de lista y de documento; usa una batería por tipo.")
+        return 2
     corpus = sorted(p for p in (battery / "corpus").iterdir() if p.is_file() and not p.name.startswith("."))
-    public = sorted(p for p in (battery / "publico").iterdir() if p.is_file() and not p.name.startswith("."))
+    public_dir = battery / "publico"
+    public = sorted(p for p in public_dir.iterdir()
+                    if p.is_file() and not p.name.startswith(".")) if public_dir.is_dir() else []
     python = rb.find_python(args.python)
     versions = rb.installed_versions(python)
     try:
@@ -381,12 +678,14 @@ def main(argv: list[str] | None = None) -> int:
     run_dir = battery / "ejecuciones" / run_id
     (run_dir / "casos").mkdir(parents=True)
     (run_dir / "logs").mkdir()
-    info = {"run_id": run_id, "bateria": VERSION, "modelo": args.model, "ollama": ollama_version,
+    battery_version = f"listas {LIST_VERSION}" if list_mode else VERSION
+    info = {"run_id": run_id, "bateria": battery_version, "tipo": "list" if list_mode else "documents",
+            "modelo": args.model, "ollama": ollama_version,
             "versiones": versions, "commit_paraguas": rb.git_commit(HERE.parent),
             "ajustes_extra": extra, "repeticiones": args.repeat, "casos": [c["id"] for c in cases],
             "inicio_utc": rb.utc_now()}
-    print(f"Batería abierta {VERSION} · {len(cases)} casos × {args.repeat} · App {versions.get('swarmbly-app')} · "
-          f"{args.model} · ajustes {extra or 'ninguno'}")
+    print(f"Batería abierta {battery_version} · {len(cases)} casos × {args.repeat} · "
+          f"App {versions.get('swarmbly-app')} · {args.model} · ajustes {extra or 'ninguno'}")
     proxy, registry = rb.EgressProxy(), rb.PublicRegistry()
     registry.fixtures = public
     rows: list[dict[str, Any]] = []
@@ -412,12 +711,16 @@ def main(argv: list[str] | None = None) -> int:
                                      run_dir / "logs" / f"{case['id']}_r{rep}_app.log")
                 proxy.log.drain()
                 registry.log.drain()
-                row: dict[str, Any] = {"id": case["id"], "cat": case["cat"], "rep": rep}
+                row: dict[str, Any] = {"id": case["id"], "cat": case["cat"], "rep": rep,
+                                       "preview": {}}
                 meta: dict[str, Any] = {}
                 answer = ""
                 try:
                     app.start()
-                    played = play(app, case, args.case_timeout)
+                    played = play_list(app, case, args.case_timeout) if is_list_case(case) \
+                        else play(app, case, args.case_timeout)
+                    if is_list_case(case):
+                        row["preview"] = played.get("preview") or {}
                     msg = played["mensaje"] or {}
                     meta = msg.get("meta") or {}
                     answer = msg.get("content") or ""
@@ -433,19 +736,27 @@ def main(argv: list[str] | None = None) -> int:
                 row["respuesta"] = answer
                 row["red"] = {"registro": reg_ev, "proxy": prx_ev}
                 row["meta"] = meta
-                row["puntuacion"] = score(case, answer, meta, sends, row["red"])
+                row["puntuacion"] = score_list(case, row["preview"], meta, sends, row["red"]) \
+                    if is_list_case(case) else score(case, answer, meta, sends, row["red"])
                 rows.append(row)
                 (run_dir / "casos" / f"{case['id']}_r{rep}.json").write_text(
                     json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
                 s = row["puntuacion"]
-                print(f"  {case['id']:7} r{rep} {'OK ' if s['aprobado'] else 'NO '} clave {s['clave_ok']}/{s['clave_total']}"
-                      f" · {s['palabras']} palabras · {s['citas']} citas · sin respaldo {s['frases_sin_respaldo']}"
-                      f" · envíos {s['envios']} · {row.get('estado')}")
+                if is_list_case(case):
+                    failed = [k for k, v in s["comprobaciones"].items() if not v]
+                    print(f"  {case['id']:7} r{rep} {'OK ' if s['aprobado'] else 'NO '} "
+                          f"celdas {s['celdas_ok']}/{s['celdas_total']} · faltantes {s['faltantes']}"
+                          f" · envíos {s['envios']} · fallos {', '.join(failed) or '—'}"
+                          f" · {row.get('estado')}")
+                else:
+                    print(f"  {case['id']:7} r{rep} {'OK ' if s['aprobado'] else 'NO '} clave {s['clave_ok']}/{s['clave_total']}"
+                          f" · {s['palabras']} palabras · {s['citas']} citas · sin respaldo {s['frases_sin_respaldo']}"
+                          f" · envíos {s['envios']} · {row.get('estado')}")
     finally:
         proxy.close()
         registry.close()
     info["fin_utc"] = rb.utc_now()
-    summ = summarise(rows)
+    summ = summarise_list(rows) if list_mode else summarise(rows)
     previous = None
     if args.compare:
         target = find_run(battery, args.compare, run_dir)
@@ -455,10 +766,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"No se pudo leer la corrida a comparar: {exc}")
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    (run_dir / "resumen.md").write_text(summary_markdown(run_id, info, summ, rows, previous), encoding="utf-8")
+    markdown = list_summary_markdown(run_id, info, summ, rows, previous) if list_mode \
+        else summary_markdown(run_id, info, summ, rows, previous)
+    (run_dir / "resumen.md").write_text(markdown, encoding="utf-8")
     t = summ["total"]
-    print(f"Total: {t['aprobados']}/{t['n']} aprobados · datos clave {t['clave'][0]}/{t['clave'][1]} · "
-          f"resultados en {run_dir}")
+    if list_mode:
+        print(f"Total: {t['aprobados']}/{t['n']} casos · celdas {t['celdas'][0]}/{t['celdas'][1]} · "
+              f"envíos {t['envios']} · resultados en {run_dir}")
+    else:
+        print(f"Total: {t['aprobados']}/{t['n']} aprobados · datos clave {t['clave'][0]}/{t['clave'][1]} · "
+              f"resultados en {run_dir}")
     return 0
 
 

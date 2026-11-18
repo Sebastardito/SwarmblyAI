@@ -1,0 +1,305 @@
+{
+  "version": "0.1.0",
+  "nota": "Batería abierta de la receta 4 (listas). Material ficticio: Inés Carvallo, Tomás Vera, Nadia Sotelo y lotes inventados. Las celdas esperadas se fijan antes de ejecutar; mide la tabla y la vista previa, no una medición sellada.",
+  "casos": [
+    {
+      "id": "CL-01",
+      "cat": "CL",
+      "kind": "pasted",
+      "operation": "Clasifica cada palabra: escribe «vocal» si empieza por vocal y «consonante» si empieza por consonante. Responde solo con la etiqueta.",
+      "items": "aroma\n\nbrisa\n   \neco\nfaro\n\naroma\nolivo\npiedra",
+      "expected_items": [
+        "aroma",
+        "brisa",
+        "eco",
+        "faro",
+        "aroma",
+        "olivo",
+        "piedra"
+      ],
+      "expected": [
+        "^vocal$",
+        "^consonante$",
+        "^vocal$",
+        "^consonante$",
+        "^vocal$",
+        "^vocal$",
+        "^consonante$"
+      ],
+      "expected_duplicates": [
+        {
+          "n": 5,
+          "of": 1
+        }
+      ],
+      "expected_waves": 1,
+      "nota": "Lista pegada con líneas en blanco y un duplicado; la regla está escrita en la operación."
+    },
+    {
+      "id": "CV-01",
+      "cat": "CV",
+      "kind": "pasted",
+      "operation": "Convierte cada medida a centímetros con el factor 1 pulgada = 2,54 cm. Responde solo con el número, sin unidad.",
+      "items": "2 pulgadas\n5 pulgadas\n10 pulgadas\n0,5 pulgadas",
+      "expected_items": [
+        "2 pulgadas",
+        "5 pulgadas",
+        "10 pulgadas",
+        "0,5 pulgadas"
+      ],
+      "expected": [
+        "^5[.,]08$",
+        "^12[.,]7$",
+        "^25[.,]4$",
+        "^1[.,]27$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Conversión de unidad con el factor dado; el resultado es comprobable sin conocimiento del mundo."
+    },
+    {
+      "id": "EX-01",
+      "cat": "EX",
+      "kind": "pasted",
+      "operation": "Extrae solo el código que aparece después de «código:» en cada ficha. Responde solo con el código.",
+      "items": "Ficha de la parcela Norte; código: PN-204; responsable: equipo de campo.\nFicha de la parcela Sur; código: PS-118; responsable: equipo de campo.\nFicha de la parcela Este; código: PE-073; responsable: equipo de campo.",
+      "expected_items": [
+        "Ficha de la parcela Norte; código: PN-204; responsable: equipo de campo.",
+        "Ficha de la parcela Sur; código: PS-118; responsable: equipo de campo.",
+        "Ficha de la parcela Este; código: PE-073; responsable: equipo de campo."
+      ],
+      "expected": [
+        "^PN-204$",
+        "^PS-118$",
+        "^PE-073$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Extracción de un campo de texto corto; el valor está literalmente en el elemento."
+    },
+    {
+      "id": "EX-02",
+      "cat": "EX",
+      "kind": "pasted",
+      "operation": "Extrae solo la fecha (dd/mm/aaaa) de cada ficha. Responde solo con la fecha.",
+      "items": "Entrega 12/03/2026, lote Aliso.\nEntrega 04/07/2026, lote Canelo.\nEntrega 19/11/2025, lote Lingue.",
+      "expected_items": [
+        "Entrega 12/03/2026, lote Aliso.",
+        "Entrega 04/07/2026, lote Canelo.",
+        "Entrega 19/11/2025, lote Lingue."
+      ],
+      "expected": [
+        "^12/03/2026$",
+        "^04/07/2026$",
+        "^19/11/2025$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Extracción de una fecha con formato fijo, sin cálculo ni ambigüedad."
+    },
+    {
+      "id": "TR-01",
+      "cat": "TR",
+      "kind": "pasted",
+      "operation": "Traduce al inglés cada palabra. Responde solo con la traducción.",
+      "items": "agua\nfuego\nviento\nluna\nsol\nnoche",
+      "expected_items": [
+        "agua",
+        "fuego",
+        "viento",
+        "luna",
+        "sol",
+        "noche"
+      ],
+      "expected": [
+        "^(the )?water$",
+        "^(the )?fire$",
+        "^(the )?wind$",
+        "^(the )?moon$",
+        "^(the )?sun$",
+        "^(the )?night$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Traducción de palabras comunes; se admite el artículo inglés opcional."
+    },
+    {
+      "id": "SI-01",
+      "cat": "SI",
+      "kind": "pasted",
+      "operation": "Responde «sí» si el número de la ficha es par y «no» si es impar. Responde solo con «sí» o «no».",
+      "items": "Ficha 14: muestra de suelo.\nFicha 27: muestra de agua.\nFicha 32: muestra de aire.\nFicha 45: muestra de sedimento.\nFicha 50: muestra de hojas.",
+      "expected_items": [
+        "Ficha 14: muestra de suelo.",
+        "Ficha 27: muestra de agua.",
+        "Ficha 32: muestra de aire.",
+        "Ficha 45: muestra de sedimento.",
+        "Ficha 50: muestra de hojas."
+      ],
+      "expected": [
+        "^(si|sí)$",
+        "^(no)$",
+        "^(si|sí)$",
+        "^(no)$",
+        "^(si|sí)$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Sí/no sobre una propiedad (paridad) que está dentro del propio elemento. El par 45 es impar: la segunda respuesta debe ser «no»."
+    },
+    {
+      "id": "SI-02",
+      "cat": "SI",
+      "kind": "pasted",
+      "operation": "Responde «sí» si la palabra contiene la letra r y «no» si no la contiene. Responde solo con «sí» o «no».",
+      "items": "aroma\nbrisa\neco\nfaro\nolivo\npiedra",
+      "expected_items": [
+        "aroma",
+        "brisa",
+        "eco",
+        "faro",
+        "olivo",
+        "piedra"
+      ],
+      "expected": [
+        "^(si|sí)$",
+        "^(si|sí)$",
+        "^(no)$",
+        "^(si|sí)$",
+        "^(no)$",
+        "^(si|sí)$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Sí/no sobre una letra presente o ausente en la palabra; no requiere mundo, solo mirar el elemento."
+    },
+    {
+      "id": "MX-01",
+      "cat": "MX",
+      "kind": "pasted",
+      "operation": "Suma 7 al número de cada ficha. Responde solo con el resultado.",
+      "items": "Ficha 1: parcela Norte.\nFicha 2: parcela Norte.\nFicha 3: parcela Norte.\nFicha 4: parcela Norte.\nFicha 5: parcela Norte.\nFicha 6: parcela Norte.\nFicha 7: parcela Norte.\nFicha 8: parcela Norte.\nFicha 9: parcela Norte.\nFicha 10: parcela Norte.\nFicha 11: parcela Norte.\nFicha 12: parcela Norte.\nFicha 13: parcela Norte.\nFicha 14: parcela Norte.\nFicha 15: parcela Norte.\nFicha 16: parcela Norte.\nFicha 17: parcela Norte.\nFicha 18: parcela Norte.",
+      "expected_items": [
+        "Ficha 1: parcela Norte.",
+        "Ficha 2: parcela Norte.",
+        "Ficha 3: parcela Norte.",
+        "Ficha 4: parcela Norte.",
+        "Ficha 5: parcela Norte.",
+        "Ficha 6: parcela Norte.",
+        "Ficha 7: parcela Norte.",
+        "Ficha 8: parcela Norte.",
+        "Ficha 9: parcela Norte.",
+        "Ficha 10: parcela Norte.",
+        "Ficha 11: parcela Norte.",
+        "Ficha 12: parcela Norte.",
+        "Ficha 13: parcela Norte.",
+        "Ficha 14: parcela Norte.",
+        "Ficha 15: parcela Norte.",
+        "Ficha 16: parcela Norte.",
+        "Ficha 17: parcela Norte.",
+        "Ficha 18: parcela Norte."
+      ],
+      "expected": [
+        "^8$",
+        "^9$",
+        "^10$",
+        "^11$",
+        "^12$",
+        "^13$",
+        "^14$",
+        "^15$",
+        "^16$",
+        "^17$",
+        "^18$",
+        "^19$",
+        "^20$",
+        "^21$",
+        "^22$",
+        "^23$",
+        "^24$",
+        "^25$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 2,
+      "nota": "Lista de 18 elementos: supera la ola de 12 y obliga a dos olas secuenciales."
+    },
+    {
+      "id": "CS-01",
+      "cat": "CS",
+      "kind": "csv",
+      "operation": "Escribe el número de letras de cada nombre de lote (sin contar espacios). Responde solo con el número.",
+      "source": {
+        "kind": "csv",
+        "file": "lotes.csv",
+        "column": "lote"
+      },
+      "expected_items": [
+        "Aliso",
+        "Canelo",
+        "Lingue",
+        "Aliso"
+      ],
+      "expected": [
+        "^5$",
+        "^6$",
+        "^6$",
+        "^5$"
+      ],
+      "expected_duplicates": [
+        {
+          "n": 4,
+          "of": 1
+        }
+      ],
+      "expected_waves": 1,
+      "nota": "Columna de un CSV con una celda vacía (se descarta) y un valor repetido (se marca); el número de letras se comprueba sin conocimiento externo."
+    },
+    {
+      "id": "EX-03",
+      "cat": "EX",
+      "kind": "pasted",
+      "operation": "Extrae solo el código que sigue a «código:» en cada ficha. Si una ficha no trae código, no escribas nada para ese elemento.",
+      "items": "Ficha 31; código: LN-410; lote: Aliso.\nFicha 32; código: LN-411; lote: Canelo.\nFicha 33; lote: Lingue; sin código asignado.\nFicha 34; código: LN-413; lote: Maqui.",
+      "expected_items": [
+        "Ficha 31; código: LN-410; lote: Aliso.",
+        "Ficha 32; código: LN-411; lote: Canelo.",
+        "Ficha 33; lote: Lingue; sin código asignado.",
+        "Ficha 34; código: LN-413; lote: Maqui."
+      ],
+      "expected": [
+        "^LN-410$",
+        "^LN-411$",
+        null,
+        "^LN-413$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "El elemento 3 no da ninguna base: la tabla debe marcarlo «missing» y no inventar un código."
+    },
+    {
+      "id": "PN-01",
+      "cat": "PN",
+      "kind": "pasted",
+      "operation": "Extrae solo el nombre de la parcela que aparece después de «parcela:». Responde solo con el nombre.",
+      "items": "Inés Carvallo <ines.carvallo@example.test>, parcela: Los Coigües.\nTomás Vera <tomas.vera@example.test>, parcela: Los Aromos.\nNadia Sotelo <nadia.sotelo@example.test>, parcela: El Lingue.",
+      "expected_items": [
+        "Inés Carvallo <ines.carvallo@example.test>, parcela: Los Coigües.",
+        "Tomás Vera <tomas.vera@example.test>, parcela: Los Aromos.",
+        "Nadia Sotelo <nadia.sotelo@example.test>, parcela: El Lingue."
+      ],
+      "expected": [
+        "^Los Coig[uü]es$",
+        "^Los Aromos$",
+        "^El Lingue$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "preview_where": "swarm",
+      "preview_local_only": true,
+      "ajustes": {
+        "privacy.tier": "GLOBAL"
+      },
+      "nota": "Nombres personales ficticios con correo: la vista previa debe proponer local y explicar por qué, aunque se le pida swarm. La ejecución es local."
+    }
+  ]
+}

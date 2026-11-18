@@ -12,3 +12,4 @@ build/
 *.egg-info/
 bench/dev/ejecuciones/
 bench/dev_v3/ejecuciones/
+bench/dev_list/ejecuciones/
