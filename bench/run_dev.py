@@ -44,7 +44,9 @@ import shutil
 import sys
 import tempfile
 import time
-from pathlib import Path
+import urllib.error
+import urllib.request
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 HERE = Path(__file__).resolve().parent
@@ -54,6 +56,7 @@ import run_bank as rb  # noqa: E402  (same folder: proxy, registry, app instance
 DEV = HERE / "dev"
 VERSION = "0.5.0"
 LIST_VERSION = "0.1.0"
+CODE_VERSION = "0.1.0"
 
 _CITE = re.compile(r"\[(?:D\d+\s*p\d+|W\d+|\d+)(?:[^\]]{0,40})\]")
 _TABLE = re.compile(r"^\s*\|?\s*:?-{3,}", re.M)
@@ -485,6 +488,244 @@ def summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
     return "\n".join(out) + "\n"
 
 
+# --------------------------------------------------------------------------- code scoring
+def is_code_case(case: dict[str, Any]) -> bool:
+    """A recipe 5 case: data with code, proposed and approved by the harness."""
+    return case.get("kind") == "code"
+
+
+def _code_block(answer: str, heading: str) -> str:
+    """The fenced text under ``### stdout`` / ``### stderr`` in the answer."""
+    marker = f"### {heading}\n```text\n"
+    start = (answer or "").find(marker)
+    if start < 0:
+        return ""
+    start += len(marker)
+    end = (answer or "").find("\n```", start)
+    return answer[start:end] if end >= 0 else answer[start:]
+
+
+def _numbers(text: str) -> list[float]:
+    """Numbers in prose, with dates, hive codes and digests removed first."""
+    text = re.sub(r"\b\d{4}-\d{2}-\d{2}\b", " ", text or "")
+    text = re.sub(r"\b[A-Za-z]-\d{2,}\b", " ", text)
+    text = re.sub(r"\b[0-9a-f]{32,}\b", " ", text, flags=re.I)
+    out: list[float] = []
+    for token in re.findall(r"-?\d+(?:[.,]\d+)?", text):
+        try:
+            out.append(float(token.replace(",", ".")))
+        except ValueError:
+            pass
+    return out
+
+
+def _code_prose(stdout: str, stderr: str, out_files: list[dict[str, Any]]) -> str:
+    return "\n".join([stdout or "", stderr or "",
+                      *[str(item.get("text") or "") for item in out_files or []]])
+
+
+def score_code(case: dict[str, Any], proposal: dict[str, Any], meta: dict[str, Any],
+               stdout: str, stderr: str, out_files: list[dict[str, Any]],
+               sends: int, red: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Score one recipe 5 run: values, script hash, trap, receipt and isolation."""
+    proposal = proposal or {}
+    meta = meta or {}
+    code = meta.get("code") or {}
+    run = meta.get("code_run") or {}
+    receipt = meta.get("receipt") or {}
+    prose = _code_prose(stdout, stderr, out_files)
+    number_text = "\n".join([stdout or "", stderr or "",
+                             *[str(item.get("text") or "") for item in out_files or []]])
+    # stdout carries the result; stderr is included for a refusal that the
+    # script printed after catching its own exception.
+    values = _numbers(number_text)
+    expected_numbers = list(case.get("expected_numbers") or [])
+    matched = 0
+    for spec in expected_numbers:
+        wanted = float(spec.get("value"))
+        tolerance = float(spec.get("tolerance") or 0.0)
+        if any(abs(found - wanted) <= tolerance for found in values):
+            matched += 1
+    numeric_ok = matched == len(expected_numbers)
+    alternative = False
+    note = case.get("alternative_note")
+    if not numeric_ok and note and re.search(note, prose, re.I):
+        numeric_ok = True
+        alternative = True
+
+    text_ok = all(re.search(pattern, prose, re.I) for pattern in case.get("expected_text") or [])
+    forbidden = [pattern for pattern in case.get("forbidden_text") or []
+                 if re.search(pattern, prose, re.I)]
+
+    trapped = code.get("trapped")
+    refusal = case.get("refusal")
+    refusal_hit = bool(refusal and re.search(refusal, prose, re.I))
+    if case.get("expect_trap"):
+        trap_ok = trapped in (case.get("expect_trap") or []) or refusal_hit
+    elif refusal:
+        trap_ok = refusal_hit
+    else:
+        trap_ok = trapped is None
+
+    code_hash = str(code.get("script_sha256") or "")
+    proposal_hash = str(proposal.get("script_sha256") or "")
+    script_ok = bool(proposal.get("script")) and len(proposal_hash) == 64 \
+        and code_hash == proposal_hash and code.get("approved_by") == "user"
+    corrections = int(code.get("corrections") or 0)
+    destination = str((meta.get("model_destination") or {}).get("clase") or "")
+    tools = receipt.get("tools") or []
+    third_ok = destination == "local" and all(
+        str(tool.get("clase") or "") != "terceros" for tool in tools)
+
+    file_names = []
+    files_ok = True
+    for item in run.get("files") or []:
+        name = str((item or {}).get("name") or "")
+        file_names.append(name)
+        path = PurePosixPath(name)
+        if (not name or path.is_absolute() or ".." in path.parts
+                or "\\" in name or name.startswith("~")):
+            files_ok = False
+    run_ok = bool(run.get("run_id")) and files_ok
+
+    observed = len((red or {}).get("registro") or []) + len((red or {}).get("proxy") or [])
+    checks = {
+        "script": script_ok,
+        "aprobado_por_usuario": code.get("approved_by") == "user",
+        "trampa": trap_ok,
+        "numeros": numeric_ok,
+        "texto": text_ok,
+        "prohibido": not forbidden,
+        "correcciones": corrections <= 2,
+        "archivos": run_ok,
+        "recibo": (receipt.get("recipe") == "code"
+                   and (receipt.get("code") or {}).get("script_sha256") == proposal_hash),
+        "sin_envios": sends == 0 and observed == 0 and not (receipt.get("envios") or []),
+        "sin_terceros": third_ok,
+    }
+    return {
+        "aprobado": all(checks.values()), "comprobaciones": checks,
+        "numeros_ok": matched, "numeros_total": len(expected_numbers),
+        "alternativa": alternative, "trapped": trapped, "envios": sends,
+        "archivos": file_names, "prohibido_encontrado": forbidden,
+    }
+
+
+def score_code_cancel(case: dict[str, Any], proposal: dict[str, Any],
+                      cancelled: dict[str, Any], approve_status: int,
+                      messages: list[dict[str, Any]], sends: int,
+                      red: dict[str, Any] | None = None) -> dict[str, Any]:
+    """A cancelled proposal must not run, answer or leave a code meta block."""
+    proposal = proposal or {}
+    code_messages = [m for m in messages or []
+                     if (m.get("meta") or {}).get("code")
+                     or (m.get("meta") or {}).get("code_run")]
+    observed = len((red or {}).get("registro") or []) + len((red or {}).get("proxy") or [])
+    checks = {
+        "propuesta": bool(proposal.get("script")) and len(str(proposal.get("script_sha256") or "")) == 64,
+        "cancelado": bool((cancelled or {}).get("cancelled")),
+        "aprobacion_rechazada": int(approve_status) == 400,
+        "sin_ejecucion": not code_messages,
+        "sin_envios": sends == 0 and observed == 0,
+    }
+    return {
+        "aprobado": all(checks.values()), "comprobaciones": checks,
+        "numeros_ok": 0, "numeros_total": 0, "trapped": None, "envios": sends,
+        "archivos": [], "prohibido_encontrado": [],
+    }
+
+
+def _code_agg(rs: list[dict[str, Any]]) -> dict[str, Any]:
+    scores = [r["puntuacion"] for r in rs]
+    names = sorted({k for s in scores for k in (s.get("comprobaciones") or {})})
+    return {
+        "n": len(scores),
+        "aprobados": sum(bool(s.get("aprobado")) for s in scores),
+        "numeros": [sum(int(s.get("numeros_ok") or 0) for s in scores),
+                    sum(int(s.get("numeros_total") or 0) for s in scores)],
+        "por_comprobacion": {
+            name: [sum(bool((s.get("comprobaciones") or {}).get(name)) for s in scores
+                       if name in (s.get("comprobaciones") or {})),
+                   sum(1 for s in scores if name in (s.get("comprobaciones") or {}))]
+            for name in names
+        },
+        "alternativas": sum(bool(s.get("alternativa")) for s in scores),
+        "trampas": sum(1 for s in scores if s.get("trapped")),
+        "envios": sum(int(s.get("envios") or 0) for s in scores),
+        "latencia_media_s": round(
+            sum(float((r.get("turnos") or [{}])[-1].get("latencia_s") or 0) for r in rs)
+            / max(1, len(rs)), 1),
+    }
+
+
+def summarise_code(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    categories = sorted({r["cat"] for r in rows})
+    cases = sorted({r["id"] for r in rows})
+    return {
+        "total": _code_agg(rows),
+        "por_categoria": {c: _code_agg([r for r in rows if r["cat"] == c]) for c in categories},
+        "por_caso": {
+            cid: {
+                "n": len([r for r in rows if r["id"] == cid]),
+                "aprobados": sum(bool(r["puntuacion"].get("aprobado"))
+                                 for r in rows if r["id"] == cid),
+                "numeros": [
+                    sum(int(r["puntuacion"].get("numeros_ok") or 0)
+                        for r in rows if r["id"] == cid),
+                    sum(int(r["puntuacion"].get("numeros_total") or 0)
+                        for r in rows if r["id"] == cid),
+                ],
+            }
+            for cid in cases
+        },
+    }
+
+
+def code_summary_markdown(run_id: str, info: dict[str, Any], summ: dict[str, Any],
+                          rows: list[dict[str, Any]],
+                          previous: dict[str, Any] | None) -> str:
+    def pct(a: int, b: int) -> str:
+        return f"{a}/{b} ({100 * a / b:.0f} %)" if b else "—"
+    t = summ["total"]
+    out = [
+        f"# Batería abierta de código · {run_id}", "",
+        f"App {info.get('versiones', {}).get('swarmbly-app', '?')} · modelo {info.get('modelo')} · "
+        f"n={info.get('repeticiones')} por caso · batería abierta, no una medición sellada.", "",
+        "## Total", "",
+        f"- Casos aprobados: {pct(t['aprobados'], t['n'])}",
+        f"- Números correctos: {pct(*t['numeros'])}",
+        f"- Respuestas con la alternativa «no usé la corrección»: {t['alternativas']}",
+        f"- Ejecuciones con trampa: {t['trampas']}",
+        f"- Envíos observados: {t['envios']}",
+        f"- Latencia media por caso: {t['latencia_media_s']} s", "",
+        "## Comprobaciones", "", "| Comprobación | Aprobadas |", "|---|---|",
+    ]
+    for name, (ok, n) in sorted(t["por_comprobacion"].items()):
+        out.append(f"| {name} | {pct(ok, n)} |")
+    out += ["", "## Por caso", "", "| Caso | Reps | Aprobados | Números |", "|---|---|---|---|"]
+    for cid, data in summ["por_caso"].items():
+        out.append(f"| {cid} | {data['n']} | {data['aprobados']}/{data['n']} | "
+                   f"{pct(*data['numeros'])} |")
+    out += ["", "## Fallos", "", "| Caso | Rep. | Comprobaciones | Números | Trampa |",
+            "|---|---|---|---|---|"]
+    any_failure = False
+    for r in rows:
+        s = r["puntuacion"]
+        failed = [k for k, v in s["comprobaciones"].items() if not v]
+        if failed:
+            any_failure = True
+            out.append(f"| {r['id']} | {r['rep']} | {', '.join(failed)} | "
+                       f"{s['numeros_ok']}/{s['numeros_total']} | {s.get('trapped') or '—'} |")
+    if not any_failure:
+        out.append("| — | — | — | — | — |")
+    if previous:
+        p = previous["total"]
+        out += ["", f"Frente a la corrida anterior: casos {p['aprobados']}/{p['n']} → "
+                f"{t['aprobados']}/{t['n']}; números {p['numeros'][0]}/{p['numeros'][1]} → "
+                f"{t['numeros'][0]}/{t['numeros'][1]}; envíos {p['envios']} → {t['envios']}."]
+    return "\n".join(out) + "\n"
+
+
 # --------------------------------------------------------------------------- running
 def play(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str, Any]:
     """All turns of a case in one conversation; returns the last answer."""
@@ -562,6 +803,106 @@ def play_list(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict
     return {"preview": preview, "turnos": [turn], "mensaje": last}
 
 
+def http_bytes(url: str, token: str = "", timeout: float = 60.0) -> bytes:
+    """Download one local App file without the harness proxy."""
+    req = urllib.request.Request(url, method="GET")
+    if token:
+        req.add_header("X-Swarmbly-Token", token)
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+    with opener.open(req, timeout=timeout) as response:
+        return response.read()
+
+
+def _download_text_outputs(app: rb.AppInstance, run: dict[str, Any]) -> list[dict[str, Any]]:
+    text_suffix = {".csv", ".tsv", ".json", ".txt", ".md", ".log", ".yaml", ".yml",
+                   ".xml", ".html"}
+    out: list[dict[str, Any]] = []
+    for item in run.get("files") or []:
+        name = str((item or {}).get("name") or "")
+        entry = {"name": name, "sha256": str((item or {}).get("sha256") or ""),
+                 "text": "", "error": ""}
+        suffix = Path(name).suffix.lower()
+        if suffix in text_suffix and item.get("url"):
+            try:
+                raw = http_bytes(app.base + str(item["url"]), app.token)
+                entry["text"] = raw.decode("utf-8", "replace")[:20000]
+            except Exception as exc:
+                entry["error"] = f"{type(exc).__name__}: {exc}"[:300]
+        out.append(entry)
+    return out
+
+
+def _http_error_text(exc: urllib.error.HTTPError) -> str:
+    try:
+        return exc.read().decode("utf-8", "replace")[:500]
+    except Exception:
+        return ""
+
+
+def play_code(app: rb.AppInstance, case: dict[str, Any], timeout: float) -> dict[str, Any]:
+    """Propose one script, approve it (or cancel it), and collect its result.
+
+    The harness plays the user: every proposal is approved except the cancel
+    case, and the proposed script is returned in the record for inspection.
+    """
+    started = time.monotonic()
+    status = rb.http_json("GET", f"{app.base}/api/recipes/code/status", app.token)
+    if not status.get("available"):
+        raise RuntimeError(f"sandbox unavailable: {status.get('reason') or 'unknown reason'}")
+    try:
+        proposal = rb.http_json("POST", f"{app.base}/api/recipes/code/propose", app.token,
+                                {"question": case["question"], "files": case["files"]},
+                                timeout=120)
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(f"propose failed: HTTP {exc.code}: {_http_error_text(exc)}") from exc
+    conversation = str(proposal.get("conversation_id") or "")
+    if case.get("cancel"):
+        cancelled = rb.http_json("POST", f"{app.base}/api/recipes/code/cancel", app.token,
+                                 {"proposal_id": proposal["proposal_id"]})
+        approve_status, approve_detail = 0, ""
+        try:
+            rb.http_json("POST", f"{app.base}/api/recipes/code/approve", app.token,
+                         {"proposal_id": proposal["proposal_id"]}, timeout=timeout)
+            approve_status = 200
+        except urllib.error.HTTPError as exc:
+            approve_status = int(exc.code)
+            try:
+                approve_detail = exc.read().decode("utf-8", "replace")[:300]
+            except Exception:
+                approve_detail = ""
+        messages = rb.http_json("GET", f"{app.base}/api/conversations/{conversation}/messages",
+                                app.token) if conversation else []
+        return {
+            "proposal": proposal, "cancelled": cancelled,
+            "approve_status": approve_status, "approve_detail": approve_detail,
+            "messages": messages, "conversation_id": conversation,
+            "code_status": status,
+            "mensaje": None, "stdout": "", "stderr": "", "out_files": [],
+            "turnos": [{"texto": case["question"], "latencia_s":
+                        round(time.monotonic() - started, 2), "estado": "cancelled"}],
+        }
+    try:
+        approved = rb.http_json("POST", f"{app.base}/api/recipes/code/approve", app.token,
+                                {"proposal_id": proposal["proposal_id"]}, timeout=timeout)
+    except urllib.error.HTTPError as exc:
+        raise RuntimeError(f"approve failed: HTTP {exc.code}: {_http_error_text(exc)}") from exc
+    message = approved.get("assistant_message") or {}
+    meta = message.get("meta") or {}
+    answer = str(message.get("content") or "")
+    stdout = _code_block(answer, "stdout")
+    stderr = _code_block(answer, "stderr")
+    out_files = _download_text_outputs(app, meta.get("code_run") or {})
+    return {
+        "proposal": proposal, "approved": approved,
+        "conversation_id": conversation, "mensaje": message,
+        "code_status": status,
+        "stdout": stdout, "stderr": stderr, "out_files": out_files,
+        "turnos": [{"texto": case["question"], "latencia_s":
+                    round(time.monotonic() - started, 2),
+                    "estado": str(meta.get("status") or "timeout")}],
+    }
+
+
 def parse_set(items: list[str]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for item in items:
@@ -588,6 +929,10 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
     loaded = load_cases(battery / "casos.json")
     cases = {c["id"]: c for c in loaded}
     list_mode = any(is_list_case(c) for c in loaded)
+    code_mode = any(is_code_case(c) for c in loaded)
+    if list_mode and code_mode:
+        print("La batería mezcla casos de lista y de código; usa una batería por tipo.")
+        return 2
     info = json.loads((run_dir / "resumen.json").read_text(encoding="utf-8"))["info"]
     rows = []
     for f in sorted((run_dir / "casos").glob("*.json")):
@@ -596,7 +941,18 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         if case is None:
             continue
         sends = int((row.get("puntuacion") or {}).get("envios") or 0)
-        if is_list_case(case):
+        if is_code_case(case):
+            if case.get("cancel"):
+                row["puntuacion"] = score_code_cancel(
+                    case, row.get("proposal") or {}, row.get("cancelled") or {},
+                    int(row.get("approve_status") or 0), row.get("messages") or [],
+                    sends, row.get("red"))
+            else:
+                row["puntuacion"] = score_code(
+                    case, row.get("proposal") or {}, row.get("meta") or {},
+                    row.get("stdout") or "", row.get("stderr") or "",
+                    row.get("out_files") or [], sends, row.get("red"))
+        elif is_list_case(case):
             row["puntuacion"] = score_list(case, row.get("preview") or {},
                                            row.get("meta") or {}, sends, row.get("red"))
         else:
@@ -606,7 +962,12 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         rows.append(row)
     order = {cid: i for i, cid in enumerate(cases)}
     rows.sort(key=lambda r: (order.get(r["id"], 999), r["rep"]))
-    summ = summarise_list(rows) if list_mode else summarise(rows)
+    if code_mode:
+        summ = summarise_code(rows)
+    elif list_mode:
+        summ = summarise_list(rows)
+    else:
+        summ = summarise(rows)
     info["repuntuada_utc"] = rb.utc_now()
     previous = None
     if compare:
@@ -614,10 +975,18 @@ def rescore(run_dir: Path, battery: Path, compare: str = "") -> int:
         previous = json.loads((target / "resumen.json").read_text(encoding="utf-8"))["resumen"]
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    markdown = list_summary_markdown(run_dir.name, info, summ, rows, previous) if list_mode \
-        else summary_markdown(run_dir.name, info, summ, rows, previous)
+    if code_mode:
+        markdown = code_summary_markdown(run_dir.name, info, summ, rows, previous)
+    elif list_mode:
+        markdown = list_summary_markdown(run_dir.name, info, summ, rows, previous)
+    else:
+        markdown = summary_markdown(run_dir.name, info, summ, rows, previous)
     (run_dir / "resumen.md").write_text(markdown, encoding="utf-8")
-    if list_mode:
+    if code_mode:
+        print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} casos · "
+              f"números {summ['total']['numeros'][0]}/{summ['total']['numeros'][1]} · "
+              f"envíos {summ['total']['envios']}")
+    elif list_mode:
         print(f"Repuntuada: {summ['total']['aprobados']}/{summ['total']['n']} casos · "
               f"celdas {summ['total']['celdas'][0]}/{summ['total']['celdas'][1]}")
     else:
@@ -656,8 +1025,10 @@ def main(argv: list[str] | None = None) -> int:
         wanted = {x.strip() for x in args.only.split(",") if x.strip()}
         cases = [c for c in cases if c["id"] in wanted]
     list_mode = any(is_list_case(c) for c in cases)
-    if list_mode and not all(is_list_case(c) for c in cases):
-        print("La batería mezcla casos de lista y de documento; usa una batería por tipo.")
+    code_mode = any(is_code_case(c) for c in cases)
+    if sum((list_mode, code_mode)) > 1 or (list_mode and not all(is_list_case(c) for c in cases)) \
+            or (code_mode and not all(is_code_case(c) for c in cases)):
+        print("La batería mezcla tipos de caso; usa una batería por tipo.")
         return 2
     corpus = sorted(p for p in (battery / "corpus").iterdir() if p.is_file() and not p.name.startswith("."))
     public_dir = battery / "publico"
@@ -678,8 +1049,10 @@ def main(argv: list[str] | None = None) -> int:
     run_dir = battery / "ejecuciones" / run_id
     (run_dir / "casos").mkdir(parents=True)
     (run_dir / "logs").mkdir()
-    battery_version = f"listas {LIST_VERSION}" if list_mode else VERSION
-    info = {"run_id": run_id, "bateria": battery_version, "tipo": "list" if list_mode else "documents",
+    battery_version = (f"listas {LIST_VERSION}" if list_mode else
+                       f"codigo {CODE_VERSION}" if code_mode else VERSION)
+    info = {"run_id": run_id, "bateria": battery_version,
+            "tipo": "list" if list_mode else "code" if code_mode else "documents",
             "modelo": args.model, "ollama": ollama_version,
             "versiones": versions, "commit_paraguas": rb.git_commit(HERE.parent),
             "ajustes_extra": extra, "repeticiones": args.repeat, "casos": [c["id"] for c in cases],
@@ -697,6 +1070,8 @@ def main(argv: list[str] | None = None) -> int:
                 sources.mkdir()
                 for p in corpus:
                     shutil.copy2(p, sources / p.name)
+                for alias, target in (case.get("aliases") or {}).items():
+                    (sources / alias).symlink_to(sources / target)
                 settings = {
                     "setup_completed": True, "language": "es",
                     "model.backend": "ollama", "model.backend_url": args.ollama,
@@ -717,14 +1092,30 @@ def main(argv: list[str] | None = None) -> int:
                 answer = ""
                 try:
                     app.start()
-                    played = play_list(app, case, args.case_timeout) if is_list_case(case) \
-                        else play(app, case, args.case_timeout)
-                    if is_list_case(case):
+                    if is_code_case(case):
+                        played = play_code(app, case, args.case_timeout)
+                        row["proposal"] = played.get("proposal") or {}
+                        row["cancelled"] = played.get("cancelled") or {}
+                        row["approve_status"] = played.get("approve_status") or 0
+                        row["approve_detail"] = played.get("approve_detail") or ""
+                        row["messages"] = played.get("messages") or []
+                        row["code_status"] = played.get("code_status") or {}
+                        row["stdout"] = played.get("stdout") or ""
+                        row["stderr"] = played.get("stderr") or ""
+                        row["out_files"] = played.get("out_files") or []
+                    elif is_list_case(case):
+                        played = play_list(app, case, args.case_timeout)
                         row["preview"] = played.get("preview") or {}
+                    else:
+                        played = play(app, case, args.case_timeout)
                     msg = played["mensaje"] or {}
                     meta = msg.get("meta") or {}
                     answer = msg.get("content") or ""
-                    row.update(turnos=played["turnos"], estado=str(meta.get("status", "timeout")))
+                    if is_code_case(case) and case.get("cancel"):
+                        row.update(turnos=played["turnos"], estado="cancelled")
+                    else:
+                        row.update(turnos=played["turnos"],
+                                   estado=str(meta.get("status", "timeout")))
                 except Exception as exc:
                     row.update(estado="error", error=str(exc)[:500])
                 finally:
@@ -736,13 +1127,32 @@ def main(argv: list[str] | None = None) -> int:
                 row["respuesta"] = answer
                 row["red"] = {"registro": reg_ev, "proxy": prx_ev}
                 row["meta"] = meta
-                row["puntuacion"] = score_list(case, row["preview"], meta, sends, row["red"]) \
-                    if is_list_case(case) else score(case, answer, meta, sends, row["red"])
+                if is_code_case(case):
+                    if case.get("cancel"):
+                        row["puntuacion"] = score_code_cancel(
+                            case, row.get("proposal") or {}, row.get("cancelled") or {},
+                            int(row.get("approve_status") or 0), row.get("messages") or [],
+                            sends, row["red"])
+                    else:
+                        row["puntuacion"] = score_code(
+                            case, row.get("proposal") or {}, meta,
+                            row.get("stdout") or "", row.get("stderr") or "",
+                            row.get("out_files") or [], sends, row["red"])
+                elif is_list_case(case):
+                    row["puntuacion"] = score_list(case, row["preview"], meta, sends, row["red"])
+                else:
+                    row["puntuacion"] = score(case, answer, meta, sends, row["red"])
                 rows.append(row)
                 (run_dir / "casos" / f"{case['id']}_r{rep}.json").write_text(
                     json.dumps(row, ensure_ascii=False, indent=2), encoding="utf-8")
                 s = row["puntuacion"]
-                if is_list_case(case):
+                if is_code_case(case):
+                    failed = [k for k, v in s["comprobaciones"].items() if not v]
+                    print(f"  {case['id']:7} r{rep} {'OK ' if s['aprobado'] else 'NO '} "
+                          f"números {s['numeros_ok']}/{s['numeros_total']} · trampa {s.get('trapped') or '—'}"
+                          f" · envíos {s['envios']} · fallos {', '.join(failed) or '—'}"
+                          f" · {row.get('estado')}")
+                elif is_list_case(case):
                     failed = [k for k, v in s["comprobaciones"].items() if not v]
                     print(f"  {case['id']:7} r{rep} {'OK ' if s['aprobado'] else 'NO '} "
                           f"celdas {s['celdas_ok']}/{s['celdas_total']} · faltantes {s['faltantes']}"
@@ -756,7 +1166,12 @@ def main(argv: list[str] | None = None) -> int:
         proxy.close()
         registry.close()
     info["fin_utc"] = rb.utc_now()
-    summ = summarise_list(rows) if list_mode else summarise(rows)
+    if code_mode:
+        summ = summarise_code(rows)
+    elif list_mode:
+        summ = summarise_list(rows)
+    else:
+        summ = summarise(rows)
     previous = None
     if args.compare:
         target = find_run(battery, args.compare, run_dir)
@@ -766,11 +1181,18 @@ def main(argv: list[str] | None = None) -> int:
             print(f"No se pudo leer la corrida a comparar: {exc}")
     (run_dir / "resumen.json").write_text(json.dumps({"info": info, "resumen": summ}, ensure_ascii=False, indent=2),
                                           encoding="utf-8")
-    markdown = list_summary_markdown(run_id, info, summ, rows, previous) if list_mode \
-        else summary_markdown(run_id, info, summ, rows, previous)
+    if code_mode:
+        markdown = code_summary_markdown(run_id, info, summ, rows, previous)
+    elif list_mode:
+        markdown = list_summary_markdown(run_id, info, summ, rows, previous)
+    else:
+        markdown = summary_markdown(run_id, info, summ, rows, previous)
     (run_dir / "resumen.md").write_text(markdown, encoding="utf-8")
     t = summ["total"]
-    if list_mode:
+    if code_mode:
+        print(f"Total: {t['aprobados']}/{t['n']} casos · números {t['numeros'][0]}/{t['numeros'][1]}"
+              f" · envíos {t['envios']} · resultados en {run_dir}")
+    elif list_mode:
         print(f"Total: {t['aprobados']}/{t['n']} casos · celdas {t['celdas'][0]}/{t['celdas'][1]} · "
               f"envíos {t['envios']} · resultados en {run_dir}")
     else:

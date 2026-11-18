@@ -1,0 +1,25 @@
+colmena,apiario,peso_kg,estado,fecha_revision
+A-01,Los Aromos,32.5,ok,2026-02-10
+A-02,Los Aromos,28.0,ok,2026-03-02
+A-03,Los Aromos,35.2,ok,2026-03-15
+A-04,Los Aromos,30.1,ok,2026-03-28
+A-05,Los Aromos,27.8,ok,2026-04-05
+A-06,Los Aromos,31.4,ok,2026-02-18
+A-07,Los Aromos,29.9,ok,2026-03-20
+A-08,Los Aromos,33.0,ok,2026-04-12
+B-01,El Lingue,24.0,ok,2026-02-12
+B-02,El Lingue,26.5,ok,2026-03-04
+B-03,El Lingue,25.2,ok,2026-03-18
+B-04,El Lingue,27.0,ok,2026-04-02
+B-05,El Lingue,23.8,ok,2026-03-25
+B-06,El Lingue,28.1,ok,2026-02-22
+B-07,El Lingue,24.7,ok,2026-03-30
+B-08,El Lingue,26.0,ok,2026-04-15
+C-01,Las Nieves,20.5,ok,2026-02-14
+C-02,Las Nieves,22.0,ok,2026-03-06
+C-03,Las Nieves,21.3,ok,2026-03-22
+C-04,Las Nieves,19.8,ok,2026-04-08
+C-05,Las Nieves,23.1,ok,2026-02-25
+C-06,Las Nieves,20.0,ok,2026-03-12
+C-07,Las Nieves,22.7,ok,2026-03-31
+C-08,Las Nieves,21.6,ok,2026-04-18
