@@ -64,3 +64,5 @@ jobs:
         run: cd SwarmblyLCE && ../.venv/bin/python -m pytest -q tests
       - name: SwarmblyCore tests
         run: cd SwarmblyCore && ../.venv/bin/python -m pytest -q tests
+      - name: SwarmblyAgent tests
+        run: cd SwarmblyCore/agent && ../../.venv/bin/python -m pytest -q tests

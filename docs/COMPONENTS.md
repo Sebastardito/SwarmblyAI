@@ -16,6 +16,8 @@ The source of truth is [`components.lock`](../components.lock). Distribution **3
 | SwarmblyLCE | 0.2.1 | mirror of [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `050d4ed` (`v0.2.1`) | [10.5281/zenodo.24330449](https://doi.org/10.5281/zenodo.24330449) (0.2.0: [10.5281/zenodo.24070616](https://doi.org/10.5281/zenodo.24070616)) |
 | SwarmblyApp | 0.6.0 | mirror of [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `8130dab` (`v0.6.0`) | [10.5281/zenodo.24330450](https://doi.org/10.5281/zenodo.24330450) (all versions: [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638); 0.5.0: [10.5281/zenodo.24265875](https://doi.org/10.5281/zenodo.24265875)) |
 
+**Agent runtime (3.4).** `SwarmblyCore/agent/` is a separate distribution, `swarmbly-agent` 0.1.0: dependency-free and local-only. Its API is in [`SwarmblyCore/agent/README.md`](../SwarmblyCore/agent/README.md); it does not change the wire protocol.
+
 ### Rules
 
 1. **SwarmblyCore is edited here.** It has no repository of its own; its releases are this repository's releases.
@@ -61,6 +63,8 @@ La fuente de verdad es [`components.lock`](../components.lock). Distribución **
 | SwarmblyCore | `swarmbly-v0` 0.1.0 | en este repositorio | — | [10.5281/zenodo.21956743](https://doi.org/10.5281/zenodo.21956743) |
 | SwarmblyLCE | 0.2.1 | espejo de [SwarmblyLCE](https://github.com/Sebastardito/SwarmblyLCE) | `050d4ed` (`v0.2.1`) | [10.5281/zenodo.24330449](https://doi.org/10.5281/zenodo.24330449) (0.2.0: [10.5281/zenodo.24070616](https://doi.org/10.5281/zenodo.24070616)) |
 | SwarmblyApp | 0.6.0 | espejo de [SwarmblyApp](https://github.com/Sebastardito/SwarmblyApp) | `8130dab` (`v0.6.0`) | [10.5281/zenodo.24330450](https://doi.org/10.5281/zenodo.24330450) (todas las versiones: [10.5281/zenodo.23322638](https://doi.org/10.5281/zenodo.23322638); 0.5.0: [10.5281/zenodo.24265875](https://doi.org/10.5281/zenodo.24265875)) |
+
+**Runtime de agente (3.4).** `SwarmblyCore/agent/` es una distribución separada, `swarmbly-agent` 0.1.0: sin dependencias y solo local. Su API está en [`SwarmblyCore/agent/README.md`](../SwarmblyCore/agent/README.md); no cambia el protocolo de red.
 
 ### Reglas
 
