@@ -796,6 +796,38 @@ def place(text: str, table: str, request: str) -> str:
     return "\n\n".join([paragraphs[0], table, *paragraphs[1:]])
 
 
+_ITEM = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
+
+
+def drop_repeated_list(text: str, table: str) -> str:
+    """A list that only repeats the rows of the table the program built is
+    left out: told not to repeat the table, a 7B model wrote its rows again as
+    bullets under it in 3 of 3 answers (open battery v3, TB-01)."""
+    found = find_tables(table)
+    if not found:
+        return text
+    _, _, _, rows = found[0]
+    keys = [(_fold(r[0]), {_canon(m.group(1)) for c in r[1:] for m in _NUMBER.finditer(c)})
+            for r in rows if r and r[0].strip()]
+    keys = [(k, n) for k, n in keys if len(k) >= 2]
+    if not keys:
+        return text
+    out = []
+    for block in re.split(r"\n\s*\n", text or ""):
+        lines = [ln for ln in block.split("\n") if ln.strip()]
+        items = [ln for ln in lines if _ITEM.match(ln)]
+        head = [ln for ln in lines if not _ITEM.match(ln)]
+        if len(items) >= 2 and len(head) <= 1 and (not head or head[0].rstrip().endswith(":")):
+            def repeats(item: str) -> bool:
+                f = _fold(item)
+                figs = {_canon(m.group(1)) for m in _NUMBER.finditer(item)}
+                return any(k in f and (figs & n or not n) for k, n in keys)
+            if sum(repeats(i) for i in items) >= max(2, round(0.8 * len(items))):
+                continue                      # the table already says it
+        out.append(block)
+    return "\n\n".join(out)
+
+
 # --- audit --------------------------------------------------------------------------
 
 def audit(answer: str, sources: list[dict[str, Any]]) -> dict[str, Any] | None:

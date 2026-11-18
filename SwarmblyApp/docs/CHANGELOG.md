@@ -1,8 +1,25 @@
 # Changelog
 
-## 0.6.0 — Roles and recipes (unreleased)
+## 0.6.0 — Roles and recipes (2026-11-17)
 
-Swarmbly AI 3.3.
+Swarmbly AI 3.3. Models by role; the cards of "¿Qué quieres hacer?" with
+three recipes (ask your documents; compare documents in a table built by
+code; research with public sources, with the query approved before
+anything leaves, comparisons and disagreements computed by code and a
+claim verifier). Each step was kept only if the open development battery
+(`bench/dev`, fictitious) showed it helps: final full run 112/123 cases and
+343/354 key data, no leak. Measured once on two new sealed banks (v3.1 and
+v3.2, written by the author, 28 cases each), on `b149a77`: short answers
+87/146 key data, compositions 0/16 passed with 70 % of their claims
+supported, no passage or personal name sent, and one private site name
+sent in a query the harness approved as proposed. What those runs found
+was fixed afterwards and checked on the open batteries (`bench/dev`,
+`bench/dev_v3`) and on confirmation runs of the same banks, which are not
+blind; figures in the Swarmbly AI 3.3.0 release notes. Not fixed: a 7B
+model can still read "10, not 12" as the first figure, and tables that
+need sums over a CSV wait for recipe 5 (3.4). The usability test of the
+privacy receipt with people (criterion of 3.1) is postponed. Requires
+SwarmblyLCE 0.2.1.
 
 - **Models by role** (`swarmbly_app/roles.py`, settings `roles.*`). A role
   names a model, whether it may reason before answering and, optionally, a

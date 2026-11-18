@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmbly-app"
-version = "0.5.0"
+version = "0.6.0"
 description = "Swarmbly App — integrated decentralized AI client and network dashboard for SwarmblyAI + SwarmblyLCE. Fragments the problem, not the model."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,7 +31,7 @@ classifiers = [
 ]
 dependencies = [
   "swarmbly-v0 @ git+https://github.com/Sebastardito/SwarmblyAI.git@51eb44e8e471757f8abe2f90e60023633719fd0b",
-  "swarmbly-lce @ git+https://github.com/Sebastardito/SwarmblyLCE.git@e375914dff535861d101ef733d59e3e3846b1a72",
+  "swarmbly-lce @ git+https://github.com/Sebastardito/SwarmblyLCE.git@050d4ed0503431b1d46ba02a38997692ba0d4768",
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",
   "httpx>=0.27",

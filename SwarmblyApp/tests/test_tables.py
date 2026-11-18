@@ -342,3 +342,15 @@ def test_a_source_table_with_one_column_per_lot_is_read_turned():
     assert "| Lote AB1 | 2,8 | 1.150 | [D1 p2] |" in out["markdown"]
     assert "| Lote AB2 | 3,1 | 1.080 | [D1 p2] |" in out["markdown"]
     assert len(calls) == 1                     # no extraction by the model was needed
+
+
+def test_a_list_that_repeats_the_built_table_is_left_out():
+    from swarmbly_app import tables
+    table = ("| Parcela | Cuaja con abejorros (%) | Fuente |\n|---|---|---|\n| Alta | 78 | [D2 p3] |\n"
+             "| Media | 71 | [D2 p3] |\n| Baja | 61 (antes 64) | [D2 p3] [D1 p4] |")
+    answer = ("La cuaja de las tres parcelas es la siguiente:\n\n- Parcela Alta: 78%\n- Parcela Media: 71%\n"
+              "- Parcela Baja: 61% (antes 64%) [D1 p4]\n\nLa Baja bajó tras la muerte de dos colonias [D1 p4].")
+    out = tables.drop_repeated_list(answer, table)
+    assert "- Parcela Alta" not in out and "murte" not in out and "dos colonias" in out
+    other = "Pasos siguientes:\n\n- Revisar las colonias cada semana.\n- Pedir presupuesto de cajas."
+    assert tables.drop_repeated_list(other, table) == other
