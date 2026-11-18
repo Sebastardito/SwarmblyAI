@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "distribution": "3.2.0",
+  "distribution": "3.3.0",
   "note": "Versions of the components tested together. Mirrors are copies (git subtree --squash) of the commit below; never edit them here: change the component's own repository and run scripts/sync_components.py.",
   "components": {
     "SwarmblyCore": {
@@ -31,7 +31,7 @@
       "ref": "v0.6.0",
       "commit": "8130dabdd581b1f922585e825eb1fb639c91ec22",
       "tree": "3193ca1c30e2e5b42cc3549e07e1062ffd149269",
-      "doi": "10.5281/zenodo.24265875"
+      "doi": "10.5281/zenodo.23322638"
     }
   }
 }

@@ -2,6 +2,20 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## 3.3.0 — Roles and recipes (2026-11-17)
+
+Release notes: [`docs/releases/v3.3.0.md`](docs/releases/v3.3.0.md). Measured once on two new sealed banks (v3.1 and v3.2, App `b149a77`, defaults, `qwen2.5:7b`): short answers 87/146 key data, compositions 0/16 passed with 70 % of their claims supported, no passage or personal name sent; in two cases a private site name left in a query the harness approved as proposed (fixed after the run). Open batteries after the fixes: `bench/dev` 112/123, `bench/dev_v3` 48/57, no leak. Confirmation runs of the same banks are not blind and are reported apart.
+
+- **SwarmblyApp 0.6.0** (mirror at tag `v0.6.0`, `8130dab`):
+  - **Models by role** (writer, search terms, answers with public evidence, verifier), under the destination policy.
+  - **"What do you want to do?"** with three recipes: ask your documents; compare documents in a table built by code (source tables, also turned, CSV files, one value per place in a sentence, corrected values marked); research with public sources (a query proposed without private words and approved before anything leaves, results labelled apart, comparisons and disagreements by code, results after the documents).
+  - **Claim verifier**: each labelled sentence checked against the paragraph it cites.
+  - Documents in another language searched with translated keywords; "send this to the swarm" in a local conversation says nothing was sent.
+- **SwarmblyLCE 0.2.1** (mirror at tag `v0.2.1`, `050d4ed`): glossaries written as a table, with several pairs per line or with terms as code.
+- **Sealed banks v3.1 and v3.2** and harness `bench/run_bank.py` 1.2.2 (recipe, approved query, public permission and follow-up turns in the case cards; file names with spaces and codes from a legend).
+- **Open batteries**: `bench/dev` 0.5.0 (41 cases), `bench/dev_v3` 0.2.0 (19 cases from the patterns of the sealed banks v3), `bench/run_dev.py` 0.5.0, `bench/run_verifier.py` (73 claims).
+- **Roadmap:** the Anthropic provider and an embeddings role, recipe 4 and the agent runtime move to 3.4; the receipt test with people is postponed.
+
 ## 3.2.0 — Grounded composition and safety (2026-11-15)
 
 Release notes: [`docs/releases/v3.2.0.md`](docs/releases/v3.2.0.md). Measured once on the two sealed banks (App `940c5c9`, defaults, `qwen2.5:7b`): claims in compositions backed by a citation 10/69 → 22/59 (bank v2) and 8/53 → 21/61 (bank v1), no regression in S2, no forbidden send, receipts matching the network in 24/24; blind review in full agreement with the judge (an upper bound: the sheet sat next to the scoring).
