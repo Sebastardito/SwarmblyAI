@@ -33,12 +33,14 @@ Status: `todo` · `running` · `review` · `done` · `blocked` · `dropped`. Ver
 | T7.2 | SwarmblyApp | Recipe 5 flow: script proposal, approval with a one-time token, run through the broker, answer with script and output, up to two corrected scripts | T7.1 | done (`189435d`) | Linux 736/736; code read (propose never runs, approve is the only token path, ≤ 5 sample rows, download confined to the run's /out); Mac end-to-end matched an independent computation | T7.3 battery |
 | T6.1 | SwarmblyApp | Author search core: ORCID, OpenAlex, PubMed through the broker, the exact name approved per run | T1.1 | done (`a0f9baa`) | Linux 760/760 after integration; AUTHOR_QUERY kind, personal name marked in the receipt, off by default | T6.2 wiring |
 | T2.2 | SwarmblyApp | Embeddings role through `roles.choose`; passages to a third party only with both authorisations | T2.1 | done (`3ce4628`) | Linux 760/760; all embedding call sites routed and egress-checked; index rebuilt on model change | — |
-| T3.3 | SwarmblyApp | Fix: recipe 4 wave of 12 items answered with the first item's answer | T3.2 | running | — | Review |
-| T7.1b | SwarmblyApp | Sandbox test_05 measures run time after the worker is ready; shared compile cache in tests | T7.1 | running | — | Review |
+| T3.3 | SwarmblyApp | Fix: recipe 4 wave of 12 items answered with the first item's answer | T3.2 | done (`1114620`) | Cause: one 12-line prompt makes qwen2.5:7b repeat item 1; positions were mapped correctly (fake model). A wave whose distinct items all get one value is retried item by item; parser fixed for echoed labels. Linux 764/764. Partial repetition is not detected | T3.3b battery re-run |
+| T7.1b | SwarmblyApp | Sandbox test_05 measures run time after the worker is ready; shared compile cache in tests | T7.1 | done (`56144eb`) | Bound still catches a missing hard kill; a new test shows the shared cache holds only compiled code | — |
+| T3.3b | umbrella (bench) | Re-run the recipe 4 battery on the fixed App | T3.3 | queued | — | — |
+| T9.1a | SwarmblyApp | Injected-instruction suite across every tool surface, with a model that obeys any instruction (exit criterion) | T5.1, T6.1, T7.2 | running | — | — |
 | T7.3 | umbrella (bench) | Open battery for recipe 5 with expected results computed beforehand; isolation tests listed in the exit criteria | T7.2 | running | — | — |
 | T8.2 | SwarmblyApp | Agent adapter: the runtime drives MCP tools in a conversation, each call approved by the user (D-011) | T8.1 pushed, T5.1 | todo | — | Needs `swarmbly-agent` reachable as a pinned dependency (edge pushed) |
 | T5.2 | SwarmblyApp | MCP settings UI and API routes: add a server, see the exact command, approve tools, suspension notice | T5.1 | running | — | Serialised with T7.2 (same UI files) |
-| T4.2 | SwarmblyApp | Skills in the UI: offer by description, activate, body quoted in the prompt | T4.1 | todo | — | After T5.2 |
+| T4.2 | SwarmblyApp | Skills in the UI: offer by description, activate, body quoted in the prompt | T4.1 | running | — | After T5.2 |
 | T6.2 | SwarmblyApp | Author search in the UI with the consent box | T6.1 | todo | — | After T4.2 |
 | T9.1 | all | Open battery 3.4, injected-instruction test ("a page cannot widen permissions"), CI on Linux and Windows | all | todo | — | — |
 | T9.2 | maintainer | New sealed bank (confirms zero unauthorised sends, R-003) | T9.1 | todo | — | Written by the maintainer |
