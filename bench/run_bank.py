@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.3.1"
+HARNESS_VERSION = "1.3.2"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -292,40 +292,48 @@ def _list_items(value: str) -> list[str]:
 
 
 def _checks_value(block: str, name: str = "Comprobaciones") -> list[str]:
-    """The bullet list of ``Comprobaciones:`` (continuation lines included)."""
+    """The bullet list of ``Comprobaciones:`` (continuation lines included).
+
+    Bullets may be indented or start at the margin (``- …``). A list written on
+    the field's own line is split on « | » and on «; ».
+    """
     lines = block.splitlines()
     out: list[str] = []
     taking = False
     current = ""
+    inline = ""
     for line in lines:
         m = _FIELD.match(line)
-        if m and not line.startswith((" ", "\t")):
+        if m and not line.startswith((" ", "\t")) and not line.lstrip().startswith("-"):
             if taking:
                 break
             if m.group(1).strip() == name:
                 taking = True
-                first = m.group(2).strip()
-                if first:
-                    current = first
+                inline = m.group(2).strip()
             continue
         if not taking:
             continue
         if not line.strip():
             continue
-        if line.startswith((" ", "\t")):
-            stripped = line.strip()
-            if stripped.startswith("-"):
-                if current:
-                    out.append(current)
-                current = stripped[1:].strip()
-            elif current:
+        stripped = line.strip()
+        if stripped.startswith("-"):
+            if current:
+                out.append(current)
+            current = stripped[1:].strip()
+        elif line.startswith((" ", "\t")):
+            if current:
                 current += " " + stripped
+            elif inline:
+                inline += " " + stripped
             else:
                 current = stripped
         else:
             break
     if current:
         out.append(current)
+    if inline:
+        parts = [x.strip(" -") for x in re.split(r"\s+\|\s+|;\s+", inline)]
+        out = [x for x in parts if x] + out
     return out
 
 
@@ -524,14 +532,72 @@ def apply_bank_codes(bank: Bank, cases: list[Case]) -> None:
                      if not p.name.endswith(".cambio.json")) if mcp_dir.is_dir() else []
     skill_codes = _named_legend(bank, skills)
     server_codes = _named_legend(bank, servers)
+    file_codes = bank_legend(bank)
     for case in cases:
         if case.skill and case.skill not in skills and case.skill in skill_codes:
             case.skill = skill_codes[case.skill]
         case.servers = [server_codes.get(s, s) if s not in servers else s for s in case.servers]
         if case.server_change:
-            first, _, rest = case.server_change.strip().partition(" ")
-            if first not in servers and first in server_codes:
-                case.server_change = f"{server_codes[first]} {rest}".strip()
+            case.server_change = normalize_server_change(
+                case.server_change, servers, server_codes, case.servers)
+        # «Archivos» and «Columna» go to the App and to the CSV reader by file
+        # name, so a legend code is replaced by the name of its file.
+        case.code_files = [file_codes[f].name if _CODE.fullmatch(f) and f in file_codes else f
+                           for f in case.code_files]
+        if case.list_column:
+            case.list_column = normalize_column(case.list_column)
+            file_part, sep, column = case.list_column.partition("#")
+            if _CODE.fullmatch(file_part) and file_part in file_codes:
+                case.list_column = file_codes[file_part].name + sep + column
+
+
+_QUOTES = "«»\"`'"
+
+
+def normalize_column(raw: str) -> str:
+    """«Columna» as ``archivo#columna``. Also accepted: ``archivo, columna X``,
+    ``archivo: X``, ``archivo → X``, ``archivo (columna X)`` and
+    ``columna X de archivo``; quotes around the column are dropped."""
+    text = (raw or "").strip()
+    q = "[«\"`']?"
+    qe = "[»\"`']?"
+    if "#" in text:
+        file_part, _, column = text.partition("#")
+        column = column.strip().strip(_QUOTES)
+        return f"{file_part.strip()}#{column}"
+    patterns = (
+        rf"^columna\s+{q}(?P<col>.+?){qe}\s+(?:de|del|en)\s+(?:el\s+)?(?:archivo\s+)?(?P<file>\S+?)\.?$",
+        rf"^(?P<file>\S+?)\s*\(\s*(?:columna\s+)?{q}(?P<col>[^)]+?){qe}\s*\)\.?$",
+        rf"^(?P<file>\S+?)\s*(?:,|;|:|→|->|–|—)\s*(?:la\s+)?(?:columna\s+)?{q}(?P<col>.+?){qe}\.?$",
+        rf"^(?P<file>\S+?)\s+columna\s+{q}(?P<col>.+?){qe}\.?$",
+    )
+    for pattern in patterns:
+        m = re.match(pattern, text, re.I)
+        if m:
+            return f"{m.group('file').strip()}#{m.group('col').strip()}"
+    return text
+
+
+def normalize_server_change(raw: str, servers: list[str], codes: dict[str, str],
+                            case_servers: list[str]) -> str:
+    """«Cambio de servidor» as ``<servidor> en el turno N``. The server may be a
+    name or a legend code anywhere in the text, or implied when the card uses
+    one server; the turn is the number after «turno»."""
+    text = (raw or "").strip()
+    turn = re.search(r"turno\s*(?:n\.?\s*º?\s*)?([2-5])\b", text, re.I)
+    if not turn:
+        return text
+    name = ""
+    for token in re.findall(r"[\w.-]+", text):
+        if token in servers:
+            name = token
+            break
+        if token in codes:
+            name = codes[token]
+            break
+    if not name and len(case_servers) == 1:
+        name = case_servers[0]
+    return f"{name} en el turno {turn.group(1)}" if name else text
 
 
 def _v4_refs(case: Case) -> list[str]:
@@ -856,10 +922,13 @@ def validate_case(bank: Bank, case: Case) -> tuple[list[str], dict[str, Any]]:
         if not case.list_items and not case.list_column:
             problems.append("receta lista sin «Lista» ni «Columna»")
         if case.list_column:
-            file_part, _, column = case.list_column.partition("#")
+            file_part, sep, column = case.list_column.partition("#")
             path = _resolve_v4_ref(bank, file_part)
-            if path is None:
-                problems.append("«Columna» apunta a un archivo que no existe")
+            if not sep:
+                problems.append("«Columna»: formato no reconocido (archivo.csv#columna)")
+            elif path is None:
+                problems.append("«Columna» apunta a un archivo que no existe"
+                                + (" (código sin leyenda)" if _CODE.fullmatch(file_part) else ""))
             elif not column:
                 problems.append("«Columna» no dice la columna (archivo.csv#columna)")
             elif path.suffix.lower() == ".csv":
@@ -883,7 +952,9 @@ def validate_case(bank: Bank, case: Case) -> tuple[list[str], dict[str, Any]]:
     if case.server_change:
         match = re.match(r"\s*([\w.-]+)\s+en el turno\s+([2-5])", case.server_change, re.I)
         if not match:
-            problems.append("«Cambio de servidor» debe decir «<servidor> en el turno N»")
+            problems.append("«Cambio de servidor» debe decir «<servidor> en el turno N»"
+                            + (" (no dice el turno 2–5)" if not re.search(r"turno\s*\D{0,6}[2-5]", case.server_change, re.I)
+                               else " (no nombra un servidor de la ficha)"))
         elif match.group(1) not in case.servers:
             problems.append("«Cambio de servidor» nombra un servidor que la ficha no usa")
         elif bank.materials and not (bank.materials / "mcp" / f"{match.group(1)}.cambio.json").is_file():

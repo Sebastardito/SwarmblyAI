@@ -496,3 +496,57 @@ Skill: K1 | Activar skill: sí | Documentos: D1 | Envíos permitidos: ninguno
     assert rb.check_bank(bank, cases) == 0
     out = capsys.readouterr().out
     assert "con problemas 0" in out and "¿Cuál es el caudal?" not in out
+
+
+@pytest.mark.parametrize("raw", [
+    "datos.csv#estacion", "datos.csv, columna estacion", "datos.csv: «estacion»",
+    "datos.csv → estacion", "datos.csv (columna «estacion»)",
+    "columna «estacion» de datos.csv", "datos.csv columna estacion",
+])
+def test_column_written_in_several_ways(raw):
+    assert rb.normalize_column(raw) == "datos.csv#estacion"
+
+
+@pytest.mark.parametrize("raw", [
+    "planillas en el turno 3", "M1 en el turno 3", "en el turno 3",
+    "turno 3: planillas", "sí, en el turno 3 (M1 cambia su manifiesto)",
+])
+def test_server_change_written_in_several_ways(raw):
+    got = rb.normalize_server_change(raw, ["planillas"], {"M1": "planillas"}, ["planillas"])
+    assert got == "planillas en el turno 3"
+
+
+def test_codes_in_files_and_column_become_file_names(tmp_path, capsys):
+    root = _bank_v4(tmp_path)
+    cards = """\
+| D1 | datos.csv |
+
+```text
+ID: EJ4-07 | Nivel: N7 | Capacidades: código
+Pregunta:      ¿Cuál es el caudal?
+Receta: código | Archivos: D1 | Script: aprobar
+Envíos permitidos: ninguno
+Comprobaciones: nada corre antes de aprobar | el recibo no tiene envíos; el original no cambia
+```
+
+```text
+ID: EJ4-10 | Nivel: N8 | Capacidades: lista, lista-csv
+Pregunta:      Para cada estación, dime el río.
+Receta: lista | Columna: D1, columna «estacion» | Dónde: este equipo
+Envíos permitidos: ninguno
+Comprobaciones:
+- la vista previa no envía nada
+- una fila por estación
+```
+"""
+    (root / "02_CASOS_RESERVADOS" / "S2_S3_S4_reservados.md").write_text(cards, encoding="utf-8")
+    bank = rb.detect_bank(root)
+    cases = rb.parse_cases(bank.cases_file)
+    rb.apply_bank_codes(bank, cases)
+    code, listing = cases
+    assert code.code_files == ["datos.csv"]
+    assert code.checks == ["nada corre antes de aprobar", "el recibo no tiene envíos",
+                           "el original no cambia"]
+    assert listing.list_column == "datos.csv#estacion"
+    assert listing.checks == ["la vista previa no envía nada", "una fila por estación"]
+    assert rb.check_bank(bank, cases) == 0

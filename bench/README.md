@@ -38,7 +38,10 @@ exactly as before.
 Several fields may share one line, separated by ` | `
 (`ID: S2-01 | Nivel: N2 | Capacidades: …`); a segment starts a new field only
 when it begins with a known field name. Skills and MCP servers may be named by a
-legend code (`K1 = informe-tecnico`, `M1 = planillas`), like documents (1.3.1).
+legend code (`K1 = informe-tecnico`, `M1 = planillas`), like documents (1.3.1). A code in `Archivos` or `Columna` is replaced by its
+file name; `Columna` may also read `archivo, columna X` or `columna X de
+archivo`; `Cambio de servidor` only needs the turn and a server of the card;
+`Comprobaciones` written on one line are split on ` | ` and `; ` (1.3.2).
 
 | Card field | What the harness does |
 |---|---|
@@ -105,7 +108,11 @@ Varios campos pueden ir en una misma línea, separados por ` | `
 (`ID: S2-01 | Nivel: N2 | Capacidades: …`); un segmento abre un campo nuevo solo
 si empieza con el nombre de un campo conocido. Las skills y los servidores MCP
 pueden nombrarse con un código de la leyenda (`K1 = informe-tecnico`,
-`M1 = planillas`), igual que los documentos (1.3.1).
+`M1 = planillas`), igual que los documentos (1.3.1). Un código en `Archivos` o `Columna` se
+reemplaza por el nombre de su archivo; `Columna` acepta también `archivo,
+columna X` o `columna X de archivo`; a `Cambio de servidor` le basta el turno y
+un servidor de la ficha; las `Comprobaciones` en una sola línea se separan por
+` | ` y `; ` (1.3.2).
 
 | Campo de la ficha | Qué hace el arnés |
 |---|---|
