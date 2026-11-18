@@ -2,9 +2,9 @@
 
 Earlier versions are described in their release notes (v0.1.0, v0.1.1) and in `docs/`.
 
-## 0.2.1 — Glossaries as people write them (unreleased)
+## 0.2.1 — Glossaries as people write them (2026-11-17)
 
-To be released with Swarmbly App 0.6.0 and Swarmbly AI 3.3.0.
+Released with Swarmbly App 0.6.0 and Swarmbly AI 3.3.0. The research results of 0.1.x and the C1 behaviour of 0.2.0 are unchanged, except for the glossary formats below.
 
 - **Glossary formats.** Besides one pair per line (`term = equivalents`, also `→`, `->`), a glossary may be a Markdown table (the first column is the term, the second its equivalent; the header row is skipped), put several pairs on one line separated by `;`, write a term as code or in bold (`` `P1` ``, `**P1**`), and continue an entry's equivalents on an indented line. In the sealed banks v3 of Swarmbly AI 3.3, one glossary was a table and the other had three pairs on one line and code-formatted terms: C1 read none of their entries, and the questions that used one of their terms failed. `passages.glossary_lines` reads every format for `glossary_entries`, `glossary_avoid` and `glossary_meta`.
 

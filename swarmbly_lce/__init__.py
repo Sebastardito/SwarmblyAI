@@ -21,7 +21,7 @@ real backend can adjudicate the hypotheses of the whitepaper.
 
 from __future__ import annotations
 
-__version__ = "0.2.0.dev0"
+__version__ = "0.2.1"
 SPEC_VERSION = "0.1"
 CAPSULE_VERSION = "0.2"
 
