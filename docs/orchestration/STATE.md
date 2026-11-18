@@ -18,7 +18,7 @@ Last releases: Swarmbly AI 3.3.0 (10.5281/zenodo.24330451), SwarmblyApp 0.6.0 (1
 
 **Integrated:** App `main` at `1c3240f` (pushed up to `74388e3`; since then the CI fix and the agent-path injection suite over `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suite, agent adapter, author search in the chat, spreadsheets in recipe 5); Linux suite 842 passed (non-sandbox tests). Umbrella `edge`: agent runtime, recipe 4 and recipe 5 batteries, this ledger.
 
-**In progress:** T7.5 (sandbox CI on three systems), T9.4 (test seam for the bank harness, D-013); T9.3 (harness 1.3) resumes after T9.4. The maintainer has sealed banks v4.1 and v4.2 (seals verified by the harness: 38 and 31 files).
+**In progress:** T9.3 (bank harness 1.3). Banks v4.1 and v4.2 are sealed (38 and 31 files) and wait for the harness.
 
 **Blockers:** none.
 
