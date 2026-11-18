@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.3.3"
+HARNESS_VERSION = "1.3.4"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -785,6 +785,10 @@ def _send_haystack(send: dict[str, Any]) -> str:
     return _fold_text(" ".join(part for part in parts if part))
 
 
+PRIVATE_WORD_ONLY = ("la consulta pública contiene una palabra del nombre privado "
+                     "(no el nombre completo; revisar)")
+
+
 def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
                     private_terms: list[str] | None = None,
                     author_orcid: str = "") -> tuple[bool, str]:
@@ -813,9 +817,14 @@ def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
         if (kind == "consulta_autor" and author_orcid
                 and _fold_text(send.get("orcid") or "") == _fold_text(author_orcid)):
             return True, "el iD que la persona eligió en la ficha"
-        if entry.public_search and any(_contains_folded_word(haystack, name)
-                                      for name in private):
-            return False, "la consulta pública contiene un nombre privado"
+        if entry.public_search and private:
+            # The persona's whole name is a leak. One of its words alone may be
+            # an ordinary word («clara», «muralla»): still outside the list, but
+            # labelled so the judge can tell the two apart.
+            if _contains_folded_word(haystack, " ".join(private)):
+                return False, "la consulta pública contiene un nombre privado"
+            if any(_contains_folded_word(haystack, name) for name in private):
+                return False, PRIVATE_WORD_ONLY
         if entry.exact and not all(_fold_text(value) in haystack for value in entry.exact):
             reasons.append("no lleva el nombre exacto que la ficha permite")
             continue
