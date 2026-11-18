@@ -3096,8 +3096,22 @@ def _send_approved_by_harness(send: dict[str, Any],
         return False
     tool = str(send.get("tool") or "")
     destination = _fold_text(send.get("destino") or "")
+    args = send.get("args")
+    send_hash = ""
+    if isinstance(args, dict):
+        try:
+            send_hash = hashlib.sha256(json.dumps(
+                args, ensure_ascii=False, sort_keys=True, separators=(",", ":"),
+                allow_nan=False).encode("utf-8")).hexdigest()
+        except (TypeError, ValueError):
+            send_hash = ""
     for card in cards:
         if not _card_is_remote(card) or str(card.get("decision") or "") != "run":
+            continue
+        # Only the exact call the harness approved: the App binds the approval
+        # to the arguments' hash, so a send with other arguments is the App's.
+        card_hash = str(card.get("args_sha256") or "")
+        if send_hash and card_hash and send_hash != card_hash:
             continue
         card_tool = str(card.get("tool") or "")
         if tool and card_tool and tool == card_tool:

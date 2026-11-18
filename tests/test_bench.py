@@ -794,3 +794,18 @@ def test_settle_agent_vetoes_a_remote_send_outside_the_card():
     app, cards, queue = _FakeDecisionApp(), [], rb.DecisionQueue("ejecutar")
     rb.settle_agent(app, "c", result, queue, cards, 1.0, case=case, persona=[])
     assert app.decisions == ["run"] and cards[0]["decision"] == "run"
+
+
+def test_a_send_counts_as_harness_approved_only_with_the_approved_arguments():
+    import hashlib as _h
+    args = {"estacion": "Quilén Bajo", "mes": "2025-03"}
+    digest = _h.sha256(json.dumps(args, ensure_ascii=False, sort_keys=True,
+                                  separators=(",", ":")).encode("utf-8")).hexdigest()
+    card = {"tool": "mcp:meteo/serie", "local": False, "third_party": True,
+            "decision": "run", "args_sha256": digest, "host": "api.meteo.test"}
+    same = {"tipo": "herramienta_remota", "tool": "mcp:meteo/serie",
+            "destino": "api.meteo.test", "args": dict(args)}
+    other = {"tipo": "herramienta_remota", "tool": "mcp:meteo/serie",
+             "destino": "api.meteo.test", "args": {"estacion": "Rincón", "mes": "2025-03"}}
+    assert rb._send_approved_by_harness(same, [card])
+    assert not rb._send_approved_by_harness(other, [card])
