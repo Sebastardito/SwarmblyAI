@@ -16,10 +16,10 @@ Last releases: Swarmbly AI 3.3.0 (10.5281/zenodo.24330451), SwarmblyApp 0.6.0 (1
 
 **Open from 3.3:** zero unauthorised sends to be confirmed on a new sealed bank; the receipt test with people (postponed).
 
-**Integrated (local, not pushed):** App `main` at `bd76972` (seven commits over `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4); umbrella `edge` with the agent runtime (`d274d56`). Integrated App suite on Linux: 729 passed (non-sandbox tests).
+**Integrated (local, not pushed):** App `main` at `3ce4628` (ten commits over `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role); Linux suite 760 passed (non-sandbox tests). Umbrella `edge`: agent runtime, recipe 4 battery, this ledger.
 
-**In progress:** T3.2 (recipe 4 battery), T7.2 (recipe 5 flow), T6.1 (author search core), T2.2 (embeddings role). Decision D-011 taken (approval per tool call).
+**In progress:** T3.3 (recipe 4 wave defect), T7.1b (sandbox test timing), T7.3 (recipe 5 battery), T5.2 (MCP settings UI).
 
-**Blockers:** none. T8.2 needs `edge` pushed so the App can pin `swarmbly-agent`.
+**Blockers:** T8.2 needs `edge` pushed so the App can pin `swarmbly-agent` by commit. The umbrella `.venv` lacks the App's `[tools]` extra (`mcp==2.3.0`), so the usual App test command stops at `test_tools_mcp.py` on the Mac.
 
-**Next action:** review T3.2, T7.2, T6.1 and T2.2 as they finish; explain `test_05` on Linux; then T5.2, T8.2, T4.2, T6.2 in that order (they share UI files).
+**Next action:** review the four running tasks; then T8.2 (agent adapter, D-011), T4.2 (skills in the UI), T6.2 (author search in the UI), T9.1 (3.4 battery, injected-instruction test, CI).
