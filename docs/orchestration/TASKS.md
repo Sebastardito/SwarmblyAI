@@ -38,9 +38,9 @@ Status: `todo` · `running` · `review` · `done` · `blocked` · `dropped`. Ver
 | T3.3b | umbrella (bench) | Re-run the recipe 4 battery on the fixed App | T3.3 | queued | — | — |
 | T9.1a | SwarmblyApp | Injected-instruction suite across every tool surface, with a model that obeys any instruction (exit criterion) | T5.1, T6.1, T7.2 | running | — | — |
 | T7.3 | umbrella (bench) | Open battery for recipe 5 with expected results computed beforehand; isolation tests listed in the exit criteria | T7.2 | running | — | — |
-| T8.2 | SwarmblyApp | Agent adapter: the runtime drives MCP tools in a conversation, each call approved by the user (D-011) | T8.1 pushed, T5.1 | todo | — | Needs `swarmbly-agent` reachable as a pinned dependency (edge pushed) |
-| T5.2 | SwarmblyApp | MCP settings UI and API routes: add a server, see the exact command, approve tools, suspension notice | T5.1 | running | — | Serialised with T7.2 (same UI files) |
-| T4.2 | SwarmblyApp | Skills in the UI: offer by description, activate, body quoted in the prompt | T4.1 | running | — | After T5.2 |
-| T6.2 | SwarmblyApp | Author search in the UI with the consent box | T6.1 | todo | — | After T4.2 |
+| T8.2 | SwarmblyApp | Agent adapter: the runtime drives MCP tools in a conversation, each call approved by the user (D-011) | T8.1 pushed, T5.1 | running | — | Pins `swarmbly-agent` at `a19df68` (needs edge pushed to install from GitHub) |
+| T5.2 | SwarmblyApp | MCP settings UI and API routes: add a server, see the exact command, approve tools, suspension notice | T5.1 | done (`2d070e5`) | Linux 782/782 with T4.2; routes behind the local API guard; env values never accepted; descriptions shown as text | Project selector and edit form later |
+| T4.2 | SwarmblyApp | Skills in the UI: offer by description, activate, body quoted in the prompt | T4.1 | done (`02b513c`) | Linux 782/782; import never executes (marker test); offer never activates; body quoted with a label that it cannot change permissions | — |
+| T6.2 | SwarmblyApp | Author search in the UI with the consent box | T6.1 | running | — | After T4.2 |
 | T9.1 | all | Open battery 3.4, injected-instruction test ("a page cannot widen permissions"), CI on Linux and Windows | all | todo | — | — |
 | T9.2 | maintainer | New sealed bank (confirms zero unauthorised sends, R-003) | T9.1 | todo | — | Written by the maintainer |
