@@ -16,10 +16,10 @@ Last releases: Swarmbly AI 3.3.0 (10.5281/zenodo.24330451), SwarmblyApp 0.6.0 (1
 
 **Open from 3.3:** zero unauthorised sends to be confirmed on a new sealed bank; the receipt test with people (postponed).
 
-**Integrated (local, not pushed):** App `main` at `74388e3` (nineteen commits over `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suite, agent adapter, author search in the chat, spreadsheets in recipe 5); Linux suite 842 passed (non-sandbox tests). Umbrella `edge`: agent runtime, recipe 4 and recipe 5 batteries, this ledger.
+**Integrated:** App `main` at `1c3240f` (pushed up to `74388e3`; since then the CI fix and the agent-path injection suite over `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suite, agent adapter, author search in the chat, spreadsheets in recipe 5); Linux suite 842 passed (non-sandbox tests). Umbrella `edge`: agent runtime, recipe 4 and recipe 5 batteries, this ledger.
 
-**In progress:** T9.1b (injection suite on the agent path).
+**In progress:** T9.3 (bank harness 1.3). The maintainer is writing the sealed bank v4 from the guide `ejemplobancov4.md` (project doc, not in the repositories).
 
-**Blockers:** none for development. Installing the App's `agent` extra from GitHub needs `edge` pushed. The umbrella `.venv` lacks the App's `[tools]` extra (`mcp==2.3.0`), so the usual App test command stops at `test_tools_mcp.py` on the Mac.
+**Blockers:** none.
 
-**Next action:** review T9.1b; remove the xlsx workaround in bench/run_dev.py; then the release work for 3.4 (versions, notes, CI on Linux and Windows after the push) and the maintainer's new sealed bank (T9.2).
+**Next action:** review T9.3; check the CI run after the next push (first Windows sandbox run); release work for 3.4 (versions, notes) once the sealed bank v4 has run.
