@@ -66,6 +66,33 @@ file hashes, marker, numeric comparison, sends, checks, actions) and
 `casos/<ID>_r<rep>_resumen.json` (content-free counts and hashes only). The
 four tables of step 10 are in `resumen.json` (`tablas`) and `resumen.md`.
 
+Harness 1.3.3 corrects five defects without re-running a bank: public-search
+entries are recognised with more labels (`búsqueda pública`, `registro
+público`, `búsqueda web`, `internet`, `fuente pública`, `receta investigar`…);
+the harness never approves a remote tool card whose call would fall outside
+`Envíos permitidos`; the persona name is matched as a folded whole word; author
+cards carry a real state (`done`, `cancelled`, `stopped`, `error`); and the run
+record names the commit of the App actually imported (with its dirty flag) and
+the installed versions, keeping the umbrella `components.lock` line labelled as
+the lock.
+
+A finished v4 run can be re-scored without starting the App or Ollama:
+
+```bash
+python3 bench/run_bank.py --bank /path/to/bank --rescore /path/to/run \
+    --persona "<fictitious user's name>"
+```
+
+It recomputes every observation's unauthorised sends from `juez/*/envios.json`
+with the current comparator and the card freshly parsed from the bank, rebuilds
+the four tables, and writes `resumen_rescore_1.3.3.json`,
+`envios_no_autorizados_rescore_1.3.3.json` and `registro_rescore_1.3.3.md` next
+to the originals, which are never overwritten. A remote send that the harness
+itself approved is reported as `aprobado_por_el_arnes` in its own column/row
+and is not counted as an App unauthorised send. The seal is checked before and
+after; stdout only carries the tables, the totals before → after, one fixed-label
+line per changed observation and a content-free diagnostic per card with sends.
+
 ### Use
 
 ```bash
@@ -136,6 +163,34 @@ La carpeta de ejecución tiene `juez/<ID>_r<rep>/` (recibo, tarjetas, `meta.*`,
 hashes, marcador, comparación numérica, envíos, comprobaciones, acciones) y
 `casos/<ID>_r<rep>_resumen.json` (solo conteos y hashes, sin contenido). Las
 cuatro tablas del paso 10 están en `resumen.json` (`tablas`) y `resumen.md`.
+
+El arnés 1.3.3 corrige cinco defectos sin repetir un banco: reconoce la entrada
+de búsqueda pública con más rótulos (`búsqueda pública`, `registro público`,
+`búsqueda web`, `internet`, `fuente pública`, `receta investigar`…); nunca
+aprueba una tarjeta de herramienta remota cuya llamada quedaría fuera de
+`Envíos permitidos`; compara el nombre de la persona como palabra completa
+plegada; las fichas de autor llevan un estado real (`done`, `cancelled`,
+`stopped`, `error`); y el registro nombra el commit de la App realmente
+importada (con su marca de cambios sin confirmar) y las versiones instaladas,
+manteniendo la línea del `components.lock` del paraguas rotulada como el lock.
+
+Una ejecución v4 terminada se puede repuntuar sin arrancar la App ni Ollama:
+
+```bash
+python3 bench/run_bank.py --bank /ruta/al/banco --rescore /ruta/a/la/ejecución \
+    --persona "<nombre de la persona ficticia>"
+```
+
+Recalcula los envíos no autorizados de cada observación desde
+`juez/*/envios.json` con el comparador actual y la ficha recién leída del banco,
+rehace las cuatro tablas y escribe `resumen_rescore_1.3.3.json`,
+`envios_no_autorizados_rescore_1.3.3.json` y `registro_rescore_1.3.3.md` junto a
+los originales, que nunca se sobrescriben. Un envío remoto que aprobó el propio
+arnés se informa como `aprobado_por_el_arnes` en su columna y fila propias y no
+cuenta como envío no autorizado de la App. El sello se comprueba antes y
+después; por stdout solo salen las tablas, los totales antes → después, una
+línea de etiquetas fijas por observación cambiada y un diagnóstico sin contenido
+por ficha con envíos.
 
 ### Uso
 
