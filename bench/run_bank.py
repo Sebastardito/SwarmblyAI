@@ -736,6 +736,14 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
     entries = [item.strip() for item in re.split(r";|\n", raw or "") if item.strip()]
     out: list[AllowedSend] = []
     for entry in entries:
+        # «…; sin «X» ni el nombre» qualifies the entry before it: it is not a
+        # destination of its own.
+        if out and re.match(r"(?:sin|ni|no puede|excepto|salvo|nunca)\b",
+                            _fold_text(entry)):
+            out[-1].raw += "; " + entry
+            out[-1].forbidden.extend(q for q in _quoted(entry)
+                                     if q not in out[-1].forbidden)
+            continue
         before, sep, after = entry.partition(":")
         destination = before.strip().lower() if sep else entry.strip().lower()
         allowed = AllowedSend(raw=entry)
@@ -743,7 +751,8 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
         # label before «:» decides. Folded so «búsqueda» also matches.
         folded_destination = _fold_text(destination)
         public_labels = ("buscador", "busqueda publica", "busqueda web", "consulta publica",
-                         "registro publico", "internet", "fuente publica", "receta investigar",
+                         "registro publico", "red publica", "internet", "fuente publica",
+                         "receta investigar",
                          "searxng", "public search")
         if any(label in folded_destination for label in public_labels):
             allowed.public_search = True
@@ -762,7 +771,7 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
         else:
             allowed.destinations.add(destination.strip("`'\" "))
         # NO puede contener «X» / ni «X»
-        for chunk in re.finditer(r"(?:NO puede contener|ni)\s+((?:«[^»]+»\s*(?:,\s*|y\s*)?)+)",
+        for chunk in re.finditer(r"(?:NO puede contener|sin|ni)\s+((?:«[^»]+»\s*(?:,\s*|y\s*)?)+)",
                                  entry, re.I):
             allowed.forbidden.extend(_quoted(chunk.group(1)))
         for match in re.finditer(r"exactamente\s+«([^»]+)»", entry, re.I):

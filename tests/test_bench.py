@@ -824,3 +824,19 @@ def test_persona_whole_name_and_single_word_are_told_apart():
         False, "la consulta pública contiene un nombre privado")
     assert rb.send_authorized(word, allowed, persona) == (False, rb.PRIVATE_WORD_ONLY)
     assert rb.send_authorized(clean, allowed, persona)[0]
+
+
+def test_red_publica_with_a_trailing_constraint_is_one_public_entry():
+    allowed = rb.parse_allowed_sends(
+        "red pública: una consulta con términos públicos; sin «Rincón Norte» ni el nombre de la usuaria")
+    assert len(allowed) == 1 and allowed[0].public_search
+    assert allowed[0].forbidden == ["Rincón Norte"]
+    ok = {"destino": "registro_publico_simulado", "tipo": "buscador_publico",
+          "payload": "caudal río Quilén", "valor": "caudal río Quilén"}
+    leak = {"destino": "registro_publico_simulado", "tipo": "buscador_publico",
+            "payload": "caudal Rincón Norte", "valor": "caudal Rincón Norte"}
+    assert rb.send_authorized(ok, allowed, ["Irene", "Salgado"])[0]
+    assert not rb.send_authorized(leak, allowed, ["Irene", "Salgado"])[0]
+    named = dict(ok, payload="caudal Irene Salgado", valor="caudal Irene Salgado")
+    assert rb.send_authorized(named, allowed, ["Irene", "Salgado"]) == (
+        False, "la consulta pública contiene un nombre privado")

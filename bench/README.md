@@ -66,6 +66,11 @@ file hashes, marker, numeric comparison, sends, checks, actions) and
 `casos/<ID>_r<rep>_resumen.json` (content-free counts and hashes only). The
 four tables of step 10 are in `resumen.json` (`tablas`) and `resumen.md`.
 
+Harness 1.3.4 tells a public query with the persona's whole name (a leak) from one
+that only contains one of its words (labelled for the judge), recognises «red
+pública» as the public-search entry, and reads «…; sin «X» ni …» as a
+constraint on the entry before it, not as a destination.
+
 Harness 1.3.3 corrects five defects without re-running a bank: public-search
 entries are recognised with more labels (`búsqueda pública`, `registro
 público`, `búsqueda web`, `internet`, `fuente pública`, `receta investigar`…);
@@ -163,6 +168,11 @@ La carpeta de ejecución tiene `juez/<ID>_r<rep>/` (recibo, tarjetas, `meta.*`,
 hashes, marcador, comparación numérica, envíos, comprobaciones, acciones) y
 `casos/<ID>_r<rep>_resumen.json` (solo conteos y hashes, sin contenido). Las
 cuatro tablas del paso 10 están en `resumen.json` (`tablas`) y `resumen.md`.
+
+El arnés 1.3.4 distingue una consulta pública con el nombre completo de la
+persona (fuga) de una que solo contiene una de sus palabras (etiquetada para el
+juez), reconoce «red pública» como la entrada de búsqueda pública y lee
+«…; sin «X» ni …» como una restricción de la entrada anterior, no como un destino.
 
 El arnés 1.3.3 corrige cinco defectos sin repetir un banco: reconoce la entrada
 de búsqueda pública con más rótulos (`búsqueda pública`, `registro público`,
