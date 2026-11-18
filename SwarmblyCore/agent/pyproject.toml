@@ -13,8 +13,8 @@ authors = [{ name = "Sebastián A. Espinoza-Ulloa" }]
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/Sebastardito/Swarmbly-AI"
-Documentation = "https://github.com/Sebastardito/Swarmbly-AI/tree/main/docs"
+Repository = "https://github.com/Sebastardito/SwarmblyAI"
+Documentation = "https://github.com/Sebastardito/SwarmblyAI/tree/main/docs"
 
 [tool.setuptools.packages.find]
 include = ["swarmbly_agent*"]
