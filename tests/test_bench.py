@@ -441,3 +441,58 @@ def test_decision_queue_never_approves_what_the_card_does_not_say():
     assert queue.next(card)[:2] == ("run", False)
     empty = rb.DecisionQueue("")
     assert empty.next({"tool": "mcp:x/y", "arguments": {}})[:2] == ("skip", False)
+
+
+def test_v4_fields_joined_by_pipes_and_coded_skills_and_servers(tmp_path, capsys):
+    """Cards may join several fields on one line with « | » and name skills or
+    MCP servers by a legend code (K1, M1)."""
+    root = _bank_v4(tmp_path)
+    cards = """\
+Leyenda: K1 = demo · M1 = planillas · D1 = datos.csv
+
+```text
+ID: EJ4-07 | Nivel: N7 | Capacidades: código, código-exacto
+Pregunta:      ¿Cuál es el caudal?
+Receta: código | Archivos: datos.csv | Script: aprobar
+Resultado exacto: 4,1 m³/s (03_REFERENCIA/EJ4-07.py) | Tolerancia: ±0,01
+Envíos permitidos: ninguno
+```
+
+```text
+ID: EJ4-14 | Nivel: N8 | Capacidades: lista, lista-privada
+Pregunta:      Para cada código, dime el nombre.
+Receta: lista | Dónde: este equipo (sin enjambre) | Documentos: informe.md
+Lista:
+<<<
+QA
+QM
+>>>
+Envíos permitidos: ninguno
+```
+
+```text
+ID: EJ4-19 | Nivel: N9 | Capacidades: mcp-local
+Pregunta:      Busca la ficha.
+Usar herramientas: sí | Servidores: M1 | Aprobadas en Ajustes: buscar_estacion
+Decisiones: ejecutar | rechazar
+Skill: K1 | Activar skill: sí | Documentos: D1 | Envíos permitidos: ninguno
+```
+"""
+    path = root / "02_CASOS_RESERVADOS" / "S2_S3_S4_reservados.md"
+    path.write_text(cards, encoding="utf-8")
+    bank = rb.detect_bank(root)
+    cases = rb.parse_cases(bank.cases_file)
+    rb.apply_bank_codes(bank, cases)
+    code, listing, tools = cases
+    assert code.case_id == "EJ4-07" and code.level == "N7"
+    assert code.capabilities == ["código", "código-exacto"]
+    assert code.code_files == ["datos.csv"] and code.code_script == "aprobar"
+    assert code.tolerance == "±0,01"
+    assert listing.list_where == "este equipo" and listing.list_items == ["QA", "QM"]
+    assert tools.servers == ["planillas"] and tools.approved_tools == ["buscar_estacion"]
+    assert tools.decisions == "ejecutar | rechazar"      # a pipe inside a value stays
+    assert tools.skill == "demo" and tools.activate_skill
+    assert tools.documents == ["D1"] and tools.allowed_sends == "ninguno"
+    assert rb.check_bank(bank, cases) == 0
+    out = capsys.readouterr().out
+    assert "con problemas 0" in out and "¿Cuál es el caudal?" not in out

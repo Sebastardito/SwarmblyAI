@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.3.0"
+HARNESS_VERSION = "1.3.1"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -197,6 +197,46 @@ _RECIPES = {"documentos": "documents", "documents": "documents", "tabla": "table
             "lista": "list", "list": "list", "código": "code", "codigo": "code", "code": "code"}
 
 
+_KNOWN_FIELDS = {
+    "ID", "Nivel", "Capacidades", "Pregunta", "Documentos", "Receta", "Consulta aprobada",
+    "Permiso público", "Turno 2", "Turno 3", "Turno 4", "Turno 5", "Lista", "Columna", "Dónde",
+    "Archivos", "Script", "Resultado exacto", "Tolerancia", "Archivo de salida",
+    "Usar herramientas", "Servidores", "Aprobadas en Ajustes", "Decisiones",
+    "Cambio de servidor", "Skill", "Activar skill", "Autor", "Servicios", "Decisión autor",
+    "Envíos permitidos", "Comprobaciones", "Datos clave", "Errores graves", "Rúbrica",
+    "Material necesario", "Notas",
+}
+_PIPE = re.compile(r"\s+\|\s+")
+
+
+def _expand_inline_fields(block: str) -> str:
+    """Put fields joined on one line by « | » on their own lines.
+
+    ``ID: S2-01 | Nivel: N2 | Capacidades: a, b`` becomes three field lines. A
+    segment only starts a new field when it begins with a known field name, so a
+    pipe inside a value (``aprobar | cancelar``) stays part of that value.
+    """
+    out: list[str] = []
+    for line in block.splitlines():
+        m = _FIELD.match(line)
+        if not (m and not line.startswith((" ", "\t")) and " | " in line):
+            out.append(line)
+            continue
+        pieces = _PIPE.split(line)
+        current = pieces[0]
+        fields: list[str] = []
+        for piece in pieces[1:]:
+            pm = _FIELD.match(piece)
+            if pm and pm.group(1).strip() in _KNOWN_FIELDS:
+                fields.append(current)
+                current = piece
+            else:
+                current += " | " + piece
+        fields.append(current)
+        out.extend(fields)
+    return "\n".join(out)
+
+
 def _field_value(block: str, name: str) -> str:
     """A card field, with its indented continuation lines, joined by spaces."""
     lines = block.splitlines()
@@ -311,10 +351,20 @@ def _docs_refs(value: str) -> list[str]:
     return refs
 
 
+def _where_value(raw: str) -> str:
+    """«Dónde»: ``este equipo`` or ``enjambre``, also with prose after it."""
+    low = (raw or "").strip().lower()
+    for value in ("este equipo", "enjambre"):
+        if low == value or re.match(rf"{value}\b", low):
+            return value
+    return low
+
+
 def parse_cases(path: Path) -> list[Case]:
     text = path.read_text(encoding="utf-8")
     cases: list[Case] = []
     for block in re.findall(r"```text\n(.*?)```", text, re.S):
+        block = _expand_inline_fields(block)
         case_id = _field_value(block, "ID")
         question = _field_value(block, "Pregunta")
         if not case_id or not question:
@@ -335,7 +385,7 @@ def parse_cases(path: Path) -> list[Case]:
             capabilities=capabilities,
             list_items=_list_items(_block_value(block, "Lista")),
             list_column=column,
-            list_where=_field_value(block, "Dónde").strip().lower(),
+            list_where=_where_value(_field_value(block, "Dónde")),
             code_files=_split_names(_field_value(block, "Archivos")),
             code_script=_field_value(block, "Script").strip().lower(),
             exact_result=_field_value(block, "Resultado exacto"),
@@ -372,6 +422,7 @@ def is_public_fixture(name: str) -> bool:
 
 
 _CODE = re.compile(r"(?<![\w-])([A-Z]{1,2}\d{1,2})(?![\w]|-\d)")
+_NAMED_PAIR = re.compile(r"(?<![\w-])([A-Z]{1,2}\d{1,2})\s*(?:=|:|→|–|—)\s*[`«\"']?")
 
 
 def _bank_files(bank: Bank) -> tuple[list[Path], list[Path]]:
@@ -423,7 +474,64 @@ def bank_legend(bank: Bank) -> dict[str, Path]:
             hits = {p for p in files if p.name in line}
             if len(codes) == 1 and len(hits) == 1:
                 legend.setdefault(codes.pop(), hits.pop())
+                continue
+            # Several pairs on one line: "D1 = a.md · D2 = b.csv".
+            for m in _NAMED_PAIR.finditer(line):
+                after = line[m.end():]
+                for f in sorted(files, key=lambda q: len(q.name), reverse=True):
+                    if after.startswith(f.name):
+                        legend.setdefault(m.group(1), f)
+                        break
     return legend
+
+
+def _named_legend(bank: Bank, names: list[str]) -> dict[str, str]:
+    """Codes (K1, M2…) a bank may use for skills or MCP servers, from any legend
+    line that names exactly one code and exactly one of ``names``."""
+    if not names:
+        return {}
+    sources = [bank.cases_file, *sorted(bank.cases_file.parent.glob("LEYENDA*.md"))]
+    legend: dict[str, str] = {}
+    for src in sources:
+        if not src.is_file():
+            continue
+        for line in src.read_text(encoding="utf-8").splitlines():
+            codes = set(_CODE.findall(line))
+            hits = {n for n in names
+                    if re.search(rf"(?<![\w-]){re.escape(n)}(?![\w-])", line)}
+            if len(codes) == 1 and len(hits) == 1:
+                legend.setdefault(codes.pop(), hits.pop())
+                continue
+            # Several pairs on one line: "K1 = demo · M1 = planillas".
+            for m in _NAMED_PAIR.finditer(line):
+                after = line[m.end():]
+                for n in sorted(names, key=len, reverse=True):
+                    if re.match(rf"{re.escape(n)}(?![\w-])", after):
+                        legend.setdefault(m.group(1), n)
+                        break
+    return legend
+
+
+def apply_bank_codes(bank: Bank, cases: list[Case]) -> None:
+    """Replace skill and MCP server codes of the cards by their names (v4)."""
+    if bank.kind != "v4" or bank.materials is None:
+        return
+    skills_dir = bank.materials / "skills"
+    skills = sorted(p.name for p in skills_dir.iterdir()
+                    if p.is_dir()) if skills_dir.is_dir() else []
+    mcp_dir = bank.materials / "mcp"
+    servers = sorted(p.name[:-5] for p in mcp_dir.glob("*.json")
+                     if not p.name.endswith(".cambio.json")) if mcp_dir.is_dir() else []
+    skill_codes = _named_legend(bank, skills)
+    server_codes = _named_legend(bank, servers)
+    for case in cases:
+        if case.skill and case.skill not in skills and case.skill in skill_codes:
+            case.skill = skill_codes[case.skill]
+        case.servers = [server_codes.get(s, s) if s not in servers else s for s in case.servers]
+        if case.server_change:
+            first, _, rest = case.server_change.strip().partition(" ")
+            if first not in servers and first in server_codes:
+                case.server_change = f"{server_codes[first]} {rest}".strip()
 
 
 def _v4_refs(case: Case) -> list[str]:
@@ -2830,6 +2938,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     cases = parse_cases(bank.cases_file)
+    apply_bank_codes(bank, cases)
     if args.only:
         wanted = {c.strip() for c in args.only.split(",")}
         cases = [c for c in cases if c.case_id in wanted]

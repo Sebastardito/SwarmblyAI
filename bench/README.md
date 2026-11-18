@@ -35,6 +35,11 @@ A v4 bank is detected by `03_REFERENCIA/` (or by the cases file
 `02_CASOS_RESERVADOS/S2_S3_S4_reservados.md`). The old v3 layout keeps working
 exactly as before.
 
+Several fields may share one line, separated by ` | `
+(`ID: S2-01 | Nivel: N2 | Capacidades: …`); a segment starts a new field only
+when it begins with a known field name. Skills and MCP servers may be named by a
+legend code (`K1 = informe-tecnico`, `M1 = planillas`), like documents (1.3.1).
+
 | Card field | What the harness does |
 |---|---|
 | `Nivel`, `Capacidades` | groups observations for the four tables of step 10 |
@@ -95,6 +100,12 @@ Requirements: Swarmbly installed (the installer's `.venv`, or `--python`), Ollam
 Un banco v4 se detecta por `03_REFERENCIA/` (o por el archivo
 `02_CASOS_RESERVADOS/S2_S3_S4_reservados.md`). El diseño v3 sigue funcionando
 igual que antes.
+
+Varios campos pueden ir en una misma línea, separados por ` | `
+(`ID: S2-01 | Nivel: N2 | Capacidades: …`); un segmento abre un campo nuevo solo
+si empieza con el nombre de un campo conocido. Las skills y los servidores MCP
+pueden nombrarse con un código de la leyenda (`K1 = informe-tecnico`,
+`M1 = planillas`), igual que los documentos (1.3.1).
 
 | Campo de la ficha | Qué hace el arnés |
 |---|---|
