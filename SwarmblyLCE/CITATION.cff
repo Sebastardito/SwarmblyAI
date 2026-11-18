@@ -2,10 +2,10 @@
 # Citation File Format (CFF) 1.2.0
 # https://citation-file-format.github.io/
 #
-# The whitepaper DOI is 10.5281/zenodo.23150478. The software DOI below is
-# the record of release v0.2.0, minted by the Zenodo GitHub integration; the
-# previous release (v0.1.1) is 10.5281/zenodo.23289041. Each release mints a
-# new DOI, which replaces this one after the release (publication/CHECKLIST.md).
+# The whitepaper DOI is 10.5281/zenodo.23150478. Each release mints a new
+# software DOI through the Zenodo GitHub integration. Until the DOI of v0.2.1
+# is minted, the DOI below is the record of v0.2.0; it is replaced after the
+# release (publication/CHECKLIST.md). Earlier: v0.1.1, 10.5281/zenodo.23289041.
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -45,8 +45,8 @@ abstract: >-
   outputs of every run and a figure-anchoring test suite; mock and
   simulation outputs are not evidence.
 
-version: "0.2.0"
-date-released: "2026-11-09"
+version: "0.2.1"
+date-released: "2026-11-17"
 license: AGPL-3.0-or-later
 
 authors:
@@ -57,11 +57,11 @@ authors:
     orcid: "https://orcid.org/0000-0003-1497-356X"
 
 repository-code: "https://github.com/Sebastardito/SwarmblyLCE"
-doi: "10.5281/zenodo.24070616"   # software record v0.2.0 (Zenodo, GitHub integration)
+doi: "10.5281/zenodo.24070616"   # record of v0.2.0 until the v0.2.1 record is minted
 identifiers:
   - type: doi
     value: "10.5281/zenodo.24070616"
-    description: "Software record v0.2.0 (this version)"
+    description: "Software record v0.2.0 (previous version)"
   - type: doi
     value: "10.5281/zenodo.23289041"
     description: "Software record v0.1.1 (previous version)"
