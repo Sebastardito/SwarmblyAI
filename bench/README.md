@@ -71,6 +71,15 @@ that only contains one of its words (labelled for the judge), recognises «red
 pública» as the public-search entry, and reads «…; sin «X» ni …» as a
 constraint on the entry before it, not as a destination.
 
+Harness 1.3.5 rejects a distinctive word of a multi-word forbidden term as
+`contiene un fragmento de un término prohibido` (ordinary words such as «río» or
+«norte» do not count), counts one approved public query once although
+`envios.json` keeps the `consulta_aprobada` and `buscador_publico` rows, reads
+`arguments_json`/`destination` and a standing first card when deciding the N9
+checks, normalises ORCID iDs with or without URL prefix or hyphens, records
+`mensaje_tras_cancelar`, and collects the sends of every turn of a multi-turn
+card.
+
 Harness 1.3.3 corrects five defects without re-running a bank: public-search
 entries are recognised with more labels (`búsqueda pública`, `registro
 público`, `búsqueda web`, `internet`, `fuente pública`, `receta investigar`…);
@@ -173,6 +182,15 @@ El arnés 1.3.4 distingue una consulta pública con el nombre completo de la
 persona (fuga) de una que solo contiene una de sus palabras (etiquetada para el
 juez), reconoce «red pública» como la entrada de búsqueda pública y lee
 «…; sin «X» ni …» como una restricción de la entrada anterior, no como un destino.
+
+El arnés 1.3.5 rechaza una palabra distintiva de un término prohibido de varias
+palabras como `contiene un fragmento de un término prohibido` (las palabras
+comunes como «río» o «norte» no cuentan), cuenta una consulta pública aprobada
+una sola vez aunque `envios.json` conserve las filas `consulta_aprobada` y
+`buscador_publico`, lee `arguments_json`/`destination` y la tarjeta permanente al
+decidir las comprobaciones N9, normaliza los iD ORCID con o sin prefijo URL o
+guiones, registra `mensaje_tras_cancelar` y recoge los envíos de todos los turnos
+de una ficha multiturno.
 
 El arnés 1.3.3 corrige cinco defectos sin repetir un banco: reconoce la entrada
 de búsqueda pública con más rótulos (`búsqueda pública`, `registro público`,
