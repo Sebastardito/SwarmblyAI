@@ -158,14 +158,14 @@ def run_checks(state) -> dict[str, Any]:
     ollama = check_ollama((cfg["model"].get("backend_url") or OLLAMA_URL)
                           if cfg["model"].get("backend") in ("auto", "ollama")
                           else OLLAMA_URL)
-    py_ok = sys.version_info >= (3, 10)
+    py_ok = sys.version_info >= (3, 11)
     try:
         writable = state.dirs.root.exists() and _writable(state.dirs.root)
     except Exception:
         writable = False
     missing = [p for p in packages if p["required"] and p["status"] != "ok"]
     return {
-        "python": {"version": platform.python_version(), "required": ">=3.10",
+        "python": {"version": platform.python_version(), "required": ">=3.11",
                    "status": "ok" if py_ok else "too_old",
                    "virtualenv": in_virtualenv(), "executable": sys.executable},
         "packages": packages,

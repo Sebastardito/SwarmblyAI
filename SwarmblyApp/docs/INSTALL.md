@@ -6,7 +6,7 @@
 
 | | Needed | Notes |
 |---|---|---|
-| Python | 3.10 or newer | CI runs 3.10–3.13 |
+| Python | 3.11 or newer | CI runs 3.11–3.13 |
 | git | yes, for the first install | Installs the pinned SwarmblyAI and SwarmblyLCE commits |
 | Model runner | recommended | [Ollama](https://ollama.com/download), or any OpenAI-compatible server (llama.cpp `--server`, vLLM) |
 | Memory | 8 GB works for 1–3B models | The first-run assistant computes a budget for your machine |
@@ -26,7 +26,7 @@ launch.bat             # Windows
 macOS: double-click `Swarmbly.command` in Finder to get the same thing in a
 Terminal window. Closing the window stops the app.
 
-The wrapper finds a Python 3.10+ interpreter (`python3.13` … `python3`, or the
+The wrapper finds a Python 3.11+ interpreter (`python3.13` … `python3`, or the
 one in `PYTHON=`) and runs `scripts/launch.py`, which uses only the standard
 library. It goes through six checks and asks before every change:
 
@@ -177,7 +177,7 @@ conversations, identity and settings too, delete the data directory above.
 
 ## Español
 
-**Requisitos:** Python 3.10 o más, git para la primera instalación y, de
+**Requisitos:** Python 3.11 o más, git para la primera instalación y, de
 preferencia, [Ollama](https://ollama.com/download) o un servidor compatible
 con OpenAI. Funciona en macOS, Linux y Windows.
 

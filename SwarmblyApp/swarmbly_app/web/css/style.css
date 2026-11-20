@@ -68,6 +68,15 @@ p { margin: 0 0 10px; }
 .skip:focus { left: 8px; }
 
 /* ---- shell ------------------------------------------------------------- */
+.test-mode-banner {
+  position: sticky; top: 0; z-index: 60;
+  padding: 7px 14px; text-align: center;
+  background: var(--pollen); color: var(--on-accent);
+  font-weight: 650; letter-spacing: .01em;
+  border-bottom: 1px solid rgba(0, 0, 0, .25);
+}
+.test-mode-banner[hidden] { display: none; }
+
 .shell { display: grid; grid-template-columns: var(--side) minmax(0, 1fr) var(--rail); height: 100vh; }
 .shell.activity-hidden { grid-template-columns: var(--side) minmax(0, 1fr) 0; }
 .shell.activity-hidden .activity { display: none; }
@@ -242,6 +251,9 @@ table.data td .chip { margin: 0 4px 4px 0; }
 .msg.failed .msg-gutter { background: linear-gradient(var(--venom), var(--venom)) left / 1.5px 100% no-repeat; }
 .msg.failed .md { color: var(--venom); }
 .msg-note { font-size: 12.5px; color: var(--pollen); margin: 0 0 6px; }
+.agent-approval { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--pollen); border-radius: var(--r-m); background: color-mix(in srgb, var(--wax) 72%, transparent); }
+.agent-approval h3 { margin-top: 0; color: var(--pollen); }
+.agent-approval pre { background: var(--cell); border: 1px solid var(--membrane); border-radius: var(--r-s); padding: 10px 12px; font: 13px/1.5 var(--mono); }
 .msg-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
 .msg-actions { display: flex; gap: 6px; }
 .cursor { display: inline-block; width: 8px; height: 15px; background: var(--chlorophyll); vertical-align: text-bottom; animation: blink 1s steps(2) infinite; }
@@ -490,3 +502,17 @@ code.cite { font-size: 11px; opacity: .75; }
 .recipes > p.small { text-align: center; margin-top: 10px; }
 .recipe-tag { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 6px; }
 .recipe-tag[hidden] { display: none; }
+
+/* 3.4 author search: consent box, service choices and ORCID candidates. */
+.btn[hidden] { display: none !important; }
+.author-services { border: 1px solid var(--membrane); border-radius: var(--r-s); padding: 8px 10px; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.author-services legend { font-size: 12.5px; color: var(--ink-dim); padding: 0 4px; }
+.author-service { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+.author-service .muted { font: 11.5px var(--mono); opacity: .75; }
+.author-consent-sentence { margin: 0; }
+.author-candidates { display: flex; flex-direction: column; gap: 6px; }
+.author-candidate { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--membrane); border-radius: var(--r-s); font-size: 13px; }
+.author-candidate-name { font-weight: 600; }
+.author-candidate code { font-size: 11.5px; }
+.author-candidate .muted { grid-column: 2 / -1; font-size: 12px; }
+.author-research .muted { font-size: 12px; }

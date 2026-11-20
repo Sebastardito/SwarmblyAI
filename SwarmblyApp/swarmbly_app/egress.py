@@ -12,8 +12,11 @@ Every call that can carry data off this computer passes through here:
   recorded. A third party receives nothing unless the user authorised that
   host (``privacy.third_party_models``); passages of the user's documents need
   a second, separate authorisation (``privacy.third_party_passages``); and
-  other nodes' fragments are never sent to a third party. A failure never
-  widens a destination: callers do not fall back to another server.
+  other nodes' fragments are never sent to a third party. Tool calls are
+  separate: a non-local ``TOOL_REMOTE`` needs its host in
+  ``privacy.tool_hosts``, and ``AUTHOR_QUERY`` needs one of the fixed author
+  hosts plus the broker's per-call consent. A failure never widens a
+  destination: callers do not fall back to another server.
 * **Ledger.** Each request has a ledger of what left, recorded where the bytes
   are sent (the real query string, not what a step meant to send). The chat
   turns it into a privacy receipt (``swarmbly.privacy_receipt/1.0``).
@@ -32,6 +35,8 @@ import urllib.parse
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterator
 
+from . import test_hosts
+
 LOCAL = "local"
 OWN_NETWORK = "red_propia"
 THIRD_PARTY = "terceros"
@@ -45,6 +50,16 @@ FOREIGN = "fragmento_ajeno"      # another node's fragment served by this node
 FRAGMENT = "fragmento"           # a fragment of the user's public request
 PUBLIC_QUERY = "consulta_publica"  # entity names sent to a public source
 UNKNOWN = "desconocido"          # treated as passages
+TOOL_REMOTE = "herramienta_remota"  # a tool call to a remote service
+TOOL_LOCAL = "herramienta_local"    # a tool call that runs on this computer
+AUTHOR_QUERY = "consulta_autor"     # an author name sent to an author source
+
+# Author search is a short, fixed set of public scholarly sources. A call also
+# needs the broker's per-call consent (see ``author_consent``); the allowlist
+# alone is not permission.
+AUTHOR_HOSTS = ("pub.orcid.org", "api.openalex.org", "eutils.ncbi.nlm.nih.gov")
+AUTHOR_ALLOWLIST = AUTHOR_HOSTS
+TOOL_KINDS = frozenset({TOOL_REMOTE, TOOL_LOCAL, AUTHOR_QUERY})
 
 _OWN_SUFFIXES = (".local", ".lan", ".home", ".internal", ".home.arpa", ".localdomain")
 _OWN_NAMES = {"host.docker.internal", "gateway.docker.internal"}
@@ -136,18 +151,40 @@ def model_destination(cfg: dict[str, Any]) -> dict[str, str]:
 class Policy:
     third_party_hosts: tuple[str, ...] = ()
     third_party_passages: bool = False
+    tool_hosts: tuple[str, ...] = ()
 
     @classmethod
     def from_config(cls, cfg: dict[str, Any]) -> "Policy":
         privacy = cfg.get("privacy") or {}
         hosts = tuple(sorted({str(h).strip().lower() for h in privacy.get("third_party_models") or []
                               if str(h).strip()}))
-        return cls(hosts, bool(privacy.get("third_party_passages", False)))
+        tool_hosts = tuple(sorted({str(h).strip().lower() for h in privacy.get("tool_hosts") or []
+                                   if str(h).strip()}))
+        return cls(hosts, bool(privacy.get("third_party_passages", False)), tool_hosts)
 
     def authorised(self, host: str) -> bool:
         return host.lower() in self.third_party_hosts
 
+    def tool_authorised(self, host: str) -> bool:
+        return host.lower() in self.tool_hosts
+
     def allows(self, cls: str, host: str, kind: str) -> tuple[bool, str]:
+        if kind == AUTHOR_QUERY:
+            if host.lower() not in AUTHOR_HOSTS:
+                return False, (f"{host} is not one of the approved author sources "
+                               f"({', '.join(AUTHOR_HOSTS)}). Nothing was sent.")
+            if not _author_consent.get():
+                return False, (f"{host} is an approved author source, but this call has no "
+                               "per-call consent. Nothing was sent.")
+            return True, ""
+        if kind == TOOL_REMOTE:
+            if cls == LOCAL:
+                return True, ""
+            if not self.tool_authorised(host):
+                return False, (f"{host} is not an authorised tool host. Add it to "
+                               "privacy.tool_hosts in Settings, or use a local tool. "
+                               "Nothing was sent.")
+            return True, ""
         if cls in (LOCAL, OWN_NETWORK):
             return True, ""
         if kind == FOREIGN:
@@ -199,6 +236,27 @@ class Ledger:
 
 _ledger: contextvars.ContextVar[Ledger | None] = contextvars.ContextVar("swarmbly_ledger", default=None)
 _purpose: contextvars.ContextVar[str] = contextvars.ContextVar("swarmbly_purpose", default=UNKNOWN)
+_author_consent: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "swarmbly_author_consent", default=False)
+
+
+@contextlib.contextmanager
+def author_consent() -> Iterator[None]:
+    """The broker's yes for one author lookup; scoped to this call/context.
+
+    The fixed allowlist is not permission by itself. The broker enters this
+    block only after a one-time token has been checked, and resets it when the
+    call ends. Threads must use :func:`carry` to inherit it.
+    """
+    token = _author_consent.set(True)
+    try:
+        yield
+    finally:
+        _author_consent.reset(token)
+
+
+def author_consent_granted() -> bool:
+    return bool(_author_consent.get())
 
 
 @contextlib.contextmanager
@@ -252,18 +310,39 @@ def record(**event: Any) -> None:
         ledger.add(**event)
 
 
-def check_call(url: str, nbytes: int, reason: str, kind: str | None = None) -> None:
+def check_call(url: str, nbytes: int, reason: str, kind: str | None = None,
+               **extra: Any) -> None:
     """Enforce the policy for one call that carries ``kind`` to ``url``, and
-    record it when it leaves this computer. Raises :class:`EgressDenied`."""
+    record it when it leaves this computer. Raises :class:`EgressDenied`.
+
+    ``extra`` is copied into the ledger event (the broker uses it for the tool
+    id and the approval kind). A local tool call is recorded too, with class
+    ``local`` and type ``herramienta_local``.
+    """
     cls, host = classify_url(url)
-    if cls == LOCAL:
-        return
     kind = kind or current_purpose()
+    # D-013: the map is known before the call; policy still sees only the
+    # declared host. A blocked call never opens the mapped connection, so it
+    # carries no ``simulado`` flag.
+    simulated = test_hosts.target_for(host) is not None
+    if cls == LOCAL and kind != AUTHOR_QUERY:
+        if kind in TOOL_KINDS:
+            event: dict[str, Any] = {"destino": "local", "clase": LOCAL, "tipo": kind,
+                                     "bytes": 0, "motivo": reason}
+            if simulated:
+                event["simulado"] = True
+            record(**event, **extra)
+        return
     ok, why = policy().allows(cls, host, kind)
     if not ok:
-        record(destino=host, clase=cls, tipo=kind, bytes=0, motivo=reason, bloqueado=True)
+        record(destino=host, clase=cls, tipo=kind, bytes=0, motivo=reason,
+               bloqueado=True, **extra)
         raise EgressDenied(why, host, kind)
-    record(destino=host, clase=cls, tipo=kind, bytes=int(nbytes), motivo=reason)
+    event = {"destino": host, "clase": cls, "tipo": kind, "bytes": int(nbytes),
+             "motivo": reason}
+    if simulated:
+        event["simulado"] = True
+    record(**event, **extra)
 
 
 _QUERY_KEYS = ("q", "search", "srsearch", "term", "titles", "query", "ids", "id", "page")
@@ -310,10 +389,11 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
         words = text.lower().split()
         shingles |= {" ".join(words[i:i + 8]) for i in range(max(0, len(words) - 7))}
     names = [_name_parts(n) for n in personal_names or [] if n]
-    sends, blocked = [], []
+    sends, blocked, tools = [], [], []
     for ev in events:
         value = str(ev.get("valor", ""))
         kind = ev.get("tipo", UNKNOWN)
+        is_tool = kind in TOOL_KINDS or bool(ev.get("spec_id"))
         folded = " ".join(value.lower().split())
         if kind == PUBLIC_QUERY:
             if any(s in folded for s in shingles):
@@ -328,10 +408,45 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
             kind_out = "fragmento"
         else:
             kind_out = kind
+        personal_name = bool(ev.get("personal_name"))
+        simulated = bool(ev.get("simulado"))
         entry = {"destino": ev.get("destino", ""), "clase": ev.get("clase", ""),
                  "tipo": kind_out, "valor": value if kind == PUBLIC_QUERY else f"({kind})",
                  "bytes": int(ev.get("bytes", 0) or 0), "motivo": ev.get("motivo", "")}
-        (blocked if ev.get("bloqueado") else sends).append(entry)
+        if personal_name:
+            # An author lookup carries a person's name as its payload. The
+            # egress kind stays AUTHOR_QUERY; this flag is what the UI and the
+            # receipt use, the same way a detected personal name already is.
+            entry["personal_name"] = True
+        if simulated:
+            # D-013: the declared host in the receipt was reached through the
+            # launch-time loopback map; the app says so instead of pretending
+            # the connection went to the real service.
+            entry["simulado"] = True
+        was_blocked = bool(ev.get("bloqueado"))
+        if was_blocked:
+            blocked.append(entry)
+        elif not (is_tool and ev.get("clase") == LOCAL):
+            # A local tool is activity, not an outbound send. Remote tool
+            # sends are ordinary sends as well as tool entries.
+            sends.append(entry)
+        if is_tool:
+            tool_entry = {
+                "spec_id": str(ev.get("spec_id") or ""),
+                "destino": ev.get("destino", ""),
+                "clase": ev.get("clase", ""),
+                "tipo": kind_out,
+                "bytes": 0 if was_blocked else int(ev.get("bytes", 0) or 0),
+                "allowed": not was_blocked,
+                "blocked": was_blocked,
+                "approved_by": str(ev.get("aprobado_por") or ""),
+                "motivo": ev.get("motivo", ""),
+            }
+            if personal_name:
+                tool_entry["personal_name"] = True
+            if simulated:
+                tool_entry["simulado"] = True
+            tools.append(tool_entry)
     answer = answer or ""
     destinations = ["local"] + sorted({s["destino"] for s in sends if s["destino"]})
     return {
@@ -345,8 +460,10 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
         "consentimiento": consent,
         "envios": sends,
         "bloqueados": blocked,
+        "tools": tools,
         "pasajes_enviados": sum(1 for s in sends if s["tipo"] == "pasaje"),
-        "nombres_personales_enviados": sum(1 for s in sends if s["tipo"] == "nombre_personal"),
+        "nombres_personales_enviados": sum(
+            1 for s in sends if s["tipo"] == "nombre_personal" or s.get("personal_name")),
         "bytes_salientes": sum(s["bytes"] for s in sends),
         "fragmentos_creados": int(fragments),
         "respuesta_sintetica": answer,

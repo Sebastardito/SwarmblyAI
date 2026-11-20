@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from swarmbly_lce.c1 import SourceIndex
+from swarmbly_lce.c1 import passages as _passages
 from swarmbly_lce.c1.passages import (  # noqa: F401  (kept for older imports)
     _BM25, _fold, _is_glossary, _paragraphs, _stem, _tokens, CANDIDATES_KEPT,
     DENSE_CANDIDATES, EXTRA_WEIGHT, MAX_PER_FILE, RELATIVE_FLOOR, RRF_K, SPAN_MAX_CHARS)
@@ -60,8 +61,17 @@ class LCEAdapter:
     def __init__(self, dirs: DataDirs):
         self.dirs = dirs
         # The README the app writes into its own source folder is not a document
+        self.index = self._new_index()
+        # The embedding identity the index's vectors were built with.  The
+        # SourceIndex cache is keyed by text, so a different model (or a
+        # different vector size) must get a fresh index: zip() would silently
+        # truncate mismatched vectors instead of failing.
+        self._embedding: dict[str, Any] = {"identity": "", "model": "", "dim": 0}
+        self.last_embedding_meta: dict[str, Any] = {}
+
+    def _new_index(self) -> SourceIndex:
         from .projects import is_app_note
-        self.index = SourceIndex(
+        return SourceIndex(
             skip=lambda root, path: (path.name == "README.md" and path.parent == self.dirs.sources)
             or is_app_note(path))
 
@@ -138,6 +148,39 @@ class LCEAdapter:
         except Exception as exc:  # upstream package is a dependency; report honestly
             raise RuntimeError(f"could not initialize LCE C1: {exc}") from exc
 
+    # -- embeddings (3.4, carried over from 3.3) --------------------------------
+    def prepare_embeddings(self, identity: str, model: str, dim: int = 0) -> dict[str, Any]:
+        """Make the index safe for ``identity``'s vectors; rebuild if needed.
+
+        ``identity`` names the backend, model and endpoint; ``dim`` is the
+        vector size last observed for it (0 before the first call).  A change
+        in either discards every cached vector by starting a new SourceIndex,
+        so vectors from two models never share a cache.  Returns what the
+        answer's meta should say.
+        """
+        previous = dict(self._embedding)
+        reason = ""
+        if previous["identity"] and previous["identity"] != identity:
+            reason = "model changed"
+        elif dim and previous["dim"] and dim != previous["dim"]:
+            reason = "dimension changed"
+        rebuilt = bool(reason)
+        if rebuilt:
+            self.index = self._new_index()
+        self._embedding = {"identity": identity, "model": model,
+                           "dim": dim or int(previous.get("dim") or 0)}
+        meta = {"model": model, "identity": identity,
+                "rebuilt": rebuilt, "dimension": self._embedding["dim"]}
+        if rebuilt:
+            meta["reason"] = reason
+            meta["previous_model"] = previous.get("model", "")
+        self.last_embedding_meta = meta
+        return dict(meta)
+
+    def note_embeddings(self, meta: dict[str, Any]) -> None:
+        """Record what this request did for its meta/receipt."""
+        self.last_embedding_meta = dict(meta)
+
     # -- C1 (swarmbly_lce.c1) ------------------------------------------------
     def personal_roots(self, extra_dirs: list[str] | tuple[str, ...] = ()) -> list[Path]:
         return [self.dirs.sources, *[Path(d).expanduser() for d in extra_dirs or ()]]
@@ -202,9 +245,56 @@ class LCEAdapter:
         getter = getattr(self.index, "glossary_meta", None)
         return getter(self._roots(extra_dirs, roots)) if getter else {}
 
+    def glossary_private_terms(self, extra_dirs: list[str] | tuple[str, ...] = (),
+                               roots: list[Path] | None = None) -> list[str]:
+        """Terms whose glossary line carries the App's ``| privado`` mark (T9.17).
+
+        LCE's ``_split_meta`` drops a bare ``privado`` segment (it is not one of
+        its metadata keys), so the App reads the raw lines here, from the same
+        files and roots the adapter already reads.  Only the term list leaves
+        this method; the mark itself never changes what LCE does locally.
+        """
+        from .memory_capture import split_private_mark
+        out: list[str] = []
+        for root in self._roots(extra_dirs, roots):
+            root = Path(root).expanduser()
+            if not root.is_dir():
+                continue
+            for path in sorted(root.rglob("*")):
+                if (not path.is_file() or not _passages.is_glossary(path)
+                        or any(p.startswith(".") for p in path.relative_to(root).parts)):
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                for term, right in _passages.glossary_lines(text):
+                    if term not in out and split_private_mark(right)[1]:
+                        out.append(term)
+        return out
+
+    # a shorter name for callers that only ask "which terms are private?"
+    glossary_private = glossary_private_terms
+
     def glossary_entries(self, extra_dirs: list[str] | tuple[str, ...] = (),
                          roots: list[Path] | None = None) -> list[tuple[str, str]]:
-        return self.index.glossary_entries(self._roots(extra_dirs, roots))
+        roots = self._roots(extra_dirs, roots)
+        entries = list(self.index.glossary_entries(roots))
+        private = set(self.glossary_private_terms(roots=roots))
+        if not private:
+            return entries
+        from .memory_capture import split_private_mark
+        out: list[tuple[str, str]] = []
+        for term, right in entries:
+            clean, marked = split_private_mark(right)
+            # The mark travels in the entry's existing two-field shape: every
+            # caller keeps working, and the proposal can read it App-side even
+            # though LCE itself dropped it.
+            if term in private or marked:
+                out.append((term, f"{clean} | privado" if clean else "privado"))
+            else:
+                out.append((term, right))
+        return out
 
     def worker_guard(self, declared_model: str):
         """WorkerGuard (invariant I2) bound to the base model this node

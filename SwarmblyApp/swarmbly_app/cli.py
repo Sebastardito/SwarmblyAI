@@ -28,7 +28,22 @@ def main(argv: list[str] | None = None) -> int:
                         help="override the API port (default 8765)")
     parser.add_argument("--host", default=None,
                         help="API bind address (default 127.0.0.1)")
+    parser.add_argument("--test-host-map", default=None, metavar="FILE",
+                        help="TEST ONLY (D-013): JSON map of declared host -> loopback "
+                             "target; never settable from the UI, the API or the config "
+                             "file. Also read once from SWARMBLY_TEST_HOST_MAP at startup.")
     args = parser.parse_args(argv)
+
+    # D-013: the seam is decided here, at launch, before any client exists.
+    # Nothing in the UI, the API or the config file can enable it later.
+    from . import test_hosts
+    try:
+        mapping = test_hosts.load(args.test_host_map)
+    except test_hosts.TestHostMapError as exc:
+        print(f"swarmbly-app: refusing to start: {exc}", file=sys.stderr)
+        return 2
+    if mapping:
+        print(test_hosts.startup_line())
 
     from .state import AppState
 

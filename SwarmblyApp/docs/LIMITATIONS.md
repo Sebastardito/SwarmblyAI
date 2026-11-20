@@ -154,4 +154,8 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    conservan su sentido entre turnos, pero un modelo pequeño (3B) sigue
    añadiendo datos, nombres y filas que no están en las fuentes; los
    documentos largos se leen por sus mejores párrafos. La composición
-   fundamentada llega en 3.2.
+   fundamentada llega en 3.2. 27. Una aprobación de herramienta pendiente vive
+   en memoria, no en disco: recargar la página vuelve a mostrar la tarjeta
+   porque forma parte del mensaje del asistente, pero reiniciar la app detiene
+   la ejecución (no se guarda ningún token ni ejecución pendiente). Vuelve a
+   enviar la pregunta después de reiniciar.

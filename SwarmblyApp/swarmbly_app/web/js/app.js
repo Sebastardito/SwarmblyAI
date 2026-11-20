@@ -21,6 +21,10 @@ const App = (() => {
       document.body.appendChild(h("p.boot-error", String(err)));
       return;
     }
+    if (state.health?.test_mode?.active) {
+      const banner = UI.$("#test-mode-banner");
+      if (banner) banner.hidden = false;
+    }
     await I18n.load(state.config.language || "en");
     applyTheme();
     UI.append(clear(UI.$("#brand")), UI.mark(30), h("span.brand-name", "Swarmbly"));

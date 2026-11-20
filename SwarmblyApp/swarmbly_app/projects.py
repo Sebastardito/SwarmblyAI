@@ -119,14 +119,34 @@ def _merge_gloss(old: str, new: str) -> str:
     _, eqs2, meta2 = _parse_gloss(new)
     key = _gloss_key(old)
     out = [e for e in dict.fromkeys([*eqs, *eqs2]) if _gloss_key(f"{e} = x") != key] or [term]
+    # T9.17: a bare privacy mark keeps no value in _parse_gloss ({"privado": []});
+    # it is still a flag, and the newer line's explicit value wins over the old.
+    from .memory_capture import private_value
+
+    def privacy(values: dict[str, list[str]]) -> bool | None:
+        found = None
+        for name, marks in values.items():
+            if name.strip().lower() in {"privado", "privada", "private", "privad@"}:
+                found = private_value(marks[0]) if marks else True
+        return found
+
+    private = privacy(meta2)
+    if private is None:
+        private = privacy(meta)
     for k, vals in meta2.items():
+        if k.strip().lower() in {"privado", "privada", "private", "privad@"}:
+            continue
         if k == "wd" and meta.get("wd"):
             continue                       # the first chosen item stays
         meta[k] = list(dict.fromkeys([*meta.get(k, []), *vals]))
     line = f"{term} = {', '.join(out)}"
     for k, vals in meta.items():
+        if k.strip().lower() in {"privado", "privada", "private", "privad@"}:
+            continue
         if vals:
             line += f" | {k}: {', '.join(vals)}"
+    if private:
+        line += " | privado"
     return line
 
 

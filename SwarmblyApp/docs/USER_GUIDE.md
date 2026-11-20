@@ -59,7 +59,7 @@ create one. A project is a folder of yours, by default
 | Folder | What goes there |
 |---|---|
 | `sources/` | the project's documents (text, Markdown, Word, HTML, PDF) |
-| `memory/` | the project's memory: notes saved from the chat (`notas.md`), a glossary (`glosario.md`: `term = equivalent`), and any notes of yours |
+| `memory/` | the project's memory: notes saved from the chat (`notas.md`), a glossary (`glosario.md`: `term = equivalent`, or `term = equivalent | privado` for an entry never used in public searches), and any notes of yours |
 | `chats/` | the project's conversations, one file each, kept up to date by the app |
 | `exports/` | `.swarmbly` packages of the project |
 
@@ -95,7 +95,10 @@ something or to add it to the glossary, or you define or correct a term
 cucuyos…"), a card under the answer proposes notes and glossary entries.
 Edit them, untick what you do not want, and press *Save to memory*; nothing
 is saved otherwise. The glossary (`term = synonyms, translations`) widens
-later searches: any one of the equivalents finds the term.
+later searches: any one of the equivalents finds the term. Add `| privado`
+(or `| private`) to an entry, or tick *Private: never used in public
+searches* when you save it, to keep its term and equivalents out of public
+queries; local answers still use it.
 
 **Searching online.** Swarmbly never sends your question to a search engine
 on its own. If you ask for online or recent references, the answer says no
@@ -289,7 +292,9 @@ siguientes respuestas lo encuentran. *Documentos* muestra qué puede leer el
 proyecto y por qué un archivo no dio nada. Si pides recordar algo en medio
 de un mensaje, o defines o corriges un término, aparece una propuesta de
 memoria y glosario bajo la respuesta: la editas y la confirmas con *Guardar
-en memoria*. Para buscar en internet, la respuesta ofrece *Buscar en línea*
+en memoria*; una entrada marcada *Privado* (o `| privado`) no se usa en
+búsquedas públicas, aunque las respuestas locales sí la usan. Para buscar en
+internet, la respuesta ofrece *Buscar en línea*
 con el texto exacto que se enviaría a PubMed y Wikipedia; lo revisas y lo
 apruebas. Una etiqueta que no corresponde a ninguna fuente se marca como
 *cita sin fuente*.

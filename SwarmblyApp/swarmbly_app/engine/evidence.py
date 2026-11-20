@@ -55,6 +55,8 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .. import test_hosts
+
 WIKI_API = "https://{lang}.wikipedia.org/w/api.php"
 WIKI_PAGE = "https://{lang}.wikipedia.org/wiki/{title}"
 SUPPORTED_LANGS = ("es", "en", "pt", "fr")
@@ -277,7 +279,7 @@ def _http_get_json(url: str, timeout_s: float, user_agent: str) -> Any:
                                                "Accept": "application/json"})
     from .. import egress
     egress.record_public_query(url, provider=urllib.parse.urlsplit(url).hostname or "")
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed host)
+    with test_hosts.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed host)
         return json.loads(resp.read().decode("utf-8"))
 
 

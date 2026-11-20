@@ -9,8 +9,8 @@ from test_api_lce import make_client
 
 def test_recipes_are_listed_and_only_known_ones_run():
     assert [r["id"] for r in R.listing()] == ["documents", "table", "research", "list"]
-    assert {r["id"]: r["available"] for r in R.listing()}["list"] is False
-    assert R.valid("Table") == "table" and R.valid("list") == "" and R.valid("whatever") == ""
+    assert {r["id"]: r["available"] for r in R.listing()}["list"] is True
+    assert R.valid("Table") == "table" and R.valid("list") == "list" and R.valid("whatever") == ""
 
 
 def test_the_research_query_is_proposed_before_anything_leaves(app_state, monkeypatch):
@@ -207,3 +207,135 @@ def test_a_second_paragraph_of_the_same_foreign_document_needs_one_keyword():
     out = _other_language(lambda q, e, p: [weight, advice, other], "reviewer, colonies, average fruit weight",
                           "¿Qué aconsejó el revisor externo sobre las colonias y cuánto pesaban los frutos?", "p", [])
     assert out == [weight, advice]
+
+
+# ---- T9.10: a private name is removed whole, even at the start ---------------
+
+def test_the_sanitiser_removes_a_private_name_whole_and_its_fragments():
+    from swarmbly_app.web_search import strip_private_details
+
+    # the observed shape: "Rincón Norte" in the user's material, "Rincón" at
+    # the very start of the offered query
+    detail = strip_private_details("Rincón Norte y el caudal", "Rincón Norte es mío")
+    assert detail["query"] == "caudal"
+    assert "Rincón" not in detail["query"] and "Norte" not in detail["query"]
+    assert detail["removed_terms"] == ["Rincón Norte"]
+
+    # a known term, with different accents and case, whole and as a fragment
+    detail = strip_private_details("RINCON NORTE caudal", "", private=["Rincón Norte"])
+    assert detail["query"] == "caudal"
+    detail = strip_private_details("Rincon caudal", "", private=["Rincón Norte"])
+    assert detail["query"] == "caudal" and "Rincon" in detail["removed"]
+    detail = strip_private_details("caudal Rincón", "", private=["Rincón Norte"])
+    assert detail["query"] == "caudal"
+    detail = strip_private_details("Rincón-Norte caudal", "", private=["Rincón Norte"])
+    assert detail["query"] == "caudal"
+
+
+def test_the_sanitiser_keeps_common_words_when_they_stand_alone():
+    from swarmbly_app.web_search import strip_private_details
+
+    # ordinary wording of the user's own topic is not a fragment to remove
+    for query in ("norte caudal", "río caudal", "alto bajo caudal", "caudal del norte"):
+        detail = strip_private_details(query, "", private=["Rincón Norte"])
+        assert "caudal" in detail["query"], query
+        assert "norte" in detail["query"].lower() or "norte" not in query.lower()
+        assert "río" in detail["query"].lower() or "río" not in query.lower()
+    # but the whole private term still takes its common word with it
+    detail = strip_private_details("Rincón Norte caudal", "", private=["Rincón Norte"])
+    assert detail["query"] == "caudal"
+
+
+def test_the_sanitiser_says_when_nothing_public_remains():
+    from swarmbly_app.web_search import strip_private_details
+
+    detail = strip_private_details("Rincón Norte", "Rincón Norte es mío")
+    assert detail["query"] == "" and detail["empty"] is True
+    assert detail["removed_terms"] == ["Rincón Norte"]
+    # only a possessive/verb is left: that is not a topic either
+    detail = strip_private_details("Rincón Norte es mío", "",
+                                   private=["Rincón Norte"])
+    assert detail["query"] == "" and detail["empty"] is True
+
+
+class _PrivateKeywordBackend(FakeBackend):
+    """The model offers a private name as the first search keyword (EJ4-04)."""
+
+    def stream_chat(self, messages, *, model, max_tokens=1024, temperature=0.2,
+                    **kw):
+        prompt = str(messages[-1]["content"])
+        self.calls.append({"messages": messages, "model": model})
+        from swarmbly_app.inference.base import GenerationResult
+        if "Translate the question" in prompt:
+            text = "Rincón Alto, caudal medio, red pública"
+        else:
+            text = "La respuesta local."
+        return GenerationResult(text=text, model=model, completion_tokens=3, total_ms=1)
+
+
+def test_the_research_proposal_reports_a_private_fragment_the_model_put_first(
+        app_state):
+    fake = _PrivateKeywordBackend()
+    app_state.backends.resolve = lambda config=None: fake      # type: ignore[method-assign]
+    app_state.config.update({"evidence": {"enabled": True, "providers": []},
+                             "compose.verify": False})
+    question = ("Rincón Alto y Quilén Bajo son mis puntos clave: compara el caudal "
+                "medio de Quilén Bajo con la red pública.")
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], question, mode="local", run_async=False,
+                        recipe="research")
+    offer = app_state.chat.get_messages(conv["id"])[-1]["meta"]["web_offer"]
+    assert offer["query"] and "Rincón" not in offer["query"]
+    assert "Alto" not in offer["query"].split()
+    assert "Rincón" in offer["removed"] or "Rincón Alto" in offer["removed_terms"]
+    assert offer["empty"] is False
+
+# ---- T9.16: the proposal reports the private terms it kept out ---------------
+
+def _ej404_glossary():
+    return [("QA", "Quilén Alto"), ("QM", "Quilén Medio"), ("QB", "Quilén Bajo")]
+
+
+def _ej404_question():
+    return ("Rincón Alto y Quilén Bajo son mis puntos clave: compara el caudal "
+            "medio de Quilén Bajo con la red pública.")
+
+
+def test_the_proposal_names_the_sentence_initial_private_place():
+    """EJ4-04: the private run at the start is what was removed, not the public
+    station that shares a word with it."""
+    detail = R.propose_query_details(_ej404_question(), _ej404_glossary())
+    assert detail["removed_terms"] == ["Rincón Alto"]
+    assert "Rincón" not in detail["query"]
+    assert "Alto" not in detail["query"].split()
+    # the public station from the glossary stays in the public query
+    assert "Quilén Bajo" in detail["query"]
+    assert "Quilén" not in detail["removed"] and "Bajo" not in detail["removed"]
+    assert detail["empty"] is False
+
+
+def test_a_public_sounding_term_listed_as_private_is_removed_and_explained():
+    """A term can be public in general and still be the user's own place: when
+    the caller puts it in ``private`` it is removed and reported, which is the
+    one case where a public name may appear in ``removed_terms``."""
+    detail = R.propose_query_details(_ej404_question(), _ej404_glossary(),
+                                     private=["Quilén Bajo"])
+    assert detail["removed_terms"] == ["Rincón Alto", "Quilén Bajo"]
+    assert "Quilén" not in detail["query"] and "Bajo" not in detail["query"].split()
+    assert "Quilén" in detail["removed"] and "Bajo" in detail["removed"]
+
+def test_the_query_api_uses_the_project_glossary_for_public_names(app_state, tmp_path):
+    """The endpoint the App calls for a proposal (EJ4-04) gets the project's
+    glossary, so "Quilén Bajo" is public there and only "Rincón Alto" is
+    reported as removed."""
+    project = app_state.projects.create("Cuenca", parent=tmp_path / "p")
+    (project.sources / "glosario.md").write_text(
+        "**QA** = Quilén Alto. Estación aguas arriba.\n"
+        "**QM** = Quilén Medio. Estación en la junta.\n"
+        "**QB** = Quilén Bajo. Estación de cierre.\n", encoding="utf-8")
+    client = make_client(app_state)
+    body = client.post("/api/recipes/query", json={
+        "text": _ej404_question(), "project_id": project.id}).json()
+    assert body["removed_terms"] == ["Rincón Alto"]
+    assert "Quilén Bajo" in body["query"]
+    assert "Rincón" not in body["query"]

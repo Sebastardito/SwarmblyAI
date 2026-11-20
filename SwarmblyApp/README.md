@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/Sebastardito/SwarmblyApp/actions/workflows/tests.yml/badge.svg)](https://github.com/Sebastardito/SwarmblyApp/actions/workflows/tests.yml)
 [![License: AGPL v3+](https://img.shields.io/badge/license-AGPL--3.0--or--later-2b6f4a)](LICENSE)
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3cc8dc)
+![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3cc8dc)
 ![Status: alpha](https://img.shields.io/badge/status-alpha-e9b949)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23322638.svg)](https://doi.org/10.5281/zenodo.23322638)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support%20Swarmbly-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/swarmbly)
@@ -54,7 +54,7 @@ app in your browser at `http://127.0.0.1:8765`:
 
 | Step | What it checks | What it may do (after asking) |
 |---|---|---|
-| Python | 3.10 or newer | — (tells you how to install it) |
+| Python | 3.11 or newer | — (tells you how to install it) |
 | git | present | — (needed for the first install) |
 | Environment | `.venv` exists and runs | create or rebuild it |
 | Packages | everything imports, requirements unchanged | install / update inside `.venv` only |
@@ -232,7 +232,7 @@ Licensed under **AGPL-3.0-or-later** ([LICENSE](LICENSE), [NOTICE](NOTICE)).
 If you use Swarmbly App in research, please cite it:
 
 > Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client and network
-> dashboard for decentralized problem-fragmenting inference* (Version 0.6.0)
+> dashboard for decentralized problem-fragmenting inference* (Version 0.7.0)
 > [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638
 
 To cite every version at once, use the concept DOI
@@ -272,7 +272,7 @@ cd SwarmblyApp
 ```
 
 En macOS también puedes hacer doble clic en **`Swarmbly.command`**. El
-lanzador comprueba Python (3.10 o más), git, el entorno `.venv`, los paquetes,
+lanzador comprueba Python (3.11 o más), git, el entorno `.venv`, los paquetes,
 Ollama y el puerto; **pregunta antes de instalar o iniciar nada**, instala
 solo dentro de `.venv`, nunca instala Ollama por ti y abre la app en
 `http://127.0.0.1:8765`. Opciones: `--check` (solo informar), `--headless`
@@ -336,7 +336,7 @@ no depende de ella. Licencia **AGPL-3.0-or-later**. Véanse [NOTICE](NOTICE) y
 
 **Cómo citar:** Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client
 and network dashboard for decentralized problem-fragmenting inference*
-(Version 0.6.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
+(Version 0.7.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
 para citar todas las versiones: 10.5281/zenodo.23322638.
 
 Copyright © 2026 Sebastián A. Espinoza-Ulloa.

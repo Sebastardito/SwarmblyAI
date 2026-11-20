@@ -209,9 +209,16 @@ _PROPER = r"((?:[A-ZÁÉÍÓÚÑ][\wáéíóúñ'-]+)(?:\s+(?:de\s+)?[A-ZÁÉÍ�
 def translated_names(question: str, glossary: list[tuple[str, str]]) -> list[str]:
     """Common names written "<término> de <Lugar>" rendered with the user's
     glossary: "cucuve de Floreana" + "cucuve = mockingbird, Mimus" →
-    "Floreana mockingbird"; "lobo peletero de Galápagos" → "Galápagos fur seal"."""
+    "Floreana mockingbird"; "lobo peletero de Galápagos" → "Galápagos fur seal".
+
+    An entry marked ``| privado`` (T9.17) is never rendered here: this name is
+    what a public lookup may be sent, and a private entry must stay home."""
+    from .memory_capture import split_private_mark
     out: list[str] = []
     for term, equivalents in glossary:
+        equivalents, private = split_private_mark(str(equivalents or ""))
+        if private:
+            continue
         first = equivalents.split(",")[0].strip()
         if (term[:1].isupper() and not term.isupper() and first
                 and re.search(r"\b" + re.escape(term) + r"\b", question)):

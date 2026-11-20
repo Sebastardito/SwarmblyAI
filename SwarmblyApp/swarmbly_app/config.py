@@ -9,12 +9,18 @@ and reversible.
 from __future__ import annotations
 
 import copy
+import ipaddress
 import json
+import re
 import threading
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 from .paths import DataDirs
+
+# Anthropic's public API root; inference/anthropic.py appends /v1/messages.
+ANTHROPIC_DEFAULT_URL = "https://api.anthropic.com"
 
 DEFAULTS: dict[str, Any] = {
     "language": "en",                 # en | es (UI default language)
@@ -30,9 +36,9 @@ DEFAULTS: dict[str, Any] = {
         "port": 8765,
     },
     "model": {
-        "backend": "auto",            # auto | ollama | openai_compat
+        "backend": "auto",            # auto | ollama | openai_compat | anthropic
         "backend_url": "",            # e.g. http://127.0.0.1:11434 (ollama) or .../v1
-        "api_key": "",                # only for OpenAI-compatible servers that need it
+        "api_key": "",                # for servers that need one (OpenAI-compatible, Anthropic)
         "model_name": "",             # empty -> auto pick
         "max_tokens": 1024,
         "temperature": 0.2,
@@ -85,6 +91,37 @@ DEFAULTS: dict[str, Any] = {
         # Two batch replicas that disagree on an item get a third (P3g).
         "tie_break": True,
     },
+    # 3.4 recipe 4: a pasted or CSV list is user-authored data. The ceiling is
+    # validated here, not in the web UI.
+    "recipes": {
+        "list_max_items": 200,
+        # Recipe 5: data with code. The model sees headers and at most
+        # ``code_max_sample_rows`` rows per table; the script and correction
+        # ceilings are server-side, not UI hints.
+        "code_max_files": 5,
+        "code_max_script_chars": 20000,
+        "code_max_corrections": 2,
+        "code_max_sample_rows": 5,
+        # A spreadsheet is copied into /data before the script runs; keep the
+        # source and its copy bounded independently of the guest's /out limit.
+        "code_max_file_bytes": 256 * 1024 * 1024,
+    },
+    # 3.4 tools. Author search is off until the user approves the exact name
+    # for a call; MCP servers are configured and started from Settings.
+    "tools": {
+        "author": {
+            "enabled": False,
+        },
+        # 3.4, D-011: the agent loop that lets the model propose MCP tool
+        # calls. Every call still needs the user's yes (or a standing yes for
+        # a local MCP tool in this project). The step and tool-call ceilings
+        # are hard upper bounds, not UI hints: D-011 says at most 8 steps.
+        "agent": {
+            "max_steps": 8,
+            "max_tool_calls": 8,
+            "max_observation_chars": 4000,
+        },
+    },
     "privacy": {
         "tier": "LOCAL",              # GLOBAL | TRUSTED | LOCAL
         "manual_tier": None,          # authoritative manual override, never downgraded
@@ -95,6 +132,10 @@ DEFAULTS: dict[str, Any] = {
         # of the user's documents need the second switch as well.
         "third_party_models": [],
         "third_party_passages": False,
+        # 3.4: hosts a tool may reach (TOOL_REMOTE). Empty = no remote tool
+        # host is authorised; a tool on this computer (destination "local")
+        # does not need an entry.
+        "tool_hosts": [],
         # 3.1: a public lookup made for a personal or sensitive question needs
         # the user's yes for that question ("ask"); "always" keeps the 3.0.x
         # behaviour (public evidence on = consent).
@@ -136,11 +177,14 @@ DEFAULTS: dict[str, Any] = {
     #   search_terms  the short generation that writes search terms
     #   fusion        answers that join the user's sources with public evidence
     #   verifier      reserved for the claim verifier of the recipes
+    #   embeddings    retrieval over the user's sources (C1), local or
+    #                 OpenAI-compatible; Anthropic has no embeddings endpoint
     # Older settings still work: compose.model (writer), lce.expansion_model
-    # (search_terms), evidence.fusion_model (fusion).
+    # (search_terms), evidence.fusion_model (fusion).  Empty embeddings role
+    # keeps the app's previous embedder: model.embed_model on model.backend_url.
     "roles": {
         role: {"model": "", "think": None, "backend": "", "backend_url": "", "api_key": ""}
-        for role in ("writer", "search_terms", "fusion", "verifier")
+        for role in ("writer", "search_terms", "fusion", "verifier", "embeddings")
     },
     "compose": {
         "inventory": False,           # F1: requirements read by code and checked (meta.requirements)
@@ -221,6 +265,14 @@ def _deep_merge(base: dict, update: dict) -> dict:
     return out
 
 
+def _anthropic_default_url(data: dict[str, Any]) -> None:
+    """An Anthropic model with no address uses its public API, never Ollama."""
+    model = data.get("model") or {}
+    if model.get("backend") == "anthropic" \
+            and not str(model.get("backend_url") or "").strip():
+        model["backend_url"] = ANTHROPIC_DEFAULT_URL
+
+
 class Config:
     """Thread-safe JSON config with defaults and deep-merge updates."""
 
@@ -237,6 +289,7 @@ class Config:
                 raw = json.loads(path.read_text(encoding="utf-8"))
                 with self._lock:
                     self._data = _deep_merge(DEFAULTS, raw)
+                    _anthropic_default_url(self._data)
             except (json.JSONDecodeError, OSError) as exc:  # corrupt file -> defaults
                 path.rename(path.with_suffix(".json.bak"))
                 self.save()
@@ -279,6 +332,7 @@ class Config:
                 node[parts[-1]] = value
         with self._lock:
             self._data = _deep_merge(self._data, nested)
+            _anthropic_default_url(self._data)
             merged = copy.deepcopy(self._data)
         if save:
             self.save()
@@ -305,10 +359,11 @@ _ENUMS = {
     "language": {"en", "es"},
     "theme": {"dark", "light"},
     "profile": {"automatic", "custom", "advanced"},
-    "model.backend": {"auto", "ollama", "openai_compat"},
-    **{f"roles.{r}.backend": {"", "ollama", "openai_compat"}
-       for r in ("writer", "search_terms", "fusion", "verifier")},
-    **{f"roles.{r}.think": {None, True, False} for r in ("writer", "search_terms", "fusion", "verifier")},
+    "model.backend": {"auto", "ollama", "openai_compat", "anthropic"},
+    **{f"roles.{r}.backend": {"", "ollama", "openai_compat", "anthropic"}
+       for r in ("writer", "search_terms", "fusion", "verifier", "embeddings")},
+    **{f"roles.{r}.think": {None, True, False}
+       for r in ("writer", "search_terms", "fusion", "verifier", "embeddings")},
     "model.embedder": {"hash", "server"},
     "swarm.mode": {"local", "lan", "internet", "auto"},
     "privacy.tier": {"GLOBAL", "TRUSTED", "LOCAL"},
@@ -349,10 +404,46 @@ _RANGES = {
     "evidence.local_max_entities": (1, 6),
     "lce.retrieval_k": (1, 10),
     "log_retention_days": (1, 3650),
+    "recipes.list_max_items": (1, 2000),
+    "recipes.code_max_files": (1, 20),
+    "recipes.code_max_script_chars": (1000, 100000),
+    "recipes.code_max_corrections": (0, 5),
+    "recipes.code_max_sample_rows": (1, 20),
+    # D-011: the ceiling is the decision (8 steps); Settings may lower it.
+    "tools.agent.max_steps": (1, 8),
+    "tools.agent.max_tool_calls": (1, 8),
+    "tools.agent.max_observation_chars": (500, 8000),
+    "recipes.code_max_file_bytes": (1, 8 * 1024 ** 3),
 }
 # Never changeable from the browser: binding the admin API elsewhere is a
 # security decision made on the command line, by the machine's owner.
 _LOCKED_PREFIXES = ("api.",)
+_HOST_LABEL = re.compile(r"^(?!-)[a-z0-9-]{1,63}(?<!-)$")
+
+
+def _normalise_host(value: Any, key: str) -> str:
+    """One host from ``privacy.tool_hosts``: a bare host or any URL."""
+    if not isinstance(value, str) or not value.strip():
+        raise ConfigError(f"{key} items must be non-empty host names")
+    text = value.strip()
+    try:
+        return str(ipaddress.ip_address(text.strip("[]"))).lower()
+    except ValueError:
+        pass
+    try:
+        parsed = urlsplit(text if "://" in text else f"//{text}")
+    except ValueError as exc:
+        raise ConfigError(f"{key}: {value!r} is not a valid host name") from exc
+    host = (parsed.hostname or "").strip().lower().strip(".")
+    if not host:
+        raise ConfigError(f"{key}: {value!r} has no host")
+    try:
+        return str(ipaddress.ip_address(host)).lower()
+    except ValueError:
+        pass
+    if len(host) > 253 or any(not _HOST_LABEL.fullmatch(part) for part in host.split(".")):
+        raise ConfigError(f"{key}: {value!r} is not a valid host name")
+    return host
 
 
 def _flatten(prefix: str, value: Any, out: dict[str, Any]) -> None:
@@ -392,6 +483,10 @@ def validate_changes(changes: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(node, dict) or parts[-1] not in node:
             raise ConfigError(f"unknown setting {key!r}")
         default = node[parts[-1]]
+        if key == "roles.embeddings.backend" and value == "anthropic":
+            raise ConfigError(
+                "Anthropic has no embeddings endpoint; choose Ollama or an "
+                "OpenAI-compatible server for the embeddings role.")
         if key in _ENUMS and value not in _ENUMS[key]:
             raise ConfigError(f"{key} must be one of {sorted(map(str, _ENUMS[key]))}")
         if key in _RANGES:
@@ -405,6 +500,11 @@ def validate_changes(changes: dict[str, Any]) -> dict[str, Any]:
             raise ConfigError(f"{key} must be a list")
         if key == "evidence.providers" and not set(value) <= _PROVIDERS:
             raise ConfigError(f"{key} items must be among {sorted(_PROVIDERS)}")
+        if key == "privacy.tool_hosts":
+            flat[key] = sorted({_normalise_host(h, key) for h in value})
+    if flat.get("model.backend") == "anthropic" \
+            and not str(flat.get("model.backend_url") or "").strip():
+        flat["model.backend_url"] = ANTHROPIC_DEFAULT_URL
     return flat
 
 

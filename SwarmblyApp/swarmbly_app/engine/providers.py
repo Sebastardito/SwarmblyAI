@@ -30,6 +30,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from .. import test_hosts
 from .evidence import _WORD, _YEAR, _fold, _sentences, _stem
 
 USER_AGENT = "SwarmblyApp (https://github.com/Sebastardito/SwarmblyApp)"
@@ -42,7 +43,7 @@ def _get(url: str, timeout_s: float, user_agent: str) -> Any:
                                                "Accept": "application/json, text/xml"})
     from .. import egress
     egress.record_public_query(url, provider=urllib.parse.urlsplit(url).hostname or "")
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed hosts)
+    with test_hosts.urlopen(req, timeout=timeout_s) as resp:   # noqa: S310 (fixed hosts)
         body = resp.read().decode("utf-8", "replace")
     return body if "retmode=xml" in url else json.loads(body)
 

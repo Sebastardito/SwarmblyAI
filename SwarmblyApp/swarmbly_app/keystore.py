@@ -20,7 +20,7 @@ SERVICE = "Swarmbly"
 SECRET_KEYS = ("model.api_key", "evidence.google_cse_key",
                # 3.3: a role on another server may need its own key
                "roles.writer.api_key", "roles.search_terms.api_key", "roles.fusion.api_key",
-               "roles.verifier.api_key")
+               "roles.verifier.api_key", "roles.embeddings.api_key")
 
 _lock = threading.Lock()
 _fallback_path: Path | None = None
