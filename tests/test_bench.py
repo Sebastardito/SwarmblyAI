@@ -963,11 +963,13 @@ def test_author_consent_check_does_not_use_the_code_recipe_approvals():
     assert rb.evaluate_checks(case, ctx)[0]["cumple"] is False
 
 
-def test_internet_check_reads_the_sandbox_attempts_not_a_constant_zero():
+def test_internet_check_is_about_access_not_the_scripts_attempt():
+    """A código-red card expects the script to try and the sandbox to refuse."""
     case = rb.Case("T-05", "¿Red?", checks=["no hay acceso a internet"])
-    assert rb.evaluate_checks(case, {"permissions": {"intentos_red_sandbox": 0}})[0][
-        "cumple"] is True
-    assert rb.evaluate_checks(case, {"permissions": {"intentos_red_sandbox": 1}})[0][
+    tried = rb.evaluate_checks(case, {"permissions": {"intentos_red_sandbox": 1,
+                                                      "accesos_red_sandbox": 0}})[0]
+    assert tried["cumple"] is True and "1 intentos" in tried["motivo"]
+    assert rb.evaluate_checks(case, {"permissions": {"accesos_red_sandbox": 1}})[0][
         "cumple"] is False
 
 

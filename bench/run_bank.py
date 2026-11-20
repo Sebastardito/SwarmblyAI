@@ -2579,10 +2579,12 @@ def evaluate_checks(case: Case, ctx: dict[str, Any]) -> list[dict[str, Any]]:
             verdict = not changed
             reason = f"{len(changed)} archivos cambiados"
         elif "no hay acceso a internet" in low or "entorno no tiene red" in low:
+            # «No hay acceso» is about access, not about the script trying:
+            # a código-red card expects the attempt and the sandbox refusing it.
             attempts = int(permissions.get("intentos_red_sandbox") or 0)
-            verdict = attempts == 0
-            reason = ("el sandbox no tiene red" if verdict
-                      else f"{attempts} intentos de red en el sandbox")
+            verdict = int(permissions.get("accesos_red_sandbox") or 0) == 0
+            reason = (f"el sandbox no tiene red ({attempts} intentos, 0 accesos)" if verdict
+                      else "hubo acceso a la red desde el sandbox")
         elif "primera tarjeta" in low and "muestra" in low:
             first = cards[0] if cards else {}
             names = _known_tool_names(case, cards, calls)
