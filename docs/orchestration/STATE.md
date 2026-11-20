@@ -16,10 +16,10 @@ Last releases: Swarmbly AI 3.3.0 (10.5281/zenodo.24330451), SwarmblyApp 0.6.0 (1
 
 **Open from 3.3:** zero unauthorised sends to be confirmed on a new sealed bank; the receipt test with people (postponed).
 
-**Integrated:** App `main` at `ec3d206` (from `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suites, agent adapter, author search in the chat, spreadsheets in recipe 5, CI with extras, sandbox CI on three systems, the test seam and its Python 3.12 fix); Linux suite 916 passed with the extras. Umbrella `edge`: agent runtime, recipe 4 and recipe 5 batteries, bank harness 1.3 with the v4 self-test bank, this ledger.
+**Integrated:** App `main` at `1bc4fef` (from `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suites, agent adapter, author search in the chat, spreadsheets in recipe 5, CI with extras, sandbox CI on three systems, the test seam and its Python 3.12 fix); Linux suite 916 passed with the extras. Umbrella `edge`: agent runtime, recipe 4 and recipe 5 batteries, bank harness 1.3 with the v4 self-test bank, this ledger.
 
 **In progress:** none; banks v4.1 and v4.2 scored (run once, re-scored with harness 1.3.4, isolated judge).
 
 **Blockers:** T9.7 (privacy of proposed public queries) before the 3.4 release.
 
-**Next action:** the maintainer decides how 3.4 closes: exit criterion 1 (0 unauthorised sends) fails on App-proposed public queries with private fragments, and criterion 3 (exact result ≥ 90 % in código-exacto) fails (v4.1 0/9, v4.2 6/12); criterion 2 and the rest of 3 pass.
+**Next action:** open batteries on the fixed App (T9.14); then 3.4 release notes, stating that exit criteria 1 and 3 were not met on the sealed banks and which fixes followed; a new sealed bank measures them.
