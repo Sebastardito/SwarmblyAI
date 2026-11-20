@@ -79,7 +79,7 @@ def _score(case_id: str, values: list[str], statuses: list[str] | None = None,
 def test_the_battery_is_well_formed():
     cases = list(CASES.values())
     ids = [c["id"] for c in cases]
-    assert len(cases) == 11 and len(ids) == len(set(ids))
+    assert len(cases) == 12 and len(ids) == len(set(ids))
     for case in cases:
         assert case["operation"].strip()
         assert len(case["expected"]) == len(case["expected_items"])

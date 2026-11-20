@@ -58,7 +58,7 @@ def _score(case_id: str, stdout: str, *, meta: dict | None = None,
 def test_the_battery_is_well_formed():
     cases = list(CASES.values())
     ids = [c["id"] for c in cases]
-    assert len(cases) == 12 and len(ids) == len(set(ids))
+    assert len(cases) == 13 and len(ids) == len(set(ids))
     assert sum(1 for c in cases if c.get("cancel")) == 1
     assert {c["id"] for c in cases if c.get("expect_trap")} == {"NW-01", "WR-01"}
     assert {c["id"] for c in cases if c.get("refusal")} == {"NA-01", "NW-01", "WR-01"}
