@@ -1,5 +1,403 @@
 # Changelog
 
+## 0.7.0 — Tools (2026-11-20)
+
+Swarmbly AI 3.4. Tools and data with code. One broker for every tool; an MCP
+client with approval per call (a local tool can be set to "don't ask again in
+this project"; remote tools, the sandbox and author search always ask); skills
+(`SKILL.md`, instructions only); author search with consent (ORCID, OpenAlex,
+PubMed); recipe 4, a list on the swarm; recipe 5, data with code in a WASI
+sandbox (`wasi-python` 0.1.5); the Anthropic provider, an embeddings role and
+the `swarmbly-agent` 0.1.0 runtime; Python 3.11 as the minimum; private
+glossary entries. The sealed banks v4.1 and v4.2 were run once (32 cards × 3,
+`qwen2.5:7b`, harness 1.3.2, re-scored offline with 1.3.4, isolated judge):
+seal OK, 0 technical failures, the eight permission counters at 0 in both
+banks, approved observations 22/96 and 44/96. Two exit criteria failed: zero
+unauthorised sends (the public query proposed by the App kept a fragment of a
+private name: one card in v4.1 and two in v4.2, three repetitions each, each
+approved by the simulated user) and exact results ≥ 90 % in código-exacto
+(v4.1 0/9, v4.2 6/12). The fixes after the banks (private names removed whole
+and by distinctive word, with the removed terms shown; recipe 5 reads text
+documents; the list recipe uses relevant passages per item; private glossary
+entries) were measured only on open batteries: recipe 4 30/36 cases
+(195/201 cells; the original 11 cases 27/33, 183/189), recipe 5 39/39 cases
+(57/57 numbers), the v4 self-test 24/24, 0 unauthorised sends. A new sealed
+bank will confirm the privacy fix. Known limits: exact results with a 7B local
+model; the 3.4 privacy fix is not yet confirmed by a sealed bank; the Windows
+disk guard is watchdog-only (R-006); the first sandbox compile is slow (R-005).
+Requires SwarmblyLCE 0.2.1.
+
+- **Glossary: a private entry never reaches a public query (T9.17)**
+  (`swarmbly_app/memory_capture.py`, `web_search.py`, `lce_adapter.py`,
+  `local_context.py`, `projects.py`, `api/__init__.py`, `web/js/chat.js`,
+  `web/i18n/*.json`, `tests/test_glossary_private.py`). A glossary line can
+  now carry `| privado` (also `| private`, `| privado: sí`/`yes`/`true`, case
+  and accents ignored). LCE drops that bare segment because it is not one of
+  its metadata keys, so the App reads the raw lines from the same roots the
+  adapter already reads. The term and its equivalents of a private entry are
+  explicit private terms for the proposal: removed whole (a short code too)
+  and by distinctive word, reported in `removed_terms`, never used as a
+  translation in a public query and never returned by
+  `public_glossary_terms`; an unmarked entry keeps today's behaviour. The
+  memory card offers *Private: never used in public searches* (a `private`
+  field in the API), `glossary_line` writes `| privado`, the saved list shows
+  the mark, and a later edit keeps it. Local answers still use the entry;
+  passages and local retrieval are unchanged.
+
+- **Research proposal: report exactly the private terms it kept out (T9.16)**
+  (`swarmbly_app/web_search.py`, `recipes.py`, `tests/test_recipes.py`). The
+  proposal filtered the private run before building the offer, so EJ4-04's
+  `removed_terms` named the public station "Quilén Bajo" and never the
+  private "Rincón Alto". The question's capitalised private runs are now
+  candidates even when they never entered the proposed query; glossary
+  equivalents are public names, so they stay in the query and are never
+  reported as removed; and an explicit `private` term still wins over a
+  public-looking one. `removed_terms` is exactly the private terms present
+  in the question, glossary translations or model keywords and absent from
+  the query, and the UI's `removed` words come from those terms.
+
+- **List recipe: a passage is attached only to the item it is about (T9.15)**
+  (`swarmbly_app/recipes.py`, `chat.py`, `tests/test_recipe_list.py`). T9.12
+  put the top passages of the project under every item, so a row of
+  `lotes.csv` was offered to a plot-code record; the original open list
+  battery fell from 27/33 cases (183/189 cells) to 21/33 (156/189). A
+  passage is now kept only when the item's code or a distinctive word
+  appears word-bounded in it (accents and case folded), or when a table
+  row's key is a cell; a long record needs two of its words in a table. At
+  most two passages are attached, prose before table rows, and an item with
+  no relevant passage gets the exact pre-T9.12 prompt. The project's
+  glossary entries and every document paragraph are also searched
+  lexically, so a short code such as `QA` finds "QA = Quilén Alto" even
+  though C1 does not index the glossary. The answer and meta still say
+  whether documents were used or withheld, and receipts record only the
+  passages actually given to the model.
+
+- **List recipe reads the project documents per item (T9.12)**
+  (`swarmbly_app/recipes.py`, `chat.py`, `tests/test_recipe_list.py`). The
+  list path built its prompt from the operation and items only, so cards
+  with “Documentos” answered from memory. Each wave now retrieves passages
+  for every item with the same local retriever the chat recipe uses and
+  places them under their item, with `[D…]` labels. A local list always
+  uses them. A swarm list uses them only when
+  `privacy.third_party_passages` is on; otherwise the passages stay home
+  and the answer says the documents were not used. The receipt records the
+  passages only when they were actually given to the model.
+
+- **Recipe 5 hands the script the text documents too (T9.11)**
+  (`swarmbly_app/recipes.py`, `chat.py`, `tests/test_recipe_code.py`). The
+  file picker now scans the project's `sources` for Markdown, plain text and
+  JSON alongside CSV/TSV/XLSX/XLSM, with the same containment checks
+  (realpath inside the project, no symlinks, size cap) and a read-only copy
+  into `/data`. The script proposal lists each text file by name, size and
+  its first five lines, with the same cap idea as the spreadsheet sample;
+  the rest of the document is not shown. A recipe-5 end-to-end test reads a
+  `.md` and a `.csv` from the sandbox.
+
+- **Research proposal: a private name is removed whole (T9.10)**
+  (`swarmbly_app/web_search.py`, `recipes.py`, `api/__init__.py`, `chat.py`,
+  `web/js/chat.js`, i18n). A private place name at the start of a request was
+  detected only by its last word ("Rincón Alto" left "Rincón" in the offered
+  query). The guard now takes a capitalised private run whole, matches whole
+  terms and their fragments token by token (accents and case folded, word
+  bounded, hyphens as separators), and only removes a *distinctive* word on
+  its own: common place words (“norte”, “alto”, “bajo”, “río”) stay when the
+  user writes them alone, but leave as part of a multi-word private term. The
+  proposal returns `removed`/`removed_terms`/`empty`; the UI lists the terms
+  removed and says when no public query remains. Nothing is sent by the
+  proposal, and the query is still editable and approved by the user.
+
+- **Launch-time test host map (D-013)** (`swarmbly_app/test_hosts.py`,
+  `cli.py`, `egress.py`, MCP/author/HTTP clients, `web/index.html`,
+  `web/js/app.js`). The sealed-bank v4 harness can now exercise third-party
+  paths without weakening the policy for real users. `swarmbly-app serve
+  --test-host-map FILE` (or `SWARMBLY_TEST_HOST_MAP=FILE` read once at process
+  start) loads a JSON object `{"declared.host": "http://127.0.0.1:PORT"}`.
+  Policy, classification, `privacy.tool_hosts`, `third_party_passages`,
+  `AUTHOR_QUERY` and `personal_name` are still computed on the declared host;
+  only the TCP connection is redirected, at the HTTP client factory / connect
+  step (the original `Host` header is kept). Remote MCP Streamable HTTP,
+  author tools and the other egress-checked HTTP clients share the same seam.
+  Only listed hosts are redirected; every target must be loopback
+  (`127.0.0.0/8`, `::1` or `localhost`) or the app refuses to start. A
+  redirected receipt entry carries `simulado: true`, the startup log prints
+  the map, and the UI shows the persistent banner “Test mode: some services
+  are simulated”. The map is deliberately not a setting: it cannot be set
+  from the UI, `/api/config` or the config file (unknown keys are refused by
+  the settings validation), and changing it requires a new process. Checked
+  for this task: `POST /api/projects` already exists with the UI's validation
+  (name, folder under the default projects root unless given) behind the local
+  API guard, so no duplicate project-creation route was added.
+
+- **Author search in the chat** (`swarmbly_app/author_search.py`,
+  `api/__init__.py`, `web/js/chat.js`, i18n). When `tools.author.enabled` is
+  on, the composer shows “Look up an author” and the research recipe has an
+  optional “Also look up an author” field. Both open one consent box with the
+  exact editable name, ORCID/OpenAlex/PubMed checkboxes (all on by default),
+  the sentence “This name will be sent to: … It is a person's name.” and
+  Run/Cancel. Cancel sends nothing. `POST /api/author/lookup` (alias
+  `/api/author/approve`) is the only route that issues the per-service broker
+  tokens and invokes the tools; with the switch off it refuses with a plain
+  message and registers nothing. The answer is a Markdown table built in code
+  from `normalise_works` (title, year, venue, DOI link, source) with `[A1]`,
+  `[A2]` labels; ambiguous ORCID stops after the people search, returns
+  candidates (name, iD, affiliation) and fetches no works until the user picks
+  one. `meta.author` records `{name_sha256, services, counts,
+  candidates_shown}`; the receipt lists each send with its host, real bytes,
+  `AUTHOR_QUERY` and `personal_name: true`. Titles stay text: the UI's Markdown
+  escapes HTML and the app never reads a title as an instruction. New routes
+  `GET /api/author/status`, `POST /api/author/cancel`; English/Spanish UI.
+
+- **Skills in the app: import, offer and activation** (`api/__init__.py`,
+  `chat.py`, `web/js/chat.js`). A project gets a `skills/` folder; importing a
+  skill copies only `SKILL.md` and its `.md`/`.txt` references, and the answer
+  lists the scripts, assets, binaries and links it left out and why. Listing
+  shows the name, description, source, size, ignored files and the skill's
+  `allowed-tools` as “requested by the skill — not granted”. The chat offers a
+  skill as a chip when the message shares at least two meaningful words with
+  its name/description (or a name word); it only offers, never activates. The
+  user can also pick one explicitly from the composer. On activation the body
+  enters the prompt as quoted, labelled third-party material that says it
+  cannot change permissions, tools, destinations or settings; `meta.skill` and
+  `receipt.skill` record its name and SHA-256, and the loader's 20 000-character
+  prompt cap still applies. A body that says “send this to …”, “enable tool X”
+  or “ignore previous instructions” is only text: no tool approval, egress
+  call, destination or setting changes. New routes `GET /api/skills`,
+  `POST /api/skills/import`, `POST /api/skills/match`; English/Spanish UI.
+
+- **Sandbox tests: cold metered fuel compile and Windows links**
+  (`swarmbly_app/sandbox/runner.py`, `worker.py`, `tests/test_sandbox_runner.py`).
+  A fuel run needs wasi-python's separate metered module compile (a cold
+  compile is several seconds on a laptop and longer on a small runner). The
+  worker now writes `metered-warm.json` after paying it, and the parent starts
+  the guest's hard wall clock only after that marker, so the first fuel run on
+  a slow machine is not killed as a deadline. The wall still covers all guest
+  work; no limit or security check changed. The time checks are split into
+  `test_05a_deadline` (unchanged bounds) and `test_05b_optional_fuel`. The
+  symlink check now reads the guest's own row: on Windows wasmtime's
+  `path_symlink` refuses the relative link (it stats the target first, and the
+  target does not exist), so the follow-up write creates a regular file inside
+  `/out`; the test asserts that contained file, checks the host canaries, and
+  walks the retained output with `lstat` to prove no link is collected or
+  followed. It also records R-006 explicitly: Windows has only the watchdog,
+  POSIX has `RLIMIT_FSIZE` plus the watchdog.
+
+- **Sandbox tests: cold-compile timing** (`tests/test_sandbox_runner.py`).
+  The deadline check now starts its wall clock only after a worker reports
+  ready, and the sandbox runner tests share one session-scoped wasmtime cache
+  (the `.cwasm` file only, never run data). A cold compile on a small CI
+  runner no longer counts against the deadline assertion; the session cache
+  is still outside every `/data`/`/out` grant and every run keeps its fresh
+  per-run directories.
+
+- **MCP servers in Settings** (`swarmbly_app/api/__init__.py`,
+  `web/js/settings.js`). The new `/api/mcp/...` routes list, add, inspect,
+  start, stop, propose and approve MCP servers per project, behind the existing
+  host/origin/session-token guard. Adding or listing a server never starts it;
+  only the explicit Start route does, and app shutdown stops what it started.
+  Local entries show the exact command line, working folder and environment
+  variable names before the first start, with the plain notice that the server
+  runs with the user's own rights and is not sandboxed. Environment values are
+  never accepted by the API, stored, logged or returned: the UI only shows
+  whether each name is set in the environment or keychain. Remote entries are
+  labelled third party and show their host, with the `privacy.tool_hosts`
+  checkbox and the separate `privacy.third_party_passages` switch. Tool
+  descriptions are returned as plain JSON text and rendered as quoted text
+  through `textContent` (never HTML or Markdown links); approval is a subset of
+  checkboxes. A suspended server shows its reason and must be proposed and
+  approved again. The new Tools tab also has the `tools.author.enabled` switch
+  (default off, now a validated setting) with one sentence explaining that a
+  lookup sends the exact name approved for that call to ORCID, OpenAlex or
+  PubMed. English and Spanish strings were added.
+
+- **Recipe 5: data with code** (`swarmbly_app/recipes.py`, `chat.py`,
+  `api/__init__.py`, web chat/i18n). The "Data with code" card lets the user
+  pick project source files and ask a question. The writer model (role
+  `writer`, else the conversation model, with the usual destination policy)
+  receives only file names, column headers and at most five sample rows per
+  table, and returns one Python script parsed defensively under a size cap.
+  The UI shows the script, the files it will see, the limits and run/cancel;
+  nothing runs before approval. `POST /api/recipes/code/approve` is the only
+  path that issues the broker's one-time `sandbox/python` token and invokes
+  the tool; cancel, missing `wasi-python`, traps (deadline, memory, output,
+  disk, files) and the two-correction limit are handled explicitly. The answer
+  gives the script, stdout/stderr with a truncation marker, produced files with
+  name/size/SHA-256 and token-safe download links from that run's retained
+  `/out`; `meta.code` records the script hash, input names, trap, elapsed time,
+  `approved_by: "user"` and correction count. The receipt lists the local tool
+  call and any model send, and the Windows watchdog-only disk guard is shown
+  in the approval box (R-006). Recipe 5's earlier runner, extra and escape
+  tests are unchanged; this adds the flow, approval and chat wiring.
+
+- **Author search with consent** (`swarmbly_app/tools/author.py`). Three
+  broker tools, `author/orcid`, `author/openalex` and `author/pubmed`, look up
+  a person's public works only after the user approves the exact name string
+  and the services. Each call needs a one-time token bound to those arguments,
+  so a different name is refused before anything is sent. The tools are
+  registered only when `tools.author.enabled` is true (absent means off). The
+  name is sent exactly as approved, never stripped, and every request goes
+  through the fixed `AUTHOR_QUERY` egress kind (never `PUBLIC_QUERY`); the
+  receipt entry now carries `personal_name: true` and
+  `nombres_personales_enviados` counts it. Results are normalised
+  `{title, year, venue, doi, source, url}` lists, deduplicated by DOI and then
+  by normalised title, and wrapped as quoted data by the broker. ORCID first
+  searches people; when several plausible matches remain it returns
+  `candidates` (name, ORCID iD, affiliation) instead of choosing one, while an
+  optional ORCID iD skips the search and an optional affiliation hint narrows
+  candidates locally without being sent. OpenAlex and PubMed honour
+  `max_results` (up to 25), PubMed keeps DOIs, and rate limits are plain
+  errors. No UI, API route or chat wiring in this step.
+
+- **Embeddings role** (`swarmbly_app/inference/embeddings.py`, `roles.py`,
+  `lce_adapter.py`, `state.py`). Retrieval over the user's sources (C1 dense
+  fusion), the seam/agreement similarity of the orchestrator and direct
+  embedding calls now choose their embedder through `roles.choose("embeddings")`:
+  the app's previous Ollama `/api/embed` model by default, or a chosen Ollama
+  model / OpenAI-compatible `/v1/embeddings` server. Anthropic has no
+  embeddings endpoint, so selecting it is refused in validation and at
+  runtime with that message. Every embedding request passes
+  `egress.check_call` before a byte (`PASSAGES` for document batches,
+  `QUESTION` for the query). A third-party destination receives passages only
+  when its host is authorised **and** `privacy.third_party_passages` is on;
+  otherwise the call is refused (`meta.lce.embeddings.note` and the receipt's
+  `bloqueados`), the app's own local Ollama embedder takes over when
+  configured, and otherwise C1 keeps keyword retrieval. Changing the embedding
+  model or the vector dimension rebuilds the C1 index (a new `SourceIndex`, so
+  vectors from two models never share the text-keyed cache) and says so in
+  `meta.lce.embeddings` (`rebuilt`, `reason`, `previous_model`, `dimension`).
+  Settings → Models gains the role's model/server/URL/key fields (en/es). The
+  role's key is kept in the system keychain.
+
+- **Recipe 4: a degenerate long wave is retried item by item** (`chat.py`,
+  `recipes.py`, `engine/orchestrator.py`). The local list path sent a whole
+  wave (up to 12 items) as one prompt with “responde solo ese elemento”. With
+  12 near-identical records, qwen2.5:7b answered item 1 for the whole wave
+  (`8` in all twelve cells), while the 6-item second wave was correct; the
+  app wrote the repeated value into the table. A wave where at least four
+  distinct items receive four or more identical answers is now retried one
+  item per prompt as a single-row Markdown table, and `meta.list` reports
+  `retries` (and each wave's `retried` flag). The parser also ignores a number
+  inside an echoed item (“Ficha 2: …”) and reads a single-item table row or an
+  item with its number replaced, so the retry's answer is not lost. A 4-item
+  wave is unchanged; a 13-item list retries only its 12-item first wave.
+
+- **MCP client core** (`swarmbly_app/tools/mcp.py`, `mcp_registry.py`). MCP
+  servers are configured per project in `settings/mcp_servers.json` with the
+  exact local command, arguments, working directory and environment-variable
+  names the user sees, or a remote URL; environment values are read at start
+  and never stored. A local server is spawned only when the user calls
+  `start`, with the allowlisted environment and the configured cwd. A remote
+  server is always a third party: it needs its host in `privacy.tool_hosts`
+  and passes `egress.check_call(kind=TOOL_REMOTE)` before connecting. The
+  client lists every tool with pagination, hashes the canonical manifest of
+  names, descriptions and schemas, and approves only a subset; each approved
+  tool is registered in the broker as `mcp:<server>/<tool>` with the broker's
+  strict schema (presentation-only annotations such as Pydantic's `title` are
+  ignored, validation keywords such as `pattern` still cannot be approved).
+  A changed manifest on reconnect or a `tools/list_changed` notification
+  suspends the server, unregisters its specs and records the reason until the
+  user approves again. Calls go through `broker.invoke`; text is concatenated,
+  structured content stays data, `isError` becomes `ok=False`, images, audio
+  and resources are reported as `omitted: <type>`, and the broker's result cap
+  applies. Remote calls whose arguments are long or contain an 8-word shingle
+  of the request's retrieved passages also need `privacy.third_party_passages`.
+  A local MCP server runs with the user's own rights and is not sandboxed; the
+  app says so in `describe()`. The SDK is an optional `[tools]` extra
+  (`mcp==2.3.0`), imported lazily with a clear error when missing.
+
+- **Sandbox runner for recipe 5** (`swarmbly_app/sandbox/`, WebAssembly CPython
+  over `wasi-python==0.1.5` / `wasmtime==50.0.1`, D-010). `SandboxRunner.run()`
+  copies the selected project files into a fresh read-only `/data`, grants a
+  fresh writable `/out` and nothing else (no root, mounts, host, tools,
+  `import_path`, stdin or environment overlays), and returns stdout, stderr,
+  file name/size/SHA-256, a trap reason and the script hash. Every run gets a
+  disposable, pre-warmed child-process worker (pool size 1, one run then
+  recycle); a hard wall clock kills the worker's process group, and collection
+  never follows a symlink. Limits default to 10 s, 256 MiB, 4 MiB per stream,
+  256 MiB / 10 000 output entries and a 384 MiB file cap: `RLIMIT_FSIZE` plus
+  a soft watchdog on POSIX, watchdog only on Windows (`platform_guard:
+  "watchdog"`, R-006). The one-time compile is never paid at import; call
+  `warm_up()` for time and peak RSS (R-005), and `available()` degrades
+  cleanly when the optional `[sandbox]` extra is absent. The broker gets the
+  `sandbox/python` spec (kind `sandbox`, destination `local`, one-time token
+  required), with realpath containment to the current project folder; local
+  runs appear in the receipt's `tools` list and send nothing. New `sandbox`
+  pytest marker and a three-OS CI job run the escape tests. Recipe 5's flow,
+  approval UI and chat wiring are not part of this change.
+
+- **Python 3.11 is the minimum** (D-006). `pyproject.toml` now declares
+  `requires-python = ">=3.11"` and lists 3.11–3.13; the doctor, the launchers,
+  the README/INSTALL requirements and the CI matrix no longer accept 3.10
+  (security support ended on 2026-10-01, and the MCP SDK and `wasi-python`
+  require 3.11).
+
+- **Recipe 4: process a list on the swarm.** The disabled card is available:
+  paste one item per line or pick a CSV file from the project's sources and a
+  column (real CSV, quoted multi-line fields included), write the operation,
+  and see exactly what would leave — operation, items, duplicate count and
+  available nodes — before choosing "On the swarm" or "Only on this computer".
+  Personal or sensitive items default to local (the user can still choose the
+  swarm explicitly), and the receipt records the recipe and the choice. Waves
+  are sized from `swarm.n_fragments_max` × `swarm.min_items_per_fragment`
+  (default 12 items) and run sequentially through the existing batch path;
+  the answer is a code-built table (#, item, answer, status) with
+  answered/missing/disagreement, duplicates kept and marked, and nothing
+  invented for a missing item. `recipes.list_max_items` (default 200) is
+  validated in the config.
+
+- **Tool broker foundation** (`swarmbly_app/tools/`). One entry point for tool
+  calls: a strict JSON-Schema subset (no `jsonschema`, unsupported keywords
+  refused), per-project approvals stored as `{spec_id, approval_hash,
+  granted_at}` with atomic writes, "rug pull" protection when a description or
+  schema changes, and one-time approval tokens bound to the tool, canonical
+  arguments and request for `sandbox`/`author` tools. Tool results are quoted
+  data with their source and hash, capped at 8000 characters. Egress has the
+  new `TOOL_REMOTE`, `AUTHOR_QUERY` and `TOOL_LOCAL` kinds: remote tools need
+  their host in `privacy.tool_hosts`, author lookups need the fixed ORCID /
+  OpenAlex / PubMed allowlist plus a per-call consent, and local tools appear
+  in the receipt's new `tools` list. No MCP, author search, sandbox, approval
+  UI or tool-invoking chat path yet; those plug into this broker.
+
+- **Skills loader** (`swarmbly_app/skills.py`). Agent Skills in the
+  `SKILL.md` format are read as instructions from a file, never as code:
+  loading, discovering, reading a reference and importing do not import, exec,
+  compile or run anything, do not add to `sys.path`, and never grant the
+  `allowed-tools` a skill requests (the parsed values are exposed as
+  `requested_tools` with a note). The frontmatter parser is deliberately
+  minimal and strict: only `key: value` scalars and one level of `metadata:`
+  string pairs, with anchors, aliases, tags, flow collections, multi-document
+  files, duplicate keys, non-string values, BOMs and tabs in indentation
+  rejected; unknown top-level keys are kept aside with a warning. A skill
+  directory is validated for its name (matching the directory) and
+  description, and its `SKILL.md` (100 KB), total readable text (2 MB), file
+  count (200) and body length are capped. `scripts/`, `assets/`, executables
+  (exec bit or shebang), binaries, archives, symlinks, junctions and hardlinks
+  are ignored or rejected with a reason, as are paths with `..`, absolute
+  paths, NUL bytes and invalid UTF-8. `read_reference` reads only `.md`/`.txt`
+  under `references/` or in the skill root. `import_skill` copies only
+  `SKILL.md` and allowed reference text into a temporary directory and renames
+  it into place, returns a manifest of what was copied and ignored, and never
+  copies or runs a script. `as_prompt_block` wraps the body as quoted,
+  labelled material that says the user activated it and that it cannot change
+  permissions or tools.
+
+- **Native Anthropic provider** (`swarmbly_app/inference/anthropic.py`). The
+  conversation model and every role can now run on Anthropic's Messages API
+  (`POST /v1/messages`, SSE) without the Anthropic SDK: httpx is enough. The
+  system prompt travels in the top-level `system` field and consecutive turns
+  of the same role are merged; the model list comes from `GET /v1/models` with
+  its `has_more`/`last_id` pagination. Streaming text deltas, stop reason and
+  token usage are read from `message_start`, `content_block_*`, `message_delta`
+  and `message_stop`; thinking deltas are ignored unless thinking is asked for,
+  in which case the request sends a budget below `max_tokens` and omits
+  `temperature`. HTTP 401/403, 404, 429, 5xx and `overloaded_error` become the
+  app's retryable `BackendError`. Anthropic is a third party: every request,
+  including the model list and the availability probe, passes
+  `egress.check_call`; nothing is sent unless `api.anthropic.com` is authorised
+  in `privacy.third_party_models`, passages need the second authorisation, and
+  a node whose conversation model is Anthropic never serves the swarm. The
+  backend is accepted by the registry, configuration validation and the
+  settings UI (with the existing key fields and i18n in English and Spanish).
+
 ## 0.6.0 — Roles and recipes (2026-11-17)
 
 Swarmbly AI 3.3. Models by role; the cards of "¿Qué quieres hacer?" with

@@ -179,6 +179,7 @@ def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] 
     glossary term or one of its equivalents (then nothing is sent for it), or
     else Wikidata and GBIF when ``online``. Fails closed per source."""
     fetch = fetch or _get
+    from .memory_capture import split_private_mark
     out = []
     for word in words[:6]:
         word = " ".join(word.split())[:60]
@@ -187,6 +188,7 @@ def resolve(words: list[str], lang: str = "es", glossary: list[tuple[str, str]] 
         cands: list[dict[str, Any]] = []
         errors: list[str] = []
         for term, eq in glossary or []:
+            eq = split_private_mark(str(eq or ""))[0]
             stem = term.lower().rstrip("s")
             names = [stem, *[e.strip().lower().rstrip("s") for e in eq.split(",") if e.strip()]]
             w = word.lower().rstrip("s")

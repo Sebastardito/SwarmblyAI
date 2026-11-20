@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 
+from . import test_hosts
 from .chat import ChatService
 from .config import Config
 from .db import Database
@@ -119,6 +120,7 @@ class AppState:
         self.model_manager = ModelManager()
         self.backends = BackendRegistry()
         self.lce = LCEAdapter(self.dirs)
+        self._last_embedding_meta: dict = {}
         self.nodes = NodeManager(self.identity_manager, self.config, self.db,
                                  self.bus, lambda: _build_advertisement(self),
                                  dirs=self.dirs)
@@ -136,6 +138,7 @@ class AppState:
         self.chat.retriever = self._lce_retrieve
         self.chat.retrieval_active = self._lce_active
         self.chat.retrieval_candidates = lambda: list(getattr(self.lce, "last_candidates", []))
+        self.chat.retrieval_meta = self.retrieval_meta
         self.chat.glossary = lambda text, project_id="": (
             self.lce.glossary_terms(text, roots=self.c1_roots(project_id))
             if self._lce_active(project_id) else "")
@@ -151,6 +154,26 @@ class AppState:
         # 3.1: projects — folders of their own, with their chats kept in them
         from .projects import ProjectRegistry
         self.projects = ProjectRegistry(self.config.all, self.config.update)
+        # 3.4: one broker for every tool call. Approvals are per project, or
+        # personal when no project is active. The chat drives the optional
+        # agent adapter; the broker is still the only path that invokes a tool.
+        from .tools import ToolBroker
+        from .tools.standing import StandingStore
+        self.tools = ToolBroker(
+            self.dirs.root,
+            project_path=lambda pid: (project.path if (project := self.projects.get(pid))
+                                      else None))
+        self.standing = StandingStore(
+            self.dirs.root,
+            project_path=lambda pid: (project.path if (project := self.projects.get(pid))
+                                      else None))
+        # 3.4, D-011: the conversation can drive MCP tools through the Core
+        # runtime. The package is optional and imported only when used.
+        from .agent_adapter import AgentAdapter
+        self.agent = AgentAdapter(self.tools, self.config.all, self.backends,
+                                  standing=self.standing, bus=self.bus)
+        self.chat.tools = self.tools
+        self.chat.agent = self.agent
         self.chat.on_conversation_changed = self._copy_chat_to_project
         self.chat.on_conversation_deleted = self._remove_chat_from_project
         self.chat.project_name = lambda pid: (getattr(self.projects.get(pid), "name", "")
@@ -199,14 +222,91 @@ class AppState:
             roots += personal
         return roots
 
+    def _embedding_choice(self, allow_fallback: bool = True):
+        """Who computes embeddings for this request (the ``embeddings`` role)."""
+        from . import roles
+        return roles.choose("embeddings", self.config.all(), None, "",
+                            self.backends, allow_fallback=allow_fallback)
+
+    def _record_embedding_refusal(self, choice) -> None:
+        """A refused destination is part of the receipt even when nothing left."""
+        if not choice.blocked:
+            return
+        from . import egress
+        egress.record(destino=choice.blocked, clase=egress.THIRD_PARTY,
+                      tipo=egress.PASSAGES, bytes=0,
+                      motivo=f"embeddings {choice.asked or 'role'}: {choice.note}",
+                      bloqueado=True)
+
+    def retrieval_meta(self) -> dict:
+        """What the last C1 retrieval did with embeddings (meta.lce.embeddings)."""
+        return dict(self._last_embedding_meta)
+
     def _lce_retrieve(self, query: str, expansion: str = "", project_id: str = "") -> list:
-        """LCE C1 retrieval for local answers, over the conversation's folders."""
+        """LCE C1 retrieval for local answers, over the conversation's folders.
+
+        Embeddings go through the ``embeddings`` role.  A third-party
+        destination without both authorisations is refused before a byte;
+        then the app's own embedder is used when it is local, and otherwise
+        C1 keeps the keyword search.  Either way the answer's meta says so.
+        """
         if not self._lce_active(project_id):
             return []
         cfg = self.config.all().get("lce") or {}
-        return self.lce.retrieve(query, k=int(cfg.get("retrieval_k", 6)),
-                                 expansion=expansion, roots=self.c1_roots(project_id),
-                                 embed=self._embed if cfg.get("dense_retrieval", True) else None)
+        meta: dict = {"role": "embeddings", "enabled": True}
+        if not cfg.get("dense_retrieval", True):
+            meta.update(enabled=False,
+                        note="dense retrieval is off: keyword search only")
+            self._last_embedding_meta = meta
+            self.lce.note_embeddings(meta)
+            return self.lce.retrieve(query, k=int(cfg.get("retrieval_k", 6)),
+                                     expansion=expansion, roots=self.c1_roots(project_id),
+                                     embed=None)
+        choice = self._embedding_choice()
+        meta.update(model=choice.model or "",
+                    backend=getattr(choice.backend, "backend", "") or "",
+                    where=choice.where or "", own=bool(choice.own))
+        if choice.note:
+            meta.update(note=choice.note, asked=choice.asked)
+            if choice.blocked:
+                meta["blocked"] = choice.blocked
+        client = choice.backend
+        if client is None:
+            meta["fallback"] = "lexical"
+            self._record_embedding_refusal(choice)
+            self._last_embedding_meta = meta
+            self.lce.note_embeddings(meta)
+            return self.lce.retrieve(query, k=int(cfg.get("retrieval_k", 6)),
+                                     expansion=expansion, roots=self.c1_roots(project_id),
+                                     embed=None)
+        if choice.note:
+            # The chosen destination was refused; the local embedder does it.
+            meta["fallback"] = "local"
+            self._record_embedding_refusal(choice)
+        meta.update(self.lce.prepare_embeddings(client.identity, client.model, client.dim))
+        self._last_embedding_meta = meta
+        self.lce.note_embeddings(meta)
+
+        def embed(texts: list[str], kind: str) -> list[list[float]]:
+            try:
+                vectors = client.embed(texts, kind)
+            except Exception as exc:
+                meta["fallback"] = "lexical"
+                meta["error"] = str(exc)[:300]
+                self._last_embedding_meta = meta
+                raise
+            if vectors:
+                meta["dimension"] = len(vectors[0])
+                self._last_embedding_meta = meta
+            return vectors
+
+        try:
+            return self.lce.retrieve(query, k=int(cfg.get("retrieval_k", 6)),
+                                     expansion=expansion, roots=self.c1_roots(project_id),
+                                     embed=embed)
+        finally:
+            self._last_embedding_meta = meta
+            self.lce.note_embeddings(meta)
 
     # -- projects (3.1) -------------------------------------------------------------
     def _copy_chat_to_project(self, conversation_id: str) -> None:
@@ -308,27 +408,19 @@ class AppState:
         return added
 
     def _embed(self, texts: list[str], kind: str) -> list[list[float]]:
-        """Vectors from the local embedding model (Ollama /api/embed); local only."""
-        import json as _json
-        import urllib.request
-        model_cfg = self.config.all().get("model") or {}
-        name = model_cfg.get("embed_model") or "nomic-embed-text"
-        prefix = ""
-        if "nomic" in name:          # nomic-embed-text expects task prefixes
-            prefix = "search_query: " if kind == "query" else "search_document: "
-        url = (model_cfg.get("backend_url") or self._ollama_url()).rstrip("/")
-        url = url[:-3] if url.endswith("/v1") else url
-        body = _json.dumps({"model": name, "input": [prefix + t for t in texts]}).encode()
-        # Documents' text is passages; a query is the question. A server that is
-        # not on this computer only gets them under the destinations policy.
+        """Vectors from the ``embeddings`` role, refusing before any byte.
+
+        Kept as the direct entry point for callers that want the refusal to
+        surface (the retrieval path uses it through ``_lce_retrieve``, which
+        falls back to the local embedder or to keyword search)."""
         from . import egress
-        egress.check_call(url, len(body), reason=f"embeddings {name}",
-                          kind=egress.QUESTION if kind == "query" else egress.PASSAGES)
-        req = urllib.request.Request(
-            url + "/api/embed", data=body,
-            headers={"Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=120) as resp:   # noqa: S310 (local server)
-            return _json.loads(resp.read().decode())["embeddings"]
+        choice = self._embedding_choice(allow_fallback=False)
+        if choice.backend is None:
+            raise egress.EgressDenied(
+                choice.note or "no embedding backend",
+                choice.blocked,
+                egress.QUESTION if kind == "query" else egress.PASSAGES)
+        return choice.backend.embed(texts, kind)
 
     # -- P2P lifecycle -----------------------------------------------------------
     def start_p2p(self) -> None:
@@ -419,7 +511,7 @@ class AppState:
         return hardware.detect_all(str(self.dirs.root))
 
     def health(self) -> dict:
-        return {
+        health = {
             "status": "ok",
             "version": __import__("swarmbly_app").__version__,
             "protocol_spec": __import__("swarmbly_app").PROTOCOL_SPEC_VERSION,
@@ -428,6 +520,11 @@ class AppState:
             "uptime_s": int(time.time() - self.started_at),
             "data_dir": str(self.dirs.root),
         }
+        if test_hosts.active():
+            # D-013: only in test mode; without the map this response is
+            # exactly what it always was. Never read from the configuration.
+            health["test_mode"] = test_hosts.describe()
+        return health
 
     def get_orchestrator(self):
         """Built lazily and rebuilt after any configuration change, so it

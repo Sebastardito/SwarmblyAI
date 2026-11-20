@@ -7,11 +7,11 @@ Run it through the wrapper for your system (they find a suitable Python):
     Swarmbly.command            macOS, double-click in Finder
     launch.bat                  Windows
 
-or directly with Python >= 3.10:  python3 scripts/launch.py [options]
+or directly with Python >= 3.11:  python3 scripts/launch.py [options]
 
 What it does, in order, and what it asks before doing:
 
-1. Python    — 3.10 or newer (tells you how to get one otherwise).
+1. Python    — 3.11 or newer (tells you how to get one otherwise).
 2. git       — needed to install the pinned SwarmblyAI / SwarmblyLCE commits.
 3. .venv     — the app's own virtual environment; created on first run.
 4. Packages  — installed or updated inside .venv only. Asks first.
@@ -45,7 +45,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 VENV = ROOT / ".venv"
 STAMP = VENV / ".swarmbly-install"
-MIN_PY = (3, 10)
+MIN_PY = (3, 11)
 DEFAULT_PORT = 8765
 OLLAMA_URL = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434")
 if not OLLAMA_URL.startswith("http"):
@@ -220,7 +220,7 @@ TOTAL = 6
 def check_python() -> bool:
     ver = "%d.%d.%d" % sys.version_info[:3]
     if sys.version_info[:2] < MIN_PY:
-        step(1, TOTAL, "Python", f"{ver} is too old (3.10 or newer needed)", "fail")
+        step(1, TOTAL, "Python", f"{ver} is too old (3.11 or newer needed)", "fail")
         note(python_hint())
         return False
     step(1, TOTAL, "Python", f"{ver}  {sys.executable}")

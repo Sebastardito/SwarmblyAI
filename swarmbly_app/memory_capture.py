@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 import uuid
 from typing import Any
 
@@ -113,8 +114,11 @@ def parse_extraction(raw: str) -> dict[str, Any]:
         if not term or "=" in term:
             continue
         eq = [e.replace("=", " ").strip() for e in _clean_list(g.get("equivalents"), 8, 80)]
-        entries.append({"term": term, "equivalents": [e for e in eq if e and e != term],
-                        "definition": " ".join(str(g.get("definition", "")).split())[:300]})
+        entry = {"term": term, "equivalents": [e for e in eq if e and e != term],
+                 "definition": " ".join(str(g.get("definition", "")).split())[:300]}
+        if private_value(g.get("private", g.get("privado"))):
+            entry["private"] = True
+        entries.append(entry)
     return {"notes": _clean_list(data.get("notes")), "glossary": entries}
 
 
@@ -339,14 +343,105 @@ def _similar(a: str, b: str) -> bool:
     return bool(wa) and len(wa & wb) / len(wa) >= 0.6
 
 
+def _fold(value: Any) -> str:
+    text = unicodedata.normalize("NFKD", str(value or "").lower())
+    return "".join(c for c in text if not unicodedata.combining(c))
+
+
+# A glossary line may carry a privacy mark as an extra "| key: value" segment:
+# "term = eq1, eq2 | privado".  LCE's _split_meta only keeps its known keys,
+# so the App reads this mark itself (T9.17).  A bare key means private; the
+# value may also say so ("sí", "yes", "true") or not ("no", "false").
+_PRIVATE_KEYS = frozenset({"privado", "privada", "private", "privad@"})
+_TRUE_WORDS = frozenset({"", "si", "sí", "yes", "true", "y", "s", "1",
+                         "verdadero", "verdadera", "x"})
+_FALSE_WORDS = frozenset({"no", "false", "n", "0", "falso", "falsa",
+                          "publico", "público", "public", "pública"})
+
+
+def private_value(value: Any) -> bool:
+    """Whether a privacy value means private (``True``, ``"sí"``, ``"yes"``…).
+
+    An empty value (the bare ``| privado`` segment) means private; an explicit
+    negative (``"no"``, ``"false"``) means public, and so does a missing value
+    (``None``: there was no mark).  Anything else is not a mark the App
+    understands, so it stays public rather than hiding a term by accident.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = _fold(value).strip(" .;:'\"«»“”")
+    if text in _TRUE_WORDS:
+        return True
+    if text in _FALSE_WORDS:
+        return False
+    return False
+
+
+def _privacy_segment(segment: str) -> bool | None:
+    """The mark of one ``|`` segment, or ``None`` when it is not a mark."""
+    key, separator, value = str(segment or "").partition(":")
+    if _fold(key).strip() not in _PRIVATE_KEYS:
+        return None
+    return private_value(value if separator else "")
+
+
+def split_private_mark(text: str) -> tuple[str, bool]:
+    """Return ``text`` without its privacy segments, and whether it is private.
+
+    ``text`` may be a full glossary line (``term = eq | privado``) or only its
+    right side.  Every other ``|`` segment (``no``, ``distinto``, ``wd``…) is
+    kept untouched; the last privacy segment wins, so a later edit can say
+    ``| privado: no``.  Case and accents do not matter.
+    """
+    parts = str(text or "").split("|")
+    private = False
+    kept = [parts[0]]
+    for segment in parts[1:]:
+        mark = _privacy_segment(segment)
+        if mark is None:
+            kept.append(segment)
+        else:
+            private = mark
+    return "|".join(kept).strip(), private
+
+
+def is_private_glossary_line(line: str) -> bool:
+    """Whether a glossary line carries the App's privacy mark (T9.17)."""
+    return split_private_mark(line)[1]
+
+
+def glossary_privacy(value: str) -> bool:
+    """Alias of :func:`is_private_glossary_line` for a right side or a line."""
+    return split_private_mark(value)[1]
+
+
+def glossary_entry_private(entry: Any) -> bool:
+    """Whether a glossary entry (the App's dict) is marked private."""
+    if not isinstance(entry, dict):
+        return False
+    for key in ("private", "privado", "privada"):
+        if key in entry and private_value(entry.get(key)):
+            return True
+    return split_private_mark(str(entry.get("equivalents") or ""))[1]
+
+
 def glossary_line(entry: dict[str, Any]) -> str:
     """``term = eq1, eq2 | no: wrong | distinto: other | wd: Q…`` (the format C1
-    reads: equivalents widen the search; segments after ``|`` never do)."""
+    reads: equivalents widen the search; segments after ``|`` never do).
+
+    A private entry (``entry["private"]``) also carries ``| privado``, which
+    the App reads itself (LCE drops unknown metadata) so neither the term nor
+    its equivalents ever reach a public query."""
     clean = lambda xs: [x for x in xs or [] if x and "|" not in x and "=" not in x]  # noqa: E731
     eq, avoid, distinct = clean(entry.get("equivalents")), clean(entry.get("avoid")), \
         clean(entry.get("distinct"))
     wd = str(entry.get("wd") or "").strip()
-    if not (eq or avoid or distinct or wd):
+    private = glossary_entry_private(entry)
+    if not (eq or avoid or distinct or wd or private):
         return ""
     line = f"{entry['term']} = {', '.join(eq) if eq else entry['term']}"
     if avoid:
@@ -355,6 +450,8 @@ def glossary_line(entry: dict[str, Any]) -> str:
         line += f" | distinto: {', '.join(distinct)}"
     if wd and wd.startswith("Q") and wd[1:].isdigit():
         line += f" | wd: {wd}"
+    if private:
+        line += " | privado"
     return line
 
 

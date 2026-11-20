@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmbly-app"
-version = "0.6.0"
+version = "0.7.0"
 description = "Swarmbly App — integrated decentralized AI client and network dashboard for SwarmblyAI + SwarmblyLCE. Fragments the problem, not the model."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "AGPL-3.0-or-later" }
 authors = [{ name = "Sebastián A. Espinoza-Ulloa", email = "sebas_saeu@hotmail.com" }]
 keywords = [
@@ -23,9 +23,9 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: System :: Distributed Computing",
 ]
@@ -44,6 +44,17 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.23"]
+tools = ["mcp==2.3.0"]
+# The agent runtime that drives MCP tools in a conversation (D-007, D-011).
+# Pinned to the umbrella release tag: the App and the runtime are released
+# together (D-014).
+agent = [
+  "swarmbly-agent @ git+https://github.com/Sebastardito/SwarmblyAI.git@v3.4.0#subdirectory=SwarmblyCore/agent",
+]
+# Recipe 5 sandbox (D-010). Exact pins, deliberately not ranges: wasi-python
+# 0.1.5 is young and only its named public API is promised. Upgrades require a
+# new escape-test spike (D-010, R-007) and a renewed wheel-hash lock.
+sandbox = ["wasi-python==0.1.5", "wasmtime==50.0.1"]  # new spike to upgrade
 
 [project.scripts]
 swarmbly-app = "swarmbly_app.cli:main"
@@ -63,3 +74,6 @@ include = ["swarmbly_app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+  "sandbox: heavy recipe-5 sandbox tests (need the [sandbox] extra; run with -m sandbox)",
+]

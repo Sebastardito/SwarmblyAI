@@ -657,12 +657,21 @@ def apply_corrections(header: list[str], rows: list[dict[str, Any]],
     return found
 
 
-def render(header: list[str], rows: list[dict[str, Any]], lang: str = "es") -> str:
-    head = [*header, "Fuente" if lang == "es" else "Source"]
+def render(header: list[str], rows: list[dict[str, Any]], lang: str = "es",
+           source: bool = True) -> str:
+    """A Markdown table from the code's rows.
+
+    ``source=True`` is recipe 2 (the last column carries the passage labels).
+    Recipe 4 passes ``source=False``: its columns are #, item, answer, status.
+    """
+    head = [*header, "Fuente" if lang == "es" else "Source"] if source else list(header)
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
     for r in rows:
-        labels = " ".join(f"[{x}]" for x in dict.fromkeys(r["labels"]))
-        lines.append("| " + " | ".join([*(c or "—" for c in r["cells"]), labels or "—"]) + " |")
+        cells = [*(c or "—" for c in r["cells"])]
+        if source:
+            labels = " ".join(f"[{x}]" for x in dict.fromkeys(r["labels"]))
+            cells.append(labels or "—")
+        lines.append("| " + " | ".join(cells) + " |")
     return "\n".join(lines)
 
 

@@ -11,6 +11,11 @@ const Chat = (() => {
   let conversations = [];
   let attachments = [];
   let recipe = null;             // 3.3: the recipe picked for the next message
+  let skills = [];               // 3.4: the active project's imported skills
+  let skill = null;              // the skill the user picked (never automatic)
+  let skillOffer = null;         // a suggestion, shown as a chip, not activated
+  let skillOfferTimer = null;
+  let agentTools = null;         // 3.4, D-011: what the agent may use here
   let projects = { items: [], active: "", default_parent: "", default_parent_warning: "" };
   const pending = {};           // message_id -> {el, partial}
   const early = {};             // message_id -> events that arrived before the element
@@ -46,6 +51,7 @@ const Chat = (() => {
     els.input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
     });
+    els.input.addEventListener("input", scheduleSkillOffer);
     els.file = h("input", { type: "file", accept: ATTACH_TYPES, multiple: true, hidden: true });
     els.file.addEventListener("change", addFiles);
     els.attachList = h("div.attach-list");
@@ -54,18 +60,37 @@ const Chat = (() => {
     els.model = h("select", { "aria-label": t("chat.model") });
     els.send = button(t("chat.send"), send, "primary");
     els.stop = button(t("chat.stop"), stop, "danger", { disabled: true });
+    els.author = button(t("chat.authorLookup"), () => openAuthorConsent(), "ghost small",
+      { title: t("chat.authorLookupHint"), id: "author-lookup" });
     els.hint = h("p.composer-hint");
     els.mode.addEventListener("change", updateHint);
     els.recipeTag = h("div.recipe-tag", { hidden: true });
+    els.skillTag = h("div.skill-tag", { hidden: true });
+    els.skillOffer = h("div.skill-offer", { hidden: true });
+    els.skill = select([{ value: "", label: t("skills.noSkill") }], "",
+      (value) => {
+        const found = skills.find((s) => s.name === value);
+        if (found) selectSkill(found); else clearSkill();
+      }, { "aria-label": t("skills.pick") });
+    els.useTools = h("input", { type: "checkbox" });
+    els.useToolsRow = h("label.inline.small.tools-toggle",
+      els.useTools, h("span", t("chat.useTools")));
+    els.useToolsRow.title = t("chat.useToolsHint");
+    els.useToolsRow.style.display = "none";
     const composer = h("div.composer",
       els.attachList,
       els.recipeTag,
+      els.skillTag,
+      els.skillOffer,
       els.input,
       h("div.composer-bar",
         button(t("chat.attach"), () => els.file.click(), "ghost small", { title: t("chat.attachHint") }),
         els.file,
+        els.author,
         h("label.inline", h("span", t("chat.mode")), els.mode),
         h("label.inline", h("span", t("chat.model")), els.model),
+        h("label.inline", h("span", t("skills.pick")), els.skill),
+        els.useToolsRow,
         h("span.spacer"), els.stop, els.send),
       els.hint);
     els.projectStrip = h("div.project-strip");
@@ -85,6 +110,8 @@ const Chat = (() => {
   async function loadProjects() {
     try { projects = await Api.get("/api/projects"); } catch (_) { /* keep the last list */ }
     renderProjects();
+    await loadSkills();
+    await loadAgentTools();
   }
 
   function renderProjects() {
@@ -115,6 +142,7 @@ const Chat = (() => {
       actions.push(h("label.inline.small", { title: t("project.includePersonalHint") }, incl,
         h("span", t("project.includePersonal"))));
       actions.push(button(t("project.documents"), showDocuments, "ghost small"));
+      actions.push(button(t("skills.manage"), showSkills, "ghost small"));
       actions.push(button(t("project.export"), exportProject, "ghost small"));
       actions.push(button(t("project.close"), closeProject, "ghost small"));
     }
@@ -124,6 +152,194 @@ const Chat = (() => {
       els.projectStrip.appendChild(h("p.project-path", { title: p.path }, p.path));
       if (p.cloud_warning) els.projectStrip.appendChild(h("p.note.project-warning", t("project.cloudWarning")));
     }
+  }
+
+  // ---- skills (3.4): offer, pick, import; never run anything -------------------
+  async function loadSkills() {
+    if (!projects.active) {
+      skills = [];
+      if (skill) { skill = null; renderSkillTag(); }
+      renderSkillSelector();
+      renderSkillOffer();
+      return;
+    }
+    try {
+      const data = await Api.get(`/api/skills?project_id=${encodeURIComponent(projects.active)}`);
+      skills = data.skills || [];
+    } catch (_) { skills = []; }
+    if (skill && !skills.some((s) => s.name === skill.name)) {
+      skill = null;
+      renderSkillTag();
+    }
+    renderSkillSelector();
+    renderSkillOffer();
+  }
+
+  function renderSkillSelector() {
+    if (!els.skill) return;
+    clear(els.skill);
+    const first = projects.active
+      ? (skills.length ? t("skills.noSkill") : t("skills.noneAvailable"))
+      : t("skills.needProject");
+    els.skill.appendChild(h("option", { value: "" }, first));
+    for (const s of skills) {
+      const opt = h("option", { value: s.name }, s.name);
+      if (skill && skill.name === s.name) opt.selected = true;
+      els.skill.appendChild(opt);
+    }
+    els.skill.disabled = !projects.active || !skills.length;
+  }
+
+  function selectSkill(s) {
+    if (!s || !s.name) return;
+    skill = { name: s.name, description: s.description || "", sha256: s.sha256 || "" };
+    skillOffer = null;
+    renderSkillTag();
+    renderSkillOffer();
+    renderSkillSelector();
+  }
+
+  function clearSkill() {
+    skill = null;
+    renderSkillTag();
+    renderSkillOffer();
+    renderSkillSelector();
+  }
+
+  function renderSkillTag() {
+    if (!els.skillTag) return;
+    clear(els.skillTag);
+    els.skillTag.hidden = !skill;
+    if (!skill) return;
+    els.skillTag.appendChild(h("span.chip.ok", { title: skill.sha256 ? t("skills.hashTitle").replace("{sha}", skill.sha256) : "" },
+      `${t("skills.active")}: ${skill.name}`,
+      h("button.chip-x", { type: "button", onclick: clearSkill,
+        "aria-label": t("skills.clear") }, "×")));
+    els.skillTag.appendChild(h("span.muted.small", t("skills.activeNote")));
+  }
+
+  function scheduleSkillOffer() {
+    clearTimeout(skillOfferTimer);
+    skillOfferTimer = null;
+    if (!projects.active || skill) {
+      skillOffer = null;
+      renderSkillOffer();
+      return;
+    }
+    const text = els.input.value.trim();
+    if (text.length < 3) {
+      skillOffer = null;
+      renderSkillOffer();
+      return;
+    }
+    skillOfferTimer = setTimeout(() => fetchSkillOffer(text), 350);
+  }
+
+  async function fetchSkillOffer(text) {
+    try {
+      const data = await Api.post("/api/skills/match", {
+        project_id: projects.active, text });
+      if (skill || els.input.value.trim() !== text) return;
+      skillOffer = (data.suggestions || [])[0] || null;
+    } catch (_) { skillOffer = null; }
+    renderSkillOffer();
+  }
+
+  function renderSkillOffer() {
+    if (!els.skillOffer) return;
+    clear(els.skillOffer);
+    els.skillOffer.hidden = !skillOffer;
+    if (!skillOffer) return;
+    els.skillOffer.appendChild(h("div.skill-offer-row",
+      h("span", t("skills.offer").replace("{name}", skillOffer.name)),
+      h("span.muted.small", skillOffer.description || ""),
+      button(t("skills.use"), () => selectSkill(skillOffer), "primary small"),
+      h("button.chip-x", { type: "button", onclick: () => { skillOffer = null; renderSkillOffer(); },
+        "aria-label": t("skills.dismiss") }, "×")));
+  }
+
+  async function showSkills() {
+    if (!projects.active) { UI.toast(t("skills.needProject"), "error"); return; }
+    let data;
+    try {
+      data = await Api.get(`/api/skills?project_id=${encodeURIComponent(projects.active)}`);
+    } catch (e) { UI.toast(e.message, "error"); return; }
+    const list = h("div.skill-list");
+    if (!(data.skills || []).length) list.appendChild(h("p.muted", t("skills.empty")));
+    for (const s of data.skills || []) {
+      const ignored = s.ignored || [];
+      list.appendChild(h("div.skill-row",
+        h("div.skill-head", h("strong", s.name), chip(UI.fmtBytes(s.size))),
+        h("p.skill-desc", s.description || ""),
+        h("p.muted.small", `${t("skills.source")}: ${s.source}`),
+        h("p.muted.small", `${t("skills.allowed")}: ${(s.allowed_tools || []).join(", ") || t("skills.none")} — ${t("skills.notGranted")}`),
+        s.compatibility ? h("p.muted.small", `${t("skills.compatibility")}: ${s.compatibility}`) : null,
+        s.license ? h("p.muted.small", `${t("skills.license")}: ${s.license}`) : null,
+        s.warnings && s.warnings.length
+          ? h("p.note", `${t("skills.warnings")}: ${s.warnings.join("; ")}`) : null,
+        ignored.length
+          ? h("details", h("summary", t("skills.ignored").replace("{n}", ignored.length)),
+              h("ul", ignored.map((i) => h("li", `${i.path} — ${i.reason}`))))
+          : h("p.muted.small", t("skills.nothingIgnored")),
+        h("div.inline-form", button(t("skills.use"), () => {
+          selectSkill(s);
+          UI.toast(t("skills.selected").replace("{name}", s.name), "ok");
+        }, "small"))));
+    }
+    const errors = data.errors || [];
+    const path = h("input.text", { type: "text", placeholder: "~/Downloads/my-skill",
+      "aria-label": t("skills.folder") });
+    const overwrite = h("input", { type: "checkbox" });
+    const result = h("div.skill-import-result");
+    const importBtn = button(t("skills.import"), async () => {
+      if (!path.value.trim()) return;
+      importBtn.disabled = true;
+      try {
+        const res = await Api.post("/api/skills/import", {
+          project_id: projects.active, path: path.value.trim(),
+          overwrite: overwrite.checked });
+        const imported = res.skill || {};
+        clear(result);
+        result.appendChild(h("p.ok", t("skills.imported").replace("{name}", imported.name || "")));
+        result.appendChild(h("p.muted.small", t("skills.copied").replace("{n}", (imported.copied || []).length)));
+        if (imported.ignored && imported.ignored.length) {
+          result.appendChild(h("details", { open: true },
+            h("summary", t("skills.ignored").replace("{n}", imported.ignored.length)),
+            h("ul", imported.ignored.map((i) => h("li", `${i.path} — ${i.reason}`)))));
+        }
+        await loadSkills();
+      } catch (e) {
+        clear(result);
+        result.appendChild(h("p.error", e.message));
+      }
+      importBtn.disabled = false;
+    }, "primary small");
+    UI.modal(t("skills.title"), h("div.skill-panel",
+      h("h3", t("skills.installed")), list,
+      errors.length ? h("details", h("summary", t("skills.errors").replace("{n}", errors.length)),
+        h("ul", errors.map((e) => h("li", `${e.path} — ${e.reason}`)))) : null,
+      h("section.skill-import",
+        h("h3", t("skills.importTitle")),
+        h("p.muted", t("skills.importHelp")),
+        h("div.inline-form", path, importBtn),
+        h("label.inline.small", overwrite, h("span", t("skills.overwrite"))),
+        result)), [{ label: t("common.close"), value: null, kind: "primary" }]);
+  }
+
+  /* 3.4, D-011: the toggle is offered only when at least one MCP tool is
+     approved for this project. Off by default and reset after each message. */
+  async function loadAgentTools() {
+    try {
+      agentTools = await Api.get(`/api/agent/tools?project=${encodeURIComponent(projects.active || "")}`);
+    } catch (_) {
+      agentTools = { available: false, mcp_approved: false, tools: [] };
+    }
+    const offered = !!(agentTools.available && agentTools.mcp_approved);
+    if (!offered) els.useTools.checked = false;
+    els.useToolsRow.style.display = offered ? "" : "none";
+    els.useToolsRow.title = agentTools.available
+      ? t("chat.useToolsHint")
+      : (agentTools.reason || t("chat.useToolsUnavailable"));
   }
 
   async function onProjectChoice(value) {
@@ -275,6 +491,25 @@ const Chat = (() => {
     if (mode === "local" && cfg.model?.multi_model) key = "chat.hint.localMulti";
     if (mode !== "local" && (cfg.privacy?.tier || "LOCAL") === "LOCAL") key = "chat.hint.tierLocal";
     els.hint.textContent = t(key);
+    updateAuthorButton();
+  }
+
+  /* 3.4: the author action exists only when tools.author.enabled is true.
+     The API refuses too, so a stale page cannot send a name. */
+  const AUTHOR_SERVICES = ["orcid", "openalex", "pubmed"];
+  // Same handler as /api/author/lookup: the approval route issues the tokens.
+  const AUTHOR_APPROVE = "/api/author/approve";
+  const AUTHOR_HOSTS = {
+    orcid: "pub.orcid.org",
+    openalex: "api.openalex.org",
+    pubmed: "eutils.ncbi.nlm.nih.gov",
+  };
+  function authorEnabled() {
+    const cfg = App.state.config || {};
+    return !!(cfg.tools?.author?.enabled || cfg["tools.author.enabled"]);
+  }
+  function updateAuthorButton() {
+    if (els.author) els.author.hidden = !authorEnabled();
   }
 
   async function refreshModels() {
@@ -338,7 +573,8 @@ const Chat = (() => {
     { id: "documents", available: true },
     { id: "table", available: true },
     { id: "research", available: true },
-    { id: "list", available: false },
+    { id: "list", available: true },
+    { id: "code", available: true },
   ];
   const recipeKey = (id) => id.charAt(0).toUpperCase() + id.slice(1);
 
@@ -357,7 +593,9 @@ const Chat = (() => {
       h("p.muted.small", t("chat.recipesHint")));
   }
 
-  function pickRecipe(id) {
+  async function pickRecipe(id) {
+    if (id === "list") return openListRecipe();
+    if (id === "code") return openCodeRecipe();
     recipe = id;
     const template = t(`chat.recipe${recipeKey(id)}Template`);
     els.input.value = template;
@@ -380,23 +618,394 @@ const Chat = (() => {
     els.recipeTag.appendChild(h("span.muted.small", t(`chat.recipe${recipeKey(recipe)}Note`)));
   }
 
-  /* Research: the query is proposed before the answer, and nothing is sent
-     until the user approves it (and may edit it). */
-  async function approveResearch(text) {
-    let proposed = "";
+  /* Recipe 4: a pasted list or a CSV column, the operation, and a preview of
+     exactly what would leave before either choice is made. */
+  async function openListRecipe() {
+    recipe = null;
+    showRecipeTag();
+    const p = activeProject();
+    let sources = [];
     try {
-      proposed = (await Api.post("/api/recipes/query", { text, project_id: projects.active || "" })).query || "";
+      sources = p ? await Api.get(`/api/projects/${encodeURIComponent(p.id)}/sources`)
+                  : await Api.get("/api/lce/sources");
+    } catch (_) { sources = []; }
+    const csvs = sources.filter((d) => /\.csv$/i.test(String(d.rel || d.name || "")));
+    const items = h("textarea.text", { rows: 8, "aria-label": t("chat.listItems") });
+    const itemsLabel = h("label.stack", h("span", t("chat.listItems")), items);
+    const file = select([{ value: "", label: t("chat.listPaste") },
+      ...csvs.map((d) => ({ value: d.rel || d.name, label: d.rel || d.name }))], "",
+      null, { "aria-label": t("chat.listCsvFile") });
+    const column = h("input.text", { type: "text", placeholder: t("chat.listColumnHint"),
+      "aria-label": t("chat.listCsvColumn") });
+    const csvBox = h("div.form-stack",
+      h("label.stack", h("span", t("chat.listCsvColumn")), column));
+    csvBox.style.display = "none";
+    file.addEventListener("change", () => {
+      csvBox.style.display = file.value ? "" : "none";
+      itemsLabel.style.display = file.value ? "none" : "";
+    });
+    const operation = h("input.text", { type: "text", placeholder: t("chat.listOperationHint"),
+      "aria-label": t("chat.listOperation") });
+    const ok = await UI.modal(t("chat.recipeList"), h("div.form-stack",
+      h("p", t("chat.listIntro")),
+      itemsLabel,
+      csvs.length ? h("label.stack", h("span", t("chat.listOrCsv")), file) : null,
+      csvBox,
+      h("label.stack", h("span", t("chat.listOperation")), operation),
+      h("p.muted", t("chat.listPreviewHint"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.listPreview"), value: true, kind: "primary" }]);
+    if (!ok) return;
+    const op = operation.value.trim();
+    if (!op) { UI.toast(t("chat.listOperationEmpty"), "error"); return; }
+    const source = file.value ? { kind: "csv", file: file.value, column: column.value.trim() }
+      : { kind: "pasted" };
+    if (source.kind === "csv" && !source.column) {
+      UI.toast(t("chat.listColumnEmpty"), "error"); return;
+    }
+    if (source.kind === "pasted" && !items.value.trim()) {
+      UI.toast(t("chat.listItemsEmpty"), "error"); return;
+    }
+    let preview;
+    try {
+      preview = await Api.post("/api/recipes/list/preview", {
+        items: source.kind === "pasted" ? items.value : "", operation: op,
+        where: "local", source, project_id: projects.active || "" });
+    } catch (e) { UI.toast(e.message, "error"); return; }
+    return showListPreview(preview, { source });
+  }
+
+  async function showListPreview(preview, base) {
+    const swarm = h("input", { type: "radio", name: "list-where", value: "swarm" });
+    const local = h("input", { type: "radio", name: "list-where", value: "local" });
+    if (preview.default_where === "swarm") swarm.checked = true; else local.checked = true;
+    if (!preview.nodes_available) swarm.disabled = true;
+    const shown = preview.items.slice(0, 50);
+    const box = h("div.form-stack",
+      h("p", t("chat.listWhatLeaves")),
+      h("p", h("strong", preview.operation)),
+      h("p.muted", t("chat.listCount").replace("{n}", preview.count)
+        .replace("{d}", preview.duplicates)),
+      h("ul.sources", shown.map((item, i) => h("li", h("span.muted", `${i + 1}. `), item))),
+      preview.items.length > shown.length
+        ? h("p.muted", t("chat.listMore").replace("{n}", preview.items.length - shown.length)) : null,
+      h("p.muted", t("chat.listNodes").replace("{n}", preview.nodes_available)),
+      preview.local_only_reason ? h("p.note", preview.local_only_reason) : null,
+      h("div.form-stack",
+        h("label.inline", swarm, h("span", t("chat.listWhereSwarm"))),
+        h("label.inline", local, h("span", t("chat.listWhereLocal")))));
+    const ok = await UI.modal(t("chat.listPreviewTitle"), box, [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.listSend"), value: true, kind: "primary" }]);
+    if (!ok) return;
+    const where = swarm.checked ? "swarm" : "local";
+    return sendListJob({ items: preview.items, operation: preview.operation,
+      where, source: base.source });
+  }
+
+  async function sendListJob(job) {
+    const mode = job.where === "swarm" ? "lan" : "local";
+    if (!active) {
+      const conv = await Api.post("/api/conversations", {
+        mode, model: els.model.value, project_id: projects.active || "" });
+      active = conv.id;
+    }
+    let res;
+    try {
+      res = await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages`, {
+        text: job.operation, mode, model: els.model.value, recipe: "list",
+        list_job: job });
+    } catch (err) { UI.toast(err.message, "error"); return; }
+    els.thread.querySelector(".empty-state")?.remove();
+    track(res);
+    conversations = await Api.get(`/api/conversations${projectQuery()}`);
+    renderList();
+    els.title.textContent = conversations.find((c) => c.id === active)?.title || "";
+  }
+
+  /* Recipe 5: the model writes a short script for the selected table/file.
+     Nothing runs until the user approves the script; approval is the only
+     endpoint that issues the broker's one-time token. */
+  async function codeStatus() {
+    try { return await Api.get("/api/recipes/code/status"); }
+    catch (_) { return { available: false, reason: t("chat.codeUnavailable") }; }
+  }
+
+  async function openCodeRecipe(opts = {}) {
+    recipe = null;
+    showRecipeTag();
+    const status = await codeStatus();
+    if (!status.available) {
+      return UI.modal(t("chat.recipeCode"), h("div.form-stack",
+        h("p", t("chat.codeUnavailable")),
+        h("p.muted", t("chat.codeUnavailableHint"))), [
+        { label: t("common.close"), value: null, kind: "ghost" }]);
+    }
+    if (opts.correctionOf) {
+      return proposeCode(opts.question || "", opts.files || [], opts.correctionOf);
+    }
+    let sources = [];
+    try {
+      sources = await Api.get(`/api/recipes/code/sources?project_id=${
+        encodeURIComponent(projects.active || "")}`);
+    } catch (_) { sources = []; }
+    if (!sources.length) {
+      return UI.modal(t("chat.recipeCode"), h("p", t("chat.codeNoSources")), [
+        { label: t("common.close"), value: null, kind: "ghost" }]);
+    }
+    const boxes = [];
+    const list = h("div.form-stack", sources.map((d) => {
+      const box = h("input", { type: "checkbox", value: d.rel || d.name || "" });
+      boxes.push(box);
+      return h("label.inline", box, h("span", d.rel || d.name || ""));
+    }));
+    const question = h("textarea.text", { rows: 3, "aria-label": t("chat.codeQuestion"),
+      placeholder: t("chat.codeQuestionHint") });
+    const ok = await UI.modal(t("chat.recipeCode"), h("div.form-stack",
+      h("p", t("chat.codeIntro")),
+      h("p", h("strong", t("chat.codeFiles"))), list,
+      h("label.stack", h("span", t("chat.codeQuestion")), question),
+      h("p.muted", t("chat.codeSampleHint"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.codePropose"), value: true, kind: "primary" }]);
+    if (!ok) return;
+    const files = boxes.filter((b) => b.checked).map((b) => b.value);
+    if (!files.length) { UI.toast(t("chat.codePickFile"), "error"); return; }
+    const q = question.value.trim();
+    if (!q) { UI.toast(t("chat.codeQuestionEmpty"), "error"); return; }
+    return proposeCode(q, files, "");
+  }
+
+  async function proposeCode(question, files, correctionOf) {
+    UI.toast(t("chat.codeWriting"), "");
+    let proposal;
+    try {
+      proposal = await Api.post("/api/recipes/code/propose", {
+        conversation_id: active || "", project_id: projects.active || "",
+        question, files, model: els.model.value,
+        correction_of: correctionOf || "" });
+    } catch (err) { UI.toast(err.message, "error"); return; }
+    return showCodeApproval(proposal);
+  }
+
+  async function showCodeApproval(proposal) {
+    const pre = h("pre.code-script", { style: "max-height: 20rem; overflow: auto; white-space: pre-wrap;" },
+      proposal.script);
+    const fileList = h("ul.sources", (proposal.files || []).map((f) =>
+      h("li", h("span.muted", "· "), f.name)));
+    const limits = proposal.limits || {};
+    const limitText = t("chat.codeLimitsText")
+      .replace("{time}", limits.deadline_s)
+      .replace("{memory}", limits.memory_mib)
+      .replace("{output}", limits.output_mib)
+      .replace("{disk}", limits.max_out_mib);
+    const ok = await UI.modal(t("chat.codeProposalTitle"), h("div.form-stack",
+      h("p", t("chat.codeProposalIntro")),
+      h("p", h("strong", t("chat.codeFilesWillSee"))), fileList,
+      h("p", h("strong", t("chat.codeScript"))), pre,
+      h("p.muted", limitText),
+      proposal.watchdog_only ? h("p.note", t("chat.codeWatchdog")) : null,
+      h("p.muted", t("chat.codeApproveHint"))), [
+      { label: t("chat.codeCancel"), value: false, kind: "ghost" },
+      { label: t("chat.codeRun"), value: true, kind: "primary" }]);
+    if (!ok) {
+      try { await Api.post("/api/recipes/code/cancel", { proposal_id: proposal.proposal_id }); }
+      catch (_) { /* it already expired */ }
+      return;
+    }
+    UI.toast(t("chat.codeRunning"), "");
+    let res;
+    try {
+      res = await Api.post("/api/recipes/code/approve", { proposal_id: proposal.proposal_id });
+    } catch (err) { UI.toast(err.message, "error"); return; }
+    active = res.assistant_message.conversation_id;
+    await loadConversations(active);
+    UI.toast(t("chat.codeDone"), "ok");
+  }
+
+  async function correctCode(m) {
+    const run = m.meta?.code_run || {};
+    if (!run.proposal_id) return;
+    return openCodeRecipe({ correctionOf: run.proposal_id, question: run.question || "",
+      files: run.file_refs || [] });
+  }
+
+  /* Research: the query is proposed before the answer, and nothing is sent
+     until the user approves it (and may edit it). The optional author field
+     opens the same consent box an author lookup always uses. */
+  async function approveResearch(text) {
+    let proposed = "", removed = [], empty = false;
+    try {
+      const offer = await Api.post("/api/recipes/query", { text, project_id: projects.active || "" });
+      proposed = offer.query || "";
+      removed = offer.removed || [];
+      empty = !!offer.empty;
     } catch (e) { proposed = ""; }
     const q = h("input.text", { type: "text", value: proposed, "aria-label": t("chat.webQuery") });
+    const author = h("input.text", { type: "text", value: "",
+      "aria-label": t("chat.recipeResearchAuthor"),
+      placeholder: t("chat.recipeResearchAuthorHint") });
+    const authorBox = authorEnabled()
+      ? h("label.stack.author-research", h("span", t("chat.recipeResearchAuthor")), author,
+          h("span.muted.small", t("chat.recipeResearchAuthorHelp")))
+      : null;
     setTimeout(() => q.focus(), 50);
+    const removedNote = removed.length
+      ? h("p.muted", t("chat.webOfferRemoved").replace("{terms}", removed.join(", ")))
+      : null;
+    const emptyNote = empty ? h("p.note", t("chat.webOfferEmpty")) : null;
     const ok = await UI.modal(t("chat.recipeResearch"), h("div.form-stack",
       h("p", t("chat.recipeResearchAsk")),
       h("label.stack", h("span", t("chat.webQuery")), q),
+      removedNote, emptyNote,
+      authorBox,
       h("p.muted", t("chat.webHint"))), [
       { label: t("common.cancel"), value: false, kind: "ghost" },
       { label: t("chat.recipeResearchSend"), value: true, kind: "primary" }]);
     if (!ok || !q.value.trim()) return null;
-    return q.value.trim();
+    return { query: q.value.trim(),
+      author: authorBox ? author.value.trim() : "" };
+  }
+
+  /* 3.4 author search: the consent box is the only way a lookup starts.
+     The name stays exactly as written; services default to all three. */
+  async function openAuthorConsent(initialName = "") {
+    if (!authorEnabled()) {
+      UI.toast(t("chat.authorDisabled"), "error");
+      return false;
+    }
+    const name = h("input.text", { type: "text", value: initialName || "",
+      maxlength: "200", "aria-label": t("chat.authorName") });
+    const boxes = {};
+    const sentence = h("p.note.author-consent-sentence");
+    const chosen = () => AUTHOR_SERVICES.filter((service) => boxes[service].checked);
+    const refreshSentence = () => {
+      const hosts = chosen().map((service) => AUTHOR_HOSTS[service]).join(", ");
+      sentence.textContent = t("chat.authorConsent").replace("{hosts}",
+        hosts || t("chat.authorNoService"));
+    };
+    const serviceRows = AUTHOR_SERVICES.map((service) => {
+      const box = h("input", { type: "checkbox" });
+      box.checked = true;                       // default: all three
+      box.addEventListener("change", refreshSentence);
+      boxes[service] = box;
+      return h("label.author-service", box,
+        h("span", t(`chat.authorService.${service}`)),
+        h("span.muted", AUTHOR_HOSTS[service]));
+    });
+    refreshSentence();
+    setTimeout(() => name.focus(), 50);
+    const ok = await UI.modal(t("chat.authorTitle"), h("div.form-stack",
+      h("p", t("chat.authorIntro")),
+      h("label.stack", h("span", t("chat.authorName")), name),
+      h("fieldset.author-services", h("legend", t("chat.authorServices")), serviceRows),
+      sentence,
+      h("p.muted.small", t("chat.authorNote"))), [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("chat.authorRun"), value: "run", kind: "primary" }]);
+    if (ok !== "run") return false;             // Cancel sends nothing at all
+    if (!name.value.trim()) {
+      UI.toast(t("chat.authorNameEmpty"), "error");
+      return false;
+    }
+    const services = chosen();
+    if (!services.length) {
+      UI.toast(t("chat.authorChooseService"), "error");
+      return false;
+    }
+    const conversationId = await ensureConversation();
+    if (!conversationId) return false;
+    let response;
+    try {
+      response = await Api.post(AUTHOR_APPROVE, {
+        conversation_id: conversationId,
+        name: name.value,                        // the exact text in the box
+        services,
+      });
+    } catch (err) {
+      UI.toast(err.message, "error");
+      return false;
+    }
+    return handleAuthorResponse(response, conversationId, name.value, services);
+  }
+
+  async function ensureConversation() {
+    if (active) return active;
+    try {
+      const conv = await Api.post("/api/conversations", { mode: els.mode.value,
+        model: els.model.value, project_id: projects.active || "" });
+      active = conv.id;
+      els.title.textContent = conv.title || t("chat.untitled");
+      conversations = await Api.get(`/api/conversations${projectQuery()}`);
+      renderList();
+      return active;
+    } catch (err) {
+      UI.toast(err.message, "error");
+      return null;
+    }
+  }
+
+  /* The first ORCID answer had several people: no works were fetched. Ask
+     which person, then make a new call with that iD only after the pick. */
+  async function pickAuthorCandidate(response, name, services) {
+    const radios = [];
+    const rows = (response.candidates || []).map((candidate, index) => {
+      const radio = h("input", { type: "radio", name: "author-candidate",
+        value: candidate.orcid || "" });
+      if (index === 0) radio.checked = true;
+      radios.push(radio);
+      return h("label.author-candidate", radio,
+        h("span.author-candidate-name", candidate.name || t("chat.authorNoName")),
+        h("code", candidate.orcid || ""),
+        candidate.affiliation ? h("span.muted", candidate.affiliation) : null);
+    });
+    const ok = await UI.modal(t("chat.authorPickTitle"), h("div.form-stack",
+      h("p", t("chat.authorPickIntro")),
+      h("p.muted", t("chat.authorPickName").replace("{name}", name)),
+      h("div.author-candidates", rows.length ? rows : h("p.note", t("chat.authorNoCandidates")))),
+      [
+        { label: t("common.cancel"), value: false, kind: "ghost" },
+        { label: t("chat.authorPick"), value: "pick", kind: "primary" }]);
+    if (ok !== "pick") return false;            // no works fetched until a pick
+    const radio = radios.find((item) => item.checked);
+    if (!radio || !radio.value) {
+      UI.toast(t("chat.authorPickOne"), "error");
+      return false;
+    }
+    let picked;
+    try {
+      picked = await Api.post(AUTHOR_APPROVE, {
+        conversation_id: response.conversation_id || active,
+        name, services, orcid: radio.value,
+        candidates_shown: response.author?.candidates_shown || 0,
+      });
+    } catch (err) {
+      UI.toast(err.message, "error");
+      return false;
+    }
+    return handleAuthorResponse(picked, response.conversation_id || active,
+      name, services);
+  }
+
+  /* Results are already an assistant message built by the server; append it
+     without pretending the model is still writing. */
+  async function handleAuthorResponse(response, conversationId, name, services) {
+    if (response.ambiguous) {
+      return pickAuthorCandidate({ ...response, conversation_id: conversationId },
+        name, services);
+    }
+    els.thread.querySelector(".empty-state")?.remove();
+    if (response.user_message) els.thread.appendChild(messageEl(response.user_message));
+    if (response.assistant_message) {
+      els.thread.appendChild(messageEl(response.assistant_message));
+    }
+    try {
+      conversations = await Api.get(`/api/conversations${projectQuery()}`);
+      renderList();
+      els.title.textContent = conversations.find((c) => c.id === conversationId)?.title || "";
+    } catch (_) { /* the answer is already on screen */ }
+    scroll();
+    return true;
   }
 
   async function open(id) {
@@ -481,22 +1090,28 @@ const Chat = (() => {
     }
     const extra = {};
     if (recipe) extra.recipe = recipe;
+    if (skill) extra.skill = skill.name;
+    if (els.useTools.checked) extra.use_tools = true;
+    let researchAuthor = "";
     if (recipe === "research") {
-      const query = await approveResearch(els.input.value.trim());
-      if (!query) return;
+      const approved = await approveResearch(els.input.value.trim());
+      if (!approved) return;
       extra.allow_public = true;
-      extra.web_query = query;
+      extra.web_query = approved.query;
+      researchAuthor = approved.author || "";
     }
-    if (!active) {
-      const conv = await Api.post("/api/conversations", { mode: els.mode.value, model: els.model.value,
-        project_id: projects.active || "" });
-      active = conv.id;
+    if (!(await ensureConversation())) return;
+    if (researchAuthor) {
+      // Optional "Also look up an author": its own consent box, its own
+      // approval endpoint. Cancelling it does not cancel the research.
+      await openAuthorConsent(researchAuthor);
     }
     els.input.value = "";
     attachments = [];
     renderAttachments();
     recipe = null;
     showRecipeTag();
+    els.useTools.checked = false;      // per message: off by default again
     let res;
     try {
       res = await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages`,
@@ -536,7 +1151,7 @@ const Chat = (() => {
   function onEvent(event) {
     const p = event.payload || {};
     if (event.type === "request.started" && p.message_id) requestOf[p.message_id] = p.request_id;
-    if (!["chat.delta", "chat.done", "chat.notice"].includes(event.type)) return;
+    if (!["chat.delta", "chat.done", "chat.notice", "chat.approval"].includes(event.type)) return;
     if (event.type === "ws.open") { checkPending(true); return; }
     const entry = pending[p.message_id];
     if (entry) entry.last = Date.now();
@@ -550,6 +1165,10 @@ const Chat = (() => {
       scroll();
     } else if (event.type === "chat.notice") {
       setNote(entry.el, p.note);
+    } else if (event.type === "chat.approval") {
+      delete pending[p.message_id];
+      els.stop.disabled = Object.keys(pending).length === 0;
+      refreshMessage(p.message_id, entry.el, p);
     } else {
       delete pending[p.message_id];
       els.stop.disabled = Object.keys(pending).length === 0;
@@ -628,6 +1247,10 @@ const Chat = (() => {
       if (meta.coverage?.missing?.length) article.appendChild(coverageBox(meta.coverage.missing));
       if (meta.verification?.flagged?.length) article.appendChild(verificationBox(meta.verification));
       if (meta.memory_proposals) article.appendChild(memoryCard(m));
+      if (meta.code) article.appendChild(codeResult(m));
+      if (meta.status === "awaiting_approval" && meta.agent?.pending) {
+        article.appendChild(approvalCard(m));
+      }
       article.appendChild(footer(m));
     }
     return article;
@@ -668,6 +1291,55 @@ const Chat = (() => {
     }
   }
 
+  /* 3.4, D-011: nothing runs until the user sees the exact call and says yes.
+     Run asks the approval endpoint for the one-time token; Skip sends a denial
+     back to the model; Stop ends the run with what it has. */
+  function approvalCard(m) {
+    const card = m.meta.agent.pending;
+    const remember = h("input", { type: "checkbox" });
+    const rememberRow = h("label.inline.small", remember,
+      h("span", t("chat.agentRemember")));
+    rememberRow.style.display = card.can_remember ? "" : "none";
+    const decide = async (decision) => {
+      const buttons = [...cardEl.querySelectorAll("button")];
+      buttons.forEach((b) => { b.disabled = true; });
+      try {
+        await Api.post(
+          `/api/conversations/${encodeURIComponent(m.conversation_id)}/messages/${encodeURIComponent(m.id)}/approve`,
+          { decision, remember: remember.checked, args_sha256: card.args_sha256 });
+        const messages = await Api.get(
+          `/api/conversations/${encodeURIComponent(m.conversation_id)}/messages`);
+        const fresh = messages.find((x) => x.id === m.id);
+        const article = cardEl.closest("article");
+        if (fresh && article) article.replaceWith(messageEl(fresh));
+        scroll();
+      } catch (e) {
+        UI.toast(e.message, "error");
+        buttons.forEach((b) => { b.disabled = false; });
+      }
+    };
+    const cardEl = h("section.agent-approval",
+      h("h3", t("chat.agentApprovalTitle")),
+      h("p.muted", t("chat.agentApprovalBody")),
+      h("dl.facts",
+        h("dt", t("chat.agentTool")), h("dd", h("code", card.tool)),
+        h("dt", t("chat.agentServer")), h("dd", h("code", card.server)),
+        h("dt", t("chat.agentWhere")),
+        h("dd", card.third_party
+          ? h("span", chip(t("chat.agentRemote"), "warn"), ` ${card.host}`)
+          : h("span", chip(t("chat.agentLocal")), ` ${t("chat.agentLocalNote")}`))),
+      card.why ? h("p.muted", `${t("chat.agentWhy")} ${card.why}`) : null,
+      h("p", h("strong", t("chat.agentArguments"))),
+      h("pre.code-script", { style: "max-height: 20rem; overflow: auto; white-space: pre-wrap;" },
+        card.arguments_json),
+      rememberRow,
+      h("div.msg-actions",
+        button(t("chat.agentRun"), () => decide("run"), "primary small"),
+        button(t("chat.agentSkip"), () => decide("skip"), "ghost small"),
+        button(t("chat.agentStop"), () => decide("stop"), "danger small")));
+    return cardEl;
+  }
+
   function setNote(article, note) {
     if (!note) return;
     let n = article.querySelector(".msg-note");
@@ -695,11 +1367,16 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
-    // 3.3: a table built by code, and cells of any table that are in no passage
-    if (meta.table && meta.table.by_code !== false) chips.push(chip(t("chat.tableBuilt"), "ok",
-      t("chat.tableBuiltTitle").replace("{rows}", meta.table.rows)
-        .replace("{docs}", (meta.table.documents || []).length)
-        .replace("{empty}", meta.table.empty).replace("{dropped}", (meta.table.dropped || []).length)));
+    // 3.3/3.4: a table built by code, and cells of any table that are in no passage
+    if (meta.table && meta.table.by_code !== false) {
+      if (meta.list) chips.push(chip(t("chat.listBuilt").replace("{n}", meta.list.count), "ok",
+        t("chat.listBuiltTitle").replace("{a}", meta.list.answered)
+          .replace("{m}", meta.list.missing).replace("{d}", meta.list.disagreement)));
+      else chips.push(chip(t("chat.tableBuilt"), "ok",
+        t("chat.tableBuiltTitle").replace("{rows}", meta.table.rows)
+          .replace("{docs}", (meta.table.documents || []).length)
+          .replace("{empty}", meta.table.empty).replace("{dropped}", (meta.table.dropped || []).length)));
+    }
     if (meta.table?.corrections?.length) chips.push(chip(
       t("chat.tableCorrected").replace("{n}", meta.table.corrections.length), "",
       t("chat.tableCorrectedTitle") + " " + meta.table.corrections
@@ -708,8 +1385,27 @@ const Chat = (() => {
       t("chat.tableUnsupported").replace("{n}", meta.table_audit.unsupported.length), "warn",
       t("chat.tableUnsupportedTitle") + "\n" + meta.table_audit.unsupported
         .map((c) => `${c.row} · ${c.column}: ${c.value}`).join("\n")));
+    if (meta.code) {
+      chips.push(chip(t(meta.code.trapped ? "chat.codeTrappedChip" : "chat.codeRanChip"),
+        meta.code.trapped ? "warn" : "ok",
+        t("chat.codeChipTitle").replace("{sha}", (meta.code.script_sha256 || "").slice(0, 12))
+          .replace("{t}", meta.code.elapsed_s)));
+      if (meta.code.corrections) chips.push(chip(t("chat.codeCorrectedChip")
+        .replace("{n}", meta.code.corrections), ""));
+    }
+    if (meta.author) {
+      const counts = meta.author.counts || {};
+      const found = Object.values(counts).reduce((sum, n) => sum + (Number(n) || 0), 0);
+      chips.push(chip(t("chat.authorChip").replace("{n}", found), "ok",
+        t("chat.authorChipTitle")
+          .replace("{services}", (meta.author.services || []).join(", "))
+          .replace("{candidates}", meta.author.candidates_shown || 0)));
+    }
     if (meta.recipe) chips.push(chip(t(`chat.recipe${meta.recipe.charAt(0).toUpperCase()}${meta.recipe.slice(1)}`), "ok",
       t("chat.recipeChipTitle")));
+    if (meta.skill?.name) chips.push(chip(
+      t("skills.usedChip").replace("{name}", meta.skill.name), "ok",
+      t("skills.usedTitle").replace("{sha}", (meta.skill.sha256 || "").slice(0, 16))));
     // 3.3, recipe 3: a comparison between the documents and a public result, by code
     if (meta.comparisons?.length) chips.push(chip(t("chat.compareChip"), "ok",
       t("chat.compareChipTitle") + "\n" + meta.comparisons.map((c) =>
@@ -757,12 +1453,18 @@ const Chat = (() => {
       t("chat.citeUnknownTitle").replace("{labels}", meta.citations.unknown.join(", "))));
     if (meta.memory_saved?.path) chips.push(chip(t("chat.memorySaved"), "ok",
       t("chat.memorySavedTitle").replace("{path}", meta.memory_saved.full_path || meta.memory_saved.path)));
+    if (meta.agent) {
+      chips.push(chip(t("chat.agentChip").replace("{s}", meta.agent.steps)
+        .replace("{t}", meta.agent.tool_calls),
+        meta.status === "awaiting_approval" ? "warn" : "ok",
+        t("chat.agentChipTitle")));
+    }
     if (meta.model) chips.push(chip(meta.model));
     const ms = sw.total_ms ?? meta.total_ms;
     if (ms) chips.push(chip(UI.fmtMs(ms)));
     if (meta.completion_tokens) chips.push(chip(t("chat.tokens").replace("{n}", meta.completion_tokens)));
     const actions = [];
-    if ((m.stages && m.stages.length) || meta.swarm || meta.lce) {
+    if ((m.stages && m.stages.length) || meta.swarm || meta.lce || meta.author) {
       actions.push(button(t("chat.explore"), () => Explore.open(m), "ghost small"));
     }
     if (meta.status === "failed" || meta.status === "stopped") {
@@ -783,7 +1485,8 @@ const Chat = (() => {
 
   /* 3.1: online search only with the user's yes, the query in view and editable. */
   async function searchOnline(m) {
-    const q = h("input.text", { type: "text", value: (m.meta.web_offer || m.meta.web_search || {}).query || "",
+    const offer = m.meta.web_offer || m.meta.web_search || {};
+    const q = h("input.text", { type: "text", value: offer.query || "",
       "aria-label": t("chat.webQuery") });
     const termsBox = h("div.terms-box");
     const keep = h("input", { type: "checkbox" });
@@ -829,8 +1532,13 @@ const Chat = (() => {
       review.disabled = false;
     }, "ghost small");
     setTimeout(() => q.focus(), 50);
+    const removedNote = (offer.removed || []).length
+      ? h("p.muted", t("chat.webOfferRemoved").replace("{terms}", (offer.removed || []).join(", ")))
+      : null;
+    const emptyNote = offer.empty ? h("p.note", t("chat.webOfferEmpty")) : null;
     const ok = await UI.modal(t("chat.webOffer"), h("div.form-stack",
       h("label.stack", h("span", t("chat.webQuery")), q),
+      removedNote, emptyNote,
       h("div.msg-actions", review, h("span.muted", t("chat.termsHint"))),
       termsBox, keepRow,
       h("p.muted", t("chat.webHint"))), [
@@ -893,12 +1601,41 @@ const Chat = (() => {
           ? ` — ${[r.authors, r.year, r.source].filter(Boolean).join(" · ")}` : "")))));
   }
 
+  /* Recipe 5: the files the script produced (download through the token-aware
+     API) and the one path to a corrected script, which needs a new approval. */
+  function codeResult(m) {
+    const run = m.meta.code_run || {};
+    const box = h("div.code-result");
+    if (run.files?.length) {
+      box.appendChild(h("p", h("strong", t("chat.codeFilesProduced"))));
+      box.appendChild(h("ul.sources", run.files.map((f) => h("li",
+        h("span", ` ${f.name} · ${UI.fmtBytes(f.size)} · `),
+        h("code", { title: "sha256" }, (f.sha256 || "").slice(0, 16) + "…"),
+        " ",
+        h("button.link", { type: "button",
+          onclick: () => Api.download(f.url, f.name).catch((e) => UI.toast(e.message, "error")) },
+          t("chat.codeDownload"))))));
+    }
+    const code = m.meta.code || {};
+    if (code.trapped && (code.corrections || 0) < (run.max_corrections || 0)) {
+      box.appendChild(h("p", button(t("chat.codeCorrect"), () => correctCode(m), "primary small")));
+    }
+    return box;
+  }
+
   /* 3.1: what the user asked to remember (or defined), proposed for a yes. */
   function memoryCard(m) {
     const prop = m.meta.memory_proposals;
     if (prop.status === "saved") {
       const where = [prop.saved?.notes_path, prop.saved?.glossary_path].filter(Boolean).join(" · ");
-      return h("p.note.memory-done", `${t("chat.memorySaved")}: ${where}`);
+      const lines = prop.saved?.glossary || [];
+      return h("div.memory-card", { dataset: { mid: m.id } },
+        h("p.note.memory-done", `${t("chat.memorySaved")}: ${where}`),
+        lines.length ? h("ul.file-list.glossary-list", lines.map((line) => {
+          const mark = /\|\s*(?:privad[oa]|private)\b/i.test(line);
+          const shown = line.replace(/\s*\|\s*(?:privad[oa]|private)(?:\s*:.*)?\s*$/i, "").trim();
+          return h("li", h("code", shown), mark ? chip(t("chat.memoryPrivateChip"), "warn") : null);
+        })) : null);
     }
     if (prop.status === "discarded") return h("p.muted.memory-done", t("chat.memoryDiscarded"));
     const rows = [];
@@ -917,9 +1654,11 @@ const Chat = (() => {
         placeholder: t("chat.memoryDefinition") });
       const avoid = h("input.text", { type: "text", value: (g.avoid || []).join(", "),
         placeholder: t("chat.memoryAvoid") });
+      const priv = h("input", { type: "checkbox" }); priv.checked = !!g.private;
       rows.push(h("div.memory-row", box, h("span.chip", t("chat.memoryGlossary")), term, h("span", "="), eq,
-        h("span.muted", t("chat.memoryAvoidLabel")), avoid, def));
-      return { box, term, eq, def, avoid };
+        h("span.muted", t("chat.memoryAvoidLabel")), avoid, def,
+        h("label.inline.small", priv, h("span", t("chat.memoryPrivate")))));
+      return { box, term, eq, def, avoid, priv };
     });
     const save = async (discard) => {
       const body = discard ? { discard: true } : {
@@ -928,6 +1667,7 @@ const Chat = (() => {
           term: g.term.value.trim(),
           equivalents: g.eq.value.split(",").map((x) => x.trim()).filter(Boolean),
           avoid: g.avoid.value.split(",").map((x) => x.trim()).filter(Boolean),
+          private: g.priv.checked,
           definition: g.def.value.trim() })) };
       try {
         await Api.post(`/api/conversations/${encodeURIComponent(active)}/messages/${encodeURIComponent(m.id)}/memory`, body);
@@ -955,7 +1695,7 @@ const Chat = (() => {
   }
 
   function relabel() { build(); loadProjects().then(() => loadConversations(active)); }
-  function show() { refreshModels(); updateHint(); }
+  function show() { refreshModels(); updateHint(); loadAgentTools(); }
 
   return { init, show, relabel };
 })();
@@ -997,9 +1737,26 @@ const Explore = (() => {
       readout(t("explore.rho"), sw.rho_achieved, "measured"),
       readout(t("explore.total"), UI.fmtMs(sw.total_ms ?? meta.total_ms), "measured"),
       readout(t("explore.coverage"), sw.coverage ? sw.coverage.c_eff : null, "estimated"),
-      readout(t("explore.embedder"), sw.embedder, null))];
+      readout(t("explore.embedder"), sw.embedder, null),
+      readout(t("explore.skill"), meta.skill?.name || null, "measured"),
+      readout(t("explore.skillSha"), meta.skill?.sha256 ? meta.skill.sha256.slice(0, 16) : null, "measured"))];
     if (meta.local_reason) sections.push(h("p.note", I18n.reason(meta.local_reason)));
     if (meta.passages_withheld) sections.push(h("p.note", meta.passages_withheld));
+    if (meta.agent) {
+      sections.push(h("h3", t("explore.agent.title")),
+        h("div.readouts",
+          readout(t("explore.agent.steps"), String(meta.agent.steps || 0), "measured"),
+          readout(t("explore.agent.toolCalls"), String(meta.agent.tool_calls || 0), "measured"),
+          readout(t("explore.agent.stop"), meta.agent.stop_reason || "—", "measured")),
+        (meta.agent.approvals || []).length
+          ? h("ul.sources", meta.agent.approvals.map((a) => h("li",
+            h("code", a.tool), " · ",
+            chip(t(`explore.agent.decision.${a.decision}`, a.decision),
+              a.decision === "approved" ? "ok" : a.decision === "skipped" ? "warn" : ""),
+            ` ${t("explore.agent.by")} ${t(`explore.agent.byKind.${a.by}`, a.by)} · `,
+            h("code", { title: "sha256" }, (a.args_sha256 || "").slice(0, 16) + "…"))))
+          : h("p.muted", t("explore.agent.none")));
+    }
     if (meta.receipt) sections.push(h("h3", t("explore.receipt.title")), receiptView(meta.receipt));
     if (meta.citations && meta.citations.sentences) sections.push(h("h3", t("explore.anchor.title")),
       h("div.readouts",
@@ -1065,6 +1822,18 @@ const Explore = (() => {
       h("span", ` ${e.destino} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)}`),
       ["entidad_publica", "consulta_aprobada", "parte_consulta", "palabra_suelta", "id_resultado"].includes(e.tipo)
         ? h("code", ` ${e.valor}`) : null))));
+    if ((r.tools || []).length) {
+      parts.push(h("p.muted", t("explore.receipt.tools")));
+      parts.push(h("ul.sources", r.tools.map((e) => h("li",
+        chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),
+        h("span", ` ${e.spec_id} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)} · ${e.bytes} B`),
+        chip(t(e.allowed ? "explore.receipt.toolAllowed" : "explore.receipt.toolBlocked"),
+          e.allowed ? "" : "warn"),
+        e.personal_name ? chip(t("explore.receipt.personalName"), "warn") : null,
+        e.approved_by
+          ? h("span.muted", ` ${t("explore.receipt.toolApprovedBy")} ${t(`explore.receipt.toolBy.${e.approved_by}`, e.approved_by)}`)
+          : null))));
+    }
     if (r.consentimiento?.alcance) parts.splice(1, 0, h("p.muted",
       `${t("explore.receipt.consentScope")} ${r.consentimiento.alcance}`));
     if ((r.bloqueados || []).length) parts.push(h("p.note",

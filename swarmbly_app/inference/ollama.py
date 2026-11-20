@@ -7,7 +7,7 @@ from typing import Any, Callable
 
 import httpx
 
-from .. import egress
+from .. import egress, test_hosts
 from .base import BackendError, GenerationResult, Interrupted
 
 DEFAULT_URL = "http://127.0.0.1:11434"
@@ -46,7 +46,7 @@ class OllamaBackend:
         seen_at, table = _REMOTE.get(self.url, (0.0, {}))
         if now - seen_at > 30:
             try:
-                with httpx.Client(timeout=3.0) as client:
+                with test_hosts.httpx_client(timeout=3.0) as client:
                     resp = client.get(f"{self.url}/api/tags")
                     resp.raise_for_status()
                     table = {str(m.get("name", "")): egress.host_of(str(m.get("remote_host") or ""))
@@ -59,14 +59,14 @@ class OllamaBackend:
 
     def available(self) -> bool:
         try:
-            with httpx.Client(timeout=2.0) as client:
+            with test_hosts.httpx_client(timeout=2.0) as client:
                 return client.get(f"{self.url}/api/tags").status_code == 200
         except Exception:
             return False
 
     def list_models(self) -> list[str]:
         try:
-            with httpx.Client(timeout=3.0) as client:
+            with test_hosts.httpx_client(timeout=3.0) as client:
                 resp = client.get(f"{self.url}/api/tags")
                 resp.raise_for_status()
                 return [m.get("name", "") for m in resp.json().get("models", [])]
@@ -114,7 +114,7 @@ class OllamaBackend:
             # failed as "timed out" (P3k.1, 23 Oct 2026). Connecting still
             # fails fast; callers stop long generations with ``interrupt``.
             timeout = httpx.Timeout(self.timeout, read=max(self.timeout, COLD_LOAD_READ_S))
-            with httpx.Client(timeout=timeout) as client:
+            with test_hosts.httpx_client(timeout=timeout) as client:
                 with client.stream("POST", f"{self.url}/api/chat", json=payload) as resp:
                     if resp.status_code >= 400:
                         body = resp.read().decode("utf-8", "replace")[:400]

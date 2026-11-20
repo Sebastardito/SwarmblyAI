@@ -26,9 +26,10 @@ from typing import Any
 
 from . import egress
 
-ROLES = ("writer", "search_terms", "fusion", "verifier")
-# roles that are given paragraphs of the user's documents
-_WITH_PASSAGES = {"writer", "fusion", "verifier"}
+ROLES = ("writer", "search_terms", "fusion", "verifier", "embeddings")
+# roles that are given paragraphs of the user's documents. Embeddings always
+# carry them: C1 embeds the document passages before it embeds the query.
+_WITH_PASSAGES = {"writer", "fusion", "verifier", "embeddings"}
 _LEGACY = {"writer": ("compose", "model"), "search_terms": ("lce", "expansion_model"),
            "fusion": ("evidence", "fusion_model")}
 
@@ -44,6 +45,7 @@ class Choice:
     where: str = ""              # host of a third party; "" on this computer or the user's network
     asked: str = ""              # the model the settings name, when it could not be used
     note: str = ""               # why not: "missing" or "blocked: …"
+    blocked: str = ""            # host a refused call would have gone to (embeddings)
 
     def to_meta(self) -> dict[str, Any]:
         out: dict[str, Any] = {"model": self.model, "own": self.own}
@@ -80,12 +82,132 @@ def _remote(backend: Any, model: str) -> str:
         return egress.cloud_host_by_name(model)
 
 
+# -- embeddings (3.4, carried over from 3.3) ----------------------------------
+
+def embeddings_configured(cfg: dict[str, Any]) -> bool:
+    """True when the user chose a model or a server for the embeddings role."""
+    s = settings(cfg, "embeddings")
+    return bool(str(s.get("model") or "").strip() or str(s.get("backend") or "").strip())
+
+
+def _legacy_embedding_client(cfg: dict[str, Any]) -> Any:
+    """The app's embedder before the role existed: Ollama ``/api/embed`` at
+    ``model.backend_url`` (or 127.0.0.1:11434) with ``model.embed_model``."""
+    from .inference.embeddings import ollama_embedder
+    model_cfg = cfg.get("model") or {}
+    model = str(model_cfg.get("embed_model") or "nomic-embed-text")
+    url = str(model_cfg.get("backend_url") or "") or "http://127.0.0.1:11434"
+    return ollama_embedder(model, url)
+
+
+def _embedding_fallback(legacy: Any, *, asked: str, note: str, blocked: str = "",
+                        allow: bool = True) -> Choice:
+    """Refuse the chosen destination and use the app's own embedder, or none.
+
+    ``allow=False`` is the strict path (``AppState._embed``): the caller wants
+    the refusal, not a substitute.  A third-party legacy endpoint is never
+    used as a fallback: passages only leave for a destination the role chose
+    and the policy authorised.
+    """
+    if not allow:
+        return Choice("embeddings", "", None, asked=asked, note=note, blocked=blocked)
+    try:
+        cls, _host = egress.classify_url(legacy.endpoint)
+    except Exception:
+        cls = egress.THIRD_PARTY
+    if cls in (egress.LOCAL, egress.OWN_NETWORK):
+        return Choice("embeddings", legacy.model, legacy, own=False, asked=asked,
+                      note=f"{note}; using the local embedder {legacy.model}",
+                      blocked=blocked)
+    return Choice("embeddings", "", None, own=False, asked=asked,
+                  note=f"{note}; no local embedder configured: keyword retrieval only",
+                  blocked=blocked)
+
+
+def _choose_embeddings(cfg: dict[str, Any], s: dict[str, Any],
+                       allow_fallback: bool = True) -> Choice:
+    """A client for the embeddings role, after the destinations policy.
+
+    A third party gets passage embeddings only with both authorisations.  The
+    policy is checked before a client is even asked for its model list, so a
+    refusal writes no byte.  On refusal the app's own Ollama embedder (when
+    configured and local) does the job; otherwise C1 stays lexical.
+    """
+    from .inference.embeddings import ANTHROPIC_NO_EMBEDDINGS, EmbeddingClient
+    legacy = _legacy_embedding_client(cfg)
+    name = str(s.get("model") or "").strip()
+    kind = str(s.get("backend") or "").strip()
+    own = bool(name or kind)
+    asked = name or legacy.model
+    if not own and str((cfg.get("model") or {}).get("backend") or "") == "anthropic":
+        # The conversation's model is Anthropic and no embeddings role was
+        # chosen: its address has no embeddings route, so refuse it rather
+        # than send the passages to a model API that cannot embed.
+        return _embedding_fallback(legacy, asked=asked,
+                                   note=f"blocked: {ANTHROPIC_NO_EMBEDDINGS}",
+                                   blocked="api.anthropic.com",
+                                   allow=allow_fallback)
+    if not own:
+        chosen = legacy
+    elif kind == "anthropic":
+        return _embedding_fallback(legacy, asked=asked,
+                                   note=f"blocked: {ANTHROPIC_NO_EMBEDDINGS}",
+                                   blocked="api.anthropic.com",
+                                   allow=allow_fallback)
+    elif kind == "openai_compat":
+        url = str(s.get("backend_url") or "").strip()
+        if not url:
+            return _embedding_fallback(
+                legacy, asked=asked,
+                note="missing: the embeddings role's OpenAI-compatible server needs a URL",
+                allow=allow_fallback)
+        from .keystore import get_secret
+        chosen = EmbeddingClient(
+            "openai_compat", asked, url,
+            api_key=get_secret("roles.embeddings.api_key") or str(s.get("api_key") or ""))
+    elif kind in ("", "ollama", "auto"):
+        url = str(s.get("backend_url") or "").strip() or legacy.url
+        from .keystore import get_secret
+        chosen = EmbeddingClient(
+            "ollama", asked, url,
+            api_key=get_secret("roles.embeddings.api_key") or str(s.get("api_key") or ""))
+    else:
+        return _embedding_fallback(legacy, asked=asked,
+                                   note=f"missing: unknown embeddings backend {kind!r}",
+                                   allow=allow_fallback)
+    # Where does it run, and may this job go there? Checked before any call.
+    cls, host = egress.classify_url(chosen.endpoint)
+    remote = egress.cloud_host_by_name(chosen.model) if chosen.backend == "ollama" else ""
+    if remote:
+        cls, host = egress.THIRD_PARTY, remote
+    if cls == egress.THIRD_PARTY:
+        policy = egress.policy()
+        if not policy.authorised(host):
+            return _embedding_fallback(
+                legacy, asked=asked,
+                note=f"blocked: {chosen.model} runs at {host}, which is not authorised",
+                blocked=host, allow=allow_fallback)
+        if not policy.third_party_passages:
+            return _embedding_fallback(
+                legacy, asked=asked,
+                note=f"blocked: {chosen.model} runs at {host}, authorised for questions only",
+                blocked=host, allow=allow_fallback)
+    return Choice("embeddings", chosen.model, chosen, own=own,
+                  where=host if cls == egress.THIRD_PARTY else "")
+
+
 def choose(role: str, cfg: dict[str, Any], chat_backend: Any, chat_model: str,
-           registry: Any = None, passages: bool | None = None) -> Choice:
+           registry: Any = None, passages: bool | None = None,
+           allow_fallback: bool = True) -> Choice:
     """The model, server and thinking setting for ``role`` in this answer.
 
     ``passages`` says whether the job will carry paragraphs of the user's
-    documents (by default, what the role usually carries)."""
+    documents (by default, what the role usually carries).  For the
+    ``embeddings`` role ``chat_backend``/``chat_model`` are not used: the
+    fallback is the app's own embedder, or keyword retrieval when there is
+    none (``allow_fallback=False`` returns the refusal instead)."""
+    if role == "embeddings":
+        return _choose_embeddings(cfg, settings(cfg, role), allow_fallback)
     s = settings(cfg, role)
     think = s.get("think")
     fallback = Choice(role, chat_model, chat_backend, think)

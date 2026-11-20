@@ -33,6 +33,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from . import test_hosts
+
 SOURCE_URL = "https://codeload.github.com/searxng/searxng/tar.gz/refs/heads/master"
 IMAGE = "docker.io/searxng/searxng:latest"
 CONTAINER = "swarmbly-searxng"
@@ -77,7 +79,7 @@ def healthy(url: str, timeout: float = 8.0) -> bool:
             url.rstrip("/") + "/search?" + urllib.parse.urlencode(
                 {"q": "Galapagos", "format": "json"}),
             headers={"User-Agent": "SwarmblyApp"})
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (local)
+        with test_hosts.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (local)
             data = json.loads(resp.read().decode("utf-8", "replace"))
         return isinstance(data, dict) and "results" in data
     except Exception:
