@@ -2163,7 +2163,13 @@ def _message_after_cancel(app: AppInstance, conversation_id: str,
 
 def play_code(app: AppInstance, case: Case, project_id: str,
               actions: dict[str, Any], timeout: float) -> dict[str, Any]:
+    # A code card may also name the project's text documents (T9.11): the
+    # script has to read them, so they are selected with the table files.
     files = list(case.code_files)
+    for doc in case.documents:
+        if doc not in files and Path(doc).suffix.lower() in (".md", ".markdown",
+                                                             ".txt", ".json"):
+            files.append(doc)
     proposal = http_json("POST", f"{app.base}/api/recipes/code/propose", app.token,
                          {"project_id": project_id, "question": case.question,
                           "files": files}, timeout=180)

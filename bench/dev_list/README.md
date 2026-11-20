@@ -29,6 +29,11 @@ measurement.
 | CS-01 | CSV column | count the letters of each lot name; one empty cell is dropped, one value repeats |
 | EX-03 | pasted | one record gives no basis: the table must say `missing`, not invent a code |
 | PN-01 | pasted, personal names | personal names with e-mail; preview must propose local and say why |
+| DO-01 | project document | each lot's deposit code is only in `fichas_lotes.md`; recipe 4 must use the document per item |
+
+A case may declare `corpus` (paths relative to the battery) to see only those
+files; without it the whole `corpus/` folder is copied. `DO-01` uses this so its
+document cannot leak into the other cases.
 
 The runner starts one App per case and repetition with its own data folder and
 the internet blocked, reads the preview (`POST /api/recipes/list/preview`), sends
@@ -76,6 +81,11 @@ medición sellada.
 | CS-01 | columna de CSV | contar las letras de cada nombre de lote; una celda vacía se descarta y un valor se repite |
 | EX-03 | pegado | una ficha no da base: la tabla debe decir `missing`, no inventar un código |
 | PN-01 | pegado, nombres personales | nombres con correo; la vista previa debe proponer local y explicar por qué |
+| DO-01 | documento del proyecto | el código de depósito de cada lote solo está en `fichas_lotes.md`; la receta 4 debe usar el documento por elemento |
+
+Un caso puede declarar `corpus` (rutas relativas a la batería) para ver solo
+esos archivos; sin ese campo se copia toda la carpeta `corpus/`. `DO-01` lo usa
+para que su documento no se mezcle con los demás casos.
 
 El arnés inicia una App por caso y repetición, con carpeta de datos propia y la
 red bloqueada, lee la vista previa (`POST /api/recipes/list/preview`), envía la

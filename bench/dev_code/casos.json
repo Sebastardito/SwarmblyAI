@@ -254,6 +254,24 @@
         "colmenas.csv"
       ],
       "nota": "Se propone y se cancela: no se ejecuta nada y no hay meta.code_run."
+    },
+    {
+      "id": "MT-01",
+      "cat": "MT",
+      "kind": "code",
+      "question": "Lee el factor de la línea «FACTOR_RENDIMIENTO» de protocolo_muestreo.md, multiplícalo por el peso total de todas las colmenas de colmenas.csv e imprime el total en kg.",
+      "files": [
+        "colmenas.csv",
+        "protocolo_muestreo.md"
+      ],
+      "expected_numbers": [
+        {
+          "value": 530.57,
+          "tolerance": 0.05
+        }
+      ],
+      "expected_text": [],
+      "nota": "El factor 0,85 solo está en la séptima línea del .md (fuera de la muestra de cinco líneas del prompt): el script tiene que abrir el documento y combinarlo con el total del CSV, 624,2 kg. 624,2 × 0,85 = 530,57, calculado antes de ejecutar."
     }
   ]
 }

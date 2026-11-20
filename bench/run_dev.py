@@ -77,6 +77,27 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
     return cases
 
 
+def corpus_files(battery: Path, case: dict[str, Any]) -> list[Path]:
+    """The source files this case sees.
+
+    Without a ``corpus`` field the whole ``corpus/`` folder is copied, which
+    keeps every existing case unchanged.  A case may instead list paths
+    relative to the battery (``"corpus": ["documentos/ficha.md"]``), so a
+    document that only one case needs cannot leak into the others.
+    """
+    rels = case.get("corpus")
+    if rels is None:
+        return sorted(p for p in (battery / "corpus").iterdir()
+                      if p.is_file() and not p.name.startswith("."))
+    files: list[Path] = []
+    for rel in rels:
+        path = (battery / str(rel)).resolve()
+        if not path.is_file():
+            raise SystemExit(f"corpus file not found for {case['id']}: {rel}")
+        files.append(path)
+    return files
+
+
 def is_list_case(case: dict[str, Any]) -> bool:
     """A recipe 4 case: the expected per-item cells are fixed in the file."""
     return "expected_items" in case
@@ -1030,7 +1051,6 @@ def main(argv: list[str] | None = None) -> int:
             or (code_mode and not all(is_code_case(c) for c in cases)):
         print("La batería mezcla tipos de caso; usa una batería por tipo.")
         return 2
-    corpus = sorted(p for p in (battery / "corpus").iterdir() if p.is_file() and not p.name.startswith("."))
     public_dir = battery / "publico"
     public = sorted(p for p in public_dir.iterdir()
                     if p.is_file() and not p.name.startswith(".")) if public_dir.is_dir() else []
@@ -1070,7 +1090,7 @@ def main(argv: list[str] | None = None) -> int:
                 # documents and spreadsheets live there (no alias needed).
                 sources = work / "datos" / "sources"
                 sources.mkdir(parents=True)
-                for p in corpus:
+                for p in corpus_files(battery, case):
                     shutil.copy2(p, sources / p.name)
                 settings = {
                     "setup_completed": True, "language": "es",

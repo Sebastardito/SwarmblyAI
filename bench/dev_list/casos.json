@@ -300,6 +300,31 @@
         "privacy.tier": "GLOBAL"
       },
       "nota": "Nombres personales ficticios con correo: la vista previa debe proponer local y explicar por qué, aunque se le pida swarm. La ejecución es local."
+    },
+    {
+      "id": "DO-01",
+      "cat": "DO",
+      "kind": "pasted",
+      "operation": "Para cada lote, escribe el código de depósito que figura en la ficha del proyecto. Responde solo con el código.",
+      "items": "Lote Arrayán\nLote Maitén\nLote Peumo\nLote Boldo",
+      "expected_items": [
+        "Lote Arrayán",
+        "Lote Maitén",
+        "Lote Peumo",
+        "Lote Boldo"
+      ],
+      "expected": [
+        "^ALFA$",
+        "^BRAVO$",
+        "^CHARLIE$",
+        "^DELTA$"
+      ],
+      "expected_duplicates": [],
+      "expected_waves": 1,
+      "nota": "Los códigos no están en los elementos: cada uno se toma de fichas_lotes.md, el documento del proyecto. El caso declara solo ese documento en corpus para que no se mezcle con los demás casos.",
+      "corpus": [
+        "documentos/fichas_lotes.md"
+      ]
     }
   ]
 }
