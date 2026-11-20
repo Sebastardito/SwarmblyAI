@@ -219,7 +219,7 @@
       "files": [
         "colmenas.csv"
       ],
-      "refusal": "sin red|no hay red|no (se )?(pudo|puede) (descargar|conectar)|no internet|network|offline|URLError|URLopen|Name or service|conexi[oó]n|not supported",
+      "refusal": "sin red|no hay red|no (se )?(pudo|puede|podemos) (descargar|conectar|acceder)|sin acceso a (la )?red|no internet|network|offline|URLError|URLopen|Name or service|conexi[oó]n|not supported",
       "expect_trap": [
         "error",
         "deadline"
