@@ -2,6 +2,27 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## 3.4.0 — Tools (2026-11-20)
+
+Release notes: [`docs/releases/v3.4.0.md`](docs/releases/v3.4.0.md). The sealed banks v4.1 and v4.2 were run once (32 cards × 3, `qwen2.5:7b`, harness 1.3.2, App `ec3d206`), re-scored offline with 1.3.4 and read by an isolated judge: seal OK, 0 technical failures, the eight permission counters at 0 in both banks, approved observations 22/96 and 44/96. Two exit criteria failed: zero unauthorised sends (the public query proposed by the App kept a fragment of a private name: one card in v4.1 and two in v4.2, three repetitions each, each approved by the simulated user) and exact results ≥ 90 % in código-exacto (v4.1 0/9, v4.2 6/12). The fixes after the run were measured only on open batteries until the next sealed bank.
+
+- **SwarmblyApp 0.7.0** (mirror at tag `v0.7.0`, `a1f0508`):
+  - **One tool broker** for every tool call, with the destination policy, the approval record and the receipt; the tool kinds are checked by the broker, not by the caller.
+  - **MCP client** with approval per call: a local server is approved one by one and a local tool may be set to "don't ask again in this project"; remote tools, the sandbox and author search always ask; a server whose manifest hash changes is suspended.
+  - **Skills** in the open Agent Skills format (`SKILL.md`), instructions only: offered by description, activated by the user, and quoted in the prompt with a label that they cannot change permissions; importing never runs anything.
+  - **Author search with consent** (ORCID, OpenAlex, PubMed): the exact editable name, the services and the destination are shown before anything is sent, Cancel sends nothing, an ambiguous ORCID returns candidates, and the table is built by code.
+  - **Recipe 4, a list on the swarm**: each item answered with the relevant document passages; a local list never calls the swarm, and a swarm list sends passages only with the third-party-passages permission; a repeated wave is retried item by item.
+  - **Recipe 5, data with code**: the model proposes a short script for a CSV, spreadsheet, text document or the project's data; the user sees it and approves it with a one-time token; it runs in a WASI sandbox (`wasi-python` 0.1.5 over wasmtime) with no network, limits on time, memory and files, the data read-only and writes only to `/out`; the answer gives the script and its output, with up to two corrected scripts.
+  - **Models by role:** the native Anthropic provider (always a third party) and an embeddings role through `roles.choose`, with passages to a third party only under both authorisations.
+  - **Agent runtime:** `swarmbly-agent` 0.1.0 drives MCP tools in a conversation; the App supplies the broker, and the runtime never runs a tool without an approved token.
+  - **Python 3.11** is the minimum.
+  - **Private glossary entries:** `| privado` (or the Private box) keeps a term and its equivalents out of every public query, reports them as removed, and still uses the entry for local answers.
+- **swarmbly-agent 0.1.0** (in-tree, `SwarmblyCore/agent`): a dependency-free, local-only bounded loop with injected model, tool executor and policy; observations are quoted data, approvals return a serialisable `RunState`, and there is no network or subprocess code.
+- **SwarmblyLCE 0.2.1** unchanged (`050d4ed`, tag `v0.2.1`).
+- **Sealed banks v4.1 and v4.2** and harness 1.3.2, re-scored with 1.3.4; the isolated judge approved 22/96 observations in v4.1 and 44/96 in v4.2.
+- **Open batteries on the fixed App**: recipe 4 list 30/36 cases and 195/201 cells (the original 11 cases 27/33, 183/189); recipe 5 code 39/39 cases and 57/57 numbers; the v4 self-test 24/24 done; 0 unauthorised sends.
+- **Roadmap:** a new sealed bank confirms the 3.4 privacy fix; exact results with a 7B local model stay a limit; the Windows disk guard (R-006) and the first sandbox compile (R-005) remain open.
+
 ## 3.3.0 — Roles and recipes (2026-11-17)
 
 Release notes: [`docs/releases/v3.3.0.md`](docs/releases/v3.3.0.md). Measured once on two new sealed banks (v3.1 and v3.2, App `b149a77`, defaults, `qwen2.5:7b`): short answers 87/146 key data, compositions 0/16 passed with 70 % of their claims supported, no passage or personal name sent; in two cases a private site name left in a query the harness approved as proposed (fixed after the run). Open batteries after the fixes: `bench/dev` 112/123, `bench/dev_v3` 48/57, no leak. Confirmation runs of the same banks are not blind and are reported apart.

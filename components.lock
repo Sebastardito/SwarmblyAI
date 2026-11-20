@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "distribution": "3.3.0",
+  "distribution": "3.4.0",
   "note": "Versions of the components tested together. Mirrors are copies (git subtree --squash) of the commit below; never edit them here: change the component's own repository and run scripts/sync_components.py.",
   "components": {
     "SwarmblyCore": {
@@ -10,6 +10,13 @@
       "version": "0.1.0",
       "repository": "https://github.com/Sebastardito/SwarmblyAI",
       "doi": "10.5281/zenodo.21956743"
+    },
+    "SwarmblyAgent": {
+      "folder": "SwarmblyCore/agent",
+      "source": "in-tree",
+      "package": "swarmbly-agent",
+      "version": "0.1.0",
+      "repository": "https://github.com/Sebastardito/SwarmblyAI"
     },
     "SwarmblyLCE": {
       "folder": "SwarmblyLCE",
@@ -31,7 +38,7 @@
       "ref": "v0.7.0",
       "commit": "a1f050847cb8d82398a17c1886b80b7108d199c3",
       "tree": "e61838c701c5f769da30a00c96af5c70d445bdec",
-      "doi": "10.5281/zenodo.24330450"
+      "doi": "10.5281/zenodo.23322638"
     }
   }
 }

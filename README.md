@@ -23,7 +23,7 @@ A local orchestrator, a private memory and a peer-to-peer network of small model
 
 > **Status: alpha.** A working research prototype with published measurements, not peer reviewed. Each component states what has been measured and what has not; read [What works today](#what-works-today) before quoting any capability.
 >
-> **Latest release: [3.3.0 — roles and recipes](docs/releases/v3.3.0.md)** (2026-11-17), DOI [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451). Previous: [3.2.0](docs/releases/v3.2.0.md) (2026-11-15), DOI [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); [3.1.0](docs/releases/v3.1.0.md) (2026-11-09), DOI [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); [3.0.1](docs/releases/v3.0.1.md) (2026-11-07), [3.0.0](docs/releases/v3.0.0.md), DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763).
+> **Latest release: [3.4.0 — tools](docs/releases/v3.4.0.md)** (2026-11-20), DOI to be added once Zenodo mints it. Previous: [3.3.0](docs/releases/v3.3.0.md) (2026-11-17), DOI [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); [3.2.0](docs/releases/v3.2.0.md) (2026-11-15), DOI [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); [3.1.0](docs/releases/v3.1.0.md) (2026-11-09), DOI [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); [3.0.1](docs/releases/v3.0.1.md) (2026-11-07), [3.0.0](docs/releases/v3.0.0.md), DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763).
 
 ---
 
@@ -82,7 +82,7 @@ flowchart LR
   APP <-->|"P2P · TLS + Ed25519"| NET(("volunteer<br/>nodes"))
 ```
 
-The exact versions are pinned in [`components.lock`](components.lock) and described in [`docs/COMPONENTS.md`](docs/COMPONENTS.md).
+The exact versions are pinned in [`components.lock`](components.lock) and described in [`docs/COMPONENTS.md`](docs/COMPONENTS.md). SwarmblyCore also ships `swarmbly-agent` 0.1.0, the local agent runtime added in 3.4.
 
 ### How a request flows
 
@@ -190,7 +190,7 @@ The full tables with intervals and the withdrawn results are in each component: 
 
 ### Install
 
-**Requirements:** macOS, Linux or Windows · Python 3.10 or newer (the Windows installer offers to install it) · about 5 GB free for a model · 8 GB of RAM or more recommended.
+**Requirements:** macOS, Linux or Windows · Python 3.11 or newer (the Windows installer offers to install it) · about 5 GB free for a model · 8 GB of RAM or more recommended.
 
 | System | Run |
 |---|---|
@@ -313,7 +313,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 | | |
 |---|---|
-| **Cite** | the distribution, 3.3.0: [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); 3.2.0: [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); 3.1.0: [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); each component has its own DOI (table above); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
+| **Cite** | the distribution (3.4.0's DOI is added after Zenodo mints it), 3.3.0: [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); 3.2.0: [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); 3.1.0: [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); each component has its own DOI (table above); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
 | **Licence** | software and specification under AGPL-3.0-or-later ([`LICENSE`](LICENSE)); document text under CC BY 4.0; network use triggers clause 13 ([`NOTICE`](NOTICE)) |
 | **Governance** | pre-foundation, benevolent maintainer, heading for a Swiss Verein and later a Stiftung; dual licensing is rejected ([`GOVERNANCE.md`](GOVERNANCE.md), [`TRADEMARK.md`](TRADEMARK.md)) |
 | **Security** | report privately: [`SECURITY.md`](SECURITY.md) |
@@ -322,7 +322,7 @@ Swarmbly is developed independently, with no institutional funding, as an AGPL-l
 
 ## Español
 
-> **Última versión: [3.3.0, papeles y recetas](docs/releases/v3.3.0.md#español)** (2026-11-17), DOI [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451). Anteriores: [3.2.0](docs/releases/v3.2.0.md#español) (2026-11-15), DOI [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); [3.1.0](docs/releases/v3.1.0.md#español) (2026-11-09), DOI [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); [3.0.1](docs/releases/v3.0.1.md#español) (2026-11-07), [3.0.0](docs/releases/v3.0.0.md#español), DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763). Las figuras tienen el texto en inglés; sus cifras son las mismas.
+> **Última versión: [3.4.0, herramientas](docs/releases/v3.4.0.md#español)** (2026-11-20), DOI por añadir cuando Zenodo lo asigne. Anteriores: [3.3.0](docs/releases/v3.3.0.md#español) (2026-11-17), DOI [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); [3.2.0](docs/releases/v3.2.0.md#español) (2026-11-15), DOI [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); [3.1.0](docs/releases/v3.1.0.md#español) (2026-11-09), DOI [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); [3.0.1](docs/releases/v3.0.1.md#español) (2026-11-07), [3.0.0](docs/releases/v3.0.0.md#español), DOI [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763). Las figuras tienen el texto en inglés; sus cifras son las mismas.
 
 ### Contenido
 
@@ -377,7 +377,7 @@ flowchart LR
   APP <-->|"P2P · TLS + Ed25519"| NET(("nodos<br/>voluntarios"))
 ```
 
-Las versiones exactas están fijadas en [`components.lock`](components.lock) y descritas en [`docs/COMPONENTS.md`](docs/COMPONENTS.md).
+Las versiones exactas están fijadas en [`components.lock`](components.lock) y descritas en [`docs/COMPONENTS.md`](docs/COMPONENTS.md). SwarmblyCore incluye además `swarmbly-agent` 0.1.0, el runtime de agentes local añadido en 3.4.
 
 ### Cómo fluye una petición
 
@@ -485,7 +485,7 @@ Las tablas completas con intervalos y los resultados retirados están en cada co
 
 ### Instalación
 
-**Requisitos:** macOS, Linux o Windows · Python 3.10 o superior (el instalador de Windows ofrece instalarlo) · unos 5 GB libres para un modelo · se recomiendan 8 GB de RAM o más.
+**Requisitos:** macOS, Linux o Windows · Python 3.11 o superior (el instalador de Windows ofrece instalarlo) · unos 5 GB libres para un modelo · se recomiendan 8 GB de RAM o más.
 
 | Sistema | Ejecuta |
 |---|---|
@@ -588,7 +588,7 @@ flowchart LR
   A["<b>3.0.1</b><br/>destinos<br/>+ Docker"] --> B["<b>3.1</b><br/>proyectos y<br/>recibo de privacidad"]
   B --> C["<b>3.2</b><br/>composición fundamentada<br/>y seguridad"]
   C --> C2["<b>3.3</b><br/>papeles<br/>y recetas"]
-  C2 --> D["<b>3.4</b><br/>herramientas: MCP<br/>y habilidades"]
+  C2 --> D["<b>3.4</b><br/>herramientas: MCP, habilidades<br/>y datos con código"]
   D --> E["<b>3.5</b><br/>círculos de confianza<br/>· beta privada"]
   E --> F["<b>3.6</b><br/>red pública<br/>· beta pública"]
   F --> G["<b>4.0</b><br/>protocolo 1.0"]
@@ -608,7 +608,7 @@ Swarmbly se desarrolla de forma independiente, sin financiación institucional, 
 
 | | |
 |---|---|
-| **Cita** | la distribución, 3.3.0: [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); 3.2.0: [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); 3.1.0: [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); cada componente tiene su DOI (tabla de arriba); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
+| **Cita** | la distribución (el DOI de 3.4.0 se añade cuando Zenodo lo asigne), 3.3.0: [10.5281/zenodo.24330451](https://doi.org/10.5281/zenodo.24330451); 3.2.0: [10.5281/zenodo.24265876](https://doi.org/10.5281/zenodo.24265876); 3.1.0: [10.5281/zenodo.24070646](https://doi.org/10.5281/zenodo.24070646); 3.0.0: [10.5281/zenodo.23650763](https://doi.org/10.5281/zenodo.23650763) ([`CITATION.cff`](CITATION.cff)); cada componente tiene su DOI (tabla de arriba); whitepaper v2: [10.5281/zenodo.23031305](https://doi.org/10.5281/zenodo.23031305) |
 | **Licencia** | software y especificación bajo AGPL-3.0-or-later ([`LICENSE`](LICENSE)); texto de los documentos bajo CC BY 4.0; el uso en red activa la cláusula 13 ([`NOTICE`](NOTICE)) |
 | **Gobernanza** | antes de la fundación, con un mantenedor benevolente, rumbo a una Verein suiza y después a una Stiftung; se rechaza la doble licencia ([`GOVERNANCE.md`](GOVERNANCE.md), [`TRADEMARK.md`](TRADEMARK.md)) |
 | **Seguridad** | informa en privado: [`SECURITY.md`](SECURITY.md) |
