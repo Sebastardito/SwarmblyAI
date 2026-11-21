@@ -6,10 +6,14 @@
 #
 # Layout assumed by this unit:
 #   /opt/swarmbly-relay/.venv        Python environment with `relay` installed
-#   /etc/swarmbly-relay/circles/     signed *.json manifests (read-only)
+#   /etc/swarmbly-relay/circles/     signed *.json manifests; writable because
+#                                    an owner push atomically replaces its file
 #   /etc/swarmbly-relay/tls/         relay certificate and key (read-only)
 #
-# The service stores nothing: logs are metadata only, counters are in memory.
+# The operator bootstraps the first manifest of each circle in circles/.
+# After that the owner pushes newer signed versions over a registered
+# connection.  The service stores the current manifests and in-memory
+# counters, never payloads; logs are metadata only (D-023).
 
 [Unit]
 Description=Swarmbly circle relay
@@ -27,11 +31,13 @@ ExecStart=/opt/swarmbly-relay/.venv/bin/python -m relay.server \
     --cert /etc/swarmbly-relay/tls/fullchain.pem \
     --key /etc/swarmbly-relay/tls/key.pem \
     --host 0.0.0.0 --port 8765 \
-    --max-splices 4 --bytes-per-day 2147483648 --idle-timeout 300
+    --max-splices 4 --bytes-per-day 2147483648 --idle-timeout 300 \
+    --manifest-pushes-per-hour 30
 Restart=on-failure
 RestartSec=3s
 
-# Hardening: the relay needs the network, the manifests and the key, nothing else.
+# Hardening: the relay needs the network, a writable circles/ for owner
+# pushes, the TLS key and nothing else.
 NoNewPrivileges=true
 PrivateTmp=true
 PrivateDevices=true
@@ -46,7 +52,8 @@ LockPersonality=true
 MemoryDenyWriteExecute=true
 CapabilityBoundingSet=
 AmbientCapabilities=
-ReadOnlyPaths=/etc/swarmbly-relay
+ReadWritePaths=/etc/swarmbly-relay/circles
+ReadOnlyPaths=/etc/swarmbly-relay/tls
 
 [Install]
 WantedBy=multi-user.target
