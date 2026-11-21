@@ -50,6 +50,10 @@ OLLAMA = OLLAMA if OLLAMA.startswith("http") else "http://" + OLLAMA
 # The App requires 3.11 (D-006), so the installer must not accept an older
 # interpreter and then fail while installing the components.
 MIN_PYTHON = (3, 11)
+# R-005: the first sandbox compile needs about 3.3 GB of memory.  Only run it
+# at install time when the machine has this much *available* memory; otherwise
+# the App offers it on first launch.
+SANDBOX_MIN_AVAILABLE_GB = 6.0
 EMBED_MODEL = ("nomic-embed-text", 0.27)
 # (minimum RAM in GB, model, download GB) — the same models as the app's catalog
 CHAT_MODELS = [(24, "qwen2.5:7b", 4.7), (10, "qwen2.5:3b", 1.9), (0, "qwen2.5:1.5b", 1.0)]
@@ -88,6 +92,14 @@ T = {
   "step_modules": "Componentes de Swarmbly",
   "why_modules": "Instala SwarmblyCore, SwarmblyLCE y SwarmblyApp desde esta carpeta, con las versiones probadas juntas (components.lock).",
   "dev_mode": "¿Modo desarrollador? (instalación editable y herramientas de prueba)",
+  "step_sandbox": "Caja de ejecución (preparación)",
+  "why_sandbox": "Compila una vez el módulo WebAssembly que aísla el código de la receta 5. Usa unos 3,3 GB de memoria y tarda unos 5 s en un Mac con chip Apple o unos 60 s en un Linux de 2 vCPU; después queda en caché. Solo se hace si hay al menos 6 GB de memoria disponible.",
+  "sandbox_start": "Preparando la caja (≈5 s en Mac, ≈60 s en Linux; solo una vez)…",
+  "sandbox_nomem": "Memoria disponible {gb} GB (menos de 6 GB): se deja para el primer arranque de la App, que lo avisará.",
+  "sandbox_unknown": "No se pudo leer la memoria disponible: se deja para el primer arranque de la App, que lo avisará.",
+  "sandbox_skip": "Omitido: se deja para el primer arranque de la App.",
+  "sandbox_done": "Caja preparada y en caché.",
+  "sandbox_left": "La App no pudo prepararla ahora (código {code}); lo ofrecerá en el primer arranque.",
   "step_ollama": "Ollama (motor de modelos)",
   "why_ollama": "Ollama ejecuta los modelos de lenguaje en tu equipo. Sin él la app abre, pero el chat no tiene modelo.",
   "ollama_ok": "Ollama funcionando",
@@ -156,6 +168,14 @@ T = {
   "step_modules": "Swarmbly components",
   "why_modules": "Installs SwarmblyCore, SwarmblyLCE and SwarmblyApp from this folder, at the versions tested together (components.lock).",
   "dev_mode": "Developer mode? (editable install and test tools)",
+  "step_sandbox": "Sandbox preparation",
+  "why_sandbox": "Compiles once the WebAssembly module that isolates recipe-5 code. It uses about 3.3 GB of memory and takes about 5 s on an Apple-silicon Mac or about 60 s on a 2-vCPU Linux machine; it is cached afterwards. Run only when at least 6 GB of memory is available.",
+  "sandbox_start": "Preparing the sandbox (≈5 s on macOS, ≈60 s on Linux; once)…",
+  "sandbox_nomem": "{gb} GB available (less than 6 GB): left to the App's first launch, which will offer it.",
+  "sandbox_unknown": "Could not read the available memory: left to the App's first launch, which will offer it.",
+  "sandbox_skip": "Skipped: left to the App's first launch.",
+  "sandbox_done": "Sandbox prepared and cached.",
+  "sandbox_left": "The App could not prepare it now (code {code}); it will offer it on first launch.",
   "step_ollama": "Ollama (model runner)",
   "why_ollama": "Ollama runs the language models on your computer. Without it the app opens but chat has no model.",
   "ollama_ok": "Ollama running",
@@ -335,6 +355,79 @@ def ram_gb() -> float:
         return 8.0
 
 
+def parse_meminfo_available(text: str) -> float | None:
+    """``MemAvailable`` from Linux ``/proc/meminfo``, in decimal GB."""
+    for line in text.splitlines():
+        if line.startswith("MemAvailable:"):
+            fields = line.split()
+            if len(fields) >= 2 and fields[1].isdigit():
+                return int(fields[1]) / 1e6      # kB -> GB
+    return None
+
+
+def parse_vm_stat_available(text: str, page_size: int) -> float | None:
+    """Free + inactive + speculative pages from macOS ``vm_stat``, in GB."""
+    pages = 0
+    for line in text.splitlines():
+        key, _, rest = line.partition(":")
+        if key.strip() not in ("Pages free", "Pages inactive", "Pages speculative"):
+            continue
+        value = rest.strip().split()[0].rstrip(".") if rest.strip() else ""
+        if value.isdigit():
+            pages += int(value)
+    return pages * page_size / 1e9 if pages else None
+
+
+def available_memory_gb() -> float | None:
+    """Available physical memory, or None when the platform cannot tell us."""
+    try:
+        if IS_LINUX:
+            meminfo = Path("/proc/meminfo")
+            if meminfo.exists():
+                value = parse_meminfo_available(meminfo.read_text(encoding="utf-8"))
+                if value is not None:
+                    return value
+            return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_AVPHYS_PAGES") / 1e9
+        if IS_MAC:
+            probe = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5)
+            page = subprocess.run(["sysctl", "-n", "hw.pagesize"], capture_output=True,
+                                  text=True, timeout=5).stdout.strip()
+            return parse_vm_stat_available(probe.stdout, int(page or "4096"))
+        if IS_WIN:
+            import ctypes
+
+            class MS(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            m = MS()
+            m.dwLength = ctypes.sizeof(MS)
+            ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
+            return m.ullAvailPhys / 1e9
+    except Exception:
+        return None
+    return None
+
+
+def should_prepare_sandbox(available_gb: float | None, *,
+                           skip: bool = False) -> tuple[bool, str]:
+    """Whether to compile the sandbox now.  Never a reason to fail an install."""
+    if skip:
+        return False, "skip"
+    if available_gb is None:
+        return False, "unknown"
+    if available_gb < SANDBOX_MIN_AVAILABLE_GB:
+        return False, "low_memory"
+    return True, "enough_memory"
+
+
+def sandbox_prepare_status(returncode: int) -> str:
+    """A non-zero/unknown-option exit means 'left to first launch', not failure."""
+    return "done" if returncode == 0 else "skipped"
+
+
 def http_json(url: str, timeout: float = 2.0):
     with urllib.request.urlopen(url, timeout=timeout) as r:  # noqa: S310 (local Ollama)
         return json.loads(r.read().decode())
@@ -448,6 +541,18 @@ def _app_dependencies() -> list[str]:
     return [d for d in deps if not d.lower().startswith("swarmbly")]
 
 
+def _app_optional_dependencies(extra: str) -> list[str]:
+    """One optional-dependencies group from the App's pyproject.toml."""
+    try:
+        import tomllib
+
+        text = (ROOT / "SwarmblyApp" / "pyproject.toml").read_text(encoding="utf-8")
+        data = tomllib.loads(text)
+        return list((data.get("project") or {}).get("optional-dependencies", {}).get(extra, []))
+    except Exception:
+        return []
+
+
 def step_modules(ctx: Ctx) -> None:
     ui = ctx.ui
     if ui.interactive and ctx.args.mode == "custom" and not ctx.dev:
@@ -462,6 +567,12 @@ def step_modules(ctx: Ctx) -> None:
     run(ui, pip + edit + [str(ROOT / "SwarmblyCore")] + edit + [str(ROOT / "SwarmblyLCE")])
     run(ui, pip + ["--no-deps"] + edit + [str(ROOT / "SwarmblyApp")])
     run(ui, pip + _app_dependencies())
+    # The sandbox extra is installed explicitly, rather than as
+    # ``SwarmblyApp[sandbox]`` with dependencies, so pip does not fetch another
+    # copy of Core or LCE from their git pins.
+    sandbox_deps = _app_optional_dependencies("sandbox")
+    if sandbox_deps:
+        run(ui, pip + sandbox_deps)
     if ctx.dev:
         run(ui, pip + ["pytest>=8.0", "pytest-asyncio>=0.23"], check=False)
     probe = run(ui, [str(ctx.py), "-c", "import swarmbly_app, swarmbly_lce, swarmbly_v0; print('ok')"],
@@ -469,6 +580,38 @@ def step_modules(ctx: Ctx) -> None:
     ok = ui.dry or (probe is not None and probe.returncode == 0)
     ui.result(ui["step_modules"], "done" if ok else "failed",
               "SwarmblyCore + SwarmblyLCE + SwarmblyApp" + (" (dev)" if ctx.dev else ""))
+
+
+def step_sandbox_prepare(ctx: Ctx) -> None:
+    """Compile the sandbox once when the machine has memory to spare (R-005)."""
+    ui = ctx.ui
+    if ui.dry:
+        ui.say("    " + ui["sandbox_start"])
+        run(ui, [str(ctx.app_entry), "--prepare-sandbox"], check=False)
+        ui.result(ui["step_sandbox"], "done")
+        return
+    available = available_memory_gb()
+    prepare, reason = should_prepare_sandbox(
+        available, skip=bool(ctx.args.skip_prepare_sandbox))
+    if not prepare:
+        if reason == "low_memory":
+            detail = ui["sandbox_nomem"].format(gb=f"{available:.1f}")
+        elif reason == "unknown":
+            detail = ui["sandbox_unknown"]
+        else:
+            detail = ui["sandbox_skip"]
+        ui.result(ui["step_sandbox"], "skipped", detail)
+        return
+    if not ctx.app_entry.exists():
+        ui.result(ui["step_sandbox"], "skipped", ui["need_app"])
+        return
+    ui.say("    " + ui["sandbox_start"])
+    proc = run(ui, [str(ctx.app_entry), "--prepare-sandbox"],
+               timeout=1800, check=False, capture=True)
+    code = proc.returncode if proc is not None else -1
+    status = sandbox_prepare_status(code)
+    detail = ui["sandbox_done"] if status == "done" else ui["sandbox_left"].format(code=code)
+    ui.result(ui["step_sandbox"], status, detail)
 
 
 def _start_ollama(ui: UI, binary: str) -> bool:
@@ -863,6 +1006,7 @@ STEPS = [
     ("step_python", "why_python", step_python),
     ("step_env", "why_env", step_env),
     ("step_modules", "why_modules", step_modules),
+    ("step_sandbox", "why_sandbox", step_sandbox_prepare),
     ("step_ollama", "why_ollama", step_ollama),
     ("step_models", "why_models", step_models),
     ("step_pdf", "why_pdf", step_pdf),
@@ -934,7 +1078,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dev", action="store_true", help="editable install and test tools")
     ap.add_argument("--sources", help="a documents folder for the local memory")
     ap.add_argument("--skip", default="", help="comma-separated steps to skip: "
-                    "ollama,models,pdf,searxng,shortcuts,sources")
+                    "ollama,models,pdf,searxng,sandbox,shortcuts,sources")
+    ap.add_argument("--skip-prepare-sandbox", action="store_true",
+                    help="do not compile the sandbox at install time; the App offers it on first launch")
     args = ap.parse_args(argv)
     lang = pick_lang(args.lang)
     if not python_supported():
@@ -966,8 +1112,11 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         ui.interactive = False            # no more questions after this point
     skip = {s.strip() for s in args.skip.split(",") if s.strip()}
+    if args.skip_prepare_sandbox:
+        skip.add("sandbox")
     names = {"step_ollama": "ollama", "step_models": "models", "step_pdf": "pdf",
-             "step_searx": "searxng", "step_shortcuts": "shortcuts", "step_sources": "sources"}
+             "step_searx": "searxng", "step_sandbox": "sandbox",
+             "step_shortcuts": "shortcuts", "step_sources": "sources"}
     total = len(STEPS)
     for n, (key, why_key, fn) in enumerate(STEPS, 1):
         if mode == "quick" and key == "step_sources" and not ctx.sources:
