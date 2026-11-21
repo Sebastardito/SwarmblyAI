@@ -44,12 +44,12 @@ greater than zero or a cancelled proposal that still ran each fail a named
 check.
 
 ```bash
-# App main with the [sandbox] extra; on this Mac the extra lives in
-# /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv
-PYTHONPATH="/Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox:$PWD/SwarmblyCore:/opt/homebrew/lib/python3.11/site-packages" \
-  /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv/bin/python bench/run_dev.py \
+# App main with the [sandbox] extra installed in its own venv;
+# APP is that App checkout (for example: export APP=/path/to/SwarmblyApp)
+PYTHONPATH="$APP:$PWD/SwarmblyCore" \
+  "$APP/.venv/bin/python" bench/run_dev.py \
   --model qwen2.5:7b --battery bench/dev_code --repeat 3 --label code_n3 \
-  --python /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv/bin/python
+  --python "$APP/.venv/bin/python"
 
 python3 bench/run_dev.py --rescore bench/dev_code/ejecuciones/<run>
 ```
@@ -111,12 +111,12 @@ propuesta cancelada que igual se ejecutó hacen fallar una comprobación con
 nombre.
 
 ```bash
-# App main con el extra [sandbox]; en este Mac el extra está en
-# /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv
-PYTHONPATH="/Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox:$PWD/SwarmblyCore:/opt/homebrew/lib/python3.11/site-packages" \
-  /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv/bin/python bench/run_dev.py \
+# App main con el extra [sandbox] en su propio venv;
+# APP es esa copia de la App (por ejemplo: export APP=/ruta/a/SwarmblyApp)
+PYTHONPATH="$APP:$PWD/SwarmblyCore" \
+  "$APP/.venv/bin/python" bench/run_dev.py \
   --model qwen2.5:7b --battery bench/dev_code --repeat 3 --label code_n3 \
-  --python /Users/seb/Desktop/Dev/P2PAI/_wt/app-sandbox/.venv/bin/python
+  --python "$APP/.venv/bin/python"
 
 python3 bench/run_dev.py --rescore bench/dev_code/ejecuciones/<run>
 ```
