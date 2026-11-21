@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+#
+# Install to /etc/systemd/system/swarmbly-relay.service, then:
+#   systemctl daemon-reload
+#   systemctl enable --now swarmbly-relay
+#
+# Layout assumed by this unit:
+#   /opt/swarmbly-relay/.venv        Python environment with `relay` installed
+#   /etc/swarmbly-relay/circles/     signed *.json manifests (read-only)
+#   /etc/swarmbly-relay/tls/         relay certificate and key (read-only)
+#
+# The service stores nothing: logs are metadata only, counters are in memory.
+
+[Unit]
+Description=Swarmbly circle relay
+Documentation=https://github.com/Sebastardito/SwarmblyAI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=swarmbly-relay
+Group=swarmbly-relay
+WorkingDirectory=/opt/swarmbly-relay
+ExecStart=/opt/swarmbly-relay/.venv/bin/python -m relay.server \
+    --manifest /etc/swarmbly-relay/circles \
+    --cert /etc/swarmbly-relay/tls/fullchain.pem \
+    --key /etc/swarmbly-relay/tls/key.pem \
+    --host 0.0.0.0 --port 8765 \
+    --max-splices 4 --bytes-per-day 2147483648 --idle-timeout 300
+Restart=on-failure
+RestartSec=3s
+
+# Hardening: the relay needs the network, the manifests and the key, nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadOnlyPaths=/etc/swarmbly-relay
+
+[Install]
+WantedBy=multi-user.target
