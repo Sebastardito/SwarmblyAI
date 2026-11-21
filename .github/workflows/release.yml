@@ -144,12 +144,13 @@ jobs:
           cp docs/INSTALL.md "$stage/docs"/
           cp docs/releases/SIGNING.md "$stage/docs/releases/"
           cp -R docs/beta "$stage/docs/"
-          find "$stage" -type d -name __pycache__ -prune -exec rm -rf {} +
+          find "$stage" -type d \( -name __pycache__ -o -name .pytest_cache \) \
+            -prune -exec rm -rf {} +
           find "$stage" -type f -name '*.pyc' -delete
-          tar --exclude='__pycache__' --exclude='*.pyc' -czf \
+          tar --exclude='__pycache__' --exclude='.pytest_cache' --exclude='*.pyc' -czf \
             "dist/swarmbly-${VERSION}-installer.tar.gz" -C build "swarmbly-${VERSION}"
           (cd build && zip -qr "../dist/swarmbly-${VERSION}-installer.zip" \
-            "swarmbly-${VERSION}" -x '*/__pycache__/*' '*.pyc')
+            "swarmbly-${VERSION}" -x '*/__pycache__/*' '*/.pytest_cache/*' '*.pyc')
           ls -lh dist
 
       - name: Install cosign
