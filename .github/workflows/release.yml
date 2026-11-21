@@ -212,7 +212,7 @@ jobs:
           signed_file=SHA256SUMS
           cosign_version=$(cosign version --json | tr -d '\n')
           workflow_run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
-          verify=python scripts/verify_release.py --dir .
+          verify=python scripts/verify_release.py --dir <release-dir>
           EOF
 
       - name: Write SHA256SUMS
