@@ -17,9 +17,10 @@ def main(argv: list[str] | None = None) -> int:
         prog="swarmbly-app",
         description="Swarmbly App — decentralized AI client and network dashboard")
     parser.add_argument("command", nargs="?", default="serve",
-                        choices=["serve", "headless", "status", "init", "config"],
+                        choices=["serve", "headless", "status", "init", "config",
+                                 "doctor-export"],
                         help="serve (default, opens the UI) | headless (no UI) | "
-                             "status | init | config get/set")
+                             "status | init | config get/set | doctor-export")
     parser.add_argument("config_args", nargs="*",
                         help="config set <key> <value> | config get [<key>]")
     parser.add_argument("--data-dir", default=None,
@@ -32,7 +33,17 @@ def main(argv: list[str] | None = None) -> int:
                         help="TEST ONLY (D-013): JSON map of declared host -> loopback "
                              "target; never settable from the UI, the API or the config "
                              "file. Also read once from SWARMBLY_TEST_HOST_MAP at startup.")
+    parser.add_argument("--prepare-sandbox", action="store_true",
+                        help="compile the optional sandbox cache and exit "
+                             "(for the umbrella installer; no server is started)")
+    parser.add_argument("--force", action="store_true",
+                        help="with --prepare-sandbox, override the free-memory floor "
+                             "after an explicit warning; the umbrella installer "
+                             "never passes it by itself")
     args = parser.parse_args(argv)
+
+    if args.prepare_sandbox:
+        return _prepare_sandbox(args)
 
     # D-013: the seam is decided here, at launch, before any client exists.
     # Nothing in the UI, the API or the config file can enable it later.
@@ -63,6 +74,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "status":
         for key, value in state.health().items():
             print(f"{key:14} {value}")
+        return 0
+
+    if args.command == "doctor-export":
+        try:
+            saved = state.doctor_export.save_current()
+        except Exception as exc:
+            print(f"swarmbly-app: doctor export failed: {exc}", file=sys.stderr)
+            return 1
+        finally:
+            state.stop()
+        print("Doctor export written:\n"
+              f"  {saved['json_file']}\n  {saved['text_file']}")
         return 0
 
     state.start_p2p()  # independent P2P listener; discovery/worker per config
@@ -138,6 +161,74 @@ def _config_command(state, args: list[str]) -> int:
     state.config.update({key: value})
     print(f"{key} = {value!r}")
     return 0
+
+
+def _prepare_sandbox(args) -> int:
+    """Umbrella-installer entry point: compile the cache and exit with a code.
+
+    Exit codes are stable for the installer:
+      0  ready (compiled now, or the cache was already ready)
+      1  the compile failed
+      2  the optional ``[sandbox]`` extra is not installed
+      3  not enough free memory / the environment refuses to start it
+      4  invalid data directory or unexpected error
+    """
+    from .paths import DataDirs
+    from .sandbox import SandboxPreparation
+
+    try:
+        boot = DataDirs(args.data_dir)
+        configured = None
+        try:
+            import json
+            raw = json.loads(boot.config_path().read_text(encoding="utf-8"))
+            configured = raw.get("data_dir") if isinstance(raw, dict) else None
+        except (OSError, ValueError):
+            configured = None
+        dirs = DataDirs(configured) if configured else boot
+        preparation = SandboxPreparation(dirs.root / "sandbox")
+    except Exception as exc:
+        print(f"swarmbly-app: cannot prepare the sandbox: {exc}", file=sys.stderr)
+        return 4
+    status = preparation.status()
+    if not status["installed"]:
+        print("swarmbly-app: the optional [sandbox] extra is not installed; "
+              "nothing was compiled.", file=sys.stderr)
+        return 2
+    if status["status"] == "ready":
+        measurement = status.get("measurement") or {}
+        print("swarmbly-app: the sandbox cache is already ready "
+              f"(compile {measurement.get('elapsed_s', '?')} s, "
+              f"peak {measurement.get('peak_rss_mib', '?')} MiB).")
+        return 0
+    estimate = (f"{status['expected_seconds']:g} s and "
+                f"{status['expected_memory_gb']:g} GB expected; "
+                f"{status['free_memory_gb']} GB free")
+    force = bool(getattr(args, "force", False))
+    if force:
+        print("swarmbly-app: --force was given: the compile may take minutes and "
+              "slow this computer or swap; close other applications first.",
+              file=sys.stderr)
+    print(f"swarmbly-app: preparing the sandbox cache ({estimate})…", flush=True)
+    started = preparation.start(trigger="installer", force=force)
+    if started.get("reason_code") == "low_memory":
+        print(f"swarmbly-app: refused: {started['status'].get('last_error')}",
+              file=sys.stderr)
+        return 3
+    if started.get("reason_code") == "not_installed":
+        print("swarmbly-app: the optional [sandbox] extra is not installed.",
+              file=sys.stderr)
+        return 2
+    final = preparation.wait(900.0)
+    if final["status"] == "ready":
+        measurement = final.get("measurement") or {}
+        print("swarmbly-app: sandbox ready "
+              f"(compile {measurement.get('elapsed_s', '?')} s, "
+              f"peak {measurement.get('peak_rss_mib', '?')} MiB).")
+        return 0
+    reason = final.get("last_error") or final.get("status")
+    print(f"swarmbly-app: sandbox preparation failed: {reason}", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":  # pragma: no cover

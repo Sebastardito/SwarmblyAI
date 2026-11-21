@@ -1,6 +1,7 @@
 {
  "nav": {
   "chat": "Chat",
+  "teams": "Teams",
   "swarm": "Swarm",
   "memory": "Memory",
   "settings": "Settings",
@@ -88,7 +89,9 @@
   "group": {
    "worker": "Sharing this computer (worker)",
    "evidence": "Public evidence",
-   "roles": "Models by role"
+   "roles": "Models by role",
+   "nodeRoles": "Node roles",
+   "nodeExecutors": "Search and corpus executors"
   }
  },
  "node": {
@@ -115,6 +118,11 @@
   "export": "Export",
   "delete": "Delete",
   "placeholder": "Ask something. Lists and itemised tasks can be shared with the swarm.",
+  "team": "Team",
+  "teamNone": "No team",
+  "hint.team": "A stored team runs this message as its plan. Privacy, role and passage rules still apply.",
+  "partial": "partial answer",
+  "partialTitle": "Some steps could not be completed; the answer names them and why.",
   "attach": "Attach text",
   "attachHint": "Text files up to 200 KB, read on this computer",
   "attachTooBig": "{name} is larger than 200 KB",
@@ -154,6 +162,8 @@
   "replicas": "{n} replicas",
   "evidenceChip": "Public sources · {n}",
   "evidenceTitle": "Public context from Wikipedia was added to {n} items; only those items' texts were sent.",
+  "roleSourcesChip": "Executor sources · {n}",
+  "roleSourcesTitle": "Results a circle member's public search or shared corpus returned. The requester cannot verify which engine answered.",
   "lceChip": "Local sources · {n}",
   "lceTitle": "The answer used passages from your sources (LCE C1); they did not leave this device.",
   "publicOffer": "Also search public sources",
@@ -240,9 +250,9 @@
   "authorName": "Author's name (exact)",
   "authorServices": "Services",
   "authorService": {
-    "orcid": "ORCID",
-    "openalex": "OpenAlex",
-    "pubmed": "PubMed"
+   "orcid": "ORCID",
+   "openalex": "OpenAlex",
+   "pubmed": "PubMed"
   },
   "authorConsent": "This name will be sent to: {hosts}. It is a person's name.",
   "authorNoService": "no service selected",
@@ -332,6 +342,14 @@
   "codeDone": "Script finished.",
   "codeUnavailable": "The isolated Python environment is not installed.",
   "codeUnavailableHint": "Recipe 5 is unavailable until the optional sandbox extra is installed; nothing else is offered.",
+  "codePreparing": "The isolated environment is being prepared in the background.",
+  "codeNotPrepared": "The isolated environment has not been prepared yet.",
+  "codeNotPreparedHint": "Prepare it once from the sandbox notice or Settings → System (or run swarmbly-app --prepare-sandbox); this request runs without the code recipe.",
+  "codePreparingHint": "This request runs without the code recipe. You can keep chatting; try the recipe again when the sandbox notice says it is ready.",
+  "codeLowMemory": "There is not enough free memory to prepare the isolated environment safely.",
+  "codeLowMemoryHint": "The code recipe stays unavailable; this request runs without it. Close other applications or use a machine with more free memory, then try again from Settings.",
+  "codePrepareFailed": "The isolated environment could not be prepared.",
+  "codePrepareFailedHint": "Retry from Settings → System; this request runs without the code recipe.",
   "codeDownload": "Download",
   "codeCorrect": "Propose a corrected script",
   "codeFilesProduced": "Files produced",
@@ -376,6 +394,13 @@
   "exec": {
    "local": "local model",
    "distributed": "distributed"
+  },
+  "roleSources": {
+   "title": "Search and corpus material",
+   "local": "local",
+   "localPool": "local pool",
+   "search": "public search",
+   "corpus": "shared corpus"
   },
   "pipeline": "Pipeline",
   "attempts": "Dispatch attempts",
@@ -460,7 +485,8 @@
    "class": {
     "local": "local",
     "red_propia": "your network",
-    "terceros": "third party"
+    "terceros": "third party",
+    "circulo": "trusted circle"
    },
    "kind": {
     "pregunta": "the question",
@@ -485,7 +511,8 @@
    "consentNo": "needed and not given: nothing was looked up",
    "consentNotNeeded": "not needed",
    "consentBase": "Basis:",
-   "consentScope": "Scope:"
+   "consentScope": "Scope:",
+   "passagesShort": "passages"
   },
   "citeTitle": "Stable citation: the file's hash and the paragraph. It still holds if the project is moved or restored on another computer.",
   "anchor": {
@@ -521,6 +548,13 @@
   "title": "Swarm",
   "lede": "Computers running Swarmbly on your network. A node counts as authenticated once its identity is proven; announcements are not trusted until then.",
   "health": "Health",
+  "nodeRoles": "Node roles",
+  "nodeRolesNote": "What this computer offers the swarm as a worker. A node role is placement information only: it never widens circle admission, egress or any other permission.",
+  "ownRoles": "Own roles",
+  "noRoles": "none",
+  "noneMarked": "none marked",
+  "largeModelMin": "Large model from",
+  "reasonerModels": "Reasoning models",
   "graph": "Map",
   "graphLabel": "Map of this node and its peers",
   "graphEmpty": "No peers yet. Turn on the local network or connect by address.",
@@ -571,10 +605,12 @@
    "address": "Address",
    "state": "State",
    "role": "Role",
+   "roles": "Roles",
    "models": "Models",
    "rtt": "Latency",
    "inflight": "In flight",
-   "seen": "Last seen"
+   "seen": "Last seen",
+   "link": "Link"
   },
   "cache": {
    "hint": "Node",
@@ -593,7 +629,10 @@
   "bytesIn": "Data received",
   "bytesOut": "Data sent",
   "sharedModels": "Shared models",
-  "availability": "Time available"
+  "availability": "Time available",
+  "bootstrap": "bootstrap: not admitted",
+  "direct": "direct",
+  "relayed": "relayed"
  },
  "memory": {
   "title": "Memory",
@@ -650,6 +689,7 @@
    "system": "System",
    "tools": "Tools"
   },
+  "noProject": "Share no project",
   "sameModel": "Same as the conversation",
   "sameEmbedder": "The app's current embedder",
   "secretStored": {
@@ -956,6 +996,34 @@
   "roles__writer__api_key": {
    "label": "Key of the writer's server",
    "help": "Kept in the system keychain, not in the configuration file."
+  },
+  "node_roles__large_model_min_b": {
+   "label": "Large-model threshold (B)",
+   "help": "Shared models at or above this parameter count are announced as large_model; 7 B is the default because it is the smallest widely available class clearly above the 1–3 B models this swarm mostly runs."
+  },
+  "node_roles__reasoner_models": {
+   "label": "Reasoning models",
+   "help": "Shared models you mark here are announced as reasoner and used with think: true. Empty by default."
+  },
+  "node_roles__search__enabled": {
+   "label": "Share public search",
+   "help": "When on, this worker runs a public query for a member of a trusted circle on that member's behalf; only the query leaves this computer, never your files or conversation."
+  },
+  "node_roles__corpus__project_id": {
+   "label": "Corpus to share",
+   "help": "One local project. Only admitted peers in the circles you select see its display name and size bucket, never titles, paths or contents."
+  },
+  "node_roles__corpus__display_name": {
+   "label": "Corpus display name",
+   "help": "The name admitted peers see. Keep it free of personal details; at most 40 characters."
+  },
+  "circle__admission_mode": {
+   "label": "Peer admission",
+   "help": "Only my circles requires a valid signed manifest that lists both nodes. My own devices keeps the 3.4 LAN behaviour (any authenticated peer on the LAN)."
+  },
+  "circle__node_name": {
+   "label": "Circle display name",
+   "help": "The name this node shows in manifests and invitations. Empty uses the computer name."
   }
  },
  "models": {
@@ -1035,6 +1103,52 @@
   "applied": "Recommendation applied",
   "reverted": "Previous settings restored",
   "reversible": "Applying saves your current settings first. Sharing and the local network are never turned on by a recommendation."
+ },
+
+ "sandbox": {
+  "noticeTitle": "Prepare the isolated environment once",
+  "noticeBody": "The code recipe needs a WebAssembly Python that compiles once on this computer: about {time} s and {memory} GB of memory. Preparing it now runs in the background and the chat stays usable.",
+  "expected": "Expected: {time} s and {memory} GB; {free} GB free now (at least {min} GB needed).",
+  "free": "Only {free} GB of memory are free; at least {min} GB are needed to start safely.",
+  "prepareNow": "Prepare now",
+  "prepareAnyway": "Prepare anyway",
+  "forceWarning": "The compile may take minutes and slow this computer or swap. Close other apps first.",
+  "forcingToast": "Preparing anyway; the computer may be slow until it finishes.",
+  "forcedNote": " (compiled with the low-memory override)",
+  "later": "Later",
+  "retry": "Try again",
+  "preparingToast": "Preparing the isolated environment in the background.",
+  "readyToast": "The isolated environment is ready.",
+  "failedToast": "The isolated environment could not be prepared; see the notice.",
+  "preparing": "Preparing the isolated environment ({stage}). You can keep chatting; the code recipe waits until it is ready.",
+  "ready": "The isolated environment is ready: compiled in {time} s, peak {peak} MiB.",
+  "failed": "Preparation failed: {reason}",
+  "refused": "Not started: {reason}",
+  "notInstalled": "The optional sandbox extra is not installed; the code recipe is unavailable. Install it with pip install 'swarmbly-app[sandbox]'.",
+  "settingsTitle": "Isolated environment (code recipe)",
+  "settingsBody": "The first code recipe compiles WebAssembly Python once, then reuses the cache. Prepare it from here if you skipped the first-launch notice.",
+  "compile": "Last compile",
+  "peak": "Peak memory",
+  "state": {
+   "not_installed": "not installed",
+   "missing": "not prepared",
+   "stale": "outdated",
+   "preparing": "preparing",
+   "ready": "ready",
+   "failed": "failed",
+   "refused": "not started"
+  }
+ },
+ "doctorExport": {
+  "title": "Doctor export",
+  "body": "Writes one JSON and one readable text file to attach to a bug report. It contains only App/LCE/Core versions, OS and architecture, Python, CPU/RAM/GPU class, installed extras, whether Ollama answers and its model tags, the sandbox state and compile measurements, P2P counts and relay/push codes, and the last error codes with timestamps.",
+  "never": "It never contains node ids or keys, names, circle names or ids, member names, IP addresses or host names, paths under your home, project names, document titles, prompts, answers, glossary, memory, API keys or the relay host.",
+  "review": "Review and save…",
+  "previewTitle": "Doctor export: what will be saved",
+  "text": "Readable text (the exact file)",
+  "json": "JSON (the exact file)",
+  "save": "Save these two files",
+  "saved": "Saved {json} and {text}"
  },
  "doctor": {
   "venv": "Isolated environment",
@@ -1305,5 +1419,170 @@
   "copied": "{n} files copied.",
   "usedChip": "Skill: {name}",
   "usedTitle": "The model saw this skill's body as quoted material (SHA-256 {sha}…)."
+ },
+ "circle": {
+  "title": "Trusted circles",
+  "lede": "A circle is a signed member list kept by its owner. Only nodes listed in a current, unexpired manifest can connect and be given tasks.",
+  "none": "No circles yet. Create one, or accept an invitation from another node.",
+  "create": "Create circle",
+  "createTitle": "Create a trusted circle",
+  "name": "Circle name",
+  "accept": "Accept invitation",
+  "acceptTitle": "Accept a circle invitation",
+  "code": "Invitation code",
+  "codePlaceholder": "Paste the SWC1… code here",
+  "codeHelp": "The code is signed by the owner. Accepting sends a signed join request; the owner still has to approve it.",
+  "invite": "Invite",
+  "inviteTitle": "Invite a node",
+  "qr": "Scan this QR with the other device, or send the code.",
+  "copy": "Copy code",
+  "copied": "Invitation code copied",
+  "leave": "Leave",
+  "delete": "Delete circle",
+  "leaveConfirm": "Leave this circle? This device will no longer be admitted by its members.",
+  "deleteConfirm": "Delete this circle? Members will be told it was dissolved.",
+  "members": "Members",
+  "requests": "Join requests",
+  "approve": "Approve",
+  "reject": "Reject",
+  "revoke": "Revoke",
+  "version": "version {v}",
+  "owner": "owner",
+  "member": "member",
+  "you": "this device",
+  "noRequests": "No pending requests.",
+  "noticeTitle": "Your installation kept the 3.4 LAN admission",
+  "noticeBody": "This release adds trusted circles; new installations admit peers only through a circle manifest. Because this installation already existed, it keeps the old «my own devices» LAN admission until you choose. Review the choice in Settings → Swarm, or switch to circle-only now.",
+  "noticeKeep": "Keep my own devices",
+  "noticeSwitch": "Switch to circles",
+  "stale": "This node does not hold the current manifest; it will fetch it before being admitted.",
+  "ownerOnly": "Only the circle owner can do that.",
+  "expires": "expires {when}",
+  "unknown": "Unknown circle",
+  "modeCircle": "Only my circles",
+  "modeOwn": "My own devices (3.4 LAN)",
+  "accepted": "Join request sent. Waiting for the owner's approval.",
+  "pending": "Saved. It will be sent when the owner is reachable.",
+  "outgoing": "Outgoing join requests",
+  "col": {
+   "circle": "circle",
+   "status": "status",
+   "name": "name",
+   "node": "node",
+   "endpoints": "endpoints",
+   "role": "role"
+  },
+  "passages": "Document passages",
+  "passagesHelp": "When on, recipe 4 may attach passages of your documents to items sent to members of this circle. Off by default; separate from privacy.third_party_passages.",
+  "corpusShare": "Share corpus with this circle",
+  "corpusShareHelp": "This circle may retrieve passages from the shared corpus. Every admitted peer sees its display name and size bucket.",
+  "corpusPickFirst": "Choose a project in Settings → Swarm first.",
+  "ownPassages": "Document passages to my own devices",
+  "ownPassagesHelp": "When on, recipe 4 may attach passages of your documents to items sent to peers in my-own-devices mode. Off by default; separate from privacy.third_party_passages.",
+  "relay": "Relay",
+  "relaySet": "Set relay…",
+  "relayChange": "Change relay…",
+  "relayRemove": "Remove relay",
+  "relaySetTitle": "Set the circle relay",
+  "relayChangeTitle": "Change the circle relay",
+  "relayHost": "Relay host",
+  "relayPort": "Relay port",
+  "relayPinLabel": "Relay certificate SHA-256 pin",
+  "relayHelp": "The pin is mandatory. The owner pushes every new signed manifest version to the relay over a registered connection; the signed file in the operator spool is only the bootstrap copy and the fallback.",
+  "relayPinRequired": "A relay needs both an address and its certificate pin.",
+  "relayNone": "No relay for this circle.",
+  "relayNoneOwner": "No relay for this circle. Set one to let members reach each other beyond the LAN.",
+  "relayNoneOff": "No relay.",
+  "relayConnected": "registered",
+  "relayDown": "unreachable (backing off)",
+  "relayOff": "not connected",
+  "relayRefused": "refused by the relay",
+  "relayLimited": "not started (connection limit)",
+  "relaySecurity": "SECURITY WARNING: certificate pin mismatch; this relay is stopped",
+  "relayPin": "pin {pin}",
+  "renew": "Renew manifest",
+  "relayPush": "Relay push",
+  "relayPushNone": "nothing pushed yet",
+  "relayPushAck": "acknowledged v{v}",
+  "relayPushPending": "queued v{v}",
+  "relayPushRefused": "refused: {code}",
+  "relayPushUnreachable": "unreachable, retrying",
+  "relayPushSource": "The push is the primary path. The signed file in the operator's spool is the bootstrap copy and the fallback when the network push cannot run.",
+  "relayPushUnknownCircle": "the operator must install the first manifest for this circle on the relay",
+  "relayPushRateLimited": "the relay limits owner pushes to 30 per hour; the newest version stays queued",
+  "relayPushStale": "the relay already holds a newer version",
+  "relayPushNotOwner": "this node is not the relay's current owner",
+  "relayPushOther": "see the relay state and try again"
+ },
+ "teams": {
+  "title": "Teams",
+  "lede": "A team is a stored plan: named steps, each with an optional node role and dependencies on earlier steps. The same team runs on one computer (its local model pool) or across circle members, by role. A team never adds a permission.",
+  "create": "New team",
+  "createTitle": "New team",
+  "editTitle": "Edit team",
+  "edit": "Edit",
+  "delete": "Delete",
+  "duplicate": "Duplicate",
+  "use": "Use in chat",
+  "builtin": "example",
+  "own": "yours",
+  "project": "this project",
+  "none": "No teams yet. Create one or duplicate an example.",
+  "loadFailed": "The teams could not be read: {e}",
+  "storage": "Stored in {path}",
+  "name": "Name",
+  "description": "Description",
+  "step": "Step {n}",
+  "stepName": "Step name",
+  "instruction": "Instruction template",
+  "depends": "Runs after",
+  "after": "after",
+  "addStep": "Add step",
+  "removeStep": "Remove",
+  "save": "Save",
+  "saved": "Team saved",
+  "deleted": "Team deleted",
+  "nameRequired": "The team needs a name.",
+  "stepsRequired": "Every step needs a name and an instruction.",
+  "placeholderRequired": "At least one step must contain {request}.",
+  "requestHint": "Use {request} where the user's message belongs. A step may depend only on earlier steps.",
+  "duplicateHint": "The copy is yours; the example stays read-only.",
+  "copySuffix": "copy",
+  "deleteConfirm": "Delete the team “{name}”?",
+  "deleteHint": "This only removes the stored template; answers already made are not touched.",
+  "picked": "Team “{name}” will run the next message.",
+  "unnamedStep": "unnamed step",
+  "roleLabel": "Node role",
+  "role": {
+   "none": "No role (any worker)",
+   "search": "search",
+   "corpus": "corpus",
+   "large_model": "large model",
+   "reasoner": "reasoner"
+  }
+ },
+ "credits": {
+  "title": "Reciprocity credits",
+  "lede": "Credits are a courtesy inside a circle, not money. When you accept a verified result from a member, you sign a receipt for that member; they can offer it back just before sending you work, and it may let their task wait for a busy slot. A receipt belongs only to the worker it names, only in that circle, and expires. There is no transfer, sale, market or shared ledger: the balance is local, and a spend reported twice is flagged only at the issuer — detection, not prevention.",
+  "empty": "No circle yet. Credits are earned inside a trusted circle.",
+  "issued": "Receipts issued",
+  "unit": "Unit",
+  "unitReceipts": "one receipt = one courtesy",
+  "ttl": "Default expiry",
+  "withinDays": "within {days} days",
+  "flagged": "Double-spend reports",
+  "flaggedHelp": "The issuer logs what it issued and what workers reported spent. This is detection, not prevention, and nothing is broadcast beyond the circle.",
+  "noFlagged": "No receipt was reported spent twice.",
+  "col": {
+   "name": "circle",
+   "balance": "balance",
+   "earned": "earned",
+   "spent": "spent",
+   "expiring": "expiring soon",
+   "receipt": "receipt",
+   "worker": "worker",
+   "reports": "reports",
+   "reason": "reason"
+  }
  }
 }

@@ -84,6 +84,27 @@ swarmbly-app config get swarm      # read settings
 swarmbly-app config set swarm.worker_enabled true
 ```
 
+### Prepare the sandbox at install time (umbrella installer)
+
+The first code recipe compiles WebAssembly Python once (about 5 s / 3.3 GB on
+Apple Silicon, about 60 s on a 2-vCPU machine). An installer can pay that cost
+before the first launch:
+
+```bash
+.venv/bin/swarmbly-app --prepare-sandbox --data-dir "<data-dir>"
+```
+
+It installs nothing, starts no server and is idempotent: an existing ready
+cache exits at once. `--data-dir` must be the directory the App will use.
+Exit codes: `0` ready (compiled now or already), `1` the compile failed, `2`
+the optional `[sandbox]` extra is not installed (the recipe stays unavailable),
+`3` not enough free memory (fewer than 4 GB and no `--force`; nothing was
+started) and `4` an invalid data directory. Standard output gives the
+expected/measured time and peak memory. A person at the machine may add
+`--force` to override the floor explicitly after the warning; the umbrella
+installer never passes `--force` by itself. See [USER_GUIDE.md](USER_GUIDE.md#7-first-launch-the-code-sandbox-and-the-doctor-export)
+for what the first-launch notice does.
+
 ## First run
 
 The first-run assistant walks through:
@@ -197,6 +218,14 @@ página oficial, nunca lo instala) y el puerto (si Swarmbly ya está abierto, lo
 muestra; si otro programa lo usa, elige el siguiente libre). Opciones:
 `--check`, `--setup-only`, `--headless`, `--port N`, `--yes`, `--no`, `--dev`,
 `--reinstall`, `--no-ollama`, y `-- …` para pasar argumentos a `swarmbly-app`.
+
+**Sandbox en la instalación:** el instalador para todo el proyecto puede
+ejecutar `swarmbly-app --prepare-sandbox --data-dir "<data>"` después de
+instalar el complemento `[sandbox]`; compila la caché una vez y sale con 0
+(listo), 1 (falló), 2 (falta el complemento), 3 (menos de 4 GB libres y sin
+`--force`; no se inició) o 4 (directorio inválido), sin arrancar el servidor.
+Una persona puede añadir `--force` para anular el mínimo tras el aviso; el
+instalador para todo el proyecto nunca lo pasa por sí solo.
 
 **Primer arranque:** revisión del sistema (con instalación consentida de
 paquetes Python faltantes), configuración recomendada según tu hardware

@@ -547,6 +547,43 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             "status": job.status, "packages": job.packages, "log": job.log[-20:],
             "verified": job.verified}
 
+    # ---- first-launch sandbox preparation (3.5, R-005) -----------------------------
+    @app.get("/api/sandbox")
+    def sandbox_status() -> dict:
+        return state.sandbox.status()
+
+    @app.post("/api/sandbox/prepare")
+    def sandbox_prepare(body: dict[str, Any] | None = None) -> dict:
+        body = body or {}
+        if body.get("consent") is False:
+            raise HTTPException(status_code=400, detail="explicit consent is required")
+        # Only a real JSON true overrides the floor; strings or numbers do not.
+        result = state.sandbox.start(trigger="user", force=body.get("force") is True)
+        if result.get("reason_code") == "low_memory":
+            detail = (str((result.get("status") or {}).get("last_error"))
+                      or "not enough free memory to prepare the sandbox")
+            raise HTTPException(status_code=409, detail=detail)
+        return result
+
+    @app.post("/api/sandbox/defer")
+    def sandbox_defer() -> dict:
+        return state.sandbox.defer()
+
+    # ---- doctor export (3.5, R-014) --------------------------------------------------
+    @app.get("/api/doctor/export/preview")
+    def doctor_export_preview() -> dict:
+        return state.doctor_export.preview()
+
+    @app.post("/api/doctor/export")
+    def doctor_export_save(body: dict[str, Any] | None = None) -> dict:
+        body = body or {}
+        try:
+            return state.doctor_export.save(str(body.get("snapshot_id") or ""))
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except OSError as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
     # ---- optional local SearXNG and web-search check (consent required) ----------
     @app.get("/api/evidence/searxng")
     def searxng_status() -> dict:
@@ -897,6 +934,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
     @app.post("/api/conversations/{conv_id}/messages", status_code=202)
     def send_message(conv_id: str, body: dict[str, Any]) -> dict:
         from ..recipes import ListJobError
+        from ..teams import TeamError
         recipe = str(body.get("recipe") or "")
         list_job = body.get("list_job")
         text = str(body.get("text", "")).strip()
@@ -904,19 +942,27 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
             text = str(list_job.get("operation") or "").strip()
         if not text:
             raise HTTPException(status_code=400, detail="empty message")
+        conv = state.db.get_conversation(conv_id)
+        if conv is None:
+            raise HTTPException(status_code=404, detail="conversation not found")
+        project_id = str(conv.get("project_id") or "")
         skill_name = str(body.get("skill") or "").strip()
         skill_obj = None
         if skill_name:
-            conv = state.db.get_conversation(conv_id)
-            if conv is None:
-                raise HTTPException(status_code=404,
-                                    detail=f"unknown conversation {conv_id}")
-            project_id = str(conv.get("project_id") or "")
             if not project_id:
                 raise HTTPException(
                     status_code=400,
                     detail="skills belong to a project; open a project first")
             skill_obj = _load_skill(project_id, skill_name)
+        team_obj = None
+        team_id = str(body.get("team_id") or "").strip()
+        if team_id:
+            try:
+                team_obj = state.teams.get(team_id, project_id)
+            except TeamError as exc:
+                status = 404 if exc.code == "E_TEAM_UNKNOWN" else 400
+                raise HTTPException(status_code=status,
+                                    detail=f"{exc.code}: {exc.detail}") from exc
         try:
             user_msg, assistant_msg = state.chat.send(
                 conv_id, text,
@@ -925,6 +971,7 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
                 allow_public=bool(body.get("allow_public")),
                 web_query=str(body.get("web_query") or ""),
                 recipe=recipe, list_job=list_job, skill=skill_obj,
+                team=team_obj,
                 use_tools=bool(body.get("use_tools")))
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1331,7 +1378,14 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
     # ---- swarm (Phase 2) --------------------------------------------------------------
     @app.get("/api/swarm")
     def swarm_status() -> dict:
-        cfg = state.config.all()["swarm"]
+        full = state.config.all()
+        cfg = full["swarm"]
+        if state.worker is not None:
+            roles = state._node_roles(
+                state.worker.shared_models(), remote=True,
+                announce=bool(state.worker.policy().get("kinds")))
+        else:
+            roles = []
         return {
             **state.nodes.status(),
             "config": {k: cfg.get(k) for k in
@@ -1340,6 +1394,22 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
                         "worker_allow_internet", "worker_max_concurrent",
                         "worker_only_idle", "k_min", "k_max",
                         "n_fragments_max", "discovery_enabled")},
+            # 3.5, D-018: what this node advertises now, and the two settings
+            # that derive large_model/reasoner (search/corpus wait for WP4b).
+            "roles": roles,
+            "node_roles": {
+                "large_model_min_b": (full.get("node_roles") or {}).get(
+                    "large_model_min_b"),
+                "reasoner_models": (full.get("node_roles") or {}).get(
+                    "reasoner_models") or [],
+                "search": (full.get("node_roles") or {}).get("search") or
+                {"enabled": False},
+                "corpus": (full.get("node_roles") or {}).get("corpus") or {
+                    "project_id": "", "circle_ids": [], "display_name": ""},
+                # What the corpus role would show peers (name and bucket only).
+                "corpus_advertised": next(
+                    (role for role in roles if role.get("role") == "corpus"), None),
+            },
             "worker": state.worker.status() if state.worker else None,
         }
 
@@ -1379,6 +1449,165 @@ def create_app(state: AppState, guard: ApiGuard | None = None) -> FastAPI:
         state.config.update(changes)
         state.on_config_changed()
         return state.worker.status() if state.worker else {"policy": {}}
+
+    # ---- teams (3.5, D-019) -----------------------------------------------------------
+    def _team_call(action, *args, **kwargs):
+        from ..teams import (E_TEAM_BUILTIN, E_TEAM_UNKNOWN, TeamError)
+        try:
+            return action(*args, **kwargs)
+        except TeamError as exc:
+            if exc.code == E_TEAM_UNKNOWN:
+                status = 404
+            elif exc.code == E_TEAM_BUILTIN:
+                status = 403
+            else:
+                status = 400
+            raise HTTPException(status_code=status,
+                                detail=f"{exc.code}: {exc.detail}") from exc
+
+    @app.get("/api/teams")
+    def teams_list(project: str | None = None) -> dict:
+        return state.teams.payload(_project_id(project))
+
+    @app.post("/api/teams")
+    def teams_create(body: dict) -> dict:
+        project_id = _project_id(body.get("project_id"), body)
+        return _team_call(state.teams.create, body, project_id)
+
+    @app.put("/api/teams/{team_id}")
+    def teams_update(team_id: str, body: dict) -> dict:
+        project_id = _project_id(body.get("project_id"), body)
+        return _team_call(state.teams.update, team_id, body, project_id)
+
+    @app.delete("/api/teams/{team_id}")
+    def teams_delete(team_id: str, project: str | None = None) -> dict:
+        project_id = _project_id(project)
+        _team_call(state.teams.delete, team_id, project_id)
+        return {"deleted": team_id}
+
+    @app.post("/api/teams/{team_id}/duplicate")
+    def teams_duplicate(team_id: str, body: dict | None = None) -> dict:
+        body = body or {}
+        project_id = _project_id(body.get("project_id"), body)
+        name = body.get("name")
+        return _team_call(state.teams.duplicate, team_id, project_id,
+                          str(name) if name else None)
+
+    # ---- trusted circles (3.5, D-015) ------------------------------------------------
+    def _circle_call(action, *args, **kwargs):
+        from ..p2p.circles import (E_CIRCLE_NO_REQUEST, E_CIRCLE_NOT_MEMBER,
+                                   E_CIRCLE_OWNER_ONLY, E_CIRCLE_UNKNOWN,
+                                   E_CIRCLE_VERSION_ROLLBACK, E_INVITATION_USED,
+                                   CircleError)
+        try:
+            return action(*args, **kwargs)
+        except CircleError as exc:
+            if exc.code in (E_CIRCLE_UNKNOWN, E_CIRCLE_NO_REQUEST):
+                status = 404
+            elif exc.code in (E_CIRCLE_OWNER_ONLY, E_CIRCLE_NOT_MEMBER,
+                              E_INVITATION_USED):
+                status = 403
+            elif exc.code == E_CIRCLE_VERSION_ROLLBACK:
+                status = 409
+            else:
+                status = 400
+            raise HTTPException(status_code=status,
+                                detail=f"{exc.code}: {exc.detail}") from exc
+
+    @app.get("/api/circles")
+    def circles_list() -> dict:
+        return state.circles.list_payload()
+
+    @app.get("/api/credits")
+    def credits_list() -> dict:
+        """Local wallet per circle and the issuer's flagged double spends.
+
+        Read-only on purpose: there is no transfer, no export as a token and
+        no market (SPEC §18, D-020).
+        """
+        return state.credits.list_payload()
+
+    @app.post("/api/circles")
+    def circles_create(body: dict) -> dict:
+        return _circle_call(state.circles.create_circle,
+                            str(body.get("name") or ""))
+
+    @app.post("/api/circles/accept")
+    def circles_accept(body: dict) -> dict:
+        code = str(body.get("code") or body.get("token") or "").strip()
+        if not code:
+            raise HTTPException(status_code=400, detail="invitation code is required")
+        name = body.get("name")
+        endpoints = body.get("endpoints")
+        return _circle_call(state.circles.accept_invitation, code,
+                            name=str(name) if name else None,
+                            endpoints=endpoints)
+
+    @app.post("/api/circles/own-devices/passages")
+    def circles_own_devices_passages(body: dict | None = None) -> dict:
+        body = body or {}
+        return _circle_call(state.circles.set_own_devices_passages,
+                            bool(body.get("enabled")))
+
+    @app.post("/api/circles/notice/ack")
+    def circles_notice_ack() -> dict:
+        state.config.update({"circle.notice_pending": False})
+        return state.circles.list_payload()
+
+    @app.post("/api/circles/{circle_id}/passages")
+    def circles_passages(circle_id: str, body: dict | None = None) -> dict:
+        body = body or {}
+        return _circle_call(state.circles.set_circle_passages, circle_id,
+                            bool(body.get("enabled")))
+
+    @app.post("/api/circles/{circle_id}/relay")
+    def circles_relay(circle_id: str, body: dict | None = None) -> dict:
+        """Owner: set (or remove) the circle relay address and certificate pin.
+
+        The pin is mandatory with an address; ``{"relay": null}`` removes it.
+        The change is a new signed manifest version and is published to the
+        relay's manifest spool.
+        """
+        payload = body or {}
+        relay = payload.get("relay", payload)
+        if relay in ({}, "", None):
+            relay = None
+        return _circle_call(state.circles.set_relay, circle_id, relay)
+
+    @app.post("/api/circles/{circle_id}/renew")
+    def circles_renew(circle_id: str) -> dict:
+        """Owner: sign and publish a fresh manifest version (same members)."""
+        return _circle_call(state.circles.renew, circle_id)
+
+    @app.post("/api/circles/{circle_id}/invite")
+    def circles_invite(circle_id: str, body: dict | None = None) -> dict:
+        body = body or {}
+        ttl = body.get("ttl_s")
+        try:
+            ttl_s = int(ttl) if ttl is not None else None
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="ttl_s must be an integer")
+        return _circle_call(state.circles.invite, circle_id,
+                            endpoints=body.get("endpoints"), ttl_s=ttl_s)
+
+    @app.post("/api/circles/{circle_id}/requests/{node_id}/approve")
+    def circles_approve(circle_id: str, node_id: str,
+                        body: dict | None = None) -> dict:
+        name = (body or {}).get("name")
+        return _circle_call(state.circles.approve, circle_id, node_id,
+                            name=str(name) if name else None)
+
+    @app.post("/api/circles/{circle_id}/requests/{node_id}/reject")
+    def circles_reject(circle_id: str, node_id: str) -> dict:
+        return _circle_call(state.circles.reject, circle_id, node_id)
+
+    @app.post("/api/circles/{circle_id}/members/{node_id}/revoke")
+    def circles_revoke(circle_id: str, node_id: str) -> dict:
+        return _circle_call(state.circles.revoke, circle_id, node_id)
+
+    @app.post("/api/circles/{circle_id}/leave")
+    def circles_leave(circle_id: str) -> dict:
+        return _circle_call(state.circles.leave, circle_id)
 
     @app.get("/api/requests/{request_id}")
     def request_detail(request_id: str) -> dict:

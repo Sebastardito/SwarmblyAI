@@ -164,6 +164,166 @@ def clean_expansion(exp: Expansion, question: str) -> Expansion:
     return Expansion(keywords=", ".join(kept)[:400], entities=ents, raw=exp.raw, error=exp.error)
 
 
+# -- candidate generation for the App's side of retrieval (T10.17) ----------
+#
+# LCE folds accents and plural endings, but BM25 still needs the same token:
+# a question asking what "se recolectó" does not match a passage that says
+# "la cosecha fue", and "pesaron" does not match "peso". The App can widen
+# the query it hands to LCE without changing LCE: the user's glossary already
+# names equivalents, and a small set of Spanish inflection variants covers
+# the regular forms a document uses. The added terms weigh half in LCE, so
+# the question's own words still decide the ranking.
+
+_QUERY_STOP = frozenset("""
+para como cuando donde desde hasta entre sobre tambien porque aunque
+cuanto cuanta cuantos cuantas quien quienes cual cuales
+the and that with from this these those what when where which while
+para pero sino cada otro otra otros otras todo toda todos todas
+""".split())
+
+# Only endings that clearly mark a verb: a bare -o/-a/-e is a noun or an
+# adjective far more often, and its forms would flood the extra terms.
+_VERB_ENDINGS = tuple(sorted({
+    "ar", "er", "ir", "ando", "iendo", "ado", "ada", "ados", "adas", "ido",
+    "ida", "idos", "idas", "amos", "emos", "imos", "aron", "ieron", "aba",
+    "aban", "abamos", "ia", "ian", "iamos", "ara", "aran", "aria", "arian",
+    "are", "ó", "é", "ió", "ieron",
+}, key=len, reverse=True))
+_VERB_FORMS = ("ar", "er", "ir", "o", "a", "as", "an", "e", "en", "ó", "aron",
+               "ando", "ado", "ido", "io", "ia", "ian", "iera", "iese", "ara")
+
+
+def _query_stem(word: str) -> str:
+    word = _fold(word)
+    if len(word) > 4 and word.endswith("es") and word[-3] in "lnrdzj":
+        return word[:-2]
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def _query_words(text: str) -> list[str]:
+    out: list[str] = []
+    for raw in re.findall(r"[^\W\d_]{4,}", text or ""):
+        word = _fold(raw)
+        if len(word) < 4 or word in _QUERY_STOP:
+            continue
+        if word not in out:
+            out.append(word)
+    return out
+
+
+def _inflection_variants(word: str) -> list[str]:
+    """Regular Spanish/English forms likely to name the same thing."""
+    out: list[str] = []
+
+    def add(value: str) -> None:
+        value = _fold(value)
+        if len(value) >= 3 and value != word and value not in out:
+            out.append(value)
+
+    # plural / singular and noun/adjective gender
+    if word.endswith("es") and len(word) > 5:
+        add(word[:-2])
+        add(word[:-1])
+    elif word.endswith("s") and len(word) > 4:
+        add(word[:-1])
+    else:
+        add(word + "s")
+        add(word + "es")
+    if word.endswith(("o", "os")):
+        base = word[:-2] if word.endswith("os") else word[:-1]
+        for suffix in ("a", "as", "os", "o"):
+            add(base + suffix)
+    elif word.endswith(("a", "as")):
+        base = word[:-2] if word.endswith("as") else word[:-1]
+        for suffix in ("o", "os", "as", "a"):
+            add(base + suffix)
+    # regular verb forms: peel a known ending and put the common ones back
+    for ending in _VERB_ENDINGS:
+        if len(word) - len(ending) < 3 or not word.endswith(ending):
+            continue
+        root = word[:-len(ending)]
+        for suffix in _VERB_FORMS:
+            add(root + suffix)
+        # "siembra"/"sembró", "vuelve"/"volvió": the diphthong drops in some
+        # forms and comes back in others.
+        if "ie" in root:
+            plain = root.replace("ie", "e", 1)
+            for suffix in _VERB_FORMS:
+                add(plain + suffix)
+        if "ue" in root:
+            plain = root.replace("ue", "o", 1)
+            for suffix in _VERB_FORMS:
+                add(plain + suffix)
+        break
+    return out[:24]
+
+
+def _concept_key(word: str) -> str:
+    """A short prefix that makes inflected labels meet (recolectar/recolectó)."""
+    folded = _query_stem(word)
+    return folded[:5] if len(folded) >= 4 else folded
+
+
+def glossary_equivalents(question: str, glossary: list[tuple[str, str]] | None) -> list[str]:
+    """Every label of a glossary concept the question names, in any language.
+
+    A private entry (``| privado``) is not added: retrieval is local, but the
+    receipt and the public-name bridge must never treat it as a public
+    equivalent.
+    """
+    from .memory_capture import split_private_mark
+    words = {_concept_key(word) for word in _query_words(question)}
+    if not words:
+        return []
+    out: list[str] = []
+    for term, equivalents in glossary or []:
+        term = " ".join(str(term or "").split())
+        equivalents, private = split_private_mark(str(equivalents or ""))
+        if private or not term:
+            continue
+        labels = [term, *[e.strip() for e in equivalents.split(",") if e.strip()]]
+        labels = [label for label in labels if label]
+        stems = {_concept_key(label) for label in labels}
+        if not (words & stems):
+            continue
+        for label in labels:
+            folded = _fold(label)
+            if folded and folded not in (x.lower() for x in out):
+                out.append(label)
+    return out[:16]
+
+
+def retrieval_terms(question: str, expansion: str = "",
+                    glossary: list[tuple[str, str]] | None = None) -> str:
+    """The extra terms the App hands to LCE beside the question.
+
+    Existing behaviour is kept: the local model's English keywords, or the
+    previous question for a follow-up. Added are the glossary's equivalents
+    for the words the question actually uses, and regular inflection variants
+    (pesaron → peso, frutos → fruta) so one short passage is not missed for a
+    word form. Nothing here changes LCE; the extra terms weigh half.
+    """
+    parts: list[str] = []
+    seen: set[str] = set()
+
+    def add(text: str) -> None:
+        text = " ".join(str(text or "").split())
+        key = _fold(text)
+        if text and key not in seen:
+            seen.add(key)
+            parts.append(text)
+
+    add(expansion)
+    for label in glossary_equivalents(question, glossary):
+        add(label)
+    for word in _query_words(question):
+        for variant in _inflection_variants(word):
+            add(variant)
+    return ", ".join(parts)[:900]
+
+
 def binomials(text: str) -> list[str]:
     out = []
     for m in BINOMIAL.finditer(text or ""):

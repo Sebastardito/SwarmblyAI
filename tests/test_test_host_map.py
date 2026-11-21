@@ -24,6 +24,13 @@ from swarmbly_app.tools import ToolBroker, ToolCall, register_author_tools
 from swarmbly_app.tools.mcp import MCPClient
 from swarmbly_app.tools.mcp_registry import ServerConfig
 
+try:  # the remote MCP case needs the optional SDK (extra [tools]); D-012
+    import mcp as _mcp  # noqa: F401
+    HAS_MCP = True
+except ImportError:
+    HAS_MCP = False
+needs_mcp = pytest.mark.skipif(not HAS_MCP, reason="needs the MCP SDK (extra [tools])")
+
 
 @pytest.fixture(autouse=True)
 def clean_map(monkeypatch):
@@ -194,6 +201,7 @@ def test_shared_httpx_factory_redirects_only_the_connection(tmp_path):
     assert handler.requests[0]["headers"]["host"] == "api.example.test"
 
 
+@needs_mcp
 def test_remote_mcp_declared_test_host_reaches_loopback_with_simulado(
         tmp_path, monkeypatch):
     handler = _mcp_handler()

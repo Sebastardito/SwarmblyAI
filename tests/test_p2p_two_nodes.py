@@ -9,6 +9,7 @@ scheduling, consensus, assembly and metadata — is the production code path.
 from __future__ import annotations
 
 import itertools
+import sys
 import time
 
 import pytest
@@ -32,6 +33,9 @@ def make_node(tmp_path, name, *, worker=False, model="fake-model:1b",
     cfg = {"swarm": {"p2p_port": next(_ports), "lan_enabled": lan,
                      "worker_enabled": worker, "worker_max_concurrent": concurrent,
                      "timeout_ms": 8000, "hedge_fallback_ms": 3000},
+           # These tests exercise the 3.4 LAN path; circle admission has its
+           # own tests below and new installs default to circle-only.
+           "circle": {"admission_mode": "own_devices"},
            "privacy": {"tier": "GLOBAL"},
            "model": {"model_name": model}}
     for section, values in (extra or {}).items():
@@ -52,11 +56,38 @@ def wait_for(predicate, timeout=10.0, step=0.1):
     return False
 
 
+def _p2p_diagnosis(client, worker, peer) -> str:
+    """What both nodes saw, for a failure on a platform we cannot run here."""
+    def peers(state):
+        out = []
+        for p in state.nodes.peers.values():
+            policy = (p.advertisement or {}).get("policy") or {}
+            out.append({"node": p.node_id[:12], "connected": p.connected,
+                        "authenticated": p.authenticated,
+                        "admitted": getattr(p, "admitted", None),
+                        "session": p.session is not None,
+                        "kinds": policy.get("kinds"),
+                        "source": getattr(p, "source", "")})
+        return out
+
+    def events(state):
+        return [{k: v for k, v in e.items() if k != "ts"}
+                for e in state.bus.recent(200)
+                if str(e.get("type", "")).startswith(("node.", "p2p.", "circle."))][-12:]
+
+    return (f"connect_manual returned {peer!r}; "
+            f"listen_port={worker.nodes.listen_port}; "
+            f"worker policy={worker.worker.policy()}; "
+            f"client peers={peers(client)}; worker peers={peers(worker)}; "
+            f"client events={events(client)}; worker events={events(worker)}")
+
+
 def connect(client, worker):
-    client.nodes.connect_manual("127.0.0.1", worker.nodes.listen_port, wait=True)
+    peer = client.nodes.connect_manual("127.0.0.1", worker.nodes.listen_port,
+                                       wait=True)
     assert wait_for(lambda: worker.identity.node_id in
                     {w.node_id for w in client.nodes.available_workers()}), \
-        "worker not available after handshake"
+        "worker not available after handshake: " + _p2p_diagnosis(client, worker, peer)
 
 
 def send(state, mode="lan"):
@@ -80,6 +111,14 @@ def nodes(tmp_path):
 
 
 class TestDiscoveryWithoutIPs:
+    # mDNS is multicast; GitHub's Windows runners do not deliver it reliably
+    # (the runner network blocks UDP 5353), and a skipped announcement would
+    # make these look like a product defect. The loopback handshake and task
+    # tests below run on Windows; only discovery is skipped there.
+    pytestmark = pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="mDNS multicast is not available on GitHub Windows runners")
+
     def test_mdns_discovery_and_handshake(self, nodes):
         """The v0.1 acceptance path: no IP is typed anywhere."""
         worker, _ = nodes("W", worker=True, lan=True)
@@ -201,7 +240,7 @@ class TestDistributed:
         swarm = final["meta"]["swarm"]
         assert final["meta"]["status"] == "done", final["meta"]
         assert swarm["consensus"] is not None
-        assert set(swarm["consensus"]["families"]) == {"llama3.2", "qwen2.5"}
+        assert set(swarm["consensus"]["families"]) == {"llama", "qwen2"}
         assert "not accuracy" in swarm["consensus"]["interpretation"]
         per_task_families = [set(b["families"]) for b in
                              swarm["consensus"]["per_task"].values()]
@@ -313,7 +352,7 @@ class TestLocalMultiModel:
         assert final["meta"]["executed"] == "distributed", final["meta"]
         assert swarm["router"]["whole_request_replicas"] is True
         assert swarm["n_tasks"] == 1
-        assert set(swarm["consensus"]["families"]) == {"llama3.2", "qwen2.5"}
+        assert set(swarm["consensus"]["families"]) == {"llama", "qwen2"}
 
     def test_prose_with_k1_streams_locally(self, nodes):
         client, _ = nodes("C", extra=self._multi())
@@ -332,3 +371,26 @@ class TestLocalMultiModel:
         roles = {n["role"] for n in final["meta"]["swarm"]["nodes"]}
         assert roles == {"local model", "worker"}, final["meta"]["swarm"]["nodes"]
         assert fake_w.calls
+
+
+def test_manual_connection_keeps_the_handshake_timeout(tmp_path, monkeypatch):
+    """The short direct-probe timeout (relay fallback) must not apply to a
+    manual or discovered connection: on the Windows CI runner a first TLS
+    connection took longer than two seconds and every two-node test failed."""
+    import asyncio
+    from swarmbly_app.p2p import node as node_mod
+    from swarmbly_app.p2p.messages import HELLO_TIMEOUT_S
+
+    seen = []
+
+    async def fake_dial(host, port, hello, timeout):
+        seen.append(timeout)
+        raise asyncio.TimeoutError()
+
+    monkeypatch.setattr(node_mod, "dial", fake_dial)
+    state, _ = make_node(tmp_path, "T")
+    try:
+        state.nodes.connect_manual("127.0.0.1", 1, wait=True)
+        assert seen == [HELLO_TIMEOUT_S]
+    finally:
+        state.stop()

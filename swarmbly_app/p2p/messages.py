@@ -247,10 +247,16 @@ def advertisement(node_id: str, models: list[dict[str, Any]],
                   resources: dict[str, Any],
                   policy: dict[str, Any],
                   swarm: dict[str, Any] | None = None,
-                  reputation: dict[str, Any] | None = None) -> dict[str, Any]:
+                  reputation: dict[str, Any] | None = None,
+                  roles: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """SPEC §12 node profile. Reputation is advisory; a node's self-reported
-    reputation MUST NOT be trusted (§12)."""
-    return {
+    reputation MUST NOT be trusted (§12).
+
+    ``roles`` is the 3.5 node-role extension (D-018), MINOR-safe: an older
+    implementation ignores an unknown advertisement field (SPEC §3). In WP4a
+    only ``large_model`` and ``reasoner`` are ever built.
+    """
+    profile = {
         "v": WIRE_VERSION,
         "type": "advertisement",
         "node_id": node_id,
@@ -261,3 +267,6 @@ def advertisement(node_id: str, models: list[dict[str, Any]],
         "policy": policy,
         "reputation": reputation,
     }
+    if roles is not None:
+        profile["roles"] = roles
+    return profile

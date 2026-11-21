@@ -265,3 +265,48 @@ def test_import_reports_an_invalid_skill_without_copying(app_state, tmp_path):
     assert response.status_code == 400
     assert "description is required" in response.json()["detail"]
     assert not (project.path / "skills" / "broken").exists()
+
+
+# ---- T10.17: the skill never displaces the retrieved passages ----------------
+
+class _PromptCapture:
+    def __init__(self):
+        self.calls: list[list[dict]] = []
+
+    def available(self) -> bool:
+        return True
+
+    def list_models(self) -> list[str]:
+        return ["fake-model:1b"]
+
+    def stream_chat(self, messages, *, model, max_tokens=1024, temperature=0.2,
+                    on_delta=None, interrupt=None, system=None, **kw):
+        self.calls.append([dict(message) for message in messages])
+        return GenerationResult(text="Short answer.", model=model,
+                                completion_tokens=2, total_ms=1)
+
+
+def test_skill_and_document_passages_both_reach_the_model_with_passages_first(
+        app_state, tmp_path):
+    skill_dir = _write_skill(tmp_path / "downloads",
+                             body="\n".join("skill example line " + "x" * 120
+                                            for _ in range(220)))
+    skill = skills.load_skill(skill_dir)
+    passage = "SENTINEL-PASSAGE " + "document evidence " * 220
+    app_state.chat.retriever = lambda query, expansion="", project_id="": [{
+        "doc_id": "d1", "source": "notes.md", "rel": "notes.md", "anchor": "p1",
+        "text": passage, "score": 1.0}]
+    app_state.chat.retrieval_active = lambda project_id="": True
+    app_state.config.update({"evidence.enabled": False, "compose.verify": False,
+                             "lce": {"query_expansion": False}})
+    fake = _PromptCapture()
+    app_state.backends.resolve = lambda config=None: fake
+    conv = app_state.chat.create_conversation(mode="local")
+    app_state.chat.send(conv["id"], "¿Qué dicen mis notas?", skill=skill,
+                        run_async=False)
+    prompt = "\n".join(str(message.get("content", "")) for message in fake.calls[-1])
+    assert "SENTINEL-PASSAGE" in prompt
+    assert passage.strip() in prompt
+    assert "<<<SKILL_MATERIAL" in prompt
+    assert "shortened: the document passages take priority" in prompt
+    assert len(prompt) <= 25000

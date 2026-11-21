@@ -64,8 +64,12 @@ const Wizard = (() => {
     const slot = h("div", h("p.muted", t("settings.analyzing")));
     body.appendChild(slot);
     try {
-      const d = await Api.get("/api/doctor");
+      const [d, sandbox] = await Promise.all([
+        Api.get("/api/doctor"), Api.get("/api/sandbox")]);
       clear(slot).appendChild(Doctor.view(d, () => render()));
+      if (sandbox.installed && sandbox.status !== "ready") {
+        slot.appendChild(SandboxNotice.view(sandbox, () => render()));
+      }
     } catch (e) { clear(slot).appendChild(h("p.error", e.message)); }
   }
 

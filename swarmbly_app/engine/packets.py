@@ -27,7 +27,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..lang import DEFAULT_LANG, strings
-from ..p2p.messages import WIRE_VERSION, attempt_id_for, packet as wire_packet, task_id_for
+from ..p2p.messages import (WIRE_VERSION, attempt_id_for, packet as wire_packet,
+                            task_id_for)
 from ..p2p.worker import render_packet_prompt
 
 OBJECTIVE_MAX_CHARS = 240
@@ -135,6 +136,7 @@ class PacketPlan:
     consumes: bool
     depends_on: tuple[str, ...]
     lane: str
+    role: str = ""          # 3.5, D-018: node role this task needs, if any
 
 
 def build_message(pp: PacketPlan, gamma: dict[str, Any], session_id: bytes,
@@ -167,6 +169,26 @@ def build_message(pp: PacketPlan, gamma: dict[str, Any], session_id: bytes,
                           "max_tokens": int(max_tokens)}},
         deadline_ms=int(deadline_ms), lane=pp.lane, tier=tier,
         constraints=constraints, commitment_request=None)
+
+
+def build_search_message(pp: PacketPlan, session_id: bytes, attempt: int, *,
+                         deadline_ms: int, tier: str) -> dict[str, Any]:
+    """A WP4b search packet: only the public query, no Γ, no predecessors.
+
+    The worker needs nothing else to run a public search, and sending the
+    contract or the conversation would break «only a public query travels».
+    The public query was produced and guarded by the requester before this
+    point; the task text is exactly that query.
+    """
+    task_id = task_id_for(session_id, pp.level, pp.index)
+    return wire_packet(
+        attempt_id=attempt_id_for(task_id, attempt),
+        contract={},
+        predecessors=[],
+        task={"instruction": pp.instruction, "kind": "generate",
+              "expects": {"format": "prose", "min_tokens": 0, "max_tokens": 0}},
+        deadline_ms=int(deadline_ms), lane=pp.lane, tier=tier,
+        constraints={}, commitment_request=None)
 
 
 def measure_rho(messages: list[dict[str, Any]], prompt: str) -> dict[str, Any]:

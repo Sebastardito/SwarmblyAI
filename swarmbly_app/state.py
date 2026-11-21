@@ -17,7 +17,9 @@ from .events import EventBus
 from .identity import IdentityManager, NodeIdentity
 from .inference.registry import BackendRegistry
 from .lce_adapter import LCEAdapter
-from .models import ModelManager
+from .models import ModelManager, family_for
+from .node_roles import (configured_corpus_share, corpus_size_bucket,
+                         derive_roles, valid_corpus_name)
 from .paths import DataDirs
 from .p2p.node import NodeManager
 from .p2p.worker import WorkerService
@@ -66,14 +68,23 @@ def _build_advertisement(state: "AppState") -> dict:
     if worker_policy.get("kinds") and state.worker is not None:
         for name in state.worker.shared_models():
             info = state.model_info(name)
-            models.append({"family": info.get("family") or name.split(":")[0],
+            models.append({"family": family_for(name, info.get("family", "")),
                            "version": name,
                            "quantization": info.get("quantization", ""),
                            "ctx": None, "tok_per_s_est": None})
     vm = psutil.virtual_memory()
+    circles = getattr(state, "circles", None)
+    # 3.5, D-018: node roles are only announced while this node is a worker
+    # and only for models it really shares. large_model/reasoner come from the
+    # models; search/corpus only from the owner's explicit WP4b opt-in. A role
+    # adds placement information, never a permission.
+    roles = state._node_roles([str(m.get("version") or "") for m in models],
+                              announce=bool(worker_policy.get("kinds")),
+                              remote=True)
     return {
         "node_id": state.identity.node_id,
         "models": models,
+        "roles": roles,
         "capabilities": {"tee": False, "attestation": None},
         "swarm": None,
         "resources": {"vram_mb": None, "ram_mb": int(vm.total // (1024 ** 2)),
@@ -85,6 +96,9 @@ def _build_advertisement(state: "AppState") -> dict:
                    "kinds": list(worker_policy.get("kinds", [])),
                    # app extension: concurrent tasks this node accepts
                    "max_concurrent": int(worker_policy.get("max_concurrent", 1))},
+        # 3.5, D-021: manifest versions this node holds. A claim admits
+        # nothing; the receiver checks its own signed manifest.
+        "circle_versions": circles.advertised_versions() if circles else [],
         "reputation": None,  # self-reported reputation is never trusted (SPEC §12)
         "endpoint": {"port": state.nodes.listen_port},
     }
@@ -115,6 +129,13 @@ class AppState:
         egress.configure(self.config.all)
         self.db = Database(self.dirs.db_path())
         self.bus = EventBus()
+        # 3.5, R-014: only stable error codes are kept for the doctor export.
+        from .recent_errors import RecentErrors
+        self.errors = RecentErrors(self.bus, self.db)
+        # 3.5, R-005: the compiled sandbox cache is prepared from first launch,
+        # never inside a request. The state object is cheap and never compiles.
+        from .sandbox import SandboxPreparation
+        self.sandbox = SandboxPreparation(self.dirs.root / "sandbox", self.bus)
         self.identity_manager = IdentityManager(self.dirs.identity_key_path())
         self.identity: NodeIdentity = self.identity_manager.load_or_create()
         self.model_manager = ModelManager()
@@ -124,17 +145,35 @@ class AppState:
         self.nodes = NodeManager(self.identity_manager, self.config, self.db,
                                  self.bus, lambda: _build_advertisement(self),
                                  dirs=self.dirs)
+        # 3.5, D-015: signed circle manifests and invitations. The node
+        # manager consults this service at the handshake; the worker consults
+        # it again for every task.
+        from .p2p.circles import CircleService
+        self.circles = CircleService(self.identity_manager, self.config,
+                                     self.dirs, self.bus)
+        self.circles.attach(self.nodes)
+        self.nodes.circles = self.circles
+        # 3.5, D-020: signed reciprocity receipts, the local wallet and the
+        # issuer's double-spend log. Circle control delegates credit messages.
+        from .p2p.credits import CreditService
+        self.credits = CreditService(self.identity_manager, self.config,
+                                     self.dirs, self.bus, circles=self.circles)
+        self.circles.credits = self.credits
         self.worker: WorkerService | None = None
         from .console import ConsoleReporter
         self.console = ConsoleReporter(self.bus, lambda: self.nodes.peers)
         self.orchestrator = None  # built lazily with a live local backend
         self.latency = None       # p95 history shared across orchestrator rebuilds
-        from .engine.scheduler import SpeedStats
+        from .engine.scheduler import RoleStats, SpeedStats
         self.speed = SpeedStats()  # tokens/s per (node, model), shared the same way
+        # 3.5, D-018: per-role outcomes per node, shared across requests.
+        self.role_stats = RoleStats()
         self.chat = ChatService(self.db, self.bus, self.backends,
                                 self.config.all, self.get_orchestrator)
+        self.chat.sandbox = self.sandbox
         self.chat.report_sink = self._auto_report
         self.chat.self_node = self.identity.node_id[:12]
+        self.chat.circles = self.circles
         self.chat.retriever = self._lce_retrieve
         self.chat.retrieval_active = self._lce_active
         self.chat.retrieval_candidates = lambda: list(getattr(self.lce, "last_candidates", []))
@@ -154,6 +193,13 @@ class AppState:
         # 3.1: projects — folders of their own, with their chats kept in them
         from .projects import ProjectRegistry
         self.projects = ProjectRegistry(self.config.all, self.config.update)
+        # 3.5, D-019: teams are stored plan templates, per user and optionally
+        # per project; the project registry decides where its file lives.
+        from .teams import TeamStore
+        self.teams = TeamStore(
+            self.dirs.root,
+            project_path=lambda pid: (project.path if (project := self.projects.get(pid))
+                                      else None))
         # 3.4: one broker for every tool call. Approvals are per project, or
         # personal when no project is active. The chat drives the optional
         # agent adapter; the broker is still the only path that invokes a tool.
@@ -194,6 +240,9 @@ class AppState:
         self.bus.subscribe(lambda e: self.model_manager.invalidate()
                            if e["type"] == "models.pull"
                            and e["payload"].get("status") == "done" else None)
+        # 3.5, R-014: preview and save share one snapshot (same bytes).
+        from .doctor_export import DoctorExportService
+        self.doctor_export = DoctorExportService(self)
 
     def _personal_c1(self) -> bool:
         cfg = self.config.all().get("lce") or {}
@@ -422,13 +471,135 @@ class AppState:
                 egress.QUESTION if kind == "query" else egress.PASSAGES)
         return choice.backend.embed(texts, kind)
 
+    # -- node roles and executors (3.5, D-018) ------------------------------------
+    def _corpus_role(self, *, remote: bool = True) -> dict[str, Any] | None:
+        """The corpus metadata this node may advertise, if any.
+
+        The owner picks one project and the circles allowed to retrieve from
+        it. A remote advertisement requires at least one such circle that this
+        node still belongs to; the local pool may use the collection without a
+        circle because nothing leaves the computer. Only the display name and a
+        size bucket leave the node; no title, path or content does.
+        """
+        cfg = self.config.all()
+        share = configured_corpus_share(cfg)
+        if share is None:
+            return None
+        project = self.projects.get(share["project_id"])
+        if project is None:
+            return None
+        circle_ids: list[str] = []
+        if share["circle_ids"]:
+            payload = self.circles.list_payload() if getattr(self, "circles", None) else {}
+            local_ids = {str(c.get("circle_id")) for c in payload.get("circles") or []}
+            circle_ids = [cid for cid in share["circle_ids"] if cid in local_ids]
+        if remote and not circle_ids:
+            return None
+        try:
+            sources = self.lce.list_sources(roots=project.roots())
+            documents = sum(1 for entry in sources if not entry.get("glossary"))
+        except Exception:
+            return None
+        if documents <= 0:
+            return None
+        name = share["display_name"] or project.name.strip()
+        if not share["display_name"] and len(name) > 40:
+            name = name[:40].strip()
+        if not valid_corpus_name(name):
+            return None
+        return {"name": name, "size": corpus_size_bucket(documents),
+                "circle_ids": circle_ids}
+
+    def _node_roles(self, models: list[str], *, announce: bool = True,
+                    remote: bool = True) -> list[dict[str, Any]]:
+        """Node roles for ``models`` (large_model/reasoner/search/corpus)."""
+        corpus = self._corpus_role(remote=remote) if announce else None
+        corpus_meta = ({"name": corpus["name"], "size": corpus["size"]}
+                       if corpus else None)
+        return derive_roles(models, self.config.all(), announce=announce,
+                            corpus_share=corpus_meta)
+
+    def _worker_roles(self, models: list[str] | None = None, *,
+                      announce: bool = True, remote: bool = True
+                      ) -> list[dict[str, Any]]:
+        """Role provider for the worker: shared models and the same settings."""
+        if models is None:
+            models = self.worker.shared_models() if self.worker is not None else []
+        return self._node_roles(models, announce=announce, remote=remote)
+
+    def _circle_for(self, node_id: str,
+                    allowed: Any = None) -> dict[str, Any] | None:
+        """A valid shared trusted circle that admits ``node_id``, if any.
+
+        Executors that send data to a third party (search) or read a shared
+        collection (corpus) require a circle; the explicit *my own devices*
+        mode is not enough. This is deliberately stricter than the 3.4 LAN
+        admission. Only valid, unexpired manifests that list both nodes count
+        (the same rule as admission). With ``allowed`` (circle ids), only one
+        of those circles is returned, so a requester who shares several
+        circles with this node is matched against the one the corpus is
+        shared with.
+        """
+        circles = getattr(self, "circles", None)
+        if circles is None or circles.mode() != "circle":
+            return None
+        try:
+            candidates = circles._local_candidates(node_id)
+        except Exception:
+            return None
+        wanted = {str(c) for c in allowed} if allowed is not None else None
+        for manifest in sorted(candidates, key=lambda m: (
+                str(m.get("name") or "").casefold(), str(m.get("circle_id") or ""))):
+            circle_id = str(manifest.get("circle_id") or "")
+            if wanted is not None and circle_id not in wanted:
+                continue
+            return {"circle_id": circle_id,
+                    "circle_name": str(manifest.get("name") or "")}
+        return None
+
+    def _public_query(self, text: str, project_id: str = "") -> str:
+        """A public search query from a request, without the user's private
+        terms, or ``""`` when none can be produced.
+
+        Uses the same guard as the chat's public-search proposal and the same
+        160-character bound. Glossary entries and private glossary terms come
+        from the conversation's project (or the personal sources). If a private
+        term survives the guard, nothing is returned, so nothing is sent.
+        """
+        from . import web_search
+        try:
+            roots = self.c1_roots(project_id)
+            glossary = self.lce.glossary_entries(roots=roots)
+            private = web_search.private_terms(text or "")
+            for term in self.lce.glossary_private_terms(roots=roots):
+                if term not in private:
+                    private.append(term)
+            detail = web_search.propose_query_details(
+                text or "", glossary=glossary, private=private)
+            query = str(detail.get("query") or "").strip()[:160]
+            if not query or web_search.contains_private_terms(query, private):
+                return ""
+            return query
+        except Exception:
+            return ""
+
     # -- P2P lifecycle -----------------------------------------------------------
+    def _circle_guard(self, node_id: str) -> tuple[bool, str, str]:
+        """The worker gate of D-015: membership is checked again per task."""
+        circles = getattr(self, "circles", None)
+        if circles is None:
+            return True, "", ""
+        return circles.admits_local(node_id)
+
     def start_p2p(self) -> None:
         if self.worker is None:
             self.worker = WorkerService(
                 self.config, self.db, self.bus, self.identity_manager,
                 self.lce, lambda: self.backends.resolve(self.config.all()),
-                model_info=self.model_info)
+                model_info=self.model_info, circle_guard=self._circle_guard,
+                role_provider=self._worker_roles, circle_for=self._circle_for,
+                project_provider=lambda project_id: self.projects.get(project_id),
+                credits=self.credits)
             self.nodes.start(task_handler=self.worker.handle,
                              cancel_handler=self.worker.cancel)
 
@@ -485,6 +656,10 @@ class AppState:
         re-advertise, rebuild the orchestrator with the current model."""
         self.orchestrator = None
         self.nodes.apply_config()
+        circles = getattr(self, "circles", None)
+        if circles is not None:
+            # Switching to circle-only must not leave 3.4 LAN peers connected.
+            circles.enforce_admission()
 
     def _update_config(self, changes: dict) -> dict:
         merged = self.config.update(changes)
@@ -542,8 +717,11 @@ class AppState:
             self.orchestrator = Orchestrator(
                 self.nodes, self.bus, local_stream, self.config.all,
                 local_model=cfg["model"].get("model_name", ""),
-                latency=self.latency, speed=self.speed, stats_sink=self._client_stats,
-                local_pool_factory=self._local_pool)
+                latency=self.latency, speed=self.speed,
+                role_stats=self.role_stats, stats_sink=self._client_stats,
+                public_query=self._public_query,
+                local_pool_factory=self._local_pool,
+                credits=self.credits)
         return self.orchestrator
 
     def _local_pool(self):
@@ -553,10 +731,15 @@ class AppState:
         models = [m for m in (model_cfg.get("local_models") or []) if m]
         if not model_cfg.get("multi_model") or len(models) < 2 or self.worker is None:
             return None
-        families = {m: (self.model_info(m) or {}).get("family") or m.split(":")[0]
+        families = {m: family_for(m, (self.model_info(m) or {}).get("family", ""))
                     for m in models}
+        # The local pool advertises the roles its own models have, derived
+        # exactly like a remote worker's but without the "shared" condition:
+        # a role-aware plan can then run entirely on this one node.
+        roles = self._node_roles(models, announce=True, remote=False)
         return LocalPool(self.identity.node_id, self.worker, models, families,
-                         parallel=int(model_cfg.get("local_parallel", 1) or 1))
+                         parallel=int(model_cfg.get("local_parallel", 1) or 1),
+                         roles=roles)
 
     def _auto_report(self, request_id: str) -> None:
         from .reports import render_report

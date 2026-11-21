@@ -6,10 +6,15 @@ Every call that can carry data off this computer passes through here:
   from its address alone: ``local`` (this computer: loopback), ``red_propia``
   (the user's own network: private and link-local addresses, ``.local``,
   single-label names such as a Docker service) or ``terceros`` (any other
-  host, i.e. an organisation outside the user's control). A server that
-  speaks an "OpenAI-compatible" API is not local for that reason.
+  host, i.e. an organisation outside the user's control). A peer send is
+  classified by transport instead (D-017): ``circulo`` when the peer is a
+  member of one of this node's trusted circles, ``red_propia`` in the
+  explicit *my own devices* mode, and refused otherwise. A server that speaks
+  an "OpenAI-compatible" API is not local for that reason.
 * **Policy.** Local is always allowed. The user's own network is allowed and
-  recorded. A third party receives nothing unless the user authorised that
+  recorded, and so is a member of a trusted circle (the circle setting
+  ``circle_passages`` decides separately whether document passages may go
+  there). A third party receives nothing unless the user authorised that
   host (``privacy.third_party_models``); passages of the user's documents need
   a second, separate authorisation (``privacy.third_party_passages``); and
   other nodes' fragments are never sent to a third party. Tool calls are
@@ -39,6 +44,7 @@ from . import test_hosts
 
 LOCAL = "local"
 OWN_NETWORK = "red_propia"
+CIRCLE = "circulo"
 THIRD_PARTY = "terceros"
 
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
@@ -185,7 +191,16 @@ class Policy:
                                "privacy.tool_hosts in Settings, or use a local tool. "
                                "Nothing was sent.")
             return True, ""
+        if not cls:
+            return False, ("this peer is not in a valid, unexpired trusted circle; "
+                           "nothing was sent.")
         if cls in (LOCAL, OWN_NETWORK):
+            return True, ""
+        if cls == CIRCLE:
+            # D-017: a peer is CIRCLE only after the circle service has found
+            # a shared, valid manifest; the class itself is the authorisation.
+            # Passages to it are a separate per-circle switch, checked before
+            # a recipe attaches them (``circle_passages``).
             return True, ""
         if kind == FOREIGN:
             return False, (f"{host} is a third-party service: this node never sends other "
@@ -311,15 +326,24 @@ def record(**event: Any) -> None:
 
 
 def check_call(url: str, nbytes: int, reason: str, kind: str | None = None,
+               *, destination_class: str | None = None,
+               destination_label: str | None = None,
                **extra: Any) -> None:
     """Enforce the policy for one call that carries ``kind`` to ``url``, and
     record it when it leaves this computer. Raises :class:`EgressDenied`.
 
-    ``extra`` is copied into the ledger event (the broker uses it for the tool
-    id and the approval kind). A local tool call is recorded too, with class
-    ``local`` and type ``herramienta_local``.
+    A peer send passes ``destination_class=CIRCLE`` (or ``OWN_NETWORK`` in the
+    explicit *my own devices* mode): the class comes from the circle service,
+    not from an address, as D-017 requires. ``extra`` is copied into the
+    ledger event (the broker uses it for the tool id and the approval kind;
+    a peer send adds the circle and the member). A local tool call is recorded
+    too, with class ``local`` and type ``herramienta_local``.
     """
-    cls, host = classify_url(url)
+    if destination_class is None:
+        cls, host = classify_url(url)
+    else:
+        cls, host = destination_class, host_of(url)
+    label = destination_label or host
     kind = kind or current_purpose()
     # D-013: the map is known before the call; policy still sees only the
     # declared host. A blocked call never opens the mapped connection, so it
@@ -335,10 +359,10 @@ def check_call(url: str, nbytes: int, reason: str, kind: str | None = None,
         return
     ok, why = policy().allows(cls, host, kind)
     if not ok:
-        record(destino=host, clase=cls, tipo=kind, bytes=0, motivo=reason,
+        record(destino=label, clase=cls, tipo=kind, bytes=0, motivo=reason,
                bloqueado=True, **extra)
         raise EgressDenied(why, host, kind)
-    event = {"destino": host, "clase": cls, "tipo": kind, "bytes": int(nbytes),
+    event = {"destino": label, "clase": cls, "tipo": kind, "bytes": int(nbytes),
              "motivo": reason}
     if simulated:
         event["simulado"] = True
@@ -368,6 +392,19 @@ def record_public_query(url: str, provider: str, via: str = "") -> None:
 # Receipt
 # ---------------------------------------------------------------------------
 
+def _relay_hops(sends: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Distinct relay transport hops named by this receipt's sends."""
+    seen: dict[tuple[str, int], dict[str, Any]] = {}
+    for entry in sends:
+        relay = entry.get("relay")
+        if not isinstance(relay, dict) or not relay.get("host"):
+            continue
+        key = (str(relay.get("host")), int(relay.get("port") or 0))
+        seen[key] = {"host": key[0], "port": key[1], "metadata_only": True,
+                     "saw": ["who", "when", "bytes"], "content": False}
+    return [seen[key] for key in sorted(seen)]
+
+
 def _name_parts(name: str) -> list[str]:
     return [w.lower() for w in name.replace(",", " ").split() if len(w) >= 3]
 
@@ -376,13 +413,21 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
                   consent: dict[str, Any], passages: list[str] | None = None,
                   personal_names: list[str] | None = None,
                   fragments: int = 0, extra_sends: list[dict[str, Any]] | None = None,
-                  model_destination: dict[str, Any] | None = None) -> dict[str, Any]:
+                  model_destination: dict[str, Any] | None = None,
+                  ignore_ledger_fragments: bool = False) -> dict[str, Any]:
     """The privacy receipt of one answer, from what was recorded as sent.
 
     ``passages`` (texts given to the model) and ``personal_names`` let the
     receipt flag a sent value that contains a passage or the user's name.
     """
     events = list(ledger.events) if ledger is not None else []
+    if ignore_ledger_fragments:
+        # A peer send is also in the ledger (the egress gate records it where
+        # the bytes are written). ``extra_sends`` carries the attempt's
+        # per-destination passage count, so use that one entry, not both.
+        events = [e for e in events
+                  if not (not e.get("bloqueado") and e.get("tipo") == FRAGMENT
+                          and e.get("clase") in (CIRCLE, OWN_NETWORK))]
     events += list(extra_sends or [])
     shingles: set[str] = set()
     for text in passages or []:
@@ -413,6 +458,34 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
         entry = {"destino": ev.get("destino", ""), "clase": ev.get("clase", ""),
                  "tipo": kind_out, "valor": value if kind == PUBLIC_QUERY else f"({kind})",
                  "bytes": int(ev.get("bytes", 0) or 0), "motivo": ev.get("motivo", "")}
+        # D-017: a peer send names the circle and the member; a list wave that
+        # carried document passages says how many reached this destination.
+        for key in ("circle_id", "circle_name", "member_name", "role", "executor"):
+            if ev.get(key):
+                entry[key] = str(ev[key])
+        # 3.5, WP3 / D-016: the transport hop is part of the receipt. The
+        # relay saw who, when and how many bytes; never content.
+        if ev.get("transport"):
+            entry["transport"] = str(ev["transport"])
+        if isinstance(ev.get("relay"), dict):
+            entry["relay"] = {
+                "host": str(ev["relay"].get("host") or ""),
+                "port": int(ev["relay"].get("port") or 0),
+                "metadata_only": True,
+                "saw": ["who", "when", "bytes"],
+                "content": False,
+            }
+        for key in ("role_fallback", "on_behalf", "engine_unverified"):
+            if ev.get(key):
+                # D-018/WP4b: a generic fallback for a role, or a public search
+                # a member ran on the requester's behalf whose engine the
+                # requester cannot verify.
+                entry[key] = True
+        if ev.get("passages") not in (None, ""):
+            try:
+                entry["pasajes"] = int(ev.get("passages") or 0)
+            except (TypeError, ValueError):
+                entry["pasajes"] = 0
         if personal_name:
             # An author lookup carries a person's name as its payload. The
             # egress kind stays AUTHOR_QUERY; this flag is what the UI and the
@@ -461,11 +534,14 @@ def build_receipt(ledger: Ledger | None, *, lane: str, route: str, answer: str,
         "envios": sends,
         "bloqueados": blocked,
         "tools": tools,
-        "pasajes_enviados": sum(1 for s in sends if s["tipo"] == "pasaje"),
+        "pasajes_enviados": sum(
+            int(s.get("pasajes") or 0) + (1 if s["tipo"] == "pasaje" else 0)
+            for s in sends),
         "nombres_personales_enviados": sum(
             1 for s in sends if s["tipo"] == "nombre_personal" or s.get("personal_name")),
         "bytes_salientes": sum(s["bytes"] for s in sends),
         "fragmentos_creados": int(fragments),
+        "saltos_relay": _relay_hops(sends),
         "respuesta_sintetica": answer,
         "hash_respuesta_sha256": hashlib.sha256(answer.encode("utf-8")).hexdigest(),
         "origen": "registrado por la app en el punto de envío",

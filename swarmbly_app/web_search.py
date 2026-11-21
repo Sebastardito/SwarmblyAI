@@ -788,6 +788,12 @@ def strip_private_details(query: str, question: str = "",
             "removed_terms": matched, "empty": empty}
 
 
+def contains_private_terms(text: str, private: list[str] | None = None) -> bool:
+    """Whether ``text`` still contains one of ``private`` (word-bounded)."""
+    return any(_contains_private_phrase(text or "", term)
+               for term in private or [] if term)
+
+
 def strip_private(query: str, question: str = "", private: list[str] | None = None,
                   public_terms: list[str] | None = None) -> str:
     """The query without the question's private words, codes, figures and the

@@ -48,6 +48,40 @@ class TestChat:
         rows = chat.get_messages(conv["id"])
         assert rows[-1]["meta"]["status"] == "stopped"
 
+    def test_cancel_keeps_the_partial_text_and_says_it_was_stopped(
+            self, app_state, fake_chat):
+        chat, fake = fake_chat
+        app_state.config.update({"language": "es"})
+        conv = chat.create_conversation()
+
+        def partial_then_stop(messages, **kw):
+            on_delta = kw.get("on_delta")
+            if on_delta:
+                on_delta("La respuesta empezó así")
+            raise Interrupted("interrupted")
+
+        fake.stream_chat = partial_then_stop
+        chat.send(conv["id"], "¿Qué pasa?", run_async=False)
+        message = chat.get_messages(conv["id"])[-1]
+        assert message["meta"]["status"] == "stopped"
+        assert message["meta"]["partial"] is True
+        assert "La respuesta empezó así" in message["content"]
+        assert "Se detuvo la respuesta" in message["content"]
+
+    def test_cancel_without_a_delta_still_leaves_a_stop_message(
+            self, app_state, fake_chat):
+        chat, fake = fake_chat
+        conv = chat.create_conversation()
+
+        def stop_at_once(messages, **kw):
+            raise Interrupted("interrupted")
+
+        fake.stream_chat = stop_at_once
+        chat.send(conv["id"], "hello", run_async=False)
+        message = chat.get_messages(conv["id"])[-1]
+        assert message["content"] == "The answer was stopped at your request."
+        assert message["meta"]["partial"] is False
+
     def test_retry(self, app_state, fake_chat):
         chat, _ = fake_chat
         conv = chat.create_conversation()

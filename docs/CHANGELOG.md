@@ -1,5 +1,437 @@
 # Changelog
 
+## 0.8.0 — Teams and trusted circles (2026-11-21)
+
+Swarmbly AI 3.5. Teams and trusted circles. Trusted circles with signed
+membership manifests and invitations by code or QR, checked at the handshake
+and at the worker gate (new installs are circle-only); a `CIRCLE` destination
+class, with every peer send through the egress gate and receipts that name it;
+off-LAN work through the circle's own relay (pinned TLS, end-to-end TLS through
+the splice, the owner pushing each manifest version over the network); node
+roles (large model, reasoner, and opt-in search and corpus executors); teams as
+stored plan templates with honest partial results (complete, partial or
+failed; dependent steps blocked, never guessed); reciprocity credits as signed,
+non-transferable receipts, offered only to a busy worker, with double spends
+detected at the issuer; first-launch sandbox preparation with a 4 GiB floor and
+an explicit override (`--prepare-sandbox --force`, `{"force": true}`); a doctor
+export built from an allow-list; and the leftovers of the 3.4 evaluation (MCP
+suspensions shown to the user, no raw tool block, the conversation language in
+every recipe, recipe 5 on the writer role with the model actually used
+recorded). The P2P tests now also run on Windows. No sealed bank was run for
+this version: bank v5 is prepared and runs once, by the author, before the
+beta. Off-LAN runs between real machines and signed installers (Apple and
+Windows accounts) are still pending.
+
+**App leftovers from the 3.4 evaluation, WP9 (T10.17).**
+
+- **MCP suspensions reach the user.** A tool waiting for approval, refused by
+  policy, stopped by the loop guard or no longer answering now adds a plain
+  note to the answer and a `TOOL` stage with the tool, the reason and what was
+  done instead; `meta.suspensions` and the receipt's agent summary repeat it.
+- **The loop guard never returns a raw tool block.** The App strips fenced or
+  bare protocol JSON, tool tags and protocol markers from the final text; when
+  no prose remains it says the tool loop was stopped instead of showing the
+  model's tool call.
+- **A skill no longer displaces the document passages.** Both reach the model;
+  the passages come first and keep their room, and the skill body is shortened
+  (with a visible marker) when the material budget is short.
+- **Retrieval widens the App-side query.** Glossary equivalents and regular
+  accent/inflection variants are added to the terms handed to LCE (which is
+  unchanged), with an open neutral test set under `tests/fixtures/retrieval/`.
+- **The conversation language reaches every recipe.** List, code and compose
+  prompts take the conversation's language; a clearly English answer to a
+  Spanish question is regenerated once with the language rule, and list status
+  cells are localised.
+- **Cancel keeps a message.** A stopped request shows the text already
+  streamed plus a note that the answer was stopped, never an empty message.
+- **A table header is not a list answer.** Header and separator rows are
+  rejected as missing by the list parser, so a model that only echoes its
+  table header gets the item marked like any other empty answer.
+- **Recipe 5 records the model that wrote the script.** The script is still
+  written by the `writer` model role (the conversation's model when no writer
+  is configured), as designed in 3.4; the proposal, `meta.code` and the
+  receipt now state the actual model and backend.
+
+**First-launch sandbox preparation and doctor export, WP7 App part
+(R-005/R-014).**
+
+- **The sandbox cache is a first-launch step** (`sandbox/cache.py`,
+  `sandbox/prepare.py`, `state.py`). After start-up, when the optional
+  `[sandbox]` extra is installed and the compiled cache is missing or stale,
+  the App shows a notice with the expected time and memory (about 5 s / 3.3 GB
+  on Apple Silicon, about 60 s on a 2-vCPU machine) and offers **Prepare now**
+  / **Later**, in the web UI and in the first-run assistant. The compile runs
+  in one daemon thread (`preparing` → `ready`, or `failed` with the reason) and
+  publishes `sandbox.prepare` events, so chat is never blocked. A machine with
+  fewer than **4 GiB free** is refused from the automatic start and a plain
+  **Prepare now**; the explicit override is the next bullet. `Later` hides the
+  notice for a week. The measured wall time and peak RSS are stored next to the
+  cache and never leave the computer.
+- **Explicit low-memory override.** Below the 4 GiB floor the automatic start
+  and a plain **Prepare now** still refuse. An explicit **Prepare anyway**
+  (API `{"force": true}`, CLI `--force`) starts the compile after a one-line
+  warning; the state records `forced: true` and the free memory at start, the
+  `sandbox.prepare` event is marked forced, and the doctor export carries the
+  boolean. The umbrella installer never passes `--force` by itself.
+- **Recipe 5 never compiles inside a request.** An unprepared, stale,
+  preparing, failed or memory-refused cache reports unavailable with the
+  reason and the request continues without the code recipe. The one-time
+  compile happens only from the notice/Settings or from the installer flag.
+- **API and CLI.** `GET /api/sandbox`, `POST /api/sandbox/prepare`,
+  `POST /api/sandbox/defer`; `swarmbly-app --prepare-sandbox` compiles and
+  exits with stable codes (0 ready, 1 failed, 2 extra missing, 3 not enough
+  free memory, 4 bad data directory) so the umbrella installer can run it at
+  install time. `docs/INSTALL.md` documents the call.
+- **Doctor export** (`doctor_export.py`, `recent_errors.py`, `db.recent_failures`).
+  `GET /api/doctor/export/preview` returns the exact JSON and text strings;
+  `POST /api/doctor/export` writes that same snapshot, and the UI shows both
+  files before saving. The export contains only App/LCE/Core versions,
+  OS/architecture, Python, CPU/RAM/GPU class, installed extras, Ollama
+  reachability and model tags, the sandbox state and compile measurements, P2P
+  counts (listening, peers, circles, relay configured, relay/push codes) and
+  the last error codes with timestamps. It never carries node ids or keys,
+  names, circle names or ids, member names, IPs or host names, paths under the
+  user's home, project names, document titles, prompts, answers, glossary,
+  memory, API keys or the relay host. A schema validator ships with the module
+  and the tests. `swarmbly-app doctor-export` writes both files.
+- **Docs and tests.** User guide EN/ES (first launch, doctor export),
+  INSTALL (installer flag and exit codes), LIMITATIONS (what the export
+  contains and never contains) and this entry. `tests/test_first_launch.py`
+  covers the notice conditions, the 4 GiB refusal, background transitions, a
+  request during preparation and the CLI exit codes;
+  `tests/test_doctor_export.py` builds an export from a fixture full of
+  private canaries, validates the schema and asserts that the preview and the
+  saved files are byte-for-byte equal.
+
+**Off-LAN through the circle relay, WP3 (D-016/D-023).**
+
+- **Relay in the circle.** The owner sets `relay: {host, port,
+  tls_cert_sha256}` in the circle card, API `POST /api/circles/{id}/relay`.
+  The pin is mandatory with an address; a relay without a valid SHA-256 pin is
+  refused (`E_CIRCLE_RELAY_PIN`). The optional field is signed inside the
+  manifest and inside new invitations, so older nodes ignore it and a
+  tampered endpoint fails the signature.
+- **Owner pushes each version over the network.** The App now sends the relay's
+  `manifest_update` frame (`relay_client.py`, copied from the umbrella
+  protocol) on a registered connection for every new owner-signed version:
+  approval, revocation, relay change, dissolve and renewal. Only the newest
+  unacknowledged version is queued per target, with backoff while the relay is
+  unreachable. A relay change pushes the same version to the relay named in
+  the **previous** manifest too, then to the new one. The circle card shows
+  the acknowledged version, pending version and refusal code with hints for
+  `unknown_circle` (operator must install the first manifest),
+  `rate_limited` (30 pushes per hour) and `stale_version`. The owner can sign
+  a fresh version with the same members and relay via
+  `POST /api/circles/{id}/renew` (or the circle card's **Renew manifest**);
+  it is pushed like every other version. The existing signed file in
+  `circle.relay_publish_dir` remains the operator's bootstrap copy and
+  fallback; it is no longer the only update path.
+- **App-side client** (`swarmbly_app/p2p/relay_client.py`, AGPL header). A
+  deliberate copy of the prototype's protocol client and `MemoryBIO` inner
+  TLS adapter: pinned outer TLS 1.3, signed single-use challenge, `pair` /
+  `pair_incoming` / `pair_accept`, then raw splice. It also exposes the
+  atomic manifest publisher.
+- **Registration and pairing** (`p2p/node.py`, `p2p/transport.py`). One idle
+  registered acceptor per (circle, relay) with exponential backoff, off when
+  the manifest has no relay and bounded by `circle.relay_max_connections`.
+  A pin mismatch stops that relay with a security warning; a refusal
+  (`not_a_member`, `limit_splices`, `peer_not_connected`, …) is shown. An
+  outbound pair opens a short separate connection because the prototype
+  accepts one splice per connection. Direct addresses are tried first; only
+  then the relay. The inner TLS 1.3 + channel-bound handshake, admission, the
+  worker gate and the egress gate are unchanged for relayed peers.
+  `ensure_circle_peers` makes relay-reachable members visible to placement
+  before planning; a relay that is down does not stop direct peers.
+- **Honest transport hop** (`engine/scheduler.py`, `egress.py`, `chat.py`,
+  `web/js/monitor.js`). `Attempt`/`Peer` carry `transport` (`direct` or
+  `relayed`) and the relay host; the receipt lists `saltos_relay` and marks the
+  hop as metadata only (who, when, bytes; never content). The Swarm peers table
+  gains a **Link** column (direct / relayed) and the circle card shows the
+  relay state and pin.
+- **Docs and tests.** Architecture, P2P testing guide (two machines on
+  different networks), user guide EN/ES, limitations and this entry.
+  `tests/test_relay.py` covers manifest/invitation fields and pins, refusal of
+  an unpinned relay, owner publish on approval/revocation, wrong pin before
+  any frame, a real umbrella relay end to end (no direct path, task done,
+  ciphertext only), direct-first, revocation, non-members, pin-mismatch
+  warning and relay-down with working LAN peers. `tests/test_relay_push.py`
+  covers the network push with the real umbrella relay: approval acknowledged,
+  revocation cutting an open session and blocking re-entry, `unknown_circle`
+  before bootstrap, relay down/up delivering only the newest version, a relay
+  change reaching old and new relays, and a non-owner never pushing.
+
+**Reciprocity credits, WP6 (D-020/D-021).**
+
+- **Signed, non-transferable receipts** (`swarmbly_app/p2p/credits.py`,
+  `engine/scheduler.py`). When the requester accepts a verified result from a
+  worker that is a member of a shared, valid circle, it signs an Ed25519
+  receipt over canonical JSON: random `receipt_id`, circle, issuer, worker, a
+  BLAKE2b hash of the attempt id (never task content), `tokens_out`,
+  `generation_ms`, model, `issued_at` and `expires_at` (90 days by default,
+  `credits.receipt_ttl_days`). Nothing is issued for the local pool, *my own
+  devices*, rejected or degraded replicas, or an executor that returned
+  nothing; the scheduler calls the service only after verification and the
+  quality check accepted the replica.
+- **Control plane** (`p2p/circles.py`, `p2p/node.py`). Three new MINOR-safe
+  types on the same TLS session: `credit_receipt` (issuer → worker),
+  `credit_spend` (worker → member, just before a task to a member already seen
+  busy, so a receipt is never spent on an idle worker) and `credit_spent`
+  (accepting worker → issuer, receipt id and spender only). An older node
+  ignores them. Delivery checks signature, manifest membership of issuer and
+  worker, addressee, expiry and duplicate id; spend checks the same plus
+  `worker == sender` and replay. Messages and receipts are size-bounded.
+- **Local wallet and spending** (`p2p/credits.py`, `p2p/worker.py`). The
+  wallet is per circle under `<data>/credits/wallet.json` (0600, atomic,
+  bounded to 256 receipts); only the named worker can spend, only in the same
+  circle, and the spender marks the receipt spent. The spend is offered inside
+  `NodeManager.dispatch_async` **after** admission and `egress.check_call`, so
+  it never bypasses a gate. The worker waits for a slot only while busy and
+  only for the exact attempt a valid `credit_spend` named; an uncredited
+  requester is still served when a slot is free, and a large receipt buys one
+  priority, not many.
+- **Double-spend detection** (`p2p/credits.py`). The issuer keeps a bounded
+  log under `<data>/credits/issued.json` (0600). A receipt reported spent
+  twice (same or different workers) or spent by a node that is not the named
+  worker is flagged in `GET /api/credits`, in the event bus
+  (`credit.double_spend`) and in Swarm. It is detection, not prevention, and
+  nothing is broadcast beyond the circle.
+- **UI and API** (`api/__init__.py`, `web/js/monitor.js`,
+  `web/i18n/*.json`). The Swarm panel gets a Reciprocity credits section: per
+  circle balance/earned/spent/expiring, the issuer's flagged double spends,
+  and a one-paragraph explanation in English and Spanish that credits are a
+  courtesy inside a circle, not money. Daily counters are unchanged.
+- **Protocol appendix and docs** (`docs/LIMITATIONS.md` item 16 and the new
+  appendix there, `docs/ARCHITECTURE.md`, `docs/USER_GUIDE.md`). The appendix
+  documents fields, signature, validation and MINOR safety for all three
+  messages; it lives in the existing MINOR-safe extension list rather than a
+  new file. Limitations state detection, not prevention, and R-010.
+- **Tests** (`tests/test_credits.py`). Issuance only for an accepted circle
+  result (none for local/own-devices/executor-empty and none for a rejected
+  replica), forged/wrong-worker/non-member/expired/duplicate refusal, spend
+  only by the named worker and circle, priority only while busy, no bypass of
+  admission/egress, a requester without credits still served, double-spend
+  flags, wallet bounds and 0600 modes, unknown control types ignored, the API
+  read-only, and two real loopback nodes that earn, deliver, spend and report.
+
+**Baseline hygiene (T10.3a).**
+
+- **One canonical model family** (`swarmbly_app/models.py`, `state.py`,
+  `engine/directory.py`, `p2p/worker.py`, `tests/test_hardware_models.py`,
+  `tests/test_p2p_two_nodes.py`). Ollama reports `llama`/`qwen2` from
+  `/api/tags`; without a running backend the code fell back to the tag
+  (`llama3.2`/`qwen2.5`). The same model therefore had a different family on a
+  developer machine and in CI, and `llama3.1`/`llama3.2` could count as two
+  families for consensus diversity. `family_for()` now prefers the backend
+  family, then the catalog, then the tag. The two P2P tests assert the
+  canonical family and a unit test covers both paths.
+- **Windows P2P CI** (`.github/workflows/tests.yml`,
+  `tests/test_p2p_two_nodes.py`). A new `p2p-windows` job runs the handshake,
+  messages, two-node P2P and worker-policy tests on `windows-latest`. The
+  mDNS discovery tests skip there with a reason (GitHub Windows runners do not
+  deliver multicast reliably); every loopback test still runs.
+
+**Trusted circles, WP1 (D-015).**
+
+- **Signed membership manifests** (`swarmbly_app/p2p/circles.py`,
+  `tests/test_circles.py`). A circle is a manifest with `circle_id`, name,
+  owner, members (node id, display name, endpoints), version, issue/expiry and
+  the owner's Ed25519 signature over canonical JSON. Tampering, a foreign
+  signature, an expired manifest and a version rollback are refused.
+- **Invitations as code or QR** (`swarmbly_app/qr.py`). A signed one-time
+  token (`circle_id`, owner, nonce, expiry, endpoints) is compressed and
+  base64url-encoded (`SWC1.…`); the QR is generated by a small pure-Python
+  Model 2 encoder (no new dependency) and served as SVG. Accepting an
+  invitation sends a signed join request over the existing TLS session; the
+  owner approves in the Swarm view and signs the next manifest version.
+- **Admission at the handshake and at the worker gate.** In circle-only mode
+  both nodes must hold a valid, unexpired manifest listing the other; the
+  peer's advertised manifest version is checked too. A valid invitation opens
+  a control-only bootstrap session for the join request and never receives a
+  task. Revocation is a new version without the member; older versions are
+  ignored, connected members receive the new version, and the revoked peer is
+  dropped. The explicit *my own devices* mode keeps the 3.4 LAN behaviour.
+- **Default and migration.** New installs are circle-only. An installation
+  that already has a config file keeps *my own devices* and shows a notice in
+  Swarm until the user chooses; Settings → Swarm → *Peer admission* changes
+  it. The choice is stored under `circle.*`.
+- **API and UI** (`swarmbly_app/api/__init__.py`, `web/js/monitor.js`,
+  `web/js/settings.js`, `web/i18n/*.json`). Create, invite (code + QR),
+  accept, approve/reject join requests, list members, revoke and leave, all
+  behind the local API guard, plus a Trusted circles panel in the Swarm view.
+- **Storage** under `<data>/circles/` (manifests, issued invitations, pending
+  joins, outgoing requests), written atomically with mode 0600.
+- **Not in WP1:** the `CIRCLE` destination class, peer sends through the
+  egress gate, receipts naming the circle and member, and `circle_passages`
+  are WP2. A peer still appears as `OWN_NETWORK` in the receipt today.
+
+**Node roles, WP4a (D-018).**
+
+- **Validated node-role schema** (`swarmbly_app/node_roles.py`,
+  `swarmbly_app/p2p/handshake.py`). The signed advertisement may carry
+  `roles`, a list of at most eight entries: `large_model` (a model that is
+  advertised plus `params_b`), `reasoner` (an advertised model plus
+  `think: true`), `search` (up to four engine short names) and `corpus` (a
+  display name of at most 40 characters and size `S|M|L`, never titles,
+  paths or contents). Unknown roles and roles naming a model the node does
+  not advertise are dropped, not fatal; malformed known metadata is rejected
+  like the rest of the advertisement.
+- **What this node advertises.** Only `large_model` and `reasoner`, only
+  while the worker role is on and only for models actually shared:
+  `large_model` for shared models at or above
+  `node_roles.large_model_min_b` (default 7 B; a tag without a parameter
+  count is not guessed into the role), `reasoner` for shared models
+  the user marked in `node_roles.reasoner_models` (default empty). The local
+  pool derives the same roles from its own models without the "shared"
+  condition. A settings change re-announces through the existing signed
+  `advertisement_update`.
+- **Role-aware placement** (`swarmbly_app/engine/scheduler.py`). A task may
+  carry a role; only workers that advertise it are candidates and only the
+  role's models are considered. Per-role outcomes are learned per node in
+  memory (`RoleStats`), never from the peer's claim, and a recently failed
+  role node is deprioritised. Without a role worker, `large_model`/`reasoner`
+  fall back to the best generic worker and the attempt, metadata, stage and
+  receipt say `role X unavailable, ran on Y`; `search`/`corpus` fail honestly.
+- **Packet and worker** (`swarmbly_app/p2p/worker.py`). MINOR-safe
+  `constraints.role` and `constraints.think`; a worker refuses an
+  unadvertised role with `E_ROLE_UNAVAILABLE` before taking a slot or running
+  anything, and passes `think` only to a backend that accepts it.
+- **UI** (`web/js/settings.js`, `web/js/monitor.js`, i18n en/es). Settings →
+  Swarm exposes the threshold and the reasoning-model list with one-line
+  explanations; the Swarm panel shows the node's own roles and each peer's
+  advertised roles.
+- **Not in WP4a:** the search and corpus executors (WP4b) and teams (WP5).
+  Their roles are already in the wire schema so those changes are additive.
+
+**Search and corpus executors, WP4b (D-018).**
+
+- **Opt-in roles** (`swarmbly_app/node_roles.py`, `config.py`, `state.py`).
+  `node_roles.search.enabled` is off by default and a worker advertises
+  `search` with only the engines its own configuration supports (PubMed,
+  Wikipedia, and SearXNG only when a URL is configured). Corpus sharing is a
+  project plus the circles allowed to read it, also off by default; only a
+  display name (at most 40 characters) and a size bucket (`S|M|L`, from
+  document count) are advertised. Worker-off still means no roles at all.
+- **Search executor** (`p2p/worker.py`, `web_search.py`). A search task
+  carries only a public query, in a packet with no Γ, predecessors or
+  conversation; the requester derives it with `strip_private_details` and
+  its glossary/private terms and sends nothing if that cannot be done. The
+  worker accepts one short line (not a document), requires a shared trusted
+  circle (not *my own devices*), checks its egress policy for each engine and
+  records the query, circle and member it ran for in its own ledger. Results
+  are bounded titles, URLs and snippets, signed like any result.
+- **Corpus executor** (`p2p/worker.py`, `lce_adapter.py`). A corpus task is
+  refused with `E_ROLE_UNAVAILABLE`, before retrieval, unless the requester
+  belongs to a circle the corpus is shared with. It reads only the selected
+  project's roots, returns at most five bounded passages with a neutral
+  citation (document title and span id, never a path), and records the
+  passages, count and bytes in the worker ledger.
+- **Requester rules** (`engine/scheduler.py`, `engine/orchestrator.py`,
+  `chat.py`, `egress.py`). Search sends show the public query, circle, member
+  and executor kind in the receipt, and say the requester cannot verify the
+  engine. Corpus results are labelled in `role_sources` with the member and
+  circle the requester sent to, never the worker's claim; they stay out of
+  glossary/memory. They are treated as the requester's passages for egress:
+  a packet carrying them reaches only the local pool or a circle peer with
+  `circle_passages` on (or the own-devices switch), and a third-party model
+  only with `privacy.third_party_passages`; otherwise the dependent task runs
+  locally or fails honestly.
+- **UI and docs**: Settings → Swarm has the search switch and the corpus
+  project/display name, each circle card has a “Share corpus with this circle”
+  switch, and the Swarm panel explains that every admitted peer sees the name
+  and bucket. English and Spanish strings, architecture, limitations and user
+  guide were updated.
+- **Tests**: `tests/test_node_executors.py` covers opt-in defaults, worker-off,
+  engine lists, the private-term query guard, document-like query refusal,
+  non-member/unshared-circle refusals with nothing searched or retrieved,
+  worker ledgers, neutral citations, the passage gate for peers and model
+  services, real loopback search and corpus in a shared circle, and the local
+  pool path. Network calls are faked.
+
+**Teams and honest partial results, WP5 (D-019).**
+
+- **Stored plan templates** (`swarmbly_app/teams.py`, `tests/test_teams.py`).
+  A team is a named list of steps with an instruction template (`{request}`),
+  an optional node role and dependencies on earlier steps only. User teams
+  live in `<data>/teams.json` and project teams in `<project>/teams.json`,
+  validated on load and on save (at most 12 steps, bounded names and
+  instructions, known roles, unique ids, no forward edge and therefore no
+  cycle); writes are atomic and mode 0600. Three neutral built-in examples are
+  read-only and can only be duplicated.
+- **Running a team** (`engine/orchestrator.py`, `chat.py`, `api/__init__.py`).
+  `Orchestrator.run(team=…)` builds the plan from the template instead of
+  calling the router and the planner, substitutes the user's request and
+  passes the step roles as `task_roles`. The same template runs on one node
+  (local pool with every role) or across circle members by role. No new wire
+  message: the task plane stays 0.2. Every gate still applies: lane/tier,
+  circle admission, the egress gate, passage rules, the WP4b public-query
+  guard and corpus provenance; a team never widens a permission.
+- **Teams API and UI** (`api/__init__.py`, `web/js/teams.js`,
+  `web/js/chat.js`, `web/index.html`, `web/i18n/*.json`). List, create, edit,
+  delete, duplicate a built-in, and a composer selector that runs the chosen
+  team for one message, with English and Spanish strings. The Teams view says
+  what a team is and that the stored templates are local.
+- **Honest partial results** (`engine/scheduler.py`,
+  `engine/orchestrator.py`, `chat.py`). `run_levels` records a state per step
+  (`completed`, `failed`, `blocked`), with a stable reason (`node_lost`,
+  `deadline`, `policy_refusal`, `role_unavailable`, `no_worker`, `failed`).
+  A failed step no longer aborts the plan: independent steps continue, and
+  every dependent step is marked `blocked by <step>` and is not run. The
+  answer assembles the completed steps and appends a note naming each missing
+  step and why; the metadata carries `status` (`complete` / `partial` /
+  `failed` when nothing usable completed), `steps` and `missing_steps`. A
+  failed run goes through the normal error path and still keeps its per-step
+  record. The receipt is unchanged in meaning: only what was really sent.
+- **Lists** (`chat.py`, `recipes.py`). Recipe 4 keeps its per-item statuses;
+  a failed wave marks its own items `failed` with the reason and later waves
+  continue. The table summary and metadata report the failed count, and the
+  answer names the waves that failed.
+- **Stops and coordination** (`engine/scheduler.py`). A user stop cancels the
+  run and stays `stopped`, never a partial answer. The requester remains the
+  only coordinator: if it goes away the run ends; no plan migration.
+- **Tests**: `tests/test_teams.py` covers validation (cycles, forward and
+  self dependencies, unknown role, bounds, duplicate ids), read-only
+  built-ins, per-user/per-project storage, the API and the en/es strings;
+  `tests/test_teams_run.py` covers a team entirely on the local pool, the
+  same team across two real loopback nodes in a shared circle with role
+  placement, a node stopped mid-run (partial answer, missing step named,
+  dependent blocked), nothing completed (`failed`, not `partial`), user stop,
+  chat status, a failing recipe-4 wave that keeps the other waves, and a
+  no-team regression. Network calls are faked.
+- **Docs**: architecture, this changelog, the user guide (en/es) and
+  limitations describe teams, partial answers and the single coordinator.
+
+**Honest peer classification, WP2 (D-017).**
+
+- **Destination class `CIRCLE`** (`swarmbly_app/egress.py`,
+  `swarmbly_app/p2p/circles.py`). A peer send is classified by the circle
+  service: a member of a valid shared manifest is `CIRCLE` with its
+  `circle_id`; the explicit *my own devices* mode is `OWN_NETWORK`; a peer
+  outside every circle is refused, never labelled. `Policy` admits `CIRCLE`
+  only through that classification.
+- **Peer sends through the egress gate** (`swarmbly_app/p2p/node.py`,
+  `engine/scheduler.py`). `NodeManager.dispatch_async` calls
+  `egress.check_call` with purpose `FRAGMENT` before it writes a packet; a
+  refusal raises before `_write`, so no bytes leave. Attempts keep the real
+  destination class for the receipt.
+- **Receipts tell the truth** (`swarmbly_app/chat.py`, `web/js/chat.js`).
+  The hard-coded `OWN_NETWORK` is gone: a circle send shows `CIRCLE`, the
+  circle name and the member's display name plus short node id; a blocked
+  peer is not counted as a send. A list wave also reports how many document
+  passages reached each destination.
+- **Per-circle `circle_passages`** (`swarmbly_app/p2p/circles.py`,
+  `swarmbly_app/config.py`, `api/__init__.py`, `web/js/monitor.js`). Stored
+  with the circle on this node, off by default, independent of
+  `privacy.third_party_passages`. Recipe 4 attaches passages only to the
+  peers of circles whose switch is on: in a mixed swarm the grounded wave is
+  sent to those members and never to the others. *My own devices* mode uses
+  the equivalent `circle.own_devices_passages` switch (also off by default).
+  An existing `third_party_passages=true` does not turn either on.
+- **Docs and tests.** `ARCHITECTURE.md` now states the exact rule instead of
+  leaving passages unaddressed; the user guide explains the receipt classes
+  and both switches. New tests cover classification per mode, the gate
+  refusing a non-member before any write, the receipt naming circle and
+  member, passages only with the switch on, and the migration default.
+
 ## 0.7.0 — Tools (2026-11-20)
 
 Swarmbly AI 3.4. Tools and data with code. One broker for every tool; an MCP

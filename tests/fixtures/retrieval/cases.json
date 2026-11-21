@@ -1,0 +1,23 @@
+[
+  {
+    "id": "synonyms",
+    "question": "¿Cuánto se recolectó en el terreno elevado?",
+    "glossary": [["terreno", "finca, plot"], ["recolectar", "producir, harvest"], ["elevado", "alta"]],
+    "document": "parcela_norte.md",
+    "expected": "2,4 toneladas"
+  },
+  {
+    "id": "inflection",
+    "question": "¿Cuánto pesaron los frutos?",
+    "glossary": [],
+    "document": "peso_fruta.md",
+    "expected": "2,4 kg por planta"
+  },
+  {
+    "id": "accent_folding",
+    "question": "¿Dónde se hizo la siembra de maiz?",
+    "glossary": [["sembrar", "siembra"]],
+    "document": "siembra_maiz.md",
+    "expected": "lote bajo"
+  }
+]

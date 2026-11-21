@@ -81,3 +81,20 @@ def fake_chat(app_state: AppState) -> tuple[ChatService, FakeBackend]:
     fake = FakeBackend()
     app_state.backends.resolve = lambda config=None: fake  # type: ignore[method-assign]
     return app_state.chat, fake
+
+
+def prepare_guest_for_test(state, timeout: float = 300.0) -> None:
+    """Prepare the real sandbox guest cache once for a test that runs it.
+
+    R-005: recipe 5 no longer compiles inside a request, so a test that runs
+    the real guest prepares the cache first. The app refuses to start the
+    compile below a free-memory floor; CI runners (macOS arm64 has 7 GB in
+    all) often report less free memory than that, which says nothing about
+    the code under test. The probe is therefore replaced for the test only;
+    the floor itself is covered by tests/test_first_launch.py.
+    """
+    state.sandbox._memory = lambda: 16 * 1024 ** 3
+    started = state.sandbox.start()
+    assert started.get("started") is True, started
+    status = state.sandbox.wait(timeout)
+    assert status.get("status") == "ready", status

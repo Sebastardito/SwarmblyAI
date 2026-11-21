@@ -114,6 +114,9 @@ class PeerSession:
     connected_at: float = 0.0
     last_seen: float = 0.0
     write_lock: asyncio.Lock | None = None
+    # 3.5, WP3 / D-016: set when this session runs through a relay splice.
+    relay_hop: dict[str, Any] | None = None
+    tls_version: str = ""
 
     def close(self) -> None:
         try:
@@ -121,7 +124,7 @@ class PeerSession:
         except Exception:
             pass
         try:  # abort the transport so pending reads end immediately
-            transport = self.writer.transport
+            transport = getattr(self.writer, "transport", None)
             if transport is not None:
                 transport.abort()
         except Exception:
@@ -215,3 +218,60 @@ async def dial(host: str, port: int, hello_message: dict[str, Any],
     session.node_id = str(ack_message.get("node_id", ""))
     session.advertisement = ack_message.get("advertisement") or {}
     return session, ack_message, observed
+
+
+# ---------------------------------------------------------------------------
+# 3.5, WP3 / D-016: the same handshake over a paired relay splice
+# ---------------------------------------------------------------------------
+
+async def dial_over_stream(stream: Any, hello_message: dict[str, Any],
+                           *, address: str = "", timeout: float = HELLO_TIMEOUT_S
+                           ) -> tuple[PeerSession, dict[str, Any], str]:
+    """Initiator side: inner TLS 1.3 then the normal HELLO/HELLO_ACK.
+
+    ``stream`` is a relay ``RelayStream`` after ``paired``. The relay only
+    forwards the TLS records; the channel-bound handshake still authenticates
+    the peer's Ed25519 key and certificate fingerprint end to end.
+    """
+    from .relay_client import TLSReader, TLSStream, TLSWriter
+
+    tls = TLSStream(stream, client_ssl_context(), server_side=False)
+    await asyncio.wait_for(tls.do_handshake(), timeout)
+    observed = tls.peer_fingerprint()
+    if not observed:
+        raise WireError("relay peer presented no TLS certificate")
+    session = PeerSession(
+        node_id="", address=address, port=0, advertisement={},
+        reader=TLSReader(tls), writer=TLSWriter(tls), initiator=True,
+        tls_version=tls.version() or "")
+    await write_frame(session.writer, hello_message)
+    ack_message = await read_frame_with_timeout(session.reader, timeout)
+    if ack_message.get("type") != "hello_ack":
+        session.close()
+        raise WireError("expected hello_ack")
+    session.node_id = str(ack_message.get("node_id", ""))
+    session.advertisement = ack_message.get("advertisement") or {}
+    return session, ack_message, observed
+
+
+async def accept_over_stream(stream: Any, cert_path: Path, key_path: Path,
+                             *, address: str = "",
+                             timeout: float = HELLO_TIMEOUT_S
+                             ) -> tuple[PeerSession, dict[str, Any]]:
+    """Responder side: inner TLS 1.3 (server) then read the peer's HELLO."""
+    from .relay_client import TLSReader, TLSStream, TLSWriter
+
+    tls = TLSStream(stream, server_ssl_context(cert_path, key_path),
+                    server_side=True)
+    await asyncio.wait_for(tls.do_handshake(), timeout)
+    session = PeerSession(
+        node_id="", address=address, port=0, advertisement={},
+        reader=TLSReader(tls), writer=TLSWriter(tls), initiator=False,
+        tls_version=tls.version() or "")
+    hello = await read_frame_with_timeout(session.reader, timeout)
+    if hello.get("type") != "hello":
+        session.close()
+        raise WireError("expected hello")
+    session.node_id = str(hello.get("node_id", ""))
+    session.advertisement = hello.get("advertisement") or {}
+    return session, hello

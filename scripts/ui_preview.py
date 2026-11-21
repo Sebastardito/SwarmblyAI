@@ -42,6 +42,7 @@ def fake_node(base: Path, name: str, port: int, models: list[DetectedModel], **s
     # Loopback only and no mDNS: fake workers must never reach a real network.
     state.config.update({"swarm": {"p2p_port": port, "p2p_host": "127.0.0.1",
                                    "lan_enabled": False, **swarm},
+                         "circle": {"admission_mode": "own_devices"},
                          "privacy": {"tier": "GLOBAL"},
                          "permissions": {"lan_discovery": False},
                          "model": {"model_name": models[0].name}})

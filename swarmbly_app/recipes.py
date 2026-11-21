@@ -244,7 +244,14 @@ def list_wave_size(cfg: dict[str, Any]) -> int:
     return max(1, fragments * per_fragment)
 
 
-def list_language(operation: str) -> str:
+def list_language(operation: str, lang: str | None = None) -> str:
+    """The language of a list answer: the conversation's when known.
+
+    ``operation`` is the user's text; a short Spanish operation used to be
+    detected as English, so the caller passes the conversation language.
+    """
+    if lang in ("es", "en", "pt", "fr"):
+        return "es" if lang == "es" else "en"
     from .lang import detect_language
     try:
         return "es" if detect_language(operation or "") == "es" else "en"
@@ -253,7 +260,8 @@ def list_language(operation: str) -> str:
 
 
 def build_list_prompt(operation: str, items: list[str],
-                      evidence: dict[int, list[dict[str, Any]]] | None = None) -> str:
+                      evidence: dict[int, list[dict[str, Any]]] | None = None,
+                      *, lang: str | None = None) -> str:
     """The enumerated prompt the existing admission/orchestrator path expects.
 
     The operation is the user's text; the app adds only the per-item cue and
@@ -265,7 +273,7 @@ def build_list_prompt(operation: str, items: list[str],
     fact next to the question it answers; the prompt still has exactly one
     numbered line per item.
     """
-    lang = list_language(operation)
+    lang = list_language(operation, lang)
     if lang == "es":
         cue = ("Para cada elemento numerado, responde solo ese elemento. "
                "Escribe una línea por elemento: «número. respuesta».")
@@ -293,7 +301,7 @@ def build_list_prompt(operation: str, items: list[str],
     return f"{operation.strip()}\n\n{cue}\n{heading}\n{body}"
 
 
-def build_single_item_prompt(operation: str, item: str) -> str:
+def build_single_item_prompt(operation: str, item: str, *, lang: str | None = None) -> str:
     """One item, answered as a table row, for a degenerated local wave.
 
     A 12-item wave made qwen2.5:7b repeat item 1's answer; asked one item at a
@@ -301,7 +309,7 @@ def build_single_item_prompt(operation: str, item: str) -> str:
     ("Ficha 9: parcela Norte.").  A single-row table keeps the answer in its
     own cell, so the app can read it without guessing where the item ends.
     """
-    lang = list_language(operation)
+    lang = list_language(operation, lang)
     if lang == "es":
         cue = ("Devuelve una tabla Markdown con una fila y dos columnas: "
                "número y resultado. No incluyas el texto del elemento.")
@@ -526,12 +534,14 @@ def relevant_list_passages(item: str, passages: list[dict[str, Any]],
 
 
 def summary_line(count: int, answered: int, missing: int, disagreement: int,
-                 lang: str = "en") -> str:
+                 lang: str = "en", failed: int = 0) -> str:
     if lang == "es":
-        return (f"{count} elementos: {answered} respondidos, {missing} faltantes, "
-                f"{disagreement} en desacuerdo.")
-    return (f"{count} items: {answered} answered, {missing} missing, "
-            f"{disagreement} disagreement.")
+        base = (f"{count} elementos: {answered} respondidos, {missing} faltantes, "
+                f"{disagreement} en desacuerdo")
+        return base + (f", {failed} fallidos." if failed else ".")
+    base = (f"{count} items: {answered} answered, {missing} missing, "
+            f"{disagreement} disagreement")
+    return base + (f", {failed} failed." if failed else ".")
 
 
 def _tier_for(text: str, privacy_cfg: dict[str, Any]) -> dict[str, Any]:
@@ -999,16 +1009,18 @@ def sample_document(path: Path | str, max_rows: int = 5,
 
 def build_code_prompt(question: str, files: list[dict[str, Any]],
                       samples: list[dict[str, Any]],
-                      correction: dict[str, Any] | None = None) -> str:
+                      correction: dict[str, Any] | None = None,
+                      *, lang: str | None = None) -> str:
     """The writer's prompt: question, file names, headers and <=5 rows/table."""
-    lang = list_language(question)
+    lang = list_language(question, lang)
     if lang == "es":
         intro = (
             "Escribe UN script de Python corto para responder la pregunta del usuario. "
             "Se ejecutará en un entorno aislado, sin red y sin procesos. "
             "Los archivos elegidos se copian como solo lectura en /data/<nombre>; "
             "escribe solo en /out/. Imprime la respuesta en stdout. "
-            "Puedes usar pandas y openpyxl."
+            "Puedes usar pandas y openpyxl. Escribe en español los textos y "
+            "mensajes que produzca el script."
         )
         heading = "Pregunta"
         files_heading = ("Archivos y muestras (máximo 5 filas por tabla y 5 líneas por "

@@ -33,6 +33,7 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 
 from ..events import EventBus
+from ..node_roles import FALLBACK_ROLES, models_for_role
 from ..p2p.messages import verify_signed
 
 MAX_RESULT_CHARS = 64_000
@@ -154,6 +155,55 @@ class SpeedStats:
         return None if not tps else max_tokens / tps
 
 
+class RoleStats:
+    """Observed per-role outcomes per node, in memory (3.5, D-018).
+
+    A node's advertised role is a self-declared claim and is never trusted as
+    proof. Placement learns from what actually happened: a node whose role
+    attempt failed recently is deprioritised for that role for a while, but it
+    is still chosen when no other role-capable worker is left. Nothing here is
+    persisted or sent to peers.
+    """
+
+    FAILURE_MEMORY_S = 300.0
+
+    def __init__(self) -> None:
+        self._failed_at: dict[tuple[str, str], float] = {}
+        self._ok: dict[tuple[str, str], int] = {}
+        self._failed: dict[tuple[str, str], int] = {}
+
+    def record_success(self, node_id: str, role: str) -> None:
+        if not role:
+            return
+        key = (node_id, role)
+        self._ok[key] = self._ok.get(key, 0) + 1
+        self._failed_at.pop(key, None)
+
+    def record_failure(self, node_id: str, role: str) -> None:
+        if not role:
+            return
+        key = (node_id, role)
+        self._failed[key] = self._failed.get(key, 0) + 1
+        self._failed_at[key] = time.monotonic()
+
+    def recently_failed(self, node_id: str, role: str) -> bool:
+        at = self._failed_at.get((node_id, role))
+        return at is not None and time.monotonic() - at < self.FAILURE_MEMORY_S
+
+    def snapshot(self) -> list[dict[str, Any]]:
+        """What this requester observed, for the request metadata."""
+        now = time.monotonic()
+        out = []
+        for node_id, role in sorted(set(self._failed_at) | set(self._ok)):
+            at = self._failed_at.get((node_id, role))
+            out.append({"node": node_id[:12], "role": role,
+                        "failed_ago_s": (round(max(0.0, now - at), 1)
+                                         if at is not None else None),
+                        "ok": self._ok.get((node_id, role), 0),
+                        "failed": self._failed.get((node_id, role), 0)})
+        return out
+
+
 class LatencyStats:
     """Per (kind, budget-bucket) latency history for the p95 hedge timer."""
 
@@ -192,6 +242,7 @@ class Attempt:
     node_id: str
     family: str
     reason: str                       # initial | hedge | retry | tie_break
+    attempt_id: str = ""              # wire attempt id (D-020 receipt hash)
     status: str = "dispatched"        # dispatched|accepted|extra|failed|cancelled_slow
     code: str = ""
     elapsed_ms: int | None = None
@@ -204,6 +255,27 @@ class Attempt:
     latency_key: str = ""
     started_at: float | None = None   # sent; reset when it leaves the slot queue
     hedged: bool = False              # already triggered a speed hedge
+    # D-017: the destination class and the circle/member the receipt names.
+    destination_class: str = ""
+    circle_id: str = ""
+    circle_name: str = ""
+    member_name: str = ""
+    passages: int = 0                 # document passages in this packet
+    # D-018: the node role the task asked for, and whether the requester had
+    # to fall back to a generic worker (large_model/reasoner only).
+    role: str = ""
+    role_fallback: bool = False
+    # WP4b: an executor attempt (search/corpus), its public query and whether
+    # the packet carries a corpus passage (egress kind PASSAGES).
+    executor: str = ""
+    query: str = ""
+    carries_passages: bool = False
+    # 3.5, WP3 / D-016: the transport hop of the send. ``direct`` is the
+    # normal path; ``relayed`` names the circle relay that forwarded
+    # ciphertext and saw metadata only.
+    transport: str = "direct"
+    relay_host: str = ""
+    relay_port: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         out = self._base()
@@ -217,7 +289,22 @@ class Attempt:
                 "model": self.model, "reason": self.reason,
                 "status": self.status, "code": self.code,
                 "elapsed_ms": self.elapsed_ms, "tokens_out": self.tokens_out,
-                "bytes_out": self.bytes_out, "bytes_in": self.bytes_in}
+                "bytes_out": self.bytes_out, "bytes_in": self.bytes_in,
+                "destination_class": self.destination_class,
+                "circle_id": self.circle_id, "circle_name": self.circle_name,
+                "member_name": self.member_name, "passages": self.passages,
+                "role": self.role,
+                **({"role_fallback": True} if self.role_fallback else {}),
+                **({"executor": self.executor} if self.executor else {}),
+                **({"query": self.query} if self.query else {}),
+                **({"carries_passages": True} if self.carries_passages else {}),
+                "transport": self.transport,
+                **({"relay": {"host": self.relay_host,
+                              "port": self.relay_port,
+                              "metadata_only": True,
+                              "saw": ["who", "when", "bytes"],
+                              "content": False}}
+                   if self.transport == "relayed" and self.relay_host else {})}
 
 
 @dataclass
@@ -228,10 +315,78 @@ class Replica:
     model: str
     elapsed_ms: int
     telemetry: dict[str, Any] = field(default_factory=dict)
+    # WP4b: provenance of executor material. The requester labels it from the
+    # destination it actually sent to, never from the worker's own claim.
+    sources: list[dict[str, Any]] = field(default_factory=list)
+    executor: str = ""
+    circle_id: str = ""
+    circle_name: str = ""
+    member_name: str = ""
 
 
 class TaskFailed(RuntimeError):
-    pass
+    """A task could not produce a usable replica.
+
+    ``reason`` is a small stable category the orchestrator can report per
+    step (``role_unavailable``, ``no_worker``, ``deadline``,
+    ``policy_refusal``, ``node_lost``, ``failed``); ``code`` is the last
+    stable wire/policy code when there is one.
+    """
+
+    def __init__(self, message: str, *, code: str = "", reason: str = ""):
+        super().__init__(message)
+        self.code = code
+        self.reason = reason
+        self.detail = message
+
+
+def _failure_reason(codes: set[str]) -> str:
+    """The honest category of a failed task, from the attempts' codes."""
+    if codes & {"E_DEADLINE", "E_TIMEOUT"}:
+        return "deadline"
+    if codes & {"E_CIRCLE_REQUIRED", "E_EGRESS_DENIED", "E_POLICY",
+                "E_TIER_VIOLATION"}:
+        return "policy_refusal"
+    if "E_ROLE_UNAVAILABLE" in codes:
+        return "role_unavailable"
+    if codes & {"E_TRANSPORT", "E_DISCONNECTED"}:
+        return "node_lost"
+    return "failed"
+
+
+@dataclass
+class StepState:
+    """What happened to one step of a plan (partial results, D-019)."""
+
+    status: str = "pending"        # pending|completed|failed|blocked
+    reason: str = ""               # stable category, not user prose
+    detail: str = ""               # short English detail for the record
+    blocked_by: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"status": self.status}
+        if self.reason:
+            out["reason"] = self.reason
+        if self.detail:
+            out["detail"] = self.detail
+        if self.blocked_by:
+            out["blocked_by"] = list(self.blocked_by)
+        return out
+
+
+@dataclass
+class LevelsOutcome:
+    """Results that survived, and the state of every step of the plan."""
+
+    results: dict[str, Any] = field(default_factory=dict)
+    states: dict[str, StepState] = field(default_factory=dict)
+
+    def state(self, task_id: str) -> StepState:
+        return self.states.setdefault(task_id, StepState())
+
+
+class RunCancelled(RuntimeError):
+    """The user stopped the request; this stays a stop, not a partial answer."""
 
 
 class Scheduler:
@@ -240,7 +395,10 @@ class Scheduler:
                  timeout_s: float, hedge_fallback_s: float,
                  latency: LatencyStats, kind: str = "generate",
                  min_params_b: float = 0.0, queue_retries: bool = True,
-                 speed: SpeedStats | None = None):
+                 speed: SpeedStats | None = None,
+                 passage_texts: list[str] | None = None,
+                 role_stats: RoleStats | None = None,
+                 credits: Any = None):
         self.nodes = nodes
         # Models below this size are not used (tags without a size always are).
         self.min_params_b = float(min_params_b)
@@ -250,6 +408,14 @@ class Scheduler:
         # (P3b.3': queued retries waited 50 s and then timed out anyway).
         self.queue_retries = bool(queue_retries)
         self.speed = speed or SpeedStats()
+        # D-018: per-role outcomes per node, shared across requests by the app.
+        self.role_stats = role_stats or RoleStats()
+        # D-020: the requester's credit service. A verified, accepted replica
+        # from a circle member earns one signed receipt; nothing else does.
+        self.credits = credits
+        # D-017: the list recipe passes the texts it attached; each attempt
+        # records how many of them its packet really carried.
+        self.passage_texts = [str(text) for text in (passage_texts or []) if text]
         self._max_tokens = 0          # budget of the task being dispatched
         # After a timeout or a cancelled hedge the worker may still be
         # finishing (older workers ignore "cancel"): keep its slot for a
@@ -279,23 +445,39 @@ class Scheduler:
         self._pair_used: collections.Counter = collections.Counter()  # spread over time
 
     # -- worker selection -------------------------------------------------------
-    def _candidates(self) -> list[tuple[Any, str, str]]:
+    def _candidates(self, role: str = "", require_passages: bool = False
+                    ) -> list[tuple[Any, str, str]]:
         """(peer, family, model): per worker and family, its largest eligible model.
 
         Capability (parameter count from the tag) decides *which* model of a
         family a node runs; models below ``min_params_b`` are skipped. If that
         filter would leave no candidate at all, every model is allowed again
         (a small swarm must still answer).
+
+        With ``role`` (D-018) only workers that advertise it are candidates,
+        and for a model-bearing role only the models named by that role.
         """
         from .capability import eligible, rank_params
 
         def collect(min_b: float) -> list[tuple[Any, str, str]]:
             out = []
             for peer in self.nodes.available_workers(self.kind):
+                if require_passages and not self._passages_allowed(peer.node_id):
+                    continue
+                if role:
+                    entries = [entry for entry in (peer.advertisement.get("roles") or [])
+                               if isinstance(entry, dict) and entry.get("role") == role]
+                    if not entries:
+                        continue
+                    role_models = set(models_for_role(peer.advertisement, role))
+                else:
+                    role_models = set()
                 best: dict[str, str] = {}
                 for model in (peer.advertisement.get("models") or [{"family": "unknown"}]):
                     family = str(model.get("family") or "unknown")
                     version = str(model.get("version") or "")
+                    if version and role_models and version not in role_models:
+                        continue
                     if version and not eligible(version, min_b):
                         continue
                     if family not in best or rank_params(version) > rank_params(best[family]):
@@ -304,6 +486,22 @@ class Scheduler:
             return out
 
         return collect(self.min_params_b) or collect(0.0)
+
+    def _passages_allowed(self, node_id: str) -> bool:
+        """Whether document passages may be forwarded to this worker.
+
+        Corpus results from a role executor are the requester's passages for
+        egress purposes: they may reach the local pool, or a circle peer whose
+        per-circle ``circle_passages`` switch is on (own-devices uses its own
+        switch). A Directory that cannot answer is treated as refusing.
+        """
+        fn = getattr(self.nodes, "passages_allowed", None)
+        if not callable(fn):
+            return True                # unit-test doubles without a policy
+        try:
+            return bool(fn(node_id))
+        except Exception:
+            return False
 
     def _capacity(self, peer) -> int:
         try:
@@ -314,14 +512,15 @@ class Scheduler:
 
     def _select(self, used_pairs: set[tuple[str, str]], used_families: set[str],
                 used_nodes: set[str], free_only: bool = False,
-                max_tokens: int | None = None):
+                max_tokens: int | None = None, role: str = "",
+                require_passages: bool = False):
         """Best (peer, family, model). ``free_only``: only workers with a free
         slot — a hedge queued behind a busy worker adds load and saves no
         time (P3b.3, 22 Oct 2026: after the server left, hedges queued on the
         two remaining single-slot workers and every task missed its deadline)."""
         best = None
         best_key = None
-        for peer, family, model in self._candidates():
+        for peer, family, model in self._candidates(role, require_passages):
             if (peer.node_id, family) in used_pairs:
                 continue
             busy = self.speed.busy(peer.node_id)
@@ -344,6 +543,9 @@ class Scheduler:
                    + (self._capacity(peer) if busy else 0),
                    too_slow,                           # then: can it finish in time?
                    self.speed.recently_failed(peer.node_id),   # and is it healthy?
+                   # D-018: a role that failed here recently goes after the
+                   # nodes this requester has not seen fail that role.
+                   self.role_stats.recently_failed(peer.node_id, role) if role else False,
                    -rank_params(model),                # then the most capable model
                    self._pair_load[(peer.node_id, family)],
                    self._pair_used[(peer.node_id, family)],  # spread across models
@@ -361,7 +563,9 @@ class Scheduler:
                        exclude: set[tuple[str, str]] | None = None,
                        start_number: int = 0,
                        reason: str = "initial",
-                       free_only: bool = False) -> list[Replica]:
+                       free_only: bool = False,
+                       role: str = "", require_passages: bool = False
+                       ) -> list[Replica]:
         """Dispatch replicas of one task; return ≥1 verified replica or raise.
 
         ``validate`` rejects a signed, well-formed replica whose content is
@@ -371,6 +575,26 @@ class Scheduler:
         returned rather than failing the request (the monitor shows it).
         """
         rejected: list[tuple[Replica, Attempt]] = []
+        # D-018: only a worker that advertises the role may receive a role
+        # task. If none does, large_model/reasoner may degrade to the best
+        # generic worker (recorded); search/corpus cannot be substituted and
+        # the task fails instead of pretending.
+        requested_role = str(role or "")
+        role_fallback = False
+        effective_role = requested_role
+        if requested_role:
+            if requested_role not in ("large_model", "reasoner", "search", "corpus"):
+                raise TaskFailed(
+                    f"{task_id}: role {requested_role!r} unavailable: unknown role",
+                    code="E_ROLE_UNAVAILABLE", reason="role_unavailable")
+            if not self._candidates(requested_role, require_passages):
+                if requested_role not in FALLBACK_ROLES:
+                    raise TaskFailed(
+                        f"{task_id}: role {requested_role!r} unavailable: no worker "
+                        "advertises it", code="E_ROLE_UNAVAILABLE",
+                        reason="role_unavailable")
+                role_fallback = True
+                effective_role = ""
         k_min = self.k_min if k_min is None else int(k_min)
         k_max = self.k_max if k_max is None else int(k_max)
         used_pairs: set[tuple[str, str]] = set(exclude or ())
@@ -389,7 +613,8 @@ class Scheduler:
                 return False
             choice = self._select(used_pairs, used_families, used_nodes,
                                   free_only=free_only or reason == "hedge",
-                                  max_tokens=max_tokens)
+                                  max_tokens=max_tokens, role=effective_role,
+                                  require_passages=require_passages)
             if choice is None:
                 return False
             peer, family, model = choice
@@ -398,11 +623,38 @@ class Scheduler:
             used_nodes.add(peer.node_id)
             multi = len(peer.advertisement.get("models") or []) > 1
             message = build(number, family if multi else None, model if multi else None)
+            constraints = message.setdefault("constraints", {})
+            if effective_role:
+                # MINOR-safe packet extension (SPEC §3): older workers ignore
+                # it; a worker that knows it refuses an unadvertised role.
+                constraints["role"] = effective_role
+                if effective_role == "reasoner":
+                    constraints["think"] = True
+            elif role_fallback:
+                # The generic worker must not be sent a role it never claimed.
+                constraints.pop("role", None)
+                constraints.pop("think", None)
+            if require_passages:
+                # MINOR-safe: the peer send carries a corpus passage, so the
+                # egress ledger records PASSAGES and the receipt says so.
+                constraints["carries_passages"] = True
+            packet_text = str(message)
             attempt = Attempt(task_id, number, peer.node_id, family, reason,
                               model=model,
-                              bytes_out=len(str(message)),
+                              bytes_out=len(packet_text),
                               max_tokens=int(max_tokens), latency_key=latency_key,
-                              started_at=time.monotonic())
+                              started_at=time.monotonic(),
+                              passages=sum(1 for text in self.passage_texts
+                                           if text in packet_text),
+                              role=requested_role, role_fallback=role_fallback,
+                              executor=(requested_role if requested_role in
+                                        ("search", "corpus") else ""),
+                              query=(str((message.get("task") or {}).get("instruction") or "")
+                                     if requested_role == "search" else ""),
+                              carries_passages=require_passages)
+            if role_fallback:
+                attempt.note = (f"role {requested_role} unavailable, ran on "
+                                f"{peer.node_id[:12]} (generic worker)")
             number += 1
             self.attempts.append(attempt)
             self._load[peer.node_id] += 1
@@ -418,7 +670,8 @@ class Scheduler:
             if not launch(reason, free_only=free_only):
                 break
         if not inflight:
-            raise TaskFailed(f"{task_id}: no connected worker available")
+            raise TaskFailed(f"{task_id}: no connected worker available",
+                             code="E_NO_WORKER", reason="no_worker")
 
         while inflight and len(accepted) < k_min:
             hedge_after, source, late = self._hedge_after(list(inflight.values()),
@@ -470,6 +723,14 @@ class Scheduler:
                     accepted.append(replica)
                     self.latency.add(latency_key, replica.elapsed_ms / 1000.0)
                     self._event(attempt, "accepted")
+                    # Only now, after signature/schema verification and the
+                    # quality check, does the requester accept the result and
+                    # sign a credit receipt for a circle member (D-020).
+                    if self.credits is not None:
+                        try:
+                            await self.credits.issue_for_attempt(attempt, replica)
+                        except Exception:
+                            pass
                 else:
                     self._event(attempt, "failed")
                     if len(accepted) + len(inflight) < k_min and launch("retry", free_only=not self.queue_retries):
@@ -480,6 +741,8 @@ class Scheduler:
             self._load[attempt.node_id] -= 1
             self._pair_load[(attempt.node_id, attempt.family)] -= 1
             attempt.status = "cancelled_slow"   # slow, not dishonest (SPEC §11.4)
+            if attempt.role and not attempt.role_fallback:
+                self.role_stats.record_failure(attempt.node_id, attempt.role)
             if attempt.started_at is not None:
                 ran = time.monotonic() - attempt.started_at
                 self.speed.observe_elapsed_floor(attempt.node_id, attempt.model,
@@ -496,9 +759,12 @@ class Scheduler:
                 replica.telemetry = dict(replica.telemetry or {}, degraded=True)
             return [replica for replica, _ in rejected]
         if not accepted:
-            codes = ", ".join(sorted({a.code for a in self.attempts
-                                      if a.task_id == task_id and a.code}))
-            raise TaskFailed(f"{task_id}: all {number} attempt(s) failed ({codes})")
+            codes = {a.code for a in self.attempts
+                     if a.task_id == task_id and a.code}
+            joined = ", ".join(sorted(codes))
+            raise TaskFailed(
+                f"{task_id}: all {number} attempt(s) failed ({joined})",
+                code=next(iter(codes), ""), reason=_failure_reason(codes))
         return accepted
 
     def _hedge_after(self, attempts: list[Attempt], latency_key: str):
@@ -544,24 +810,61 @@ class Scheduler:
             self._slots[node_id] = asyncio.Semaphore(max(1, cap))
         return self._slots[node_id]
 
+    def _record_transport(self, attempt: Attempt) -> None:
+        try:
+            hop = self.nodes.transport_hop(attempt.node_id)
+        except Exception:
+            hop = {"transport": "direct"}
+        attempt.transport = str(hop.get("transport") or "direct")
+        relay = hop.get("relay") or {}
+        attempt.relay_host = str(relay.get("host") or "")
+        try:
+            attempt.relay_port = int(relay.get("port") or 0)
+        except (TypeError, ValueError):
+            attempt.relay_port = 0
+
     async def _dispatch_one(self, node_id: str, message: dict[str, Any],
                             attempt: Attempt) -> Replica | None:
         started = time.monotonic()
+        attempt.attempt_id = str(message.get("attempt_id", "") or "")
+        # D-020: offer one earned credit only to a worker this requester knows
+        # is busy (it refused a task at its concurrency limit, or missed a
+        # deadline); spending a receipt on an idle worker buys nothing.
+        offer_credit = self.speed.busy(node_id)
         async with self._slot(node_id), self._sem:
             wait = self._busy_until.get(node_id, 0.0) - time.monotonic()
             if wait > 0:
                 await asyncio.sleep(wait)
             attempt.started_at = time.monotonic()
             try:
-                result = await self.nodes.dispatch_async(node_id, message,
-                                                         self.timeout_s)
+                destination = self.nodes.classify_peer(node_id)
+            except Exception:
+                destination = {}
+            attempt.destination_class = str(destination.get("clase") or "")
+            attempt.circle_id = str(destination.get("circle_id") or "")
+            attempt.circle_name = str(destination.get("circle_name") or "")
+            attempt.member_name = str(destination.get("member_name") or "")
+            self._record_transport(attempt)
+            try:
+                if offer_credit:
+                    result = await self.nodes.dispatch_async(
+                        node_id, message, self.timeout_s, offer_credit=True)
+                else:
+                    result = await self.nodes.dispatch_async(node_id, message,
+                                                             self.timeout_s)
+                self._record_transport(attempt)
             except asyncio.CancelledError:
                 self._busy_until[node_id] = time.monotonic() + CANCEL_GRACE_S
                 raise
             except Exception as exc:
+                self._record_transport(attempt)
                 attempt.status = "failed"
                 attempt.code = getattr(exc, "code", "") or "E_TRANSPORT"
                 attempt.note = str(getattr(exc, "detail", "") or exc)[:160]
+                if attempt.code in ("E_CIRCLE_REQUIRED", "E_EGRESS_DENIED"):
+                    # D-017: the gate refused before the write; no bytes left.
+                    attempt.bytes_out = 0
+                    attempt.passages = 0
                 if attempt.code in ("E_EXECUTION", "E_DEADLINE", "E_TRANSPORT"):
                     self.speed.record_failure(node_id)
                 if "backend unavailable" in attempt.note.lower():
@@ -575,6 +878,8 @@ class Scheduler:
                     self.speed.observe_timeout(node_id, attempt.model,
                                                attempt.max_tokens or self._max_tokens,
                                                self.timeout_s)
+                if attempt.role and not attempt.role_fallback:
+                    self.role_stats.record_failure(node_id, attempt.role)
                 attempt.elapsed_ms = int((time.monotonic() - started) * 1000)
                 return None
         attempt.elapsed_ms = int((time.monotonic() - started) * 1000)
@@ -583,6 +888,8 @@ class Scheduler:
         if problem:
             attempt.status = "failed"
             attempt.code = problem
+            if attempt.role and not attempt.role_fallback:
+                self.role_stats.record_failure(node_id, attempt.role)
             return None
         profile = result.get("profile") or {}
         telemetry = result.get("telemetry") or {}
@@ -600,15 +907,21 @@ class Scheduler:
         self.speed.observe(node_id, str(profile.get("model_version") or attempt.model),
                            telemetry.get("tokens_out"), gen_ms)
         self.speed.record_success(node_id)
+        if attempt.role and not attempt.role_fallback:
+            self.role_stats.record_success(node_id, attempt.role)
         if attempt.latency_key and attempt.started_at is not None:
             self.speed.observe_elapsed(node_id, attempt.model, attempt.latency_key,
                                        max(0.1, time.monotonic() - attempt.started_at
                                            - load_s))
         attempt.model = str(profile.get("model_version") or attempt.model)
         family = str(profile.get("model_family") or attempt.family)
+        sources = result.get("sources") if isinstance(result.get("sources"), list) else []
         return Replica(text=str(result["text"]), node_id=node_id, family=family,
                        model=attempt.model, elapsed_ms=attempt.elapsed_ms,
-                       telemetry=telemetry)
+                       telemetry=telemetry, sources=sources[:8],
+                       executor=str(result.get("executor") or ""),
+                       circle_id=attempt.circle_id, circle_name=attempt.circle_name,
+                       member_name=attempt.member_name)
 
     def _event(self, attempt: Attempt, status: str) -> None:
         self.bus.publish("swarm.attempt", request_id=self.request_id,
@@ -626,31 +939,114 @@ def verify_result(node_id: str, packet: dict[str, Any], result: dict[str, Any]) 
     text = result.get("text")
     if not isinstance(text, str) or not text.strip() or len(text) > MAX_RESULT_CHARS:
         return "E_SCHEMA"
+    sources = result.get("sources")
+    if sources is not None:
+        if not isinstance(sources, list) or len(sources) > 8:
+            return "E_SCHEMA"
+        for source in sources:
+            if not isinstance(source, dict):
+                return "E_SCHEMA"
+            for key in ("title", "span", "cite", "url", "snippet", "text", "provider"):
+                value = source.get(key)
+                if value is not None and (not isinstance(value, str) or len(value) > 2000):
+                    return "E_SCHEMA"
     return ""
 
 
 async def run_levels(scheduler: Scheduler, order: list[str],
                      consumed_deps: dict[str, tuple[str, ...]],
-                     run_one: Callable[[str], Awaitable[Any]]) -> dict[str, Any]:
-    """Run tasks as soon as their consumed predecessors are done."""
-    results: dict[str, Any] = {}
+                     run_one: Callable[[str], Awaitable[Any]], *,
+                     outcome: LevelsOutcome | None = None,
+                     deadline: float | None = None,
+                     cancel: Any = None) -> LevelsOutcome:
+    """Run tasks as soon as their consumed predecessors are done.
+
+    A step that cannot be completed does not abort the whole plan (3.5,
+    D-019): its state is recorded, every step that depends on it is marked
+    ``blocked`` and never run, and independent steps continue. ``cancel``
+    (the user's stop) still raises :class:`RunCancelled`; the caller turns
+    that into a stop, never into a partial answer. ``deadline`` is a
+    ``time.monotonic()`` backstop: steps still waiting or running then are
+    marked failed with reason ``deadline``.
+    """
+    out = outcome if outcome is not None else LevelsOutcome()
+    for task_id in order:
+        out.state(task_id)
     remaining = list(order)
     running: dict[asyncio.Task, str] = {}
+
+    def mark_missing(reason: str, detail: str, tasks: list[str]) -> None:
+        for task_id in tasks:
+            state = out.state(task_id)
+            if state.status == "pending":
+                state.status, state.reason, state.detail = "failed", reason, detail
+
     try:
         while remaining or running:
+            if cancel is not None and cancel.is_set():
+                raise RunCancelled()
+            if deadline is not None and time.monotonic() >= deadline:
+                mark_missing("deadline", "the run exceeded its global deadline",
+                             list(remaining))
+                remaining.clear()
+                for task in list(running):
+                    task.cancel()
+                mark_missing("deadline", "the run exceeded its global deadline",
+                             list(running.values()))
+                running.clear()
+                break
+            # Dependencies that will never complete block their dependents;
+            # a blocked step is named with the step that blocked it, not run.
+            for task_id in list(remaining):
+                deps = consumed_deps.get(task_id, ())
+                blocked = [dep for dep in deps
+                           if dep in out.states
+                           and out.states[dep].status in ("failed", "blocked")]
+                if blocked:
+                    state = out.state(task_id)
+                    state.status, state.reason = "blocked", "blocked"
+                    state.blocked_by = tuple(blocked)
+                    state.detail = ("depends on " + ", ".join(blocked))
+                    remaining.remove(task_id)
             ready = [t for t in remaining
-                     if all(d in results for d in consumed_deps.get(t, ()))]
+                     if all(d in out.results for d in consumed_deps.get(t, ()))]
             for task_id in ready:
                 remaining.remove(task_id)
                 running[asyncio.ensure_future(run_one(task_id))] = task_id
             if not running:
-                raise TaskFailed("plan has unsatisfiable dependencies")
-            done, _ = await asyncio.wait(set(running),
+                if remaining:
+                    # No runnable step and no dependency that could explain
+                    # it: this plan cannot make progress.
+                    mark_missing("blocked",
+                                 "the plan has unsatisfiable dependencies",
+                                 list(remaining))
+                    remaining.clear()
+                break
+            timeout = None
+            if cancel is not None or deadline is not None:
+                timeout = 0.2
+            done, _ = await asyncio.wait(set(running), timeout=timeout,
                                          return_when=asyncio.FIRST_COMPLETED)
+            if not done:
+                continue
             for finished in done:
                 task_id = running.pop(finished)
-                results[task_id] = finished.result()   # re-raises TaskFailed
+                try:
+                    out.results[task_id] = finished.result()
+                except asyncio.CancelledError:
+                    out.state(task_id).status = "failed"
+                    out.state(task_id).reason = "cancelled"
+                except TaskFailed as exc:
+                    state = out.state(task_id)
+                    state.status, state.reason = "failed", (exc.reason or "failed")
+                    state.detail = str(exc)[:240]
+                except Exception as exc:  # a bug or a backend seam: one step, not all
+                    state = out.state(task_id)
+                    state.status, state.reason = "failed", "failed"
+                    state.detail = str(exc)[:240]
+                else:
+                    out.state(task_id).status = "completed"
     finally:
         for task in running:
             task.cancel()
-    return results
+    return out

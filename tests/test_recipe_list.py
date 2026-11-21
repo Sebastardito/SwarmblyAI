@@ -342,6 +342,23 @@ def test_a_single_short_wave_is_not_retried(app_state):
     assert len(fake.calls) == 1
 
 
+def test_a_table_header_or_separator_is_not_an_item_answer():
+    from swarmbly_app.engine.orchestrator import _parse_items, _parse_single_item
+
+    header = "| # | Elemento | Respuesta |\n|---|---|---|"
+    assert _parse_items(header, {1: "Ficha uno", 2: "Ficha dos"}) == {}
+    assert _parse_single_item(header, "Ficha uno") == ""
+    numbered = "| 1 | Item | Answer |\n|---|---|---|"
+    assert _parse_items(numbered, {1: "Ficha uno"}) == {}
+    assert _parse_single_item(numbered, "Ficha uno") == ""
+    separator = "|---|---|---|"
+    assert _parse_items(separator, {1: "Ficha uno", 2: "Ficha dos"}) == {}
+    assert _parse_single_item(separator, "Ficha uno") == ""
+    # A real data row still parses.
+    assert _parse_items("| 1 | 9 |\n| 2 | 8 |",
+                        {1: "Ficha uno", 2: "Ficha dos"}) == {1: "9", 2: "8"}
+
+
 def test_item_text_echoed_with_its_own_number_is_parsed():
     from swarmbly_app.engine.orchestrator import _parse_items, _parse_single_item
 
@@ -384,14 +401,17 @@ class _CapturingSwarm:
     def __init__(self):
         self.prompts: list[str] = []
 
-    def run(self, prompt, *, mode="lan", request_id=None, cancel=None, history=None):
+    def run(self, prompt, *, mode="lan", request_id=None, cancel=None,
+            history=None, passage_texts=None, passage_peer_ids=None):
         self.prompts.append(str(prompt))
         items = re.findall(r"^\s*(\d+)\.\s+(.+)$", prompt, re.M)
         text = "\n".join(f"{n}. answer {n}" for n, _ in items)
+        passages = sum(1 for text in (passage_texts or []) if text in str(prompt))
         return {"routed": "distributed", "text": text,
                 "metadata": {"n_tasks": 1,
                              "attempts": [{"node": "W1", "task": "t0",
-                                           "bytes_out": len(prompt)}]},
+                                           "bytes_out": len(prompt),
+                                           "passages": passages}]},
                 "stages": []}
 
 
@@ -401,7 +421,11 @@ def _send_swarm_list(app_state, tmp_path, monkeypatch, passages: bool):
     app_state.chat.retrieval_active = lambda project_id="": True  # type: ignore[assignment]
     swarm = _CapturingSwarm()
     app_state.chat.orchestrator = lambda: swarm          # type: ignore[assignment]
-    app_state.config.update({"privacy": {"third_party_passages": passages}})
+    # D-017: recipe 4 in my-own-devices mode uses its own switch; the old
+    # privacy.third_party_passages (model services) is left off on purpose.
+    app_state.config.update({"circle": {"admission_mode": "own_devices",
+                                         "own_devices_passages": passages},
+                             "privacy": {"third_party_passages": False}})
     job = _job(["alpha", "beta"], operation="Give the status of this item",
                where="swarm")
     conv = app_state.chat.create_conversation(mode="lan", project_id=project.id)
@@ -428,6 +452,33 @@ def test_the_swarm_list_with_permission_sends_the_documents(
     assert "SENTINEL-PASSAGE for beta" in swarm.prompts[0]
     assert msg["meta"]["list"]["documents_used"] is True
     assert msg["meta"]["list"]["documents_withheld"] is False
+    # the receipt lists the passages per destination, not only a total
+    sends = msg["meta"]["receipt"]["envios"]
+    assert sends and sends[0].get("pasajes") == 2
+    assert msg["meta"]["receipt"]["pasajes_enviados"] == 2
+
+
+def test_third_party_passages_does_not_enable_the_swarm_switches(
+        app_state, tmp_path, monkeypatch):
+    project = app_state.projects.create("Old flag", parent=tmp_path / "p")
+    app_state.chat.retriever = _docs_retriever          # type: ignore[assignment]
+    app_state.chat.retrieval_active = lambda project_id="": True  # type: ignore[assignment]
+    swarm = _CapturingSwarm()
+    app_state.chat.orchestrator = lambda: swarm          # type: ignore[assignment]
+    # Migration: an existing third_party_passages=true must not silently turn
+    # on passages to peers (neither circle nor my-own-devices).
+    app_state.config.update({"circle": {"admission_mode": "own_devices",
+                                         "own_devices_passages": False},
+                             "privacy": {"third_party_passages": True}})
+    job = _job(["alpha", "beta"], operation="Give the status of this item",
+               where="swarm")
+    conv = app_state.chat.create_conversation(mode="lan", project_id=project.id)
+    app_state.chat.send(conv["id"], job.operation, recipe="list",
+                        list_job=job.to_dict(), run_async=False)
+    msg = app_state.chat.get_messages(conv["id"])[-1]
+    assert swarm.prompts and "SENTINEL-PASSAGE" not in swarm.prompts[0]
+    assert msg["meta"]["list"]["documents_used"] is False
+    assert msg["meta"]["list"]["documents_withheld"] is True
 
 # ---- T9.15: a passage belongs to an item only when the item points at it ----
 
@@ -546,7 +597,7 @@ def test_an_item_without_a_relevant_passage_gets_the_old_prompt(app_state, tmp_p
                         list_job=job.to_dict(), run_async=False)
     msg = app_state.chat.get_messages(conv["id"])[-1]
     prompt = fake.calls[-1]["messages"][-1]["content"]
-    assert prompt == build_list_prompt(job.operation, [item])
+    assert prompt == build_list_prompt(job.operation, [item], lang="es")
     assert "lotes.csv" not in prompt and "| lote |" not in prompt
     assert msg["meta"]["list"]["documents_used"] is False
     assert msg["meta"]["list"]["documents_available"] is False
