@@ -2,6 +2,10 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## Unreleased — 3.5
+
+- **Benchmark harness 1.4.1** (`bench/run_bank.py`): compares `Archivo de salida` with the files a run produced (existence, extension, non-empty, and the card's columns or row count); matches `Material necesario` against the documents, skill, MCP servers, roles and team the App reported using; reports author-works lookups by identifier as their own `obras_por_id` group in the case summary and receipt; compares N7 exact numbers with zero tolerance unless the card states one and names the numbers that matched; runs a marked correction turn as a second turn, scores the corrected answer and keeps both receipts; and records the App-reported model and backend per case in `casos.csv`, the case summary and a new section of the run record. The v5 guide and the harness README document the new fields; `--check` and `--rescore` keep their old results for cards that do not use them.
+
 ## 3.4.0 — Tools (2026-11-20)
 
 Release notes: [`docs/releases/v3.4.0.md`](docs/releases/v3.4.0.md). The sealed banks v4.1 and v4.2 were run once (32 cards × 3, `qwen2.5:7b`, harness 1.3.2, App `ec3d206`), re-scored offline with 1.3.4 and read by an isolated judge: seal OK, 0 technical failures, the eight permission counters at 0 in both banks, approved observations 22/96 and 44/96. Two exit criteria failed: zero unauthorised sends (the public query proposed by the App kept a fragment of a private name: one card in v4.1 and two in v4.2, three repetitions each, each approved by the simulated user) and exact results ≥ 90 % in código-exacto (v4.1 0/9, v4.2 6/12). The fixes after the run were measured only on open batteries until the next sealed bank.
