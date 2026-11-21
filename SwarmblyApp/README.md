@@ -232,7 +232,7 @@ Licensed under **AGPL-3.0-or-later** ([LICENSE](LICENSE), [NOTICE](NOTICE)).
 If you use Swarmbly App in research, please cite it:
 
 > Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client and network
-> dashboard for decentralized problem-fragmenting inference* (Version 0.7.0)
+> dashboard for decentralized problem-fragmenting inference* (Version 0.8.0)
 > [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638
 
 To cite every version at once, use the concept DOI
@@ -336,7 +336,7 @@ no depende de ella. Licencia **AGPL-3.0-or-later**. Véanse [NOTICE](NOTICE) y
 
 **Cómo citar:** Espinoza-Ulloa, S. A. (2026). *Swarmbly App: desktop client
 and network dashboard for decentralized problem-fragmenting inference*
-(Version 0.7.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
+(Version 0.8.0) [Software]. Zenodo. https://doi.org/10.5281/zenodo.23322638 —
 para citar todas las versiones: 10.5281/zenodo.23322638.
 
 Copyright © 2026 Sebastián A. Espinoza-Ulloa.

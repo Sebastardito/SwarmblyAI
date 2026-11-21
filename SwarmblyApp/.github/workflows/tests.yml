@@ -32,3 +32,22 @@ jobs:
         run: .venv/bin/python -m pip install -e ".[dev,tools,agent]"
       - name: Tests
         run: .venv/bin/python -m pytest -W error::RuntimeWarning
+
+  # The P2P layer had no Windows coverage: its TLS sockets, asyncio loop and
+  # path handling are platform-sensitive. Run the loopback multi-node tests
+  # (real TLS, handshake, packets, worker policy) on a Windows runner too.
+  # mDNS discovery is skipped there (see TestDiscoveryWithoutIPs); everything
+  # else uses 127.0.0.1 and does not depend on multicast.
+  p2p-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install the app with the test extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: P2P, handshake, messages and worker policy
+        run: python -m pytest -W error::RuntimeWarning tests/test_handshake.py tests/test_messages.py tests/test_p2p_two_nodes.py tests/test_worker_policy.py

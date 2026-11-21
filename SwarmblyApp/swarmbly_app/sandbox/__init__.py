@@ -11,12 +11,14 @@ Public surface:
 * :class:`SandboxRunner` / :meth:`SandboxRunner.run` / :class:`RunResult`
 * :class:`Limits` (10 s, 256 MiB, 4 MiB, 256 MiB / 10 000 files by default)
 * :func:`available`, :meth:`SandboxRunner.warm_up`
+* :class:`SandboxPreparation` (first-launch cache state, R-005)
 * :func:`register_tool` for the broker's ``sandbox/python`` spec
 """
 
 from __future__ import annotations
 
 from .limits import Limits
+from .prepare import SandboxPreparation
 from .runner import RunResult, SandboxError, SandboxRunner, available
 from .tool import TOOL_ID, input_schema, register as register_tool, tool_spec
 
@@ -24,6 +26,7 @@ __all__ = [
     "Limits",
     "RunResult",
     "SandboxError",
+    "SandboxPreparation",
     "SandboxRunner",
     "TOOL_ID",
     "available",

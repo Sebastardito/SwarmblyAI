@@ -35,6 +35,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..identity import IdentityManager
+from ..node_roles import clean_roles
 from .messages import WIRE_VERSION, canonical_bytes, hello, hello_ack, WireError
 
 HANDSHAKE_REVISION = 2
@@ -62,6 +63,11 @@ class Handshake:
         self.identity = identity
         self.advertisement = advertisement
         self.tls_fingerprint = tls_fingerprint  # of OUR certificate
+        # 3.5 bootstrap: a newcomer that has a valid invitation may present it
+        # in the hello before it is a member. The owner admits that session in
+        # bootstrap mode: control messages only, no task ever dispatched or
+        # served until the manifest lists both nodes.
+        self.join_token: str = ""
 
     # -- initiator side --------------------------------------------------------
     def build_hello(self) -> tuple[dict[str, Any], bytes]:
@@ -69,6 +75,8 @@ class Handshake:
         ident = self.identity.load_or_create()
         message = hello(ident.node_id, nonce, self.advertisement)
         message["hs"] = HANDSHAKE_REVISION
+        if self.join_token:
+            message["join_token"] = self.join_token
         return message, nonce
 
     def verify_ack(self, ack_message: dict[str, Any], my_nonce: bytes,
@@ -223,6 +231,11 @@ def validate_advertisement(adv: dict[str, Any], expected_node_id: str | None = N
         for key in ("family", "version", "quantization"):
             if not _safe(model.get(key)):
                 problems.append(f"model {key} has disallowed characters or length")
+    # 3.5, D-018: node roles. Known roles with malformed metadata are rejected
+    # like the rest of the advertisement; an unknown role and a role for a
+    # model that is not advertised are dropped for forward compatibility.
+    role_problems, _ = clean_roles(adv.get("roles"), models)
+    problems.extend(role_problems)
     policy = adv.get("policy")
     if policy is not None:
         if not isinstance(policy, dict):
@@ -231,4 +244,27 @@ def validate_advertisement(adv: dict[str, Any], expected_node_id: str | None = N
             kinds = policy.get("kinds", [])
             if not isinstance(kinds, list) or any(k not in _ALLOWED_KINDS for k in kinds):
                 problems.append("policy.kinds contains unknown kinds")
+    # 3.5, D-021: a peer may say which circle manifests it holds. The claim
+    # admits nothing by itself (the local manifest is authoritative); it lets
+    # the handshake refuse a peer that has not fetched the current version.
+    circle_versions = adv.get("circle_versions")
+    if circle_versions is not None:
+        if not isinstance(circle_versions, list) or len(circle_versions) > 32:
+            problems.append("circle_versions must be a list of at most 32 entries")
+        else:
+            for item in circle_versions:
+                if not isinstance(item, dict):
+                    problems.append("each circle_versions entry needs an object")
+                    break
+                version = item.get("version")
+                if not isinstance(item.get("circle_id"), str) \
+                        or not item.get("circle_id") \
+                        or not _safe(item.get("circle_id")) \
+                        or not isinstance(item.get("owner"), str) \
+                        or not item.get("owner") \
+                        or not _safe(item.get("owner")) \
+                        or not isinstance(version, int) or isinstance(version, bool) \
+                        or not 1 <= version <= 1_000_000_000:
+                    problems.append("circle_versions entry is malformed")
+                    break
     return problems

@@ -122,6 +122,67 @@ DEFAULTS: dict[str, Any] = {
             "max_observation_chars": 4000,
         },
     },
+    # 3.5, D-015: trusted circles. New installs admit peers only through a
+    # valid shared circle manifest; an upgrade from 3.4 keeps the old LAN
+    # admission ("my own devices") and shows a notice until the user chooses.
+    "circle": {
+        "admission_mode": "circle",   # circle | own_devices
+        "notice_pending": False,      # upgrade notice, cleared when acknowledged
+        "node_name": "",              # display name in manifests ("" = host name)
+        "manifest_ttl_days": 30,      # owner re-signs a manifest after this
+        "invitation_ttl_s": 604800,   # invitation lifetime (7 days)
+        # D-017: in the explicit my-own-devices mode, document passages may
+        # reach a peer only with this switch on. It never reuses
+        # privacy.third_party_passages (that one is about model services), and
+        # per-circle circle_passages defaults off as well.
+        "own_devices_passages": False,
+        # 3.5, WP3 / D-016, D-023: the owner's relay manifest spool. The
+        # prototype relay reloads a signed file before every registration and
+        # pair; the App writes each new signed version here (atomically). If
+        # the relay runs on another host, the operator syncs this directory.
+        "relay_publish_dir": "",
+        # A relayed pairing is the fallback: direct addresses get this short
+        # timeout each before the relay is asked.
+        "reach_timeout_s": 2.0,
+        # A relayed pairing is the fallback; this bounds the outer TLS +
+        # registration + pair + inner TLS attempt.
+        "relay_timeout_s": 8.0,
+        # 3.5, D-023: the owner pushes each new signed manifest over a
+        # registered connection. Backoff while the relay is unreachable; a
+        # refusal such as unknown_circle keeps the newest version queued and
+        # retries slowly so the operator's bootstrap can catch up.
+        "relay_push_backoff_s": 1.0,
+        "relay_push_backoff_max_s": 30.0,
+        "relay_push_refusal_retry_s": 300.0,
+        # Bounded per-node relay connections (one acceptor per circle/relay
+        # plus short-lived initiators).
+        "relay_max_connections": 4,
+    },
+    # 3.5, D-020: reciprocity credits are signed, non-transferable receipts.
+    # One receipt is one indivisible courtesy unit; it expires and can only be
+    # spent by the named worker, in the same circle. No transfer, no market.
+    "credits": {
+        "enabled": True,
+        "receipt_ttl_days": 90,       # default lifetime of an earned receipt
+    },
+    # 3.5, D-018: node roles are a property of the machine, not of a model
+    # task (those are ``roles`` below). WP4a advertises only what it can run:
+    # a shared model at or above the threshold is ``large_model``; a shared
+    # model the user marks here is a ``reasoner`` (used with think: true).
+    # ``search``/``corpus`` keys are deliberately absent until WP4b.
+    "node_roles": {
+        # 7 B is the smallest widely available class that is reliably better
+        # than the 1–3 B SLMs this swarm mostly runs, and fits an 8 GB GPU.
+        "large_model_min_b": 7.0,
+        "reasoner_models": [],        # model tags the user marks as reasoning
+        # 3.5, D-018 (WP4b): executors, both off until the owner opts in.
+        "search": {"enabled": False},
+        "corpus": {
+            "project_id": "",         # one local project/collection, default none
+            "circle_ids": [],         # circles allowed to retrieve from it
+            "display_name": "",       # what admitted peers may see (<= 40 chars)
+        },
+    },
     "privacy": {
         "tier": "LOCAL",              # GLOBAL | TRUSTED | LOCAL
         "manual_tier": None,          # authoritative manual override, never downgraded
@@ -287,10 +348,23 @@ class Config:
         if path.exists():
             try:
                 raw = json.loads(path.read_text(encoding="utf-8"))
+                if not isinstance(raw, dict):
+                    raise ValueError("config root is not an object")
+                # 3.5 migration: a file written by an older release keeps the
+                # 3.4 LAN admission until the user explicitly opts into circles.
+                # New installs (no file) keep the circle-only default.
+                has_circle_mode = isinstance(raw.get("circle"), dict) \
+                    and "admission_mode" in raw["circle"]
                 with self._lock:
                     self._data = _deep_merge(DEFAULTS, raw)
                     _anthropic_default_url(self._data)
-            except (json.JSONDecodeError, OSError) as exc:  # corrupt file -> defaults
+                if not has_circle_mode:
+                    with self._lock:
+                        self._data["circle"]["admission_mode"] = "own_devices"
+                        self._data["circle"]["notice_pending"] = True
+                    self.save()
+            except (json.JSONDecodeError, OSError, ValueError, AttributeError) as exc:
+                # corrupt file -> defaults (circle-only, the safe default)
                 path.rename(path.with_suffix(".json.bak"))
                 self.save()
                 with self._lock:
@@ -366,6 +440,7 @@ _ENUMS = {
        for r in ("writer", "search_terms", "fusion", "verifier", "embeddings")},
     "model.embedder": {"hash", "server"},
     "swarm.mode": {"local", "lan", "internet", "auto"},
+    "circle.admission_mode": {"circle", "own_devices"},
     "privacy.tier": {"GLOBAL", "TRUSTED", "LOCAL"},
     "privacy.manual_tier": {None, "GLOBAL", "TRUSTED", "LOCAL"},
     "privacy.public_lookup_consent": {"ask", "always"},
@@ -397,7 +472,11 @@ _RANGES = {
     "swarm.composer_max_sections": (3, 12),
     "swarm.composer_length_factor": (0.3, 1.5),
     "swarm.min_model_params_b": (0.0, 100.0),
+    "node_roles.large_model_min_b": (0.1, 10000.0),
     "swarm.min_items_per_fragment": (1, 50),
+    "circle.manifest_ttl_days": (1, 365),
+    "circle.invitation_ttl_s": (300, 2592000),
+    "credits.receipt_ttl_days": (1, 365),
     "evidence.timeout_s": (0.5, 30.0),
     "evidence.max_chars": (60, 1000),
     "evidence.max_items": (1, 100),
@@ -502,6 +581,49 @@ def validate_changes(changes: dict[str, Any]) -> dict[str, Any]:
             raise ConfigError(f"{key} items must be among {sorted(_PROVIDERS)}")
         if key == "privacy.tool_hosts":
             flat[key] = sorted({_normalise_host(h, key) for h in value})
+        if key == "circle.node_name":
+            text = str(value or "").strip()
+            if len(text) > 64 or any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+                raise ConfigError(
+                    "circle.node_name must be at most 64 printable characters")
+            flat[key] = text
+        if key == "node_roles.reasoner_models":
+            cleaned: list[str] = []
+            for name in value:
+                if not isinstance(name, str) or not name.strip() or len(name) > 96 \
+                        or any(ord(ch) < 32 or ord(ch) == 127 for ch in name):
+                    raise ConfigError(
+                        "node_roles.reasoner_models items must be model tags of "
+                        "at most 96 printable characters")
+                if name not in cleaned:
+                    cleaned.append(name)
+            flat[key] = cleaned
+        if key == "node_roles.corpus.project_id":
+            text = str(value or "").strip()
+            if len(text) > 64 or any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+                raise ConfigError(
+                    "node_roles.corpus.project_id must be a project id of at "
+                    "most 64 printable characters")
+            flat[key] = text
+        if key == "node_roles.corpus.display_name":
+            text = str(value or "").strip()
+            from .node_roles import valid_corpus_name
+            if text and not valid_corpus_name(text):
+                raise ConfigError(
+                    "node_roles.corpus.display_name must be a display name of at "
+                    "most 40 characters (letters, digits, spaces and . & ' ( ) + -)")
+            flat[key] = text
+        if key == "node_roles.corpus.circle_ids":
+            cleaned_ids: list[str] = []
+            for circle_id in value:
+                if not isinstance(circle_id, str) or not circle_id \
+                        or len(circle_id) > 64 \
+                        or any(ord(ch) < 32 or ord(ch) == 127 for ch in circle_id):
+                    raise ConfigError(
+                        "node_roles.corpus.circle_ids items must be circle ids")
+                if circle_id not in cleaned_ids:
+                    cleaned_ids.append(circle_id)
+            flat[key] = cleaned_ids
     if flat.get("model.backend") == "anthropic" \
             and not str(flat.get("model.backend_url") or "").strip():
         flat["model.backend_url"] = ANTHROPIC_DEFAULT_URL

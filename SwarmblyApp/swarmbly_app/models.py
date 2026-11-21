@@ -53,6 +53,27 @@ def classify_kind(name: str, family: str = "") -> str:
     return "embedding" if any(h in label for h in EMBEDDING_HINTS) else "chat"
 
 
+def family_for(name: str, reported: str = "") -> str:
+    """Canonical model family for a model name.
+
+    A family groups models that share training lineage for consensus
+    diversity (``llama3.1`` and ``llama3.2`` are both ``llama``). Ollama
+    reports the family in ``/api/tags``; when it is not reachable the catalog
+    knows the family of the models the app recommends, and only an unknown
+    model falls back to its tag. The same model must get the same family with
+    or without a running backend: otherwise family-diverse consensus behaves
+    differently on a developer machine and in CI (and could pair two
+    replicas of the same family when the backend is down).
+    """
+    if reported:
+        return str(reported)
+    from .catalog import by_name
+    entry = by_name(name)
+    if entry and entry.get("family"):
+        return str(entry["family"])
+    return (name or "").split(":")[0].split("/")[-1] or "unknown"
+
+
 @dataclass
 class BackendInfo:
     name: str                       # ollama | openai_compat | llama_cpp

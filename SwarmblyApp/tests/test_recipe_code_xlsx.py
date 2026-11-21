@@ -14,6 +14,8 @@ from xml.sax.saxutils import escape
 
 import pytest
 
+from conftest import prepare_guest_for_test
+
 from swarmbly_app.inference.base import GenerationResult
 from swarmbly_app.sandbox import available
 from test_api_lce import make_client
@@ -259,6 +261,8 @@ def test_xlsx_script_runs_in_the_sandbox(app_state, tmp_path, monkeypatch):
                   "print(len(df))\n"
                   "```")
     app_state.backends.resolve = lambda config=None: fake  # type: ignore[method-assign]
+    # R-005: prepare the real guest cache before recipe 5 is offered.
+    prepare_guest_for_test(app_state)
     client = make_client(app_state)
     proposal = client.post("/api/recipes/code/propose", json={
         "project_id": project.id, "question": "how many rows",

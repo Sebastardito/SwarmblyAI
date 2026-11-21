@@ -67,6 +67,9 @@ def build_node(base: Path, name: str, port: int, model: str, *, worker: bool,
     swarm = {"p2p_port": port, "lan_enabled": True, "worker_enabled": worker,
              "worker_max_concurrent": 2, "k_min": k, "k_max": max(k, 2)}
     state.config.update({"swarm": swarm, "privacy": {"tier": "GLOBAL"},
+                         # This demo shows the 3.4 LAN path; the app's
+                         # default for new installs is circle-only (D-015).
+                         "circle": {"admission_mode": "own_devices"},
                          "model": {"model_name": model,
                                    "embedder": "hash" if fake else "server"}})
     if fake:

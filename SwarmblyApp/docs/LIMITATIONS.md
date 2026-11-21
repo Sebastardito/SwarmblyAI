@@ -12,8 +12,11 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    which SPEC §14b.7 forbids (see `AUDIT_FASE0_ES.md`, H3).
 2. **Distributed requests are single-turn.** The last user message is
    fragmented; earlier turns are not packed into the plan.
-3. **No internet swarms yet.** Rendezvous, relay and NAT traversal are Phase 3
-   (experimental). Mode `internet` is refused honestly.
+3. **Off-LAN is a circle relay, not an internet swarm.** A circle with a relay
+   can reach its members across networks (3.5, D-016), but there is no public
+   rendezvous, NAT traversal or hole punching (3.6), and mode `internet` is
+   still refused honestly. The relay is operated by the circle owner and sees
+   metadata only (items 33–36 below).
 4. **TRUSTED tier needs mutual TLS** (SPEC §15c) and is not implemented; such
    requests are answered locally and nothing is sent. Automatic triage that
    raises a request to TRUSTED with no trusted swarm configured also stays local
@@ -58,9 +61,17 @@ Limitations are documented, never hidden. *[Español](#español) below.*
 16. **App protocol extensions** (all MINOR-safe, ignored by implementations
     that do not know them, SPEC §3): handshake fields `hs`/`tls_fp`, message
     `advertisement_update`, advertisement fields `endpoint` and
-    `policy.max_concurrent`, packet field `constraints.model_family` (SWIP draft
-    in `docs/SWIP-DRAFT-model-family-hint.md`), error codes `E_POLICY`,
-    `E_EXECUTION`, `E_DUPLICATE`, `E_DISCONNECTED`.
+    `policy.max_concurrent`, advertisement field `roles` (node roles, D-018),
+    packet fields `constraints.model_family` (SWIP draft in
+    `docs/SWIP-DRAFT-model-family-hint.md`), `constraints.role`,
+    `constraints.think` and `constraints.carries_passages`, the signed
+    `relay` field in manifests and invitations (D-016: host, port and the
+    certificate SHA-256 pin; optional, ignored by older nodes), result fields
+    `executor` and `sources`, control types `credit_receipt`, `credit_spend`
+    and `credit_spent` (D-020; appendix below), error codes `E_POLICY`,
+    `E_EXECUTION`, `E_DUPLICATE`, `E_DISCONNECTED`, `E_ROLE_UNAVAILABLE` and
+    the credit codes `E_CREDIT_*`. All four node roles are in the wire schema;
+    WP4b executes `search` and `corpus` only when the owner opts in.
 17. **Several local models share one machine.** In multi-model mode replicas
     run on different model families but the same hardware; unless the
     recommendation allows parallel generation they take turns. Their agreement
@@ -102,6 +113,172 @@ Limitations are documented, never hidden. *[Español](#español) below.*
     whole. Grounded composition (a fact sheet, tables built by code, a
     verifier) is planned for 3.2; until then, check the labels in *Explore
     processing*.
+
+27. **The requester cannot verify a member's search engine.** A search result
+    says which member and circle ran the query and that the requester cannot
+    verify the engine; the worker's own ledger is local and is not signed or
+    sent back. A corpus result is labelled from the destination the requester
+    sent to, not from the worker's self-description, and the passages may be
+    incomplete or irrelevant: retrieval is keyword/BM25 over the shared project
+    only.
+28. **Corpus sharing is one project at a time.** Every admitted peer of a
+    circle the owner selects sees the corpus display name and size bucket,
+    even if it never asks for a passage. The owner cannot revoke a single
+    passage already returned; revoking the member or removing the circle from
+    the share stops new retrievals.
+
+29. **The coordinator is a single point.** The requester plans, dispatches
+    and assembles. If it goes away (stop, crash, lost machine) its run ends;
+    3.5 has no plan migration, replication or hand-over. A worker that goes
+    away only costs its own steps, which is what the partial answer reports.
+30. **Teams are templates, not agents.** A team is a fixed list of at most 12
+    steps with dependencies only on earlier steps. It cannot replan, choose
+    a destination, inspect intermediate results or delegate recursively, and
+    it never adds a permission. Built-in examples are read-only (duplicate
+    them to edit). Teams are stored on this computer (per user, and per
+    project inside a project folder): there is no account, sync or sharing of
+    team definitions in 3.5.
+31. **A partial answer is honest about steps, not about quality.** `complete`
+    means every step returned a usable result; it does not mean the answer is
+    correct. A missing step is named with its stable reason and its dependents
+    are marked blocked and not retried. Recipe 4's per-item `failed` status
+    carries the wave reason, but a failure of the *local* list path still
+    fails that request (the per-wave continuation applies to distributed
+    waves).
+
+32. **Credits are a courtesy inside a circle, not money.** A receipt is
+    signed, non-transferable and expiring; only the named worker can spend it,
+    only in the same circle, and only to ask for queue priority while a worker
+    is busy. It never bypasses admission, the egress gate, lane/tier or any
+    other policy, and a requester without credits is still served when a slot
+    is free. There is no transfer, export as a token, market or global ledger
+    (SPEC §18, GOVERNANCE). The issuer detects a receipt reported spent twice
+    in its own bounded log and flags it in Swarm; that is **detection, not
+    prevention**, it does not stop a determined double spend, and nothing is
+    broadcast beyond the circle. Because 3.5 has no mutual TLS, a stolen node
+    key can spend that node's receipts until the owner revokes the member
+    (R-010); protect the key. A receipt is one indivisible unit, so a large
+    task does not buy several favours, and an expired receipt is lost. Wallet
+    and issuer log are bounded (256 and 512 records); when the wallet is full
+    a new valid receipt is refused rather than silently dropping an old one,
+    and a receipt that has fallen out of the issuer's log cannot be matched by
+    a later report.
+
+33. **The relay operator sees metadata.** A circle relay forwards ciphertext it
+    cannot read, but it necessarily sees who pairs with whom, when, from which
+    IP, and how many bytes; it also holds the signed member list. It stores no
+    payloads and the App's receipt names the hop, but traffic analysis remains
+    possible. Run your own relay or trust its operator accordingly. This is the
+    privacy notice requirement of R-014/D-023.
+34. **No hole punching yet.** Off-LAN reachability in 3.5 is TCP through the
+    circle's relay (or a direct address/overlay the circle runs). UDP/QUIC hole
+    punching is a stretch goal moved to 3.6 if not ready; the relay remains the
+    fallback and the correctness baseline.
+35. **The first relay manifest is a manual bootstrap.** The operator must
+    install the first signed manifest of each circle in the relay's `circles/`
+    directory once; until then the owner's push gets `unknown_circle` and the
+    circle card says so. After that the App pushes each new version over a
+    registered connection; the signed file in `circle.relay_publish_dir` is
+    only the bootstrap copy and the fallback. If the relay is unreachable the
+    App retries with backoff and keeps the newest unacknowledged version in
+    memory; an App restart loses that in-memory queue, so the operator can
+    still copy the file. A relay change also pushes the same version to the
+    old endpoint. One connection is kept per (circle, relay), not literally
+    per relay, because the prototype binds a registration to one `circle_id`;
+    the number is bounded by `circle.relay_max_connections`.
+36. **Relay limits are the service's.** 4 concurrent splices per member,
+    2 GiB per member per UTC day, 300 s idle and 30 s pair timeout are enforced
+    by the prototype relay, not duplicated in the App; the App surfaces the
+    refusal (`limit_splices`, `limit_bytes`, …) and backs off. Owner pushes
+    are capped at **30 per hour per owner**; the App keeps the newest version
+    queued and shows `rate_limited` until the relay accepts it. A relay
+    restart resets its byte counters (a budget, not accounting), and a member
+    can spend the relay's bandwidth up to those limits.
+
+37. **The sandbox cache is prepared at first launch, not normally inside a request.** The
+    first code recipe needs a one-time WebAssembly compile that peaks at about
+    3.3 GB. The App shows a notice with the expected time (about 5 s on Apple
+    Silicon, about 60 s on a 2-vCPU machine) and memory, refuses to start with
+    fewer than 4 GB free on the automatic start and on a plain *Prepare now*,
+    and runs the compile in the background. An explicit *Prepare anyway* (or
+    `--prepare-sandbox --force`) may override that floor after a one-line
+    warning; the state, events and doctor export then record `forced: true`
+    and the free memory at start. Until the cache is ready, recipe 5 is
+    unavailable with the reason (preparing, not prepared, failed or too little
+    free memory) and the answer continues without it: the one-time compile
+    never happens inside a request. A cache recorded by another `wasi-python`
+    or Python version is stale and is prepared again.
+    The measurement stays local and is the only compile data in the export.
+38. **The doctor export is allow-listed, not redacted.** It contains versions,
+    OS/architecture, Python, CPU/RAM/GPU class, installed extras, Ollama
+    reachability and model tags, the sandbox state and measurements, P2P
+    counts, relay/push status codes and the last error codes with timestamps.
+    It does not contain node ids or keys, names, circle names or ids, member
+    names, IP addresses or host names, paths under the user's home, project
+    names, document titles, prompts, answers, glossary, memory, API keys or
+    the relay host. Model tags are the local Ollama names. Read the preview
+    before attaching the file; the App writes exactly that preview.
+
+39. **Retrieval widening is lexical, not semantic.** The App adds the
+    glossary's equivalents and regular accent/inflection variants to the query
+    it hands to LCE. A synonym the glossary does not list, an irregular verb
+    form or a paraphrase can still miss the one short passage that answers the
+    question; LCE remains a keyword/BM25 search with its own local embeddings.
+40. **When the passages and a skill do not fit, the skill yields.** Both are
+    sent, but the material budget is shared: a large skill body is shortened
+    (with a marker) and, if there is no useful room left, only its labelled
+    header remains. The passages are never cut for the skill.
+41. **The language check only acts on a clear drift.** It uses the existing
+    stopword helper, so a very short or ambiguous English answer to a Spanish
+    question is not regenerated; list and code prompts do take the
+    conversation's language, and the retry is recorded in
+    `meta.language_retry`.
+
+### Protocol appendix: credit control messages (D-020/D-021)
+
+The App already keeps its MINOR-safe extension list in item 16 above, so this
+appendix lives here rather than in a new `docs/PROTOCOL_APPENDIX.md`. All three
+messages are new `type` values on the same TLS session; the task plane stays
+wire 0.2 and an older node ignores an unknown type (SPEC §3). All signed
+payloads use Ed25519 over RFC 8785-style canonical JSON (`messages.
+canonical_bytes`), with `sig` excluded from the signed bytes and encoded
+base64url without padding; `node_id` is the Ed25519 public key in the same
+encoding. A message over 8192 canonical bytes and a receipt over 4096 are
+refused before parsing. The three messages are not a ledger: nothing is
+forwarded, and only the named recipient/issuer acts on them.
+
+`credit_receipt` — issuer (requester) → worker, sent after a verified result is
+accepted. Fields: `v` (wire MINOR, currently `"0.2"`), `type`,
+`receipt{receipt_id (random 128-bit, base64url), circle_id, issuer, worker,
+attempt (BLAKE2b-128 hex of the attempt id, never task content), tokens_out,
+generation_ms, model, issued_at, expires_at, sig}`. Validation at the worker:
+the receipt is structurally valid and its signature verifies against
+`receipt.issuer`; the envelope was sent by that issuer; `receipt.worker` is
+this node; a valid, unexpired manifest of `circle_id` lists both issuer and
+this node; `now < expires_at`; `receipt_id` is not already in the wallet.
+Nothing is issued for the local pool, *my own devices*, rejected/degraded
+replicas or an executor that returned nothing.
+
+`credit_spend` — spender (the named worker) → a member of the same circle,
+sent just before the task it is offered for, and only to a member the spender
+already saw busy (a concurrency refusal or a missed deadline). Fields: `v`, `type`, `spender`,
+`attempt_id` (the task this applies to), and the same signed `receipt` object.
+Validation at the receiver: `spender` is the sending node and equals
+`receipt.worker`; the signature verifies; a valid manifest lists the sender
+and the issuer; `now < expires_at`; the receipt id was not already presented
+to this worker. A valid spend only sets a short-lived priority marker for that
+exact `attempt_id`. The sender marks the receipt spent in its wallet after the
+message is written.
+
+`credit_spent` — accepting worker → issuer. Fields: `v`, `type`, `receipt_id`,
+`spender`, `by` (reporting worker), `reported_at`, `sig` (by `by`). It carries
+no receipt copy and no task content. Validation at the issuer: `by` is the
+sending node and its signature verifies; the receipt id is one this issuer
+issued; `by` is listed by that receipt's circle. The issuer appends the report
+to its bounded log and flags the receipt if it is reported twice (same or
+different workers) or if the spender is not the named worker. An unknown
+receipt id is refused (`E_CREDIT_UNKNOWN`); the issuer has no global ledger to
+consult.
 
 ## Upstream (audited repositories)
 
@@ -159,3 +336,91 @@ Limitations are documented, never hidden. *[Español](#español) below.*
    porque forma parte del mensaje del asistente, pero reiniciar la app detiene
    la ejecución (no se guarda ningún token ni ejecución pendiente). Vuelve a
    enviar la pregunta después de reiniciar.
+
+27. El solicitante no puede verificar qué motor usó un miembro: el recibo
+    dice el miembro, el círculo y que no es verificable; el ledger del worker
+    es local y no se firma ni se devuelve. Los pasajes del corpus se etiquetan
+    según el destino al que el solicitante envió la tarea, no según lo que el
+    worker diga, y pueden ser incompletos o irrelevantes (recuperación BM25
+    solo sobre el proyecto compartido). 28. El corpus se comparte de un
+    proyecto a la vez. Todos los pares admitidos de un círculo elegido ven el
+    nombre visible y el tamaño, aunque nunca pidan un pasaje; el dueño no
+    puede revocar un pasaje ya devuelto, pero quitar el círculo de la
+    compartición detiene las nuevas recuperaciones. 29. El coordinador es un
+    único punto: el solicitante planifica, despacha y ensambla; si desaparece
+    (parada, caída, equipo perdido) su ejecución termina. 3.5 no tiene
+    migración de plan, replicación ni traspaso. Un worker que se va solo
+    cuesta sus propios pasos, y eso es lo que informa la respuesta parcial.
+    30. Los equipos son plantillas, no agentes: una lista fija de como mucho
+    12 pasos con dependencias solo de pasos anteriores. No replanifican, no
+    eligen destino, no inspeccionan resultados intermedios ni delegan
+    recursivamente, y nunca agregan un permiso. Los ejemplos incorporados son
+    de solo lectura (duplícalos para editar). Se guardan en este equipo (por
+    usuario y, dentro de un proyecto, por proyecto): en 3.5 no hay cuenta,
+    sincronización ni compartición de definiciones de equipos. 31. Una
+    respuesta parcial es honesta sobre los pasos, no sobre la calidad:
+    `complete` significa que todos los pasos devolvieron un resultado
+    utilizable, no que la respuesta sea correcta. Un paso faltante se nombra
+    con su razón estable y sus dependientes quedan bloqueados y no se
+    reintentan. El estado `failed` por elemento de la receta 4 lleva la razón
+    de la ola, pero un fallo del camino local de listas todavía hace fallar
+    esa solicitud (la continuación por olas aplica a olas distribuidas).
+    32. Los créditos son una cortesía dentro de un círculo, no dinero. Un
+    recibo es firmado, no transferible y caduca; solo lo puede gastar el
+    worker nombrado, solo en el mismo círculo, y solo para pedir prioridad de
+    cola cuando un worker está ocupado. Nunca salta admisión, puerta de
+    salida, carril/tier ni ninguna otra política, y quien no tiene créditos
+    sigue siendo atendido si hay un turno libre. No hay transferencia, export
+    como token, mercado ni libro contable global (SPEC §18, GOVERNANCE). El
+    emisor detecta en su registro acotado un recibo reportado dos veces y lo
+    marca en Swarm: es **detección, no prevención**, no impide un doble gasto
+    decidido y nada se difunde fuera del círculo. Sin TLS mutuo en 3.5, una
+    clave de nodo robada puede gastar los recibos de ese nodo hasta que el
+    dueño revoque al miembro (R-010); protege la clave. Un recibo es una
+    unidad indivisible y uno caducado se pierde. Cartera y registro están
+    acotados (256 y 512); si la cartera está llena, se rechaza un recibo nuevo
+    válido en vez de descartar uno viejo en silencio. Los tres mensajes de
+    control (`credit_receipt`, `credit_spend`, `credit_spent`) se documentan
+    con sus campos, firma y validación en el apéndice en inglés de arriba; son
+    MINOR-safe y un nodo antiguo ignora un tipo desconocido (SPEC §3).
+
+37. La caché del sandbox se prepara, no se compila dentro de una solicitud:
+    la primera receta de código necesita una compilación WebAssembly de unos
+    3,3 GB de pico. La App muestra un aviso con el tiempo y la memoria
+    previstos, no la inicia con menos de 4 GB libres en el arranque automático
+    ni al pulsar *Preparar ahora*, y la ejecuta en segundo plano. Una acción
+    explícita *Preparar de todos modos* (o `--prepare-sandbox --force`) puede
+    anular ese mínimo tras un aviso de una línea; entonces el estado, los
+    eventos y la exportación de diagnóstico registran `forced: true` y la
+    memoria libre al iniciar. Hasta que la caché está lista, la
+    receta 5 no está disponible con la razón (preparando, sin preparar, falló
+    o poca memoria libre) y la respuesta sigue sin ella: la compilación nunca
+    ocurre dentro de una solicitud. Una caché de otra versión de
+    `wasi-python` o de Python se considera desactualizada.
+    38. La exportación de diagnóstico es una lista blanca, no un texto
+    redactado: contiene versiones, sistema y arquitectura, Python, clase de
+    CPU/RAM/GPU, complementos, si Ollama responde y sus etiquetas de modelo,
+    el estado y las mediciones del sandbox, contadores P2P, códigos de
+    relay/envío y los últimos códigos de error con fecha. No contiene
+    identificadores de nodo ni claves, nombres, nombres de círculo o sus
+    identificadores, nombres de miembros, IP ni nombres de host, rutas bajo tu carpeta
+    personal, nombres de proyectos, títulos de documentos, preguntas,
+    respuestas, glosario, memoria, claves de API ni el host del relay. Lee la
+    vista previa antes de adjuntarla: la App escribe exactamente esa vista
+    previa.
+
+39. **La ampliación de la búsqueda es léxica, no semántica.** La App añade
+    los equivalentes del glosario y variantes regulares de acento y flexión a
+    la consulta que entrega a LCE. Un sinónimo que el glosario no lista, una
+    forma verbal irregular o una paráfrasis todavía pueden no encontrar el
+    pasaje corto que responde; LCE sigue siendo una búsqueda BM25/palabras
+    clave con sus embeddings locales.
+40. **Si los pasajes y una skill no caben, cede la skill.** Ambos se envían,
+    pero el presupuesto de material es compartido: un cuerpo de skill grande se
+    acorta (con una marca) y, si no queda espacio útil, solo permanece su
+    cabecera etiquetada. Los pasajes nunca se recortan por la skill.
+41. **La comprobación de idioma solo actúa ante una desviación clara.** Usa el
+    detector de palabras vacías existente, así que una respuesta inglesa muy
+    corta o ambigua a una pregunta en español no se regenera; las recetas de
+    lista y código sí reciben el idioma de la conversación, y el reintento queda
+    en `meta.language_retry`.

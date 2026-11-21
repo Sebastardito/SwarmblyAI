@@ -55,7 +55,10 @@ class ActiveRequest:
     list_job: Any = None           # 3.4 recipe 4: the validated ListJob
     skill: Any = None              # 3.4: the activated Skill (quoted material)
     use_tools: bool = False        # 3.4, D-011: this message drives tools via the agent runtime
+    team: Any = None               # 3.5, D-019: a stored team for this request
     task: str = ""                 # the user text this request answers
+    lang: str = ""                 # T10.17: the conversation's language for this answer
+    partial_text: str = ""         # T10.17: what was already streamed before a stop
 
 
 # Possessives and "about me" in es/en/pt (not French "mes", the Spanish month);
@@ -102,6 +105,9 @@ class ChatService:
         self.retrieval_candidates: Callable[[], list] | None = None
         self.retrieval_meta: Callable[[], dict[str, Any]] | None = None
         self.self_node: str = ""          # this node's id prefix (set by AppState)
+        # 3.5, D-017: trusted circles for the destination class and the
+        # per-circle passages switches (set by AppState).
+        self.circles: Any = None
         # 3.1: called after a conversation changes (its project folder keeps a copy)
         self.on_conversation_changed: Callable[[str], None] | None = None
         self.on_conversation_deleted: Callable[[dict[str, Any]], None] | None = None
@@ -124,6 +130,8 @@ class ChatService:
         self.agent: Any = None
         self._code_runner: Any = None
         self._code_tool_spec: Any = None
+        # 3.5, R-005: first-launch cache state (None when the App did not wire it).
+        self.sandbox: Any = None
         self._code_roots: dict[str, Path] = {}
         self._code_proposals: dict[str, dict[str, Any]] = {}
         self._code_lock = threading.RLock()
@@ -189,6 +197,36 @@ class ChatService:
             except Exception:
                 pass
 
+    def _conversation_language(self, conversation_id: str, text: str) -> str:
+        """The language of this answer: the message's own, else the conversation's.
+
+        A short follow-up ("¿y eso?", "and then?") carries too little signal
+        for the stopword vote. The recipes and the final check must not fall
+        back to English just because the current message is short.
+        """
+        from .lang import language_if_sure
+        sure = language_if_sure(text or "")
+        if sure:
+            return sure
+        if _ES_MARKS.search(text or ""):
+            return "es"
+        try:
+            rows = self.db.get_messages(conversation_id)
+        except Exception:
+            rows = []
+        for message in reversed(rows):
+            if message.get("role") not in ("user", "assistant"):
+                continue
+            sure = language_if_sure(str(message.get("content") or ""))
+            if sure in ("es", "en", "pt", "fr"):
+                return sure
+        # A very short message with no signal follows the interface language,
+        # which is the language the conversation is being held in.
+        ui = str(self.config().get("language") or "").lower()
+        if ui in ("es", "en"):
+            return ui
+        return _lang(text or "")
+
     # -- sending -------------------------------------------------------------
     def send(self, conversation_id: str, text: str, *,
              mode: str | None = None, model: str | None = None,
@@ -196,6 +234,7 @@ class ChatService:
              allow_public: bool = False,
              web_query: str = "", recipe: str = "",
              list_job: Any = None, skill: Any = None,
+             team: Any = None,
              use_tools: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
         """Store the user message and start generation.
 
@@ -205,6 +244,7 @@ class ChatService:
         conv = self.db.get_conversation(conversation_id)
         if conv is None:
             raise KeyError(f"unknown conversation {conversation_id}")
+        request_lang = self._conversation_language(conversation_id, text)
         cfg = self.config()
         mode = mode or conv["mode"] or cfg["swarm"]["mode"]
         model = model or conv["model"] or cfg["model"]["model_name"] or ""
@@ -243,10 +283,11 @@ class ChatService:
             mode=mode, model=model, project_id=str(conv.get("project_id") or ""),
             allow_public=bool(allow_public), memory_saved=memory_saved,
             web_query=" ".join((web_query or "").split())[:200],
-            use_tools=bool(use_tools), task=text)
+            use_tools=bool(use_tools), task=text, lang=request_lang)
         request.recipe = recipe_id
         request.list_job = list_ready
         request.skill = skill
+        request.team = team
         if request.use_tools:
             # D-011: the agent loop is local; the model may still be remote,
             # and its destination policy is checked in the adapter.
@@ -312,19 +353,31 @@ class ChatService:
     def _agent_update(self, request: ActiveRequest, run: Any) -> None:
         """Publish a pause for approval, or finish the message and its receipt."""
         state = run.state
+        notes = self._agent_suspensions(request, run)
+        stages = [{"stage": "TOOL", "status": note.get("status", "skipped"),
+                   "detail": {"tool": note.get("tool", ""),
+                              "reason": note.get("reason", ""),
+                              "instead": note.get("instead", "")}}
+                  for note in notes]
         if getattr(state, "status", "") == "awaiting_approval":
             card = self.agent.pending_card(run)
             summary = self.agent.summary(run)
             summary["pending"] = card
+            summary["suspensions"] = notes
             note = self._agent_wait_text(card)
+            warning = self._suspension_text(notes, _lang(request.task or ""))
             meta = {
                 "status": "awaiting_approval", "note": note,
                 "mode": "local", "model": request.model,
                 "request_id": request.request_id, "executed": "local",
                 "use_tools": True, "agent": summary,
             }
+            if notes:
+                meta["suspensions"] = notes
             try:
-                self.db.update_message(request.message_id, content="", meta=meta)
+                self.db.update_message(request.message_id,
+                                       content=(warning or note), meta=meta,
+                                       **({"stages": stages} if stages else {}))
                 self.db.touch_conversation(request.conversation_id)
             except Exception:
                 pass
@@ -338,6 +391,7 @@ class ChatService:
         content = self._agent_answer(request, run)
         status = "done" if getattr(state, "status", "") == "done" else "stopped"
         summary = self.agent.summary(run)
+        summary["suspensions"] = notes
         meta: dict[str, Any] = {
             "status": status,
             "note": self._agent_stop_text(summary.get("stop_reason", ""), request),
@@ -345,6 +399,8 @@ class ChatService:
             "request_id": request.request_id, "executed": "local",
             "use_tools": True, "agent": summary,
         }
+        if notes:
+            meta["suspensions"] = notes
         if run.last_model:
             meta["model"] = run.last_model.get("model") or request.model
             meta["completion_tokens"] = run.last_model.get("completion_tokens")
@@ -360,7 +416,8 @@ class ChatService:
         except Exception as exc:       # a receipt problem never loses the answer
             meta["receipt_error"] = str(exc)[:200]
         try:
-            self.db.update_message(request.message_id, content=content, meta=meta)
+            self.db.update_message(request.message_id, content=content, meta=meta,
+                                   **({"stages": stages} if stages else {}))
             self.db.finish_request(request.request_id, status, meta)
             self.db.touch_conversation(request.conversation_id)
         except Exception:
@@ -437,6 +494,18 @@ class ChatService:
         if reason == "max_tool_calls":
             return ("Se detuvo al alcanzar el máximo de llamadas a herramientas."
                     if es else "Stopped at the maximum number of tool calls.")
+        if reason.startswith("loop_guard"):
+            tool = reason.split(":", 1)[1].strip() if ":" in reason else ""
+            if es:
+                return (f"Se detuvo el bucle de herramientas: {tool} se pidió varias veces "
+                        "con los mismos argumentos." if tool else
+                        "Se detuvo el bucle de herramientas: la misma llamada se repitió.")
+            return (f"The tool loop was stopped: {tool} was requested several times with "
+                    "the same arguments." if tool else
+                    "The tool loop was stopped: the same call repeated.")
+        if reason == "approval_required":
+            return ("La herramienta no se ejecutó: espera tu aprobación." if es
+                    else "The tool did not run: it is waiting for your approval.")
         if reason == "stopped_by_user":
             return "Detenido a tu petición." if es else "Stopped at your request."
         if reason == "app_restarted":
@@ -447,15 +516,114 @@ class ChatService:
                     else "The model could not continue; nothing else ran.")
         return ""
 
+    @staticmethod
+    def _step_text(step: Any) -> str:
+        """The prose of one step, without a raw tool-call block."""
+        action = getattr(step, "action", None)
+        if action is None or hasattr(action, "tool"):
+            return ""
+        if not hasattr(action, "text"):
+            return ""
+        return _strip_tool_markup(str(getattr(action, "text", "") or ""))
+
+    def _agent_suspensions(self, request: ActiveRequest, run: Any) -> list[dict[str, str]]:
+        """Tools that did not run, why, and what the answer did instead.
+
+        The runtime reports a denied call as an error observation and a loop
+        guard as a stop reason; neither reached the user. This gathers both,
+        plus a tool that stopped answering, so the answer and its stages can
+        say which tool was suspended and why.
+        """
+        state = run.state
+        lang = _lang(request.task or "")
+        es = lang == "es"
+        out: list[dict[str, str]] = []
+        seen: set[tuple[str, str]] = set()
+        has_answer = any(self._step_text(step) for step in getattr(state, "steps", []) or [])
+        instead = ("La respuesta se escribió sin esa herramienta." if es
+                   else "The answer was written without that tool.") if has_answer else (
+                   "No se ejecutó nada más." if es else "Nothing else ran.")
+
+        def add(tool: str, reason: str, status: str = "skipped") -> None:
+            key = (tool, reason)
+            if key in seen:
+                return
+            seen.add(key)
+            out.append({"tool": tool, "reason": reason, "instead": instead,
+                        "status": status})
+
+        for step in getattr(state, "steps", []) or []:
+            observation = getattr(step, "observation", None)
+            action = getattr(step, "action", None)
+            if observation is None or getattr(observation, "ok", True):
+                continue
+            tool = str(getattr(observation, "tool", "") or getattr(action, "tool", "") or "")
+            content = " ".join(str(getattr(observation, "content", "") or "").split())
+            reason = _suspension_reason(content, es)
+            if reason:
+                add(tool or ("?" if es else "unknown tool"), reason, "failed")
+
+        pending = getattr(state, "pending", None)
+        if getattr(state, "status", "") == "awaiting_approval" and pending is not None:
+            tool = str(getattr(pending, "tool", "") or "")
+            why = " ".join(str(getattr(state, "pending_reason", "") or "").split())
+            reason = (("espera tu aprobación" if es else "waiting for your approval")
+                      + (f": {why}" if why else ""))
+            add(tool, reason, "awaiting_approval")
+
+        stop_reason = str(getattr(state, "stop_reason", "") or "")
+        if stop_reason.startswith("loop_guard"):
+            tool = stop_reason.split(":", 1)[1].strip() if ":" in stop_reason else ""
+            add(tool, ("el bucle de herramientas se detuvo por repetición" if es
+                       else "the tool loop stopped because the same call repeated"),
+                "stopped")
+        elif stop_reason in ("max_tool_calls", "max_steps"):
+            add("", ("se alcanzó el límite de herramientas del mensaje" if es
+                     else "the message's tool limit was reached"), "stopped")
+
+        approvals = {str(item.get("tool") or ""): str(item.get("decision") or "")
+                     for item in getattr(run, "approvals", []) or []}
+        for tool, decision in approvals.items():
+            if decision == "denied":
+                add(tool, ("la política de la app rechazó la llamada" if es
+                           else "the app's policy refused the call"), "failed")
+        return out
+
+    @staticmethod
+    def _suspension_text(notes: list[dict[str, str]], lang: str) -> str:
+        if not notes:
+            return ""
+        es = lang == "es"
+        lines = []
+        for note in notes:
+            tool = note.get("tool") or ("una herramienta" if es else "a tool")
+            reason = note.get("reason") or ("no se ejecutó" if es else "did not run")
+            instead = note.get("instead") or ""
+            lines.append(
+                (f"Aviso: no se pudo usar {tool}: {reason}. {instead}" if es
+                 else f"Note: {tool} could not be used: {reason}. {instead}").strip())
+        return "\n".join(lines)
+
     def _agent_answer(self, request: ActiveRequest, run: Any) -> str:
         """The final answer, or the last tool data when the run stopped early."""
         state = run.state
+        lang = _lang(request.task or "")
+        notes = self._agent_suspensions(request, run)
+        warning = self._suspension_text(notes, lang)
         for step in reversed(getattr(state, "steps", []) or []):
-            action = step.action
-            if hasattr(action, "text") and not hasattr(action, "tool"):
-                return str(action.text)
+            text = self._step_text(step)
+            if text:
+                return f"{warning}\n\n{text}".strip() if warning else text
         note = self._agent_stop_text(
             str(getattr(state, "stop_reason", "") or ""), request)
+        stop_reason = str(getattr(state, "stop_reason", "") or "")
+        if stop_reason.startswith(("loop_guard", "max_tool_calls", "max_steps")):
+            # The loop guard stopped the run: never return raw tool markup or a
+            # tool dump as if it were the answer.
+            honest = ("No se escribió una respuesta: se detuvo el bucle de herramientas."
+                      if lang == "es" else
+                      "No prose answer was produced: the tool loop was stopped.")
+            return "\n\n".join(x for x in (warning, note, honest) if x).strip()
         observation = None
         for step in reversed(getattr(state, "steps", []) or []):
             if step.observation is not None:
@@ -464,17 +632,19 @@ class ChatService:
         if observation is None:
             reason = str(getattr(state, "stop_reason", "") or "")
             if reason.startswith("generate_error"):
-                return f"{note}\n{reason}".strip()
-            return note or ("No answer was produced." if not str(
-                self.config().get("language") or "en").lower().startswith("es")
-                else "No se produjo una respuesta.")
+                base = f"{note}\n{reason}".strip()
+            else:
+                base = note or ("No answer was produced." if lang != "es"
+                                else "No se produjo una respuesta.")
+            return f"{warning}\n\n{base}".strip() if warning else base
         label = (f"[tool result: {observation.tool}; "
                  f"source={observation.source or 'unknown'}; "
                  f"sha256={observation.sha256}")
         if observation.truncated:
             label += "; truncated"
         label += "]"
-        return f"{note}\n\n{label}\n<<<\n{observation.content}\n>>>".strip()
+        body = f"{note}\n\n{label}\n<<<\n{observation.content}\n>>>".strip()
+        return f"{warning}\n\n{body}".strip() if warning else body
 
     def _whole_small_documents(self, sources: list[dict[str, Any]], project_id: str,
                                named: list[str] | tuple[str, ...] = (),
@@ -639,6 +809,8 @@ class ChatService:
             if not context:
                 return self._fail(request, "no user message in context")
             user_text = context[-1]["content"]
+            if not request.lang:
+                request.lang = self._conversation_language(conv_id, user_text)
             request.receipt_ctx.update(_lane_for_receipt(user_text))
             if request.recipe == "list" and request.list_job is not None:
                 return self._run_list(request, user_text)
@@ -679,16 +851,22 @@ class ChatService:
                 try:
                     # The conversation stays on this device: the orchestrator
                     # rewrites a follow-up locally into a standalone request.
+                    run_kwargs: dict[str, Any] = {
+                        "mode": mode, "request_id": request.request_id,
+                        "cancel": request.stop_event, "history": context[:-1],
+                        "project_id": request.project_id}
+                    if request.team is not None:
+                        # 3.5, D-019: a team replaces the planner, never a gate.
+                        run_kwargs["team"] = request.team
                     with egress.purpose(egress.QUESTION):
-                        outcome = self.orchestrator().run(
-                            user_text, mode=mode, request_id=request.request_id,
-                            cancel=request.stop_event, history=context[:-1])
+                        outcome = self.orchestrator().run(user_text, **run_kwargs)
                 except Exception as exc:
                     return self._fail(request, f"swarm execution failed: {exc}")
                 routed = outcome.get("routed")
                 if routed == "distributed":
                     self._finish_distributed(request, outcome["text"],
-                                             outcome["metadata"], outcome["stages"])
+                                             outcome["metadata"], outcome["stages"],
+                                             status=outcome.get("status"))
                     return
                 if routed == "error":
                     if outcome.get("status") == "stopped":
@@ -732,6 +910,7 @@ class ChatService:
                 raise IncompleteSettings("no model selected")
 
             def on_delta(delta: str) -> None:
+                request.partial_text += delta
                 self.bus.publish("chat.delta", request_id=request.request_id,
                                  conversation_id=conv_id,
                                  message_id=request.message_id, delta=delta)
@@ -789,6 +968,16 @@ class ChatService:
                 prev_user = _previous_user_turn(context)
                 if prev_user and _is_follow_up(user_text):
                     extra_terms = f"{extra_terms} {prev_user}"
+                # T10.17: the App widens the query where it can without
+                # touching LCE: glossary equivalents and regular inflections.
+                retrieval_gloss = []
+                if self.glossary_entries is not None:
+                    try:
+                        retrieval_gloss = self.glossary_entries(request.project_id)
+                    except Exception:
+                        retrieval_gloss = []
+                from .local_context import retrieval_terms
+                extra_terms = retrieval_terms(user_text, extra_terms, retrieval_gloss)
                 try:
                     sources = self.retriever(user_text, extra_terms, request.project_id) or []
                 except Exception:
@@ -875,7 +1064,7 @@ class ChatService:
             # 3.1: the blocks about this question go right before it, not at the
             # top of a long history (the model followed the history instead)
             blocks: list[str] = []
-            lang_now = _lang(user_text)
+            lang_now = request.lang or _lang(user_text)
             # 3.1: the user's glossary reaches the model, not only the search
             # ("introgresión" corrected and saved, then explained again as
             # "introgradión", fourth test)
@@ -894,12 +1083,13 @@ class ChatService:
                                      lang_now, gmeta)
             if gblock:
                 blocks.append(gblock)
+            skill_block = ""
             if request.skill is not None:
                 # 3.4: an activated skill is quoted material, never policy. It
-                # sits with the other blocks, but its label says what it is and
-                # what it cannot change.
+                # is appended after the document passages so a short model
+                # budget never trades a passage for a skill example (T10.17).
                 try:
-                    blocks.append(_skill_material_block(request.skill, lang_now))
+                    skill_block = _skill_material_block(request.skill, lang_now)
                     request.receipt_ctx["skill"] = {
                         "name": str(getattr(request.skill, "name", "") or ""),
                         "sha256": str(getattr(request.skill, "sha256", "") or "")}
@@ -1014,7 +1204,8 @@ class ChatService:
                         request.receipt_ctx["inventory"] = inv
                 given_list = inv if (inv is not None and ccfg.get("inventory")
                                      and ccfg.get("checklist", True)) else None
-                blocks.append(_sources_block(sources, user_text, gloss_pairs, inventory=given_list))
+                blocks.append(_sources_block(sources, user_text, gloss_pairs,
+                                             inventory=given_list, lang=lang_now))
                 from .compose import conflict_block, conflicts
                 compared = list(sources)
                 if (ccfg.get("conflicts_web") and (web_found or {}).get("results")
@@ -1058,7 +1249,8 @@ class ChatService:
                     docs = self.document_list(request.project_id)
                 except Exception:
                     docs = []
-                block = _documents_block(docs, user_text, _doc_labels(history, sources))
+                block = _documents_block(docs, user_text, _doc_labels(history, sources),
+                                         lang=lang_now)
                 if not sources:
                     block += "\n" + _NOTHING_FOUND.get(_lang(user_text), _NOTHING_FOUND["en"])
                     if web_found is None and request.receipt_ctx.get("web_offer") is None:
@@ -1069,6 +1261,18 @@ class ChatService:
             if request.memory_saved and not request.memory_saved.get("error"):
                 blocks.append(_MEMORY_DONE.get(_lang(user_text), _MEMORY_DONE["en"]).format(
                     path=request.memory_saved.get("path", "")))
+            if skill_block:
+                # The passages come first and take the room they need; the
+                # skill material is shortened to fit what is left. A skill by
+                # itself keeps its normal cap.
+                blocks.append(_fit_skill_block(
+                    skill_block, sum(len(block) for block in blocks), lang_now))
+            if (lang_now == "es" and (blocks or late_blocks or skill_block)
+                    and not _ASKS_ENGLISH.search(user_text)):
+                # T10.17: the conversation's language travels with every
+                # recipe; the model gets one explicit rule, not just the
+                # language of the sources block.
+                blocks.append(_LANG_RULE["es"])
             blocks += late_blocks
             if blocks:
                 context = [*context[:-1], *({"role": "system", "content": b} for b in blocks),
@@ -1162,7 +1366,8 @@ class ChatService:
                 result, scaffold_meta = _compose_by_sections(
                     answering, scaffold, user_text, model=answer_model,
                     temperature=float(self.config()["model"].get("temperature", 0.2)),
-                    on_delta=on_delta, interrupt=request.stop_event.is_set, kind=answer_kind)
+                    on_delta=on_delta, interrupt=request.stop_event.is_set, kind=answer_kind,
+                    lang=lang_now)
                 request.receipt_ctx["scaffold"] = scaffold_meta
             else:
                 with egress.purpose(answer_kind):
@@ -1266,6 +1471,40 @@ class ChatService:
                                                     or request.receipt_ctx.get("web_searched"))},
                 "route": "local", "model": answer_model}
             answer_text = getattr(result, "text", "") or ""
+            # T10.17: check the final text with the existing language helper.
+            # A clear English answer to a Spanish conversation is regenerated
+            # once, with the rule next to the question; a still-drifting answer
+            # is kept and the metadata says so.
+            from .lang import language_if_sure
+            detected = language_if_sure(answer_text)
+            if (lang_now == "es" and detected == "en"
+                    and not _ASKS_ENGLISH.search(user_text)):
+                retry_text = ""
+                try:
+                    with egress.purpose(answer_kind):
+                        retry = answering.stream_chat(
+                            [*context[:-1],
+                             {"role": "system", "content": _LANG_RULE["es"]},
+                             context[-1]],
+                            model=answer_model, max_tokens=budget,
+                            temperature=float(self.config()["model"].get("temperature", 0.2)),
+                            on_delta=None, interrupt=request.stop_event.is_set)
+                    retry_text = getattr(retry, "text", "") or ""
+                except Interrupted:
+                    raise
+                except Exception as exc:
+                    retry_text = ""
+                    extra.setdefault("language_retry", {})["error"] = type(exc).__name__
+                kept = bool(retry_text.strip()) and language_if_sure(retry_text) != "en"
+                extra["language_retry"] = {
+                    "expected": lang_now, "detected": detected,
+                    "kept": kept, "retry_detected": language_if_sure(retry_text)}
+                if kept:
+                    answer_text = retry_text
+                    try:
+                        result.text = retry_text
+                    except Exception:
+                        pass
             # a correction made in this very message applies to this answer too
             # ("Gracias por la corrección" and then "hibridización" three times)
             avoid_now = {**avoid, **{w: r for w, r in memory_capture.clear_corrections(user_text)}}
@@ -1520,14 +1759,50 @@ class ChatService:
         }
 
     def code_status(self) -> dict[str, Any]:
-        """Whether recipe 5 can run here, plus the limits the approval shows."""
+        """Whether recipe 5 can run here, plus the limits the approval shows.
+
+        R-005: recipe 5 never pays the one-time compile inside a request. An
+        unprepared, stale, preparing, failed or memory-refused cache reports
+        unavailable with the reason and the request proceeds without the code
+        recipe, as before. The user prepares it from the notice, Settings, or
+        ``swarmbly-app --prepare-sandbox``.
+        """
         try:
             from .sandbox import available
             ok, reason = available()
         except Exception as exc:
             ok, reason = False, f"the isolated environment is not available: {exc}"
+        preparation: dict[str, Any] | None = None
+        service = getattr(self, "sandbox", None)
+        if ok and service is not None:
+            try:
+                preparation = service.status()
+            except Exception:
+                preparation = None
+            if preparation is not None:
+                state = str(preparation.get("status") or "")
+                if state == "preparing":
+                    ok = False
+                    reason = ("the isolated environment is being prepared in the "
+                              "background; this request runs without the code recipe")
+                elif state == "refused" or not preparation.get("enough_memory", True):
+                    ok = False
+                    reason = ("not enough free memory to prepare the isolated "
+                              "environment; this request runs without the code recipe")
+                elif state == "failed":
+                    ok = False
+                    reason = ("the isolated environment could not be prepared; "
+                              "retry from the sandbox notice; this request runs "
+                              "without the code recipe")
+                elif state in ("missing", "stale"):
+                    ok = False
+                    reason = ("the isolated environment has not been prepared yet; "
+                              "prepare it from the sandbox notice or with "
+                              "swarmbly-app --prepare-sandbox; this request runs "
+                              "without the code recipe")
         guard = self._code_platform_guard()
         return {"available": bool(ok), "reason": "" if ok else str(reason),
+                "preparation": preparation,
                 "platform_guard": guard, "watchdog_only": guard == "watchdog",
                 "limits": self._code_limits_payload(),
                 "max_corrections": self._code_cfg()["max_corrections"]}
@@ -1773,8 +2048,19 @@ class ChatService:
         return samples
 
     def _code_choice(self, cfg: dict[str, Any], model: str) -> Any:
+        """The model the recipe-5 script writer uses.
+
+        As designed in 3.4 (recipe 5), the script is written by the
+        ``writer`` model role, which falls back to the conversation's model
+        when no writer is configured. The evaluation saw a larger model than
+        the conversation's because a writer was configured; that was the
+        documented behaviour, and what was missing was the record. The actual
+        model and backend are now recorded in the proposal, the metadata and
+        the receipt (T10.17).
+        """
         from . import roles
         backend = self.registry.resolve(cfg)
+        model = str(model or (cfg.get("model") or {}).get("model_name") or "")
         if not model:
             listed = backend.list_models() or [""]
             model = str(listed[0] or "")
@@ -1803,6 +2089,9 @@ class ChatService:
             "watchdog_only": self._code_platform_guard() == "watchdog",
             "corrections": proposal["corrections"],
             "corrections_left": max(0, cfg["max_corrections"] - proposal["corrections"]),
+            "model": proposal.get("model") or proposal.get("writer_model") or "",
+            "backend": proposal.get("writer_backend", ""),
+            "lang": proposal.get("lang", ""),
             "available": True,
         }
 
@@ -1839,7 +2128,8 @@ class ChatService:
                 raise CodeRecipeError("that conversation belongs to another project")
             project_id = conv_project
             mode = mode or str(conv.get("mode") or "")
-            model = model or str(conv.get("model") or "")
+            model = (model or str(conv.get("model") or "")
+                     or str((cfg.get("model") or {}).get("model_name") or ""))
         else:
             project_id = str(project_id or "")
             conv = self.create_conversation(title=question[:56], mode=mode,
@@ -1866,7 +2156,9 @@ class ChatService:
                           "trapped": (prior.get("result") or {}).get("trapped")}
         selected, inputs = self._code_selected(project_id, files)
         samples = self._code_samples(project_id, selected)
-        prompt = build_code_prompt(question, selected, samples, correction)
+        code_lang = self._conversation_language(conversation_id, question)
+        prompt = build_code_prompt(question, selected, samples, correction,
+                                   lang=code_lang)
 
         choice = self._code_choice(cfg, model)
         destination = self._code_destination(choice)
@@ -1896,6 +2188,10 @@ class ChatService:
         script = parse_code_script(getattr(result, "text", "") or "",
                                    self._code_cfg()["max_script"])
         script_sha = hashlib.sha256(script.encode("utf-8")).hexdigest()
+        actual_model = str(getattr(result, "model", "") or choice.model or "")
+        backend_name = str(getattr(choice.backend, "name", "")
+                           or getattr(choice.backend, "backend", "")
+                           or type(choice.backend).__name__)
         proposal = {
             "proposal_id": proposal_id,
             "conversation_id": conversation_id,
@@ -1910,7 +2206,10 @@ class ChatService:
             "correction_of": str(correction_of or ""),
             "status": "proposed",
             "created_at": time.time(),
-            "model": choice.model,
+            "model": actual_model,
+            "writer_model": actual_model,
+            "writer_backend": backend_name,
+            "lang": code_lang,
             "mode": mode or str(conv.get("mode") or cfg["swarm"].get("mode") or "local"),
             "ledger_events": events,
             "model_destination": destination,
@@ -2062,7 +2361,7 @@ class ChatService:
     def _code_answer(self, proposal: dict[str, Any], data: dict[str, Any],
                      exec_events: list[dict[str, Any]]) -> tuple[str, dict[str, Any]]:
         from .recipes import list_language
-        lang = list_language(proposal["question"])
+        lang = list_language(proposal["question"], proposal.get("lang"))
         es = lang == "es"
         script = proposal["script"]
         stdout = str(data.get("stdout") or "")
@@ -2138,14 +2437,17 @@ class ChatService:
                 "url": (f"/api/recipes/code/runs/{run_id}/files/{quote(name, safe='/')}"
                         if run_id else ""),
             })
+        writer_model = str(proposal.get("model") or proposal.get("writer_model") or "")
+        writer_backend = str(proposal.get("writer_backend") or "")
         meta: dict[str, Any] = {
             "status": "done",
             "note": reason,
             "mode": proposal.get("mode") or "local",
-            "model": proposal.get("model") or "",
+            "model": writer_model,
             "request_id": proposal["proposal_id"],
             "executed": "local",
             "recipe": "code",
+            "model_backend": writer_backend,
             "model_destination": destination,
             "code": {
                 "script_sha256": sha,
@@ -2154,6 +2456,8 @@ class ChatService:
                 "elapsed_s": float(data.get("elapsed_s") or 0.0),
                 "approved_by": "user",
                 "corrections": int(proposal.get("corrections") or 0),
+                "model": writer_model,
+                "backend": writer_backend,
             },
             "code_run": {
                 "proposal_id": proposal["proposal_id"],
@@ -2193,7 +2497,8 @@ class ChatService:
                                            answer=content, consent=consent,
                                            model_destination=destination)
             receipt["recipe"] = "code"
-            receipt["code"] = {"script_sha256": sha, "trapped": trapped}
+            receipt["code"] = {"script_sha256": sha, "trapped": trapped,
+                               "model": writer_model, "backend": writer_backend}
             meta["receipt"] = receipt
         except Exception as exc:
             meta["receipt_error"] = str(exc)[:200]
@@ -2351,6 +2656,39 @@ class ChatService:
             evidence[n] = relevant
         return evidence
 
+    def _swarm_passage_peers(self, orchestrator: Any
+                             ) -> tuple[bool, set[str] | None, str]:
+        """Whether and to whom this list wave may carry document passages.
+
+        D-017 keeps this separate from ``privacy.third_party_passages`` (a
+        model-service flag). In circle mode passages may go only to peers
+        whose shared circle has ``circle_passages`` on, so a mixed swarm sends
+        the grounded wave to those members and never to the others. In the
+        explicit my-own-devices mode the equivalent
+        ``circle.own_devices_passages`` switch decides; every peer is then
+        eligible. A wave with no remote destination stays local.
+        """
+        circles = self.circles
+        if circles is None:
+            return False, None, "no circle service is available"
+        if circles.mode() == "own_devices":
+            if circles.own_devices_passages():
+                return True, None, ""
+            return False, None, "the my-own-devices passages switch is off"
+        nodes = getattr(orchestrator, "nodes", None)
+        if nodes is None:
+            return False, None, "the swarm destinations are unknown"
+        try:
+            workers = [str(peer.node_id) for peer in nodes.available_workers()]
+        except Exception:
+            return False, None, "the swarm destinations are unknown"
+        eligible = {peer_id for peer_id in workers
+                    if circles.peer_passages_allowed(peer_id)[0]}
+        if not eligible:
+            return (False, set(),
+                    "no remote destination is in a circle with circle_passages on")
+        return True, eligible, ""
+
     def _run_list(self, request: ActiveRequest, user_text: str) -> None:
         """Waves of items through the existing batch path, then a table by code.
 
@@ -2369,7 +2707,7 @@ class ChatService:
         elif privacy["items_flagged"] or privacy["operation"]["lane"] != "PUBLIC":
             request.receipt_ctx["lane"] = "personal"
         request.receipt_ctx["list_privacy"] = privacy
-        lang = recipes.list_language(job.operation)
+        lang = recipes.list_language(job.operation, request.lang or None)
         wave_size = recipes.list_wave_size(cfg)
         waves = [job.items[i:i + wave_size] for i in range(0, len(job.items), wave_size)]
         started = time.monotonic()
@@ -2378,12 +2716,15 @@ class ChatService:
         tasks = 0
         stages: list[dict[str, Any]] = []
         wave_meta: list[dict[str, Any]] = []
+        wave_failures: list[dict[str, Any]] = []
         local_reasons: list[str] = []
         executed_waves: list[str] = []
         documents_available = False
         documents_used = False
         documents_withheld = False
         document_passages: list[str] = []
+        withheld_reason = ""
+        passage_peers: set[str] | None = None
         offset = 0
         try:
             orchestrator = self.orchestrator() if self.orchestrator is not None else None
@@ -2403,18 +2744,24 @@ class ChatService:
                                            source=job.source)
             if evidence:
                 documents_available = True
-            documents_allowed = (job.where != "swarm"
-                                 or egress.policy().third_party_passages)
+            if job.where == "swarm":
+                documents_allowed, passage_peers, withheld_reason = \
+                    self._swarm_passage_peers(orchestrator)
+            else:
+                documents_allowed, passage_peers, withheld_reason = True, None, ""
+            wave_passages: list[str] = []
             if evidence and not documents_allowed:
                 documents_withheld = True
-                prompt = recipes.build_list_prompt(job.operation, wave)
+                prompt = recipes.build_list_prompt(job.operation, wave, lang=lang)
             else:
                 if evidence:
                     documents_used = True
-                    document_passages.extend(
-                        str(p.get("text") or "") for passages in evidence.values()
-                        for p in passages)
-                prompt = recipes.build_list_prompt(job.operation, wave, evidence)
+                    wave_passages = [str(p.get("text") or "")
+                                     for passages in evidence.values()
+                                     for p in passages]
+                    document_passages.extend(wave_passages)
+                prompt = recipes.build_list_prompt(job.operation, wave, evidence,
+                                                   lang=lang)
             local_items = {n: item for n, item in enumerate(wave, 1)}
             wave_exec = "local"
             retried = False
@@ -2424,27 +2771,51 @@ class ChatService:
                     with egress.purpose(egress.QUESTION):
                         outcome = orchestrator.run(
                             prompt, mode="lan", request_id=request.request_id,
-                            cancel=request.stop_event)
+                            cancel=request.stop_event,
+                            passage_texts=wave_passages,
+                            passage_peer_ids=(passage_peers
+                                              if wave_passages else None))
                 except Exception as exc:
                     return self._fail(request, f"list wave {wave_no} failed: {exc}")
                 routed = outcome.get("routed")
                 if routed == "distributed":
                     wave_exec = "distributed"
                     metadata = outcome.get("metadata") or {}
-                    attempts.extend(metadata.get("attempts") or [])
+                    wave_attempts = list(metadata.get("attempts") or [])
+                    attempts.extend(wave_attempts)
                     tasks += int(metadata.get("n_tasks") or 0)
                     stages = outcome.get("stages") or stages
                     result_map = self._list_swarm_results(
                         metadata, str(outcome.get("text") or ""), local_items)
+                    if metadata.get("status") in ("partial", "failed"):
+                        # D-019: a partial wave marks the items it could not
+                        # answer as failed with the step's reason; the other
+                        # items of the same wave keep their answers.
+                        reason = self._wave_failure_reason(metadata)
+                        for local_n in local_items:
+                            entry = result_map.get(local_n) or {}
+                            if entry.get("status") in (None, "missing"):
+                                result_map[local_n] = {
+                                    "answer": "", "status": "failed",
+                                    "agreement": 0.0, "reason": reason}
                 elif routed == "error":
                     if outcome.get("status") == "stopped":
                         return self._finish(request, None, status="stopped",
                                             note="interrupted by user",
                                             stages=outcome.get("stages"),
                                             extra={"recipe": "list"})
-                    return self._fail(request, str(outcome.get("reason") or "list wave failed"),
-                                      stages=outcome.get("stages"),
-                                      swarm=outcome.get("metadata"))
+                    # A failed wave no longer aborts the list: its own items
+                    # are marked failed and the following waves still run.
+                    reason = str(outcome.get("reason") or "list wave failed")
+                    metadata = outcome.get("metadata") or {}
+                    attempts.extend(list(metadata.get("attempts") or []))
+                    tasks += int(metadata.get("n_tasks") or 0)
+                    stages = outcome.get("stages") or stages
+                    wave_exec = "failed"
+                    wave_failures.append({"wave": wave_no, "reason": reason[:240]})
+                    result_map = {n: {"answer": "", "status": "failed",
+                                      "agreement": 0.0, "reason": reason[:240]}
+                                  for n in local_items}
                 else:
                     local_reasons.append(str(outcome.get("reason") or
                                              "the swarm path kept this wave local"))
@@ -2481,7 +2852,7 @@ class ChatService:
                   else ["#", "Item", "Answer", "Status"])
         table_rows: list[dict[str, Any]] = []
         rows_data: list[dict[str, Any]] = []
-        counts = {"answered": 0, "missing": 0, "disagreement": 0}
+        counts = {"answered": 0, "missing": 0, "disagreement": 0, "failed": 0}
         for n, item in enumerate(job.items, 1):
             answer = answers.get(n) or {"answer": "", "status": "missing", "agreement": 0.0}
             status = str(answer.get("status") or "missing")
@@ -2489,50 +2860,66 @@ class ChatService:
                 status = "missing"
             counts[status] += 1
             value = str(answer.get("answer") or "").strip()
-            if status == "missing" or not value:
+            if status in ("missing", "failed") or not value:
                 value = "—"
             item_cell = item
             if n in duplicate_map:
                 item_cell += (f" (duplicado de #{duplicate_map[n]})" if lang == "es"
                               else f" (duplicate of #{duplicate_map[n]})")
-            cells = [str(n), item_cell, value, status]
+            cells = [str(n), item_cell, value, _list_status_label(status, lang)]
             table_rows.append({"cells": cells, "labels": []})
             rows_data.append({"n": n, "item": item, "item_cell": item_cell,
                               "answer": value, "status": status,
                               "agreement": answer.get("agreement"),
+                              "reason": answer.get("reason") or "",
                               "duplicate_of": duplicate_map.get(n)})
         markdown = tables.render(header, table_rows, lang, source=False)
         summary = recipes.summary_line(len(job.items), counts["answered"],
-                                       counts["missing"], counts["disagreement"], lang)
+                                       counts["missing"], counts["disagreement"],
+                                       lang, failed=counts["failed"])
         answer_text = f"{markdown}\n\n{summary}"
+        if wave_failures:
+            answer_text += "\n\n" + ("Olas que fallaron:" if lang == "es"
+                                     else "Waves that failed:")
+            for failure in wave_failures:
+                answer_text += (f"\n- {'Ola' if lang == 'es' else 'Wave'} "
+                                f"{failure['wave']}: {failure['reason']}")
         if documents_used:
             request.receipt_ctx["passages"] = document_passages
         documents_note = ""
         if documents_withheld:
-            documents_note = ("No se usaron tus documentos: el enjambre no tiene permiso para "
-                              "recibir pasajes privados (privacy.third_party_passages)."
+            documents_note = ("No se usaron tus documentos: los pasajes hacia este enjambre "
+                              "están apagados (circle_passages / my own devices)."
                               if lang == "es" else
-                              "Your documents were not used: the swarm is not allowed to "
-                              "receive private passages (privacy.third_party_passages).")
+                              "Your documents were not used: passages to this swarm are "
+                              "off (circle_passages / my own devices).")
             answer_text = f"{answer_text}\n\n{documents_note}"
             request.receipt_ctx["passages_withheld"] = "the swarm"
         executed = ("distributed" if executed_waves and all(
             x == "distributed" for x in executed_waves)
                     else "local" if not executed_waves or all(x == "local" for x in executed_waves)
                     else "mixed")
+        usable = counts["answered"] + counts["disagreement"]
+        list_status = ("failed" if not usable else
+                       "complete" if not (counts["missing"] or counts["failed"])
+                       else "partial")
         list_meta = {"count": len(job.items), "answered": counts["answered"],
                      "missing": counts["missing"], "disagreement": counts["disagreement"],
+                     "failed": counts["failed"], "status": list_status,
                      "where": job.where, "waves": len(waves), "executed": executed,
                      "wave_size": wave_size, "duplicates": len(duplicates),
                      "retries": sum(1 for w in wave_meta if w.get("retried")),
+                     "wave_failures": wave_failures,
                      "partial_reasons": list(dict.fromkeys(local_reasons)),
                      "documents_available": documents_available,
                      "documents_used": documents_used,
                      "documents_withheld": documents_withheld,
+                     "documents_withheld_reason": withheld_reason,
                      "documents": {"available": documents_available,
                                    "used": documents_used,
                                    "withheld": documents_withheld,
-                                   "note": documents_note},
+                                   "note": documents_note,
+                                   "reason": withheld_reason},
                      "privacy": {"tier": privacy["tier"], "lane": privacy["lane"],
                                  "sensitive": privacy["sensitive"]}}
         table_meta = {"by_code": True, "rows": len(job.items), "header": header,
@@ -2540,7 +2927,8 @@ class ChatService:
                       "rows_data": rows_data, "documents": [],
                       "empty": counts["missing"], "dropped": [], "computed": 0,
                       "duplicates": len(duplicates)}
-        extra = {"recipe": "list", "table": table_meta, "list": list_meta}
+        extra = {"recipe": "list", "table": table_meta, "list": list_meta,
+                 "answer_status": list_status}
         if executed == "local" and not attempts:
             model = (getattr(orchestrator, "local_model", "") if orchestrator else "") or ""
             result = GenerationResult(text=answer_text, model=model,
@@ -2549,8 +2937,14 @@ class ChatService:
             return self._finish(request, result, extra=extra)
         metadata = {"n_tasks": tasks or len(attempts), "attempts": attempts,
                     "truncated_tasks": [], "mode": "lan", "list": list_meta,
+                    "table": table_meta, "status": list_status,
+                    "missing_steps": [{"step": f"wave {failure['wave']}",
+                                       "status": "failed", "reason": "failed",
+                                       "detail": failure["reason"]}
+                                      for failure in wave_failures],
                     "waves": wave_meta, "partial_reasons": list_meta["partial_reasons"]}
-        return self._finish_distributed(request, answer_text, metadata, stages, extra=extra)
+        return self._finish_distributed(request, answer_text, metadata, stages,
+                                        extra=extra, status=list_status)
 
     @staticmethod
     def _degenerate_wave(local_items: dict[int, str],
@@ -2675,12 +3069,30 @@ class ChatService:
             retried = True
             retry: dict[int, dict[str, Any]] = {}
             for n, item in local_items.items():
-                single_prompt = recipes.build_single_item_prompt(operation, item)
+                single_prompt = recipes.build_single_item_prompt(operation, item,
+                                                                 lang=lang)
                 single = call(single_prompt, {1: item}, single=True)
                 retry[n] = single.get(1) or {"answer": "", "status": "missing",
                                              "agreement": 0.0}
             result_map = retry
         return result_map, models[0], retried
+
+    @staticmethod
+    def _wave_failure_reason(metadata: dict[str, Any]) -> str:
+        """The honest reason of a partial/failed list wave, short enough for a
+        table status and the answer's trailing note."""
+        missing = list((metadata or {}).get("missing_steps") or [])
+        for step in missing:
+            detail = str(step.get("detail") or "").strip()
+            if detail:
+                return " ".join(detail.split())[:240]
+            reason = str(step.get("reason") or "").strip()
+            if reason:
+                return reason
+        note = str((metadata or {}).get("partial_note") or "").strip()
+        if note:
+            return " ".join(note.split())[:240]
+        return "the wave did not complete"
 
     @staticmethod
     def _list_swarm_results(metadata: dict[str, Any], text: str,
@@ -2721,12 +3133,29 @@ class ChatService:
     def _finish_distributed(self, request: ActiveRequest, text: str,
                             metadata: dict[str, Any],
                             stages: list[dict[str, Any]],
-                            extra: dict[str, Any] | None = None) -> None:
+                            extra: dict[str, Any] | None = None,
+                            status: str | None = None) -> None:
         """Complete a distributed request: assembled text + SPEC §19 metadata."""
+        answer_status = status or str(metadata.get("status") or "complete")
+        if answer_status == "failed":
+            # Nothing usable completed: an honest failure, not a partial answer.
+            missing = list(metadata.get("missing_steps") or [])
+            detail = ""
+            for step in missing:
+                detail = str(step.get("detail") or step.get("reason") or "").strip()
+                if detail:
+                    break
+            reason = (" ".join(detail.split())[:240]
+                      or "no step could be completed")
+            return self._fail(request, reason, stages=stages, swarm=metadata)
         truncated = metadata.get("truncated_tasks") or []
         note = (f"output reached its token budget in {len(truncated)} task(s); the "
                 "answer may be incomplete" if truncated else "")
+        if answer_status == "partial":
+            note = "partial answer: some steps could not be completed"
         meta: dict[str, Any] = {"status": "done", "note": note,
+                                "answer_status": answer_status,
+                                "partial": answer_status == "partial",
                                 "mode": request.mode, "model": request.model,
                                 "request_id": request.request_id,
                                 "executed": "distributed", "swarm": metadata}
@@ -2767,6 +3196,13 @@ class ChatService:
         if result is not None:
             content = result.text
             meta.update(result.to_dict())
+        elif status == "stopped":
+            # A cancel must leave a message: what was already streamed plus a
+            # plain note saying the answer was stopped (T10.17).
+            partial = (request.partial_text or "").strip()
+            stopped = _stopped_note(request.lang or _lang(request.task or ""))
+            content = f"{partial}\n\n{stopped}" if partial else stopped
+            meta["partial"] = bool(partial)
         self._attach_receipt(request, meta, content)
         try:
             if result is not None:
@@ -2823,9 +3259,47 @@ class ChatService:
                     node = str(att.get("node", ""))
                     if self.self_node and node == self.self_node[:len(node)]:
                         continue          # this device's own models (local pool)
-                    extra_sends.append({"destino": f"nodo {node}", "clase": egress.OWN_NETWORK,
-                                        "tipo": egress.FRAGMENT, "bytes": att.get("bytes_out") or 0,
-                                        "motivo": f"fragmento {att.get('task', '')}"})
+                    if att.get("code") in ("E_CIRCLE_REQUIRED", "E_EGRESS_DENIED"):
+                        continue          # the gate refused: nothing was written
+                    executor = str(att.get("executor") or "")
+                    entry = {
+                        "destino": f"nodo {node}",
+                        "clase": att.get("destination_class") or egress.OWN_NETWORK,
+                        "tipo": egress.FRAGMENT,
+                        "bytes": att.get("bytes_out") or 0,
+                        "motivo": f"fragmento {att.get('task', '')}",
+                        "circle_id": att.get("circle_id") or "",
+                        "circle_name": att.get("circle_name") or "",
+                        "member_name": att.get("member_name") or "",
+                        "passages": att.get("passages") or 0,
+                        # 3.5, D-018: the node role this packet requested.
+                        "role": att.get("role") or "",
+                        # 3.5, WP3 / D-016: direct or through the circle
+                        # relay, with the metadata the relay saw.
+                        "transport": att.get("transport") or "direct",
+                        **({"relay": dict(att["relay"])}
+                           if att.get("relay") else {}),
+                        **({"role_fallback": True}
+                           if att.get("role_fallback") else {})}
+                    if executor == "search" and att.get("query"):
+                        # WP4b: the public query the member ran on the
+                        # requester's behalf. The requester cannot verify
+                        # which engine answered, and says so.
+                        entry.update(
+                            tipo=egress.PUBLIC_QUERY, valor=str(att["query"]),
+                            motivo=("consulta pública en nombre del solicitante: "
+                                    f"{node} la buscó por ti"),
+                            executor="search", on_behalf=True,
+                            engine_unverified=True)
+                    elif att.get("carries_passages"):
+                        entry.update(tipo=egress.PASSAGES,
+                                     motivo=f"pasajes a {node}",
+                                     passages=max(1, int(att.get("passages") or 0)))
+                        if executor:
+                            entry["executor"] = executor
+                    elif executor:
+                        entry["executor"] = executor
+                    extra_sends.append(entry)
             ledger = request.ledger
             public = any(e.get("tipo") == egress.PUBLIC_QUERY and not e.get("bloqueado")
                          for e in (ledger.events if ledger else []))
@@ -2863,7 +3337,8 @@ class ChatService:
             meta["receipt"] = egress.build_receipt(
                 ledger, lane=ctx.get("lane", "no_informado"), route=route, answer=answer,
                 consent=consent, passages=ctx.get("passages") or [],
-                fragments=fragments, extra_sends=extra_sends, model_destination=dest)
+                fragments=fragments, extra_sends=extra_sends, model_destination=dest,
+                ignore_ledger_fragments=bool(distributed))
             if ctx.get("skill"):
                 # 3.4: which skill's body the model saw, by name and content hash
                 meta["receipt"]["skill"] = dict(ctx["skill"])
@@ -3022,10 +3497,160 @@ _SOURCES_HEAD = {
 
 
 WHOLE_DOC_CHARS = 6000          # a document this short is given whole (3.1)
+def _tool_object(value: Any) -> bool:
+    """True when a JSON object is a tool call, not the user's data."""
+    if not isinstance(value, dict):
+        return False
+    keys = {str(key).lower() for key in value}
+    return bool(keys & {"action", "tool", "tool_call", "function_call", "name",
+                        "arguments", "parameters"}) and bool(
+        keys & {"action", "tool", "tool_call", "function_call", "arguments",
+                "parameters"})
+
+
+def _strip_tool_markup(text: str) -> str:
+    """Remove the model's raw tool-call block from a final answer.
+
+    A small model asked for a final answer after a tool loop sometimes emits
+    its protocol JSON (or tag form) as prose. Returning that to the user is
+    worse than returning nothing: the App strips fenced and bare tool objects,
+    XML-ish tool tags and the protocol's own markers, keeping any prose around
+    them.
+    """
+    text = str(text or "")
+    if not text:
+        return ""
+    # <tool_call>…</tool_call>, <function_call>…</function_call>, and the
+    # protocol markers some models emit (<|tool_call|> … <|/tool_call|>).
+    text = re.sub(r"(?is)<tool_call\b.*?>.*?</tool_call\s*>", " ", text)
+    text = re.sub(r"(?is)<function_call\b.*?>.*?</function_call\s*>", " ", text)
+    text = re.sub(r"(?is)<\|?tool_call\|?>.*?<\|?/tool_call\|?>", " ", text)
+    text = re.sub(r"(?is)<\|?function_call\|?>.*?<\|?/function_call\|?>", " ", text)
+
+    def fenced(match: re.Match[str]) -> str:
+        body = match.group(1).strip()
+        try:
+            if _tool_object(json.loads(body)):
+                return " "
+        except (ValueError, TypeError):
+            pass
+        return match.group(0)
+
+    text = re.sub(r"(?is)```(?:json|tool_call|tool)?\s*(\{.*?\})\s*```", fenced, text)
+    # A JSON tool object anywhere in the prose, nested arguments included:
+    # scan real JSON values instead of guessing with a regex.
+    decoder = json.JSONDecoder()
+    pieces: list[str] = []
+    cursor = 0
+    while cursor < len(text):
+        start = text.find("{", cursor)
+        if start < 0:
+            pieces.append(text[cursor:])
+            break
+        pieces.append(text[cursor:start])
+        try:
+            value, end = decoder.raw_decode(text[start:])
+        except ValueError:
+            pieces.append("{")
+            cursor = start + 1
+            continue
+        if _tool_object(value):
+            cursor = start + end
+        else:
+            pieces.append(text[start:start + end])
+            cursor = start + end
+    text = "".join(pieces)
+    # A bare JSON object on its own line(s): keep it only when it is not a tool call.
+    def line(match: re.Match[str]) -> str:
+        body = match.group(0).strip()
+        try:
+            if _tool_object(json.loads(body)):
+                return ""
+        except (ValueError, TypeError):
+            pass
+        return match.group(0)
+
+    text = re.sub(r"(?m)^\s*\{.*?\}\s*$", line, text, flags=re.S)
+    # Protocol markers without a payload ("<|tool_call|>" alone).
+    text = re.sub(r"(?i)<\|?/?(?:tool_call|function_call)\|?>", " ", text)
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def _suspension_reason(content: str, es: bool) -> str:
+    """A plain reason for a tool observation that did not succeed."""
+    low = (content or "").lower()
+    if not low:
+        return ""
+    if "suspended" in low:
+        return ("el servidor MCP está suspendido" if es
+                else "the MCP server is suspended")
+    if "did not answer" in low or "timed out" in low or "timeout" in low:
+        return ("el servidor dejó de responder" if es
+                else "the server stopped answering")
+    if "not running" in low:
+        return ("el servidor no está en marcha" if es
+                else "the server is not running")
+    if "approval not granted" in low:
+        # The user chose Skip: the card already said so, and this is not a
+        # suspension of the server.
+        return ""
+    if "not approved" in low or "approval" in low:
+        return ("la herramienta no está aprobada en Ajustes para este proyecto" if es
+                else "the tool is not approved in Settings for this project")
+    if low.startswith("denied:") or "denied:" in low:
+        detail = content.split("denied:", 1)[-1].strip()
+        detail = re.sub(r"\s+", " ", detail)[:240]
+        return (f"la política de la app rechazó la llamada: {detail}" if es
+                else f"the app's policy refused the call: {detail}")
+    if "unknown tool" in low:
+        return ("la herramienta ya no está registrada (el servidor se suspendió o cambió)" if es
+                else "the tool is no longer registered (the server was suspended or changed)")
+    if "tool error:" in low or low.startswith("error:"):
+        detail = re.sub(r"^tool error:\s*", "", content, flags=re.I)[:240]
+        return (f"la herramienta falló: {detail}" if es
+                else f"the tool failed: {detail}")
+    return ""
+
+
 def _fold_word(w: str) -> str:
     import unicodedata
     return "".join(c for c in unicodedata.normalize("NFKD", w.lower())
                    if not unicodedata.combining(c))
+
+
+PROMPT_MATERIAL_BUDGET = 24_000     # characters of sources + skill per answer
+SKILL_MIN_CHARS = 300
+
+
+def _fit_skill_block(block: str, other_chars: int, lang: str = "en") -> str:
+    """Keep the skill material inside the answer's material budget.
+
+    The grounded passages are appended before the skill and are never cut
+    here: when the two do not fit together, the skill's body is shortened
+    (with a visible marker) and, if there is no useful room, only its labelled
+    header remains. T10.17: a large skill body had replaced the passages in
+    the model's prompt.
+    """
+    block = str(block or "")
+    remaining = PROMPT_MATERIAL_BUDGET - max(0, int(other_chars))
+    if len(block) <= remaining:
+        return block
+    marker = ("\n> [skill examples shortened: the document passages take priority]"
+              if lang == "es" else
+              "\n> [skill examples shortened: the document passages take priority]")
+    end = block.find(">>>")
+    head = block[:end + 3] if end >= 0 else block[:SKILL_MIN_CHARS]
+    footer = "\n<<<END_SKILL_MATERIAL>>>"
+    fixed = head + marker + footer
+    if remaining <= len(fixed):
+        # No room for the body: a labelled header still says the skill was
+        # active, and the passages still reach the model.
+        return fixed[:max(0, remaining)] or ""
+    body = block[end + 3:block.find("<<<END_SKILL_MATERIAL>>>")]
+    room = max(0, remaining - len(fixed) - 1)
+    return head + "\n" + body[:room].rstrip() + marker + footer
 
 
 def _skill_material_block(skill: Any, lang: str = "en") -> str:
@@ -3039,6 +3664,14 @@ def _skill_material_block(skill: Any, lang: str = "en") -> str:
     from . import skills
     label = _SKILL_LABEL.get(lang, _SKILL_LABEL["en"])
     return f"{label}\n{skills.as_prompt_block(skill)}"
+
+
+_ASKS_ENGLISH = re.compile(r"\b(in english|en ingl[eé]s)\b", re.I)
+_LANG_RULE = {
+    "es": ("Responde en español. La conversación y la pregunta están en español; "
+           "no cambies al inglés aunque las fuentes o los ejemplos estén en inglés."),
+    "en": ("Answer in English. The conversation and the question are in English."),
+}
 
 
 _SKILL_LABEL = {
@@ -3226,6 +3859,24 @@ def _spanish_terms(text: str, pairs: list[tuple[str, str]]) -> tuple[str, list[d
     return text, fixes
 
 
+_LIST_STATUS = {
+    "es": {"answered": "respondido", "missing": "sin respuesta",
+           "disagreement": "desacuerdo", "failed": "fallido"},
+    "en": {"answered": "answered", "missing": "missing",
+           "disagreement": "disagreement", "failed": "failed"},
+}
+
+
+def _stopped_note(lang: str) -> str:
+    es = lang == "es"
+    return ("Se detuvo la respuesta a tu petición." if es
+            else "The answer was stopped at your request.")
+
+
+def _list_status_label(status: str, lang: str) -> str:
+    return _LIST_STATUS.get(lang, _LIST_STATUS["en"]).get(str(status), str(status))
+
+
 def _reference_note(h: dict[str, Any]) -> str:
     meta = " · ".join(x for x in (h.get("authors"), h.get("year"), h.get("source")) if x)
     return f"Referencia: {h.get('title', '')}" + (f" ({meta})" if meta else "") + f" — {h.get('url', '')}"
@@ -3290,11 +3941,12 @@ def _remote_host(backend: Any, model: str) -> str:
 
 def _compose_by_sections(backend: Any, plan: dict[str, Any], user_text: str, *, model: str,
                          temperature: float, on_delta: Callable[[str], None] | None,
-                         interrupt: Callable[[], bool], kind: str) -> tuple[GenerationResult, dict[str, Any]]:
+                         interrupt: Callable[[], bool], kind: str,
+                         lang: str = "") -> tuple[GenerationResult, dict[str, Any]]:
     """F3b (3.2): one short generation per section of the plan (and one for the
     table), streamed in order and joined. Each section sees only its facts."""
     from . import compose
-    lang = _lang(user_text)
+    lang = lang or _lang(user_text)
     tasks: list[tuple[str, str, int]] = []
     sections = plan["sections"]
     for i, sec in enumerate(sections):
@@ -3566,8 +4218,9 @@ _DOCS_HEAD = {
 
 
 def _documents_block(docs: list[dict[str, Any]], user_text: str,
-                     labels: dict[str, tuple[str, str]] | None = None) -> str:
-    lang = _lang(user_text)
+                     labels: dict[str, tuple[str, str]] | None = None,
+                     lang: str = "") -> str:
+    lang = lang or _lang(user_text)
     lines = [_DOCS_HEAD.get(lang, _DOCS_HEAD["en"])]
     labels = labels or {}
     for d in docs[:60]:
@@ -3585,14 +4238,16 @@ def _documents_block(docs: list[dict[str, Any]], user_text: str,
 
 def _sources_block(sources: list[dict[str, Any]], user_text: str,
                    pairs: list[tuple[str, str]] | None = None,
-                   inventory: dict[str, Any] | None = None) -> str:
+                   inventory: dict[str, Any] | None = None,
+                   lang: str = "") -> str:
     """LCE C1: retrieved paragraphs for a local answer, with their origin.
 
     The user's term is written next to the first equivalent of it in each
     paragraph ("inbreeding («endogamia»)", "Mimus («cucuves»)"), only in what
     the model reads: the 7B model kept saying the sources did not mention
     "endogamia" when they spoke of inbreeding (sixth test, third run)."""
-    head = _SOURCES_HEAD.get(_lang(user_text), _SOURCES_HEAD["en"])
+    lang = lang or _lang(user_text)
+    head = _SOURCES_HEAD.get(lang, _SOURCES_HEAD["en"])
     lines = [head]
     q = _fold_word(user_text)
     asked = []
@@ -3624,7 +4279,6 @@ def _sources_block(sources: list[dict[str, Any]], user_text: str,
     # them less as the block grew (no citation at all with 4,400 prompt tokens,
     # open battery of 9 November 2026). A short reminder at the end, next to
     # the question, brought the labels back without losing content.
-    lang = _lang(user_text)
     lines.append("")
     if inventory is not None:
         # F1 (3.2): the requirements of a composition, read by code, replace the

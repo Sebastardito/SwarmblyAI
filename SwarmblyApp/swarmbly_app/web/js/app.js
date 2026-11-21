@@ -4,7 +4,8 @@
 
 const App = (() => {
   const { h, clear, t } = UI;
-  const state = { config: null, health: null, swarm: null, models: null, view: "chat" };
+  const state = { config: null, health: null, swarm: null, models: null,
+                  sandbox: null, view: "chat" };
   const handlers = [];
   const views = {};
   const live = { requestId: null, stages: {}, mode: "" };
@@ -36,6 +37,7 @@ const App = (() => {
       try { view.init(UI.$(`#view-${name}`)); } catch (e) { console.error(name, e); }
     }
     Api.subscribe(dispatch);
+    await refreshSandbox();
     navigate(location.hash.replace("#", "") || "chat");
     // Back/forward and typed #links switch views too.
     window.addEventListener("hashchange", () => {
@@ -49,8 +51,33 @@ const App = (() => {
 
   function dispatch(event) {
     handleLive(event);
+    if (event.type === "sandbox.prepare") {
+      const state = event.payload?.status;
+      if (state === "ready") UI.toast(t("sandbox.readyToast"), "ok");
+      else if (state === "failed") UI.toast(t("sandbox.failedToast"), "error");
+      refreshSandbox();
+    }
     for (const fn of handlers) { try { fn(event); } catch (e) { console.error(e); } }
     if (/^(node\.|swarm\.attempt|worker\.)/.test(event.type)) scheduleSwarmRefresh();
+  }
+
+  async function refreshSandbox() {
+    try { state.sandbox = await Api.get("/api/sandbox"); } catch (_) { return; }
+    renderSandboxNotice();
+    for (const fn of handlers) { try { fn({ type: "app.sandbox", payload: state.sandbox }); } catch (_) {} }
+  }
+
+  function renderSandboxNotice() {
+    const slot = UI.$("#sandbox-notice");
+    if (!slot) return;
+    clear(slot);
+    const s = state.sandbox;
+    if (!s || (!s.notice && s.status !== "preparing")) {
+      slot.hidden = true;
+      return;
+    }
+    slot.hidden = false;
+    slot.appendChild(SandboxNotice.view(s, refreshSandbox, { compact: true }));
   }
 
   function scheduleSwarmRefresh() {
@@ -182,5 +209,100 @@ const App = (() => {
   document.addEventListener("DOMContentLoaded", boot);
 
   return { state, onEvent, register, navigate, saveConfig, reloadConfig, setLanguage,
-           refreshSwarm, setActivity };
+           refreshSwarm, refreshSandbox, setActivity };
+})();
+
+/* First-launch sandbox notice (R-005). Shared by the banner, the setup
+   assistant and Settings: one status line, the expected time/memory and the
+   Prepare now / Later actions. It never starts the compile without a click. */
+const SandboxNotice = (() => {
+  const { h, t, button, readout } = UI;
+
+  function statusLine(s) {
+    const state = s?.status || "missing";
+    if (state === "preparing") {
+      return t("sandbox.preparing").replace("{stage}", s.stage || "compiling");
+    }
+    if (state === "ready") {
+      const m = s.measurement || {};
+      const line = t("sandbox.ready")
+        .replace("{time}", m.elapsed_s ?? "—")
+        .replace("{peak}", m.peak_rss_mib ?? "—");
+      return s.forced ? line + t("sandbox.forcedNote") : line;
+    }
+    if (state === "failed") {
+      return t("sandbox.failed").replace("{reason}", s.last_error || t("sandbox.state.failed"));
+    }
+    if (state === "refused") {
+      return t("sandbox.refused").replace("{reason}", s.last_error || t("sandbox.state.refused"));
+    }
+    if (state === "not_installed") return t("sandbox.notInstalled");
+    return t("sandbox.noticeBody")
+      .replace("{time}", s.expected_seconds ?? "—")
+      .replace("{memory}", s.expected_memory_gb ?? "—");
+  }
+
+  async function prepare(onChange, force = false) {
+    try {
+      await Api.post("/api/sandbox/prepare", { consent: true, force: !!force });
+      UI.toast(force ? t("sandbox.forcingToast") : t("sandbox.preparingToast"),
+        force ? "" : "ok");
+    } catch (err) {
+      UI.toast(err.message, "error");
+    }
+    try { await onChange?.(); } catch (_) { /* the event will refresh it */ }
+  }
+
+  async function later(onChange) {
+    try { await Api.post("/api/sandbox/defer", {}); }
+    catch (err) { UI.toast(err.message, "error"); }
+    try { await onChange?.(); } catch (_) { /* ignore */ }
+  }
+
+  function view(s, onChange, { compact = false } = {}) {
+    const box = h("div.sandbox-panel");
+    box.appendChild(h("div.sandbox-head",
+      h("strong", t("sandbox.noticeTitle")),
+      h("span.chip", t(`sandbox.state.${s.status}`, s.status))));
+    box.appendChild(h("p.sandbox-line", statusLine(s)));
+    if (s.installed && ["missing", "stale", "failed", "refused"].includes(s.status)) {
+      box.appendChild(h("p.muted", t("sandbox.expected")
+        .replace("{time}", s.expected_seconds ?? "—")
+        .replace("{memory}", s.expected_memory_gb ?? "—")
+        .replace("{free}", s.free_memory_gb ?? "—")
+        .replace("{min}", s.minimum_free_memory_gb ?? "—")));
+    }
+    if (s.installed && s.enough_memory === false) {
+      box.appendChild(h("p.error", t("sandbox.free").replace("{free}", s.free_memory_gb ?? "—")
+        .replace("{min}", s.minimum_free_memory_gb ?? "—")));
+      if (s.status !== "ready" && s.status !== "preparing") {
+        box.appendChild(h("p.sandbox-warning", t("sandbox.forceWarning")));
+      }
+    }
+    if (!compact && s.status === "ready") {
+      const m = s.measurement || {};
+      box.appendChild(h("div.readouts",
+        readout(t("sandbox.compile"), m.elapsed_s == null ? null : `${m.elapsed_s} s`, "measured"),
+        readout(t("sandbox.peak"), m.peak_rss_mib == null ? null : `${m.peak_rss_mib} MiB`, "measured"),
+        readout(t("sandbox.expected"), `${s.expected_seconds} s · ${s.expected_memory_gb} GB`, "estimated")));
+    }
+    const actions = h("div.sandbox-actions");
+    if (s.installed && s.status !== "ready" && s.status !== "preparing") {
+      // The plain action always keeps the floor; below it the API refuses and
+      // the explicit second button is the informed override.
+      actions.appendChild(button(s.status === "failed" ? t("sandbox.retry") : t("sandbox.prepareNow"),
+        () => prepare(onChange, false), "primary small"));
+    }
+    if (s.can_force && s.status !== "preparing") {
+      actions.appendChild(button(t("sandbox.prepareAnyway"),
+        () => prepare(onChange, true), "danger small"));
+    }
+    if (s.installed && s.status !== "ready" && s.status !== "preparing") {
+      actions.appendChild(button(t("sandbox.later"), () => later(onChange), "ghost small"));
+    }
+    if (actions.childNodes.length) box.appendChild(actions);
+    return box;
+  }
+
+  return { view, statusLine };
 })();

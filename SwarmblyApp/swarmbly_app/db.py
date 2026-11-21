@@ -258,6 +258,19 @@ class Database:
         d["meta"] = json.loads(d["meta"] or "{}")
         return d
 
+    def recent_failures(self, limit: int = 10) -> list[dict[str, Any]]:
+        """Failed requests as timestamps and mode only, never their error text.
+
+        The doctor export must not carry prompts, answers or paths, so this
+        query deliberately omits ``meta`` and the conversation/message ids.
+        """
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT started_at, finished_at, mode FROM requests"
+                " WHERE status='failed' ORDER BY finished_at DESC LIMIT ?",
+                (max(1, int(limit)),)).fetchall()
+        return [dict(row) for row in rows]
+
     # -- node cache (discovery metadata) --------------------------------------
     def upsert_node(self, node_id: str, address: str | None, port: int | None,
                     verified: bool, profile: dict[str, Any] | None = None,

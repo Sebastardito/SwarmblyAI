@@ -8,7 +8,7 @@ from swarmbly_app.hardware import detect_all, detect_cpu, detect_memory, detect_
 from swarmbly_app.inference.ollama import OllamaBackend
 from swarmbly_app.inference.openai_compat import OpenAICompatBackend
 from swarmbly_app.inference.registry import BackendRegistry, IncompleteSettings
-from swarmbly_app.models import ModelManager
+from swarmbly_app.models import ModelManager, family_for
 
 
 class TestHardware:
@@ -25,6 +25,33 @@ class TestHardware:
         assert detect_os().confidence == "measured"
         assert detect_cpu().confidence in ("measured", "unknown")
         assert detect_memory().confidence in ("measured", "unknown")
+
+
+class TestModelFamily:
+    """One model must have one family with or without a running Ollama.
+
+    Regression: on a developer machine Ollama reports ``llama``/``qwen2``
+    from /api/tags, while CI without Ollama fell back to the tag
+    (``llama3.2``/``qwen2.5``). Family-diverse consensus then grouped the
+    same models differently, and two Llama versions could count as two
+    families.
+    """
+
+    def test_backend_family_wins(self):
+        assert family_for("llama3.2:3b", "llama") == "llama"
+
+    def test_catalog_family_when_backend_is_silent(self):
+        assert family_for("llama3.2:3b") == "llama"
+        assert family_for("llama3.1:8b") == "llama"
+        assert family_for("qwen2.5:3b") == "qwen2"
+
+    def test_known_model_same_family_with_and_without_backend(self):
+        for name in ("llama3.2:3b", "llama3.1:8b", "qwen2.5:3b",
+                     "phi3.5:3.8b", "gemma2:2b"):
+            assert family_for(name) == family_for(name, family_for(name))
+
+    def test_unknown_model_falls_back_to_tag(self):
+        assert family_for("custom-model:1b") == "custom-model"
 
 
 class TestModelManager:

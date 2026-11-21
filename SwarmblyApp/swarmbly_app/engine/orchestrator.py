@@ -35,9 +35,11 @@ from . import composer
 from .directory import Directory
 from .contract import _TOKENS_PER_WORD, build_contract, requested_words
 from .followup import standalone
-from .packets import (PacketPlan, build_message, contains_identifier, gamma_for,
-                      localise_instruction, measure_rho, minimal_objective)
-from .scheduler import LatencyStats, Scheduler, TaskFailed, run_levels
+from .packets import (PacketPlan, build_message, build_search_message,
+                      contains_identifier, gamma_for, localise_instruction,
+                      measure_rho, minimal_objective)
+from .scheduler import (LatencyStats, LevelsOutcome, RunCancelled, Scheduler,
+                        TaskFailed, run_levels)
 
 PIPELINE_STAGES = [
     "REQUEST RECEIVED",
@@ -164,7 +166,9 @@ class Orchestrator:
                  local_model: str = "", latency: LatencyStats | None = None,
                  stats_sink: Callable[..., None] | None = None,
                  local_pool_factory: Callable[[], Any] | None = None,
-                 speed: Any = None):
+                 speed: Any = None, role_stats: Any = None,
+                 public_query: Callable[[str, str], str] | None = None,
+                 credits: Any = None):
         self.nodes = nodes
         self.bus = bus
         self.local_stream = local_stream
@@ -174,13 +178,27 @@ class Orchestrator:
         from .scheduler import SpeedStats
         # learned per (node, model); the app keeps one across orchestrator rebuilds
         self.speed = speed or SpeedStats()
+        # 3.5, D-018: learned per (node, role), kept the same way.
+        from .scheduler import RoleStats
+        self.role_stats = role_stats or RoleStats()
+        # WP4b: the requester's public-query guard (AppState owns the settings,
+        # glossary and private terms). A missing callback falls back to the
+        # same guard with no glossary.
+        self.public_query = public_query
         self.stats_sink = stats_sink
         self.local_pool_factory = local_pool_factory
+        # 3.5, D-020: receipts are issued on acceptance, never before.
+        self.credits = credits
 
     # -- public entry -----------------------------------------------------------
     def run(self, text: str, *, mode: str = "lan", request_id: str | None = None,
             cancel: threading.Event | None = None,
-            history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+            history: list[dict[str, Any]] | None = None,
+            passage_texts: list[str] | None = None,
+            passage_peer_ids: set[str] | None = None,
+            task_roles: dict[str, str] | None = None,
+            team: Any = None,
+            project_id: str = "") -> dict[str, Any]:
         """Execute one request. Returns ``routed`` = distributed | local | error.
 
         ``history`` is the conversation before ``text`` (role/content dicts).
@@ -244,12 +262,71 @@ class Orchestrator:
         elif mode not in ("lan", "auto"):
             egress_block = f"mode {mode}: no network dispatch"
         pool = self.local_pool_factory() if self.local_pool_factory else None
-        directory = Directory(self.nodes, pool, remote_allowed=not egress_block)
+        if not egress_block and mode in ("lan", "auto"):
+            # 3.5, WP3 / D-016: a circle relay lets a member that is not on
+            # this LAN become visible to placement. Direct paths are still
+            # tried first inside ensure_peer; a relay failure is swallowed.
+            try:
+                self.nodes.ensure_circle_peers()
+            except Exception:
+                pass
+        directory = Directory(self.nodes, pool, remote_allowed=not egress_block,
+                              allowed_remote=passage_peer_ids)
         routing_meta["remote_allowed"] = not egress_block
+        if passage_peer_ids is not None:
+            routing_meta["passage_peer_filter"] = sorted(passage_peer_ids)
         routing_meta["local_pool"] = pool.models if pool else []
         if egress_block and pool is None:
             tracker.skip("ROUTING / DECOMPOSABILITY", egress_block)
             return local(egress_block, routing=routing_meta)
+
+        # 2. A team is an explicit, stored plan: it replaces the router and the
+        # planner, never the gates above or below (D-019). The same template
+        # therefore runs on one node or several, by role.
+        if team is not None:
+            tracker.start("ROUTING / DECOMPOSABILITY")
+            workers = directory.available_workers()
+            adm = admission_mod.Admission(
+                True, "team", "stored plan template", text,
+                len(team.get("steps") or []))
+            tracker.complete("ROUTING / DECOMPOSABILITY",
+                             decomposable=False, admission=adm.to_dict(),
+                             path=f"team: {team.get('name') or team.get('id') or ''}",
+                             remote_allowed=not egress_block,
+                             local_pool=len(pool.models) if pool else 0,
+                             notes="a stored plan template replaces the router "
+                                   "and the planner; privacy, admission, egress, "
+                                   "passage and role rules are unchanged")
+            router_meta = {"decomposable": False, "team": {
+                "id": team.get("id") or "", "name": team.get("name") or "",
+                "steps": len(team.get("steps") or [])},
+                "admission": adm.to_dict()}
+            if not workers:
+                return local(egress_block or "no connected worker is available",
+                             routing=routing_meta, router=router_meta)
+            try:
+                return self._distributed(text, adm, decision, lane, routing_meta,
+                                         router_meta, directory, tracker, request_id,
+                                         started, cancel, mode, False, False,
+                                         passage_texts=passage_texts,
+                                         task_roles=task_roles, team=team,
+                                         project_id=project_id)
+            except Cancelled:
+                tracker.fail("FINAL RESPONSE", "interrupted by the user")
+                return {"routed": "error", "reason": "interrupted by the user",
+                        "metadata": {"routing": routing_meta},
+                        "stages": tracker.list(), "status": "stopped"}
+            except Exception as exc:
+                for name in PIPELINE_STAGES:
+                    if tracker.stages[name].status == "running":
+                        tracker.fail(name, str(exc)[:200])
+                tracker.skip_rest(PIPELINE_STAGES, "not reached")
+                if tracker.stages["FINAL RESPONSE"].status != "failed":
+                    tracker.fail("FINAL RESPONSE", str(exc)[:200])
+                return {"routed": "error",
+                        "reason": f"team execution failed: {exc}",
+                        "metadata": {"routing": routing_meta, "router": router_meta},
+                        "stages": tracker.list()}
 
         # 2. Router + plan admission.
         tracker.start("ROUTING / DECOMPOSABILITY")
@@ -300,7 +377,10 @@ class Orchestrator:
         try:
             return self._distributed(text, adm, decision, lane, routing_meta,
                                      router_meta, directory, tracker, request_id,
-                                     started, cancel, mode, whole, compose)
+                                     started, cancel, mode, whole, compose,
+                                     passage_texts=passage_texts,
+                                     task_roles=task_roles,
+                                     project_id=project_id)
         except Cancelled:
             tracker.fail("FINAL RESPONSE", "interrupted by the user")
             return {"routed": "error", "reason": "interrupted by the user",
@@ -320,7 +400,8 @@ class Orchestrator:
     # -- the distributed path --------------------------------------------------------
     def _distributed(self, text, adm, decision, lane, routing_meta, router_meta,
                      directory, tracker, request_id, started, cancel, mode, whole=False,
-                     compose=False):
+                     compose=False, passage_texts=None, task_roles=None, team=None,
+                     project_id=""):
         from swarmbly_v0 import planner
         from swarmbly_v0.schema import Plan, Task
         cfg = self.config()
@@ -329,10 +410,22 @@ class Orchestrator:
 
         tracker.start("TASK PLANNING")
         path = "composition" if compose else "whole" if whole else adm.path
-        request = build_contract(text if (whole or compose) else adm.prompt)
+        request = build_contract(text if (whole or compose or team is not None)
+                                 else adm.prompt)
         contract, lang = request.contract, request.lang
         outline = None
-        if compose:
+        team_labels: dict[str, str] = {}
+        team_meta = None
+        if team is not None:
+            plan, task_roles, team_labels = self._team_plan(team, text)
+            path = "team"
+            consumed = {t.task_id: tuple(t.depends_on) for t in plan.tasks}
+            levels = _topological_levels(plan)
+            team_meta = {"id": team.get("id") or "",
+                         "name": team.get("name") or "",
+                         "builtin": bool(team.get("builtin")),
+                         "steps": len(plan.tasks)}
+        elif compose:
             outline = composer.make_outline(
                 text, contract, lang, int(request.target_words or 0),
                 LocalPromptBackend(self.local_stream, self.local_model),
@@ -355,9 +448,11 @@ class Orchestrator:
                                 answer_sheet=False)
             if plan.sequential or len(plan.tasks) < 2:
                 raise RuntimeError("the plan is a chain or a single task (SPEC §7)")
-        levels = _topological_levels(plan)
-        consumed = {t.task_id: (t.depends_on if planner.consumes_predecessor(t.instruction)
-                                else ()) for t in plan.tasks}
+        if team is None:
+            levels = _topological_levels(plan)
+            consumed = {t.task_id: (t.depends_on
+                                    if planner.consumes_predecessor(t.instruction)
+                                    else ()) for t in plan.tasks}
         tracker.complete("TASK PLANNING", n_tasks=len(plan.tasks),
                          n_levels=len(levels), language=lang,
                          target_words=request.target_words,
@@ -365,7 +460,9 @@ class Orchestrator:
                              "outline_errors": outline.errors,
                              "sections": [s.heading for s in outline.sections]}
                             if outline else {}),
-                         path=("composition (sections)" if compose else
+                         **({"team": team_meta} if team_meta else {}),
+                         path=("team: stored plan template" if team is not None else
+                               "composition (sections)" if compose else
                                "whole request (replicas)" if whole else adm.path),
                          dispatch_waves=len(_topological_levels_from(consumed)),
                          edges_statement=sum(1 for t in plan.tasks
@@ -391,16 +488,35 @@ class Orchestrator:
             objective = (outline.title or outline.topic or objective)[:240]
         plans: dict[str, PacketPlan] = {}
         gammas: dict[str, dict[str, Any]] = {}
+        # A step the requester refuses to send (a search step with no safe
+        # public query) fails honestly on its own; it does not abort the plan.
+        pre_failed: dict[str, TaskFailed] = {}
         evidence_blocks, evidence_report = self._evidence(plan, path, lang, lane, cfg)
         for task in plan.tasks:
             level_no, index = positions[task.task_id]
+            role = str((task_roles or {}).get(task.task_id)
+                       or getattr(task, "role", "") or "")
+            instruction = localise_instruction(
+                _with_block(task.instruction, evidence_blocks.get(task.task_id, "")),
+                lang, path)
+            if role == "search":
+                # WP4b, D-018: a search task carries ONLY a public query: no
+                # Γ, no predecessors, no conversation. If the guard cannot
+                # produce a query without the requester's private terms,
+                # nothing is sent and this step fails honestly.
+                instruction = self._public_query_for(task.instruction, project_id)
+                if not instruction:
+                    pre_failed[task.task_id] = TaskFailed(
+                        f"{task.task_id}: role 'search' has no public query "
+                        "without private terms; nothing was sent",
+                        code="E_PUBLIC_QUERY", reason="policy_refusal")
+                    continue
             plans[task.task_id] = PacketPlan(
                 task_id=task.task_id, wire_task_id="", level=level_no, index=index,
-                instruction=localise_instruction(
-                    _with_block(task.instruction, evidence_blocks.get(task.task_id, "")),
-                    lang, path),
+                instruction=instruction,
                 consumes=bool(consumed[task.task_id]),
-                depends_on=tuple(task.depends_on), lane=lane)
+                depends_on=tuple(task.depends_on), lane=lane,
+                role=role)
             gammas[task.task_id] = gamma_for(contract, objective, task.instruction,
                                              self._clamp(budgets[task.task_id], workers),
                                              lang)
@@ -410,6 +526,11 @@ class Orchestrator:
         def make_builder(task_id: str, carries: dict[str, str]):
             def build(attempt: int, family: str | None,
                       model: str | None = None) -> dict[str, Any]:
+                if plans[task_id].role == "search":
+                    # Only the public query; the scheduler injects the role.
+                    return build_search_message(
+                        plans[task_id], session_id, attempt,
+                        deadline_ms=int(timeout_s * 1000), tier=decision["tier"])
                 return build_message(
                     plans[task_id], gammas[task_id], session_id, attempt, carries,
                     positions, max_tokens=self._clamp(budgets[task_id], workers),
@@ -417,7 +538,8 @@ class Orchestrator:
                     temperature=temperature, model_family=family, model=model)
             return build
 
-        preview = [make_builder(t.task_id, {})(0, None) for t in plan.tasks]
+        preview = [make_builder(t.task_id, {})(0, None) for t in plan.tasks
+                   if t.task_id not in pre_failed]
         rho = measure_rho(preview, text)
         session_hex = contract.session_id
         for message in preview:
@@ -443,8 +565,10 @@ class Orchestrator:
         tracker.complete("NODE SELECTION", workers=len(workers), families=families,
                          local_pool=any(getattr(w, "source", "") == "local" for w in workers),
                          k_min=k_min, k_max=k_max,
+                         roles_requested=sorted({p.role for p in plans.values() if p.role}),
                          policy="maximise model-family diversity per task, "
-                                "then distinct machines, then lowest load")
+                                "then distinct machines, then lowest load; "
+                                "a role task only on a worker advertising it")
 
         scheduler = Scheduler(
             directory, self.bus, request_id, k_min=k_min, k_max=k_max,
@@ -455,16 +579,22 @@ class Orchestrator:
             latency=self.latency,
             min_params_b=float(swarm_cfg.get("min_model_params_b", 1.5)),
             queue_retries=not (self.local_stream is not None and self.local_model),
-            speed=self.speed)
+            speed=self.speed, passage_texts=passage_texts,
+            role_stats=self.role_stats, credits=self.credits)
         carries: dict[str, str] = {}
         resolved: dict[str, dict[str, Any]] = {}
         local_fallbacks: list[str] = []
+        local_role_fallbacks: list[dict[str, Any]] = []
         local_rejected: list[str] = []
         tie_breaks: list[dict[str, Any]] = []
+        # Tasks whose result is corpus material: their text may only be
+        # forwarded to a destination allowed to receive passages (WP4b).
+        sensitive_tasks: set[str] = set()
         tie_break = bool(swarm_cfg.get("tie_break", True))
         embedder, embedder_name = self._embedder()
 
-        async def local_rescue(task_id: str, build, check, reason: str):
+        async def local_rescue(task_id: str, build, check, reason: str,
+                               passages: bool = False):
             """This device's model on the packet, then on the bare task.
 
             The bare task drops the contract header: on 22 Oct 2026 (P3d.1)
@@ -478,8 +608,10 @@ class Orchestrator:
             last = None
             for variant in (message, {"task": message.get("task") or {}}):
                 replica = await loop.run_in_executor(
-                    None, egress.carry(self._local_fallback), task_id, variant,
-                    self._clamp(budgets[task_id], []), reason)
+                    None, egress.carry(functools.partial(
+                        self._local_fallback, task_id, variant,
+                        self._clamp(budgets[task_id], []), reason,
+                        passages=passages)))
                 if replica is None:
                     break
                 last = replica
@@ -490,18 +622,37 @@ class Orchestrator:
             return last, False
 
         async def run_one(task_id: str):
+            if task_id in pre_failed:
+                raise pre_failed[task_id]
             build = make_builder(task_id, carries)
             loop = asyncio.get_running_loop()
             check = validators.get(task_id)
+            requested_role = plans[task_id].role
+            # A search task carries only its public query (no predecessors),
+            # so a corpus predecessor is not forwarded by it.
+            requires_passages = (requested_role != "search"
+                                 and bool(set(consumed[task_id]) & sensitive_tasks))
             try:
                 replicas = await scheduler.run_task(task_id, build, budgets[task_id],
-                                                    validate=check)
+                                                    validate=check,
+                                                    role=requested_role,
+                                                    require_passages=requires_passages)
             except TaskFailed as exc:
+                # A search or corpus task has no truthful generic substitute:
+                # without its executor the right answer is an honest failure.
+                if requested_role and requested_role not in ("large_model", "reasoner"):
+                    raise
                 # Every remote attempt failed (node gone, deadline, policy).
                 # The task is run on this device's model rather than failing
                 # the whole answer (P3b.3, 22 Oct 2026: losing the largest
                 # node made one section fail and the request with it).
-                fallback, ok = await local_rescue(task_id, build, check, str(exc))
+                fallback, ok = await local_rescue(task_id, build, check, str(exc),
+                                                  passages=requires_passages)
+                if fallback is not None and requested_role:
+                    local_role_fallbacks.append(
+                        {"task": task_id, "role": requested_role,
+                         "node": self.local_model or "local model",
+                         "reason": "no role worker answered"})
                 if fallback is None:
                     raise
                 if not ok:
@@ -515,7 +666,8 @@ class Orchestrator:
                 # them echoed the Spanish words, P3c.1): try this device's
                 # model before accepting a degraded answer.
                 fallback, ok = await local_rescue(task_id, build, check,
-                                                  "all replicas rejected")
+                                                  "all replicas rejected",
+                                                  passages=requires_passages)
                 if fallback is not None and ok:
                     replicas = [fallback]
                     local_fallbacks.append(task_id)
@@ -535,7 +687,9 @@ class Orchestrator:
                             task_id, build, budgets[task_id], validate=check,
                             k_min=1, k_max=1, start_number=len(scheduler.attempts),
                             reason="tie_break", free_only=True,
-                            exclude={(r.node_id, r.family) for r in replicas})
+                            exclude={(r.node_id, r.family) for r in replicas},
+                            role=plans[task_id].role,
+                            require_passages=requires_passages)
                     except TaskFailed:
                         extra = []
                     extra = [r for r in extra if not (r.telemetry or {}).get("degraded")]
@@ -556,6 +710,8 @@ class Orchestrator:
                                   and outline.sections[_order(task_id)].kind != "table"
                                   else None))))
             resolved[task_id] = outcome
+            if any(rep.executor == "corpus" for rep in replicas):
+                sensitive_tasks.add(task_id)
             carries[task_id] = planner.summarize_fragment(outcome["text"], typed=True)
             return outcome
 
@@ -572,27 +728,69 @@ class Orchestrator:
         order = [t.task_id for t in sorted(plan.tasks, key=lambda t: positions[t.task_id])]
         for name in ("DISPATCHING", "MODEL EXECUTION", "RESULT RECEPTION"):
             tracker.start(name)
-        future = asyncio.run_coroutine_threadsafe(
-            run_levels(scheduler, order, consumed, run_one), self._loop())
+        outcome = LevelsOutcome()
         deadline = time.monotonic() + timeout_s * max(2, k_max) * len(levels) + 30
+        future = asyncio.run_coroutine_threadsafe(
+            run_levels(scheduler, order, consumed, run_one, outcome=outcome,
+                       deadline=deadline, cancel=cancel), self._loop())
         while True:
             try:
                 future.result(timeout=0.2)
                 break
+            except RunCancelled:
+                raise Cancelled()
             except concurrent.futures.TimeoutError:
                 pass
             if cancel is not None and cancel.is_set():
                 future.cancel()
                 raise Cancelled()
-            if time.monotonic() > deadline:
+            if time.monotonic() > deadline + 5:
                 future.cancel()
                 raise RuntimeError("distributed execution exceeded its global deadline")
+
+        # Only a step whose state says completed may enter assembly. This
+        # also covers a global deadline that cancelled a task after it had
+        # already written its side-effect result.
+        resolved = {task_id: value for task_id, value in resolved.items()
+                    if outcome.state(task_id).status == "completed"}
+        # D-019: what completed, what did not and why. A step that was never
+        # run because a predecessor failed says which step blocked it.
+        steps_meta: list[dict[str, Any]] = []
+        for task_id in order:
+            state = outcome.state(task_id)
+            task = plan_by_id[task_id]
+            steps_meta.append({
+                "step": task_id,
+                "name": team_labels.get(task_id) or _task_label(task),
+                "role": str((task_roles or {}).get(task_id)
+                            or getattr(task, "role", "") or ""),
+                **state.to_dict()})
+        completed_steps = [s for s in steps_meta if s["status"] == "completed"]
+        missing_steps = [s for s in steps_meta if s["status"] != "completed"]
+        if not completed_steps:
+            answer_status = "failed"
+        elif missing_steps:
+            answer_status = "partial"
+        else:
+            answer_status = "complete"
 
         attempts = [a.to_dict() for a in scheduler.attempts]
         accepted = [a for a in scheduler.attempts if a.status in ("accepted", "degraded")]
         failed = [a for a in scheduler.attempts if a.status == "failed"]
+        role_fallbacks = [
+            {"task": a["task"], "role": a["role"], "node": a["node"]}
+            for a in attempts if a.get("role_fallback")] + local_role_fallbacks
+        role_failed = [
+            {"task": a.task_id, "role": a.role, "node": a.node_id[:12],
+             "code": a.code}
+            for a in failed if a.role]
+        if role_fallbacks:
+            routing_meta["role_unavailable"] = role_fallbacks
         tracker.complete("DISPATCHING", attempts=len(attempts), hedges=scheduler.hedges,
                          retries=scheduler.retries, rejected_quality=scheduler.rejected,
+                         role_fallbacks=role_fallbacks, role_failed=role_failed,
+                         missing_steps=[{"step": s["step"], "reason": s.get("reason", "")}
+                                        for s in missing_steps],
                          hedge_timer=",".join(sorted(scheduler.hedge_timer_source)))
         tracker.complete("MODEL EXECUTION",
                          gen_ms_total=sum(int((a.get("telemetry") or {}).get("gen_ms") or 0)
@@ -633,7 +831,15 @@ class Orchestrator:
             tracker.skip("CONSENSUS / ALIGNMENT", waived)
 
         tracker.start("ASSEMBLY")
+        role_sources = self._role_sources(resolved)
         bridge_backend = LocalPromptBackend(self.local_stream, self.local_model)
+        if any(source.get("kind") == "corpus" for source in role_sources) \
+                and not self._local_model_passages_allowed():
+            # Corpus material is the requester's passage material. If this
+            # device's model is a third-party service without
+            # privacy.third_party_passages, no bridge text may be generated
+            # from it; the fragments are spliced without a bridge.
+            bridge_backend = LocalPromptBackend(None, "")
         if outline is not None:
             texts, seams, seam_policy = self._assemble_composition(
                 plan, outline, resolved, embedder)
@@ -651,6 +857,14 @@ class Orchestrator:
         coherence = self._coherence(texts, seams, embedder_name)
         tracker.complete("COHERENCE REPORT", **{k: v for k, v in coherence.items()
                                                 if k != "errors"})
+        # D-019: a partial answer names every step that could not be completed
+        # and why. A list keeps its per-item statuses and is rebuilt by the
+        # recipe; adding prose there would corrupt the table.
+        partial_note = ""
+        if missing_steps:
+            partial_note = _missing_note(lang, missing_steps)
+            if answer_status == "partial" and path != "enumerated" and texts:
+                texts = texts.rstrip() + "\n\n" + partial_note
 
         participants = {}
         for a in accepted:
@@ -680,6 +894,13 @@ class Orchestrator:
         metadata = {
             **{k: rho[k] for k in ("rho_achieved", "rho_target", "rho_floor",
                                    "rho_reachable", "rho_policy")},
+            # 3.5, D-019: complete | partial | failed, and the state of every
+            # step (completed, failed with a reason, or blocked by a step).
+            "status": answer_status,
+            "steps": steps_meta,
+            "missing_steps": missing_steps,
+            "partial_note": partial_note,
+            "team": team_meta,
             "n_tasks": len(plan.tasks), "n_levels": len(levels),
             "language": lang,
             "length": {"target_words": request.target_words,
@@ -712,6 +933,16 @@ class Orchestrator:
             "rejected_quality": scheduler.rejected,
             "local_fallback_tasks": sorted(local_fallbacks),
             "local_fallback_rejected": sorted(set(local_rejected)),
+            # 3.5, D-018: requested roles, honest substitutions and what this
+            # requester observed per (node, role). Never the peer's own claim.
+            "role_fallbacks": role_fallbacks,
+            "role_failed": role_failed,
+            "role_outcomes": (scheduler.role_stats.snapshot()
+                              if any(a.get("role") for a in attempts) else []),
+            # WP4b: material returned by the search/corpus executors, with the
+            # circle and member the requester sent to. Corpus entries are
+            # third-party passages, never the requester's own sources.
+            "role_sources": role_sources,
             "evidence": evidence_report,
             "tie_breaks": tie_breaks,
             "timeouts": scheduler.timeouts,
@@ -733,9 +964,46 @@ class Orchestrator:
         tracker.start("FINAL RESPONSE")
         tracker.complete("FINAL RESPONSE", total_ms=total_ms)
         return {"routed": "distributed", "text": texts, "metadata": metadata,
-                "stages": tracker.list()}
+                "status": answer_status, "stages": tracker.list()}
 
     # -- pieces ---------------------------------------------------------------------
+    @staticmethod
+    def _team_plan(team: Any, text: str):
+        """A stored team as an ordinary plan: substitution, deps and roles.
+
+        Dependencies are data edges here (not guessed from the instruction):
+        a team says which earlier step it consumes, so the same template is
+        dispatched the same way on one node or several. ``{request}`` is the
+        user's request, substituted into the step templates.
+        """
+        from swarmbly_v0.schema import Plan, Task
+        steps = list((team or {}).get("steps") or [])
+        index: dict[str, int] = {}
+        tasks: list[Task] = []
+        roles: dict[str, str] = {}
+        labels: dict[str, str] = {}
+        for number, step in enumerate(steps):
+            step_id = str(step.get("id") or f"s{number + 1}")
+            depends = []
+            for dep in step.get("depends_on") or []:
+                dep = str(dep)
+                if dep not in index:
+                    raise ValueError(
+                        f"team step {step_id!r} depends on {dep!r}, which is "
+                        "not an earlier step")
+                depends.append(f"t{index[dep]}")
+            task_id = f"t{number}"
+            instruction = str(step.get("instruction") or "").replace(
+                "{request}", text)
+            tasks.append(Task(task_id=task_id, instruction=instruction,
+                              depends_on=tuple(depends)))
+            roles[task_id] = str(step.get("role") or "")
+            labels[task_id] = str(step.get("name") or task_id)
+            index[step_id] = number
+        if not tasks:
+            raise ValueError("a team needs at least one step")
+        return Plan(prompt=text, tasks=tasks), roles, labels
+
     def _resolve(self, task_id, replicas, contract, embedder, *, policy: str = "units",
                  lang: str | None = None, budget: int | None = None,
                  items: dict[int, str] | None = None,
@@ -760,7 +1028,10 @@ class Orchestrator:
         """
         meta = [{"node": r.node_id[:12], "family": r.family, "model": r.model,
                  "elapsed_ms": r.elapsed_ms, "telemetry": r.telemetry,
-                 "truncated": _is_truncated(r, budget)}
+                 "truncated": _is_truncated(r, budget),
+                 "sources": r.sources, "executor": r.executor,
+                 "circle_id": r.circle_id, "circle_name": r.circle_name,
+                 "member_name": r.member_name}
                 for r in replicas]
         if len(replicas) < 2:
             text = replicas[0].text
@@ -871,15 +1142,74 @@ class Orchestrator:
                 blocks[task_id] = block
         return blocks, report
 
+    def _local_model_passages_allowed(self) -> bool:
+        """Whether this device's configured model may receive passages."""
+        from .. import egress
+        destination = egress.model_destination(self.config())
+        if destination.get("clase") == egress.THIRD_PARTY:
+            return bool(egress.policy().third_party_passages)
+        return True
+
+    @staticmethod
+    def _role_sources(resolved: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+        """Executor material returned by search/corpus, with honest origin.
+
+        Provenance comes from the destination the requester actually sent the
+        task to (circle and member), never from a worker's self-description.
+        """
+        out: list[dict[str, Any]] = []
+        fields = ("kind", "title", "span", "cite", "url", "snippet", "text",
+                  "provider", "label", "score")
+        for task_id, outcome in resolved.items():
+            for meta in outcome.get("replica_meta") or []:
+                executor = str(meta.get("executor") or "")
+                if executor not in ("search", "corpus"):
+                    continue
+                for source in meta.get("sources") or []:
+                    if not isinstance(source, dict):
+                        continue
+                    entry = {key: source.get(key) for key in fields
+                             if source.get(key) not in (None, "")}
+                    entry.update(task=task_id, node=str(meta.get("node") or ""),
+                                 executor=executor,
+                                 circle_id=str(meta.get("circle_id") or ""),
+                                 circle_name=str(meta.get("circle_name") or ""),
+                                 member_name=str(meta.get("member_name") or ""))
+                    out.append(entry)
+        return out
+
+    def _public_query_for(self, text: str, project_id: str = "") -> str:
+        """The requester's public-query guard, or a conservative fallback."""
+        if self.public_query is not None:
+            try:
+                return str(self.public_query(text, project_id) or "")
+            except Exception:
+                return ""
+        from .. import web_search
+        try:
+            detail = web_search.propose_query_details(text or "")
+            query = str(detail.get("query") or "").strip()[:160]
+            return query if query and not web_search.contains_private_terms(
+                query, web_search.private_terms(text or "")) else ""
+        except Exception:
+            return ""
+
     def _local_fallback(self, task_id: str, message: dict[str, Any], max_tokens: int,
-                        reason: str):
+                        reason: str, *, passages: bool = False):
         """Run one packet on this device's model; ``None`` if there is none."""
         from ..p2p.worker import render_packet_prompt
         from .scheduler import Replica
         backend = LocalPromptBackend(self.local_stream, self.local_model)
         started = time.monotonic()
-        text = backend.generate(render_packet_prompt(message), max_tokens=max_tokens,
-                                temperature=0.2)
+        # WP4b: a corpus result is treated as the requester's own passages. If
+        # the local model is a third-party service without
+        # privacy.third_party_passages, the egress gate raises inside
+        # LocalPromptBackend and this fallback yields nothing, so the task
+        # fails honestly instead of forwarding the passages.
+        from .. import egress
+        with egress.purpose(egress.PASSAGES if passages else egress.FRAGMENT):
+            text = backend.generate(render_packet_prompt(message), max_tokens=max_tokens,
+                                    temperature=0.2)
         if not text.strip():
             return None
         self.bus.publish("swarm.local_fallback", task=task_id, reason=reason[:160])
@@ -1087,6 +1417,68 @@ class Orchestrator:
                 "SPEC §14 requires calibration per embedder")
 
 
+def _task_label(task: Any) -> str:
+    """A short, human name for a plan step that is not part of a team."""
+    text = " ".join(str(getattr(task, "instruction", "") or "").split())
+    return f"{getattr(task, 'task_id', '')}: {text[:60]}" if text \
+        else str(getattr(task, "task_id", ""))
+
+
+# D-019: stable reason codes are translated for the answer; the metadata keeps
+# the code so the UI and reports do not depend on prose.
+_REASONS = {
+    "en": {
+        "role_unavailable": "the role is unavailable (no worker advertises it)",
+        "no_worker": "no worker was available",
+        "deadline": "the deadline expired",
+        "policy_refusal": "refused by the privacy or role policy",
+        "node_lost": "the worker was lost",
+        "blocked": "blocked by an earlier step",
+        "cancelled": "cancelled",
+        "failed": "failed",
+    },
+    "es": {
+        "role_unavailable": "el rol no está disponible (ningún nodo lo anuncia)",
+        "no_worker": "no había ningún nodo disponible",
+        "deadline": "se agotó el plazo",
+        "policy_refusal": "rechazado por la política de privacidad o de rol",
+        "node_lost": "se perdió el nodo",
+        "blocked": "bloqueado por un paso anterior",
+        "cancelled": "cancelado",
+        "failed": "falló",
+    },
+}
+
+
+def _reason_text(reason: str, lang: str | None) -> str:
+    table = _REASONS.get(str(lang or "en"), _REASONS["en"])
+    return table.get(str(reason or "failed"), table["failed"])
+
+
+def _missing_note(lang: str | None, steps: list[dict[str, Any]]) -> str:
+    """The honest trailing note: completed steps stay, missing ones are named."""
+    names = {str(step.get("step")): str(step.get("name") or step.get("step"))
+             for step in steps}
+    if str(lang or "en") == "es":
+        lines = ["No se pudieron completar algunos pasos:"]
+    else:
+        lines = ["Some steps could not be completed:"]
+    for step in steps:
+        blocked = [names.get(str(dep), str(dep))
+                   for dep in step.get("blocked_by") or []]
+        if blocked:
+            line = (f"- {step.get('name') or step.get('step')}: bloqueado por "
+                    f"{', '.join(blocked)}"
+                    if str(lang or "en") == "es" else
+                    f"- {step.get('name') or step.get('step')}: blocked by "
+                    f"{', '.join(blocked)}")
+        else:
+            line = (f"- {step.get('name') or step.get('step')}: "
+                    f"{_reason_text(str(step.get('reason') or ''), lang)}")
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def _is_truncated(replica, budget: int | None) -> bool:
     """The generation stopped at its token budget rather than finishing.
 
@@ -1166,6 +1558,57 @@ def _select_whole(replicas, meta, embedder, lang: str | None,
 _ITEM_LINE = re.compile(r"^\s*[\[(]?(\d{1,3})[\]).:]\s+(.+?)\s*$", re.M)
 _TABLE_ROW = re.compile(r"^\s*\|\s*\**(\d{1,3})\**\s*\|(.*?)\|?\s*$", re.M)
 MAX_ITEM_ANSWER_WORDS = 4      # an answer on the line after its item is short
+# A model that cannot answer sometimes returns only its table's header (or the
+# separator under it). That is not an answer for any item (T10.17).
+_HEADER_CELLS = frozenset("""
+# nº n° no. number num item items elemento elementos
+answer respuesta result resultado value valor status estado
+""".split())
+_SEPARATOR_CELL = re.compile(r"^:?-{3,}:?$")
+
+
+def _table_cells(line: str) -> list[str]:
+    text = str(line or "").strip()
+    if not text.startswith("|"):
+        return []
+    return [cell.strip(" \t*_`>\"'«»") for cell in text.strip("|").split("|")]
+
+
+def _is_separator_row(line: str) -> bool:
+    cells = _table_cells(line)
+    return bool(cells) and all(_SEPARATOR_CELL.fullmatch(cell or "") for cell in cells)
+
+
+def _is_header_row(line: str) -> bool:
+    """A header row: every cell is a label, at least one is a known heading.
+
+    Data cells such as "Aliso" or "9" do not make a header, and a row with a
+    number in its first cell is data (even if a later cell says "Answer").
+    """
+    text = str(line or "").strip()
+    if not text.startswith("|"):
+        return False
+    cells = _table_cells(text)
+    if not cells or any(not cell for cell in cells):
+        return False
+    folded = [cell.casefold().strip(" .:") for cell in cells]
+    if any(cell and _SEPARATOR_CELL.fullmatch(cell) for cell in folded):
+        return False
+    known = [cell in _HEADER_CELLS for cell in folded]
+    if any(known) and all(
+            cell in _HEADER_CELLS or cell == "#" or re.fullmatch(r"\d{1,3}", cell)
+            for cell in folded):
+        return True
+    return any(known) and all(
+        cell in _HEADER_CELLS or cell == "#"
+        or re.fullmatch(r"[^\W\d_][\w .áéíóúñü-]{0,24}", cell, re.I)
+        for cell in cells)
+
+
+def _is_table_header_or_separator(text: str) -> bool:
+    lines = [line.strip() for line in str(text or "").splitlines() if line.strip()]
+    return bool(lines) and all(_is_separator_row(line) or _is_header_row(line)
+                              for line in lines)
 _LABEL_ANYWHERE = re.compile(r"(?:^|(?<=\s))[\[(]?(\d{1,3})[\]).:]\**\s+")
 # A label left inside a value: "1. 7. libro" (renumbered from 1 with the
 # original number kept, P3d.1) or "7.* Asunción".
@@ -1249,10 +1692,14 @@ def _parse_items(text: str, items: dict[int, str]) -> dict[int, str]:
     for row in _TABLE_ROW.finditer(text):
         n = int(row.group(1))
         if n in items and n not in found:
+            if _is_header_row(row.group(0)) or _is_separator_row(row.group(0)):
+                continue
             cells = [c.strip(_STRIP) for c in row.group(2).split("|")]
             cells = [c for c in cells if c and c.casefold() != items[n].strip(_STRIP).casefold()]
-            if cells:
-                found[n] = _item_value(cells[-1], items[n]) or cells[-1]
+            if cells and not all(_SEPARATOR_CELL.fullmatch(c or "") for c in cells):
+                value = _item_value(cells[-1], items[n]) or cells[-1]
+                if not _is_table_header_or_separator(value):
+                    found[n] = value
     missing = [n for n in items if n not in found]
     if missing:
         for line in text.splitlines():
@@ -1288,7 +1735,9 @@ def _parse_items(text: str, items: dict[int, str]) -> dict[int, str]:
                  for ln in text.split("```")[0 if not text.lstrip().startswith("```") else 1]
                  .splitlines()]
         lines = [ln for ln in lines if ln and ln.lower() not in ("markdown", "md", "text")
-                 and not ln.endswith(":")]
+                 and not ln.endswith(":")
+                 and not _is_table_header_or_separator(ln)
+                 and not _is_separator_row(ln)]
         if len(lines) == len(items):
             for n, line in zip(sorted(items), lines):
                 value = _item_value(line, items[n])
@@ -1319,15 +1768,19 @@ def _parse_single_item(text: str, item: str) -> str:
     row first, then the labelled value, then the substituted number.
     """
     text = text or ""
+    if _is_table_header_or_separator(text):
+        return ""
     # A single-row table may keep the item's own number in the first cell
     # ("| 2 | 9 |" for "Ficha 2"): read the last cell, not the row label.
     for row in _TABLE_ROW.finditer(text):
+        if _is_header_row(row.group(0)) or _is_separator_row(row.group(0)):
+            continue
         cells = [c.strip(_STRIP) for c in row.group(2).split("|")]
         cells = [c for c in cells
                  if c and c.casefold() != item.strip(_STRIP).rstrip(".;,").casefold()]
-        if cells:
+        if cells and not all(_SEPARATOR_CELL.fullmatch(c or "") for c in cells):
             value = _item_value(cells[-1], item) or cells[-1]
-            if value:
+            if value and not _is_table_header_or_separator(value):
                 return value
     parsed = _parse_items(text, {1: item})
     if 1 in parsed:
@@ -1339,6 +1792,8 @@ def _parse_single_item(text: str, item: str) -> str:
     if substituted:
         return substituted
     for line in text.splitlines():
+        if _is_table_header_or_separator(line) or _is_separator_row(line):
+            continue
         bare = re.sub(r"^\s*[-*•]\s*", "", line).strip()
         bare = re.sub(r"^\s*[\[(]?\d{1,3}[\]).:]\s*", "", bare).strip()
         value = _item_value(bare, item)
@@ -1357,7 +1812,11 @@ def _item_value(raw: str, item_text: str) -> str:
     elif _SEPARATOR.search(value):
         value = _SEPARATOR.split(value)[-1].strip(_STRIP)
     value = value.rstrip(".;,").strip()
-    return value if value and value.casefold() != item.casefold() else ""
+    if not value or value.casefold() == item.casefold():
+        return ""
+    if _is_table_header_or_separator(value) or _is_separator_row(value):
+        return ""
+    return value
 
 
 class _ItemCheck:

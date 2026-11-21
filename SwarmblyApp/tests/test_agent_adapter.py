@@ -517,3 +517,84 @@ def test_standing_approval_is_bound_to_the_tool_contract(app_state):
     view = adapter.tools_view()
     tool = next(item for item in view["tools"] if item["id"] == second.id)
     assert tool["standing"] is False
+
+
+# ---- T10.17: failed or suspended tool calls reach the answer and its stages ----
+
+def _fake_run(app_state, conv_id: str, task: str, *, steps, stop_reason="final",
+              status="done", pending=None, approvals=None):
+    from types import SimpleNamespace
+    from swarmbly_app.agent_adapter import AgentRun
+    from swarmbly_app.chat import ActiveRequest
+
+    app_state.db.add_message(conv_id, "user", task)
+    message = app_state.db.add_message(conv_id, "assistant", "",
+                                      meta={"mode": "local", "status": "running"})
+    request = ActiveRequest(
+        request_id="req-test", conversation_id=conv_id, message_id=message["id"],
+        mode="local", model="fake-model:1b", project_id="", use_tools=True, task=task)
+    state = SimpleNamespace(steps=steps, stop_reason=stop_reason, status=status,
+                            pending=pending, pending_reason="")
+    run = AgentRun(run_id="agent-test", request_id=request.request_id,
+                   conversation_id=conv_id, message_id=message["id"],
+                   project_id="", task=task, model="fake-model:1b",
+                   budget={"max_steps": 8, "max_tool_calls": 8,
+                           "max_observation_chars": 4000},
+                   state=state, approvals=list(approvals or []))
+    return request, run
+
+
+def test_a_tool_that_stops_answering_is_named_in_the_answer_and_stages(app_state):
+    from types import SimpleNamespace
+    app_state.config.update({"language": "en"})
+    conv = _conversation(app_state.chat)
+    step = SimpleNamespace(
+        action=SimpleNamespace(tool="mcp:remote/search", arguments={}, why="look it up"),
+        observation=SimpleNamespace(
+            tool="mcp:remote/search", ok=False, source="runtime", sha256="0" * 64,
+            truncated=False,
+            content="tool error: MCPTimeout: MCP tool mcp:remote/search did not answer within 30s"))
+    final = SimpleNamespace(action=SimpleNamespace(text="The answer is 42."),
+                            observation=None)
+    request, run = _fake_run(app_state, conv, "use the search tool",
+                             steps=[step, final], stop_reason="final")
+    app_state.chat._agent_update(request, run)
+    message = _message(app_state.chat, conv)
+    assert "mcp:remote/search" in message["content"]
+    assert "stopped answering" in message["content"]
+    assert "written without that tool" in message["content"]
+    assert "The answer is 42." in message["content"]
+    assert message["meta"]["suspensions"][0]["tool"] == "mcp:remote/search"
+    assert message["stages"][0]["stage"] == "TOOL"
+    assert message["stages"][0]["status"] == "failed"
+    assert "mcp:remote/search" in message["stages"][0]["detail"]["tool"]
+
+
+def test_loop_guard_never_returns_the_raw_tool_block(app_state):
+    from types import SimpleNamespace
+    app_state.config.update({"language": "en"})
+    conv = _conversation(app_state.chat)
+    raw = '{"action": "tool", "tool": "mcp:test/add", "arguments": {"a": 1, "b": 2}}'
+    step = SimpleNamespace(action=SimpleNamespace(text=raw), observation=None)
+    request, run = _fake_run(app_state, conv, "add one and two", steps=[step],
+                             stop_reason="max_tool_calls", status="stopped")
+    app_state.chat._agent_update(request, run)
+    message = _message(app_state.chat, conv)
+    assert '"action"' not in message["content"]
+    assert "mcp:test/add" not in message["content"] or "tool" in message["content"]
+    assert "tool loop was stopped" in message["content"]
+    assert "No prose answer" in message["content"]
+
+
+def test_the_stripper_keeps_prose_and_drops_only_tool_markup():
+    from swarmbly_app.chat import _strip_tool_markup
+    assert _strip_tool_markup("Here is the answer: 42.") == "Here is the answer: 42."
+    assert _strip_tool_markup(
+        'Before.\n{"action": "tool", "tool": "mcp:x/y", "arguments": {}}\nAfter.'
+    ) == "Before.\n\nAfter."
+    assert _strip_tool_markup(
+        "<tool_call>{\"name\": \"mcp:x/y\", \"arguments\": {}}</tool_call>"
+    ) == ""
+    assert _strip_tool_markup(
+        "```json\n{\"action\": \"tool\", \"tool\": \"mcp:x/y\", \"arguments\": {}}\n```"
+    ) == ""

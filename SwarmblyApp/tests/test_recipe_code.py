@@ -15,7 +15,7 @@ from urllib.parse import quote
 
 import pytest
 
-from conftest import FakeBackend
+from conftest import FakeBackend, prepare_guest_for_test
 from swarmbly_app import egress
 from swarmbly_app.inference.base import GenerationResult
 from swarmbly_app.recipes import (CodeRecipeError, build_code_prompt,
@@ -359,8 +359,10 @@ def test_successful_run_meta_receipt_and_safe_download(app_state, tmp_path, monk
     message = approved.json()["assistant_message"]
     code = message["meta"]["code"]
     assert set(code) == {"script_sha256", "files_in", "trapped", "elapsed_s",
-                         "approved_by", "corrections"}
+                         "approved_by", "corrections", "model", "backend"}
     assert code["approved_by"] == "user" and code["trapped"] is None
+    assert code["model"] == "fake-model:1b"
+    assert code["backend"]
     assert code["files_in"] == ["hive.csv"]
     assert code["elapsed_s"] >= 0
     run = message["meta"]["code_run"]
@@ -486,6 +488,9 @@ def test_recipe5_script_reads_the_text_and_the_spreadsheet(
         "print(nota.strip(), len(rows))\n"
         "```")
     app_state.backends.resolve = lambda config=None: fake    # type: ignore[method-assign]
+    # R-005: recipe 5 refuses an unprepared cache instead of compiling inside
+    # the request; this test runs the real guest.
+    prepare_guest_for_test(app_state)
     client = make_client(app_state)
     proposal = client.post("/api/recipes/code/propose", json={
         "project_id": project.id, "question": "combine the note and the table",
@@ -500,3 +505,58 @@ def test_recipe5_script_reads_the_text_and_the_spreadsheet(
     finally:
         if app_state.chat._code_runner is not None:
             app_state.chat._code_runner.close()
+
+
+# ---- T10.17: the script writer is the configured chat model -----------------
+
+def test_code_uses_the_writer_role_and_falls_back_to_the_conversation_model(
+        app_state, tmp_path, monkeypatch):
+    """Recipe 5 writes the script with the ``writer`` role (3.4 design); with
+    no writer configured it uses the conversation's model. Either way the
+    proposal records the model that really wrote it."""
+    _as_available(monkeypatch, app_state)
+    project, _ = _project(app_state, tmp_path)
+
+    class TwoModels(ScriptBackend):
+        def list_models(self):
+            return ["configured:7b", "big:27b"]
+
+    fake = TwoModels("```python\nprint('ok')\n```")
+    app_state.backends.resolve = lambda config=None: fake
+    app_state.config.update({"model": {"model_name": "configured:7b"}})
+    conv = app_state.chat.create_conversation(mode="local", model="configured:7b",
+                                              project_id=project.id)
+    proposal = app_state.chat.propose_code(
+        conversation_id=conv["id"], question="sum the weights",
+        files=["hive.csv"])
+    assert fake.calls[-1]["model"] == "configured:7b"
+    assert proposal["model"] == "configured:7b"
+
+    app_state.config.update({"roles": {"writer": {"model": "big:27b"}}})
+    proposal = app_state.chat.propose_code(
+        conversation_id=conv["id"], question="sum the weights",
+        files=["hive.csv"])
+    assert fake.calls[-1]["model"] == "big:27b"
+    assert proposal["model"] == "big:27b"
+    assert proposal["backend"] == "fake"
+
+
+def test_code_records_the_model_and_backend_in_meta_and_receipt(
+        app_state, tmp_path, monkeypatch, sandbox_cleanup):
+    _as_available(monkeypatch, app_state)
+    project, _ = _project(app_state, tmp_path)
+    fake = ScriptBackend("```python\nprint('42')\n```")
+    app_state.backends.resolve = lambda config=None: fake  # type: ignore[method-assign]
+    conv = app_state.chat.create_conversation(mode="local", model="configured:7b",
+                                              project_id=project.id)
+    proposal = app_state.chat.propose_code(
+        conversation_id=conv["id"], project_id=project.id,
+        question="print the answer", files=["hive.csv"])
+    assert proposal["model"] == "configured:7b"
+    result = app_state.chat.approve_code(proposal["proposal_id"])
+    message = result["assistant_message"]
+    assert message["meta"]["model"] == "configured:7b"
+    assert message["meta"]["code"]["model"] == "configured:7b"
+    assert message["meta"]["code"]["backend"] == "fake"
+    assert message["meta"]["receipt"]["code"]["model"] == "configured:7b"
+    assert message["meta"]["receipt"]["code"]["backend"] == "fake"

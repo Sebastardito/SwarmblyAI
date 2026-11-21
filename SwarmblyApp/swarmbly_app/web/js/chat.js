@@ -13,6 +13,8 @@ const Chat = (() => {
   let recipe = null;             // 3.3: the recipe picked for the next message
   let skills = [];               // 3.4: the active project's imported skills
   let skill = null;              // the skill the user picked (never automatic)
+  let teams = [];                // 3.5, D-019: stored plan templates
+  let team = null;               // the team picked for the next message
   let skillOffer = null;         // a suggestion, shown as a chip, not activated
   let skillOfferTimer = null;
   let agentTools = null;         // 3.4, D-011: what the agent may use here
@@ -72,6 +74,11 @@ const Chat = (() => {
         const found = skills.find((s) => s.name === value);
         if (found) selectSkill(found); else clearSkill();
       }, { "aria-label": t("skills.pick") });
+    els.team = select([{ value: "", label: t("chat.teamNone") }], "",
+      (value) => {
+        team = teams.find((item) => item.id === value) || null;
+        renderTeamSelector();
+      }, { "aria-label": t("chat.team") });
     els.useTools = h("input", { type: "checkbox" });
     els.useToolsRow = h("label.inline.small.tools-toggle",
       els.useTools, h("span", t("chat.useTools")));
@@ -90,6 +97,7 @@ const Chat = (() => {
         h("label.inline", h("span", t("chat.mode")), els.mode),
         h("label.inline", h("span", t("chat.model")), els.model),
         h("label.inline", h("span", t("skills.pick")), els.skill),
+        h("label.inline", h("span", t("chat.team")), els.team),
         els.useToolsRow,
         h("span.spacer"), els.stop, els.send),
       els.hint);
@@ -112,6 +120,7 @@ const Chat = (() => {
     renderProjects();
     await loadSkills();
     await loadAgentTools();
+    await loadTeams();
   }
 
   function renderProjects() {
@@ -257,6 +266,38 @@ const Chat = (() => {
       h("button.chip-x", { type: "button", onclick: () => { skillOffer = null; renderSkillOffer(); },
         "aria-label": t("skills.dismiss") }, "×")));
   }
+
+  // ---- teams (3.5, D-019): a stored plan template for one message -----------
+  async function loadTeams() {
+    try {
+      const payload = await Api.get("/api/teams");
+      teams = payload.teams || [];
+    } catch (_) { teams = []; }
+    if (team && !teams.some((item) => item.id === team.id)) team = null;
+    renderTeamSelector();
+  }
+
+  function renderTeamSelector() {
+    if (!els.team) return;
+    clear(els.team);
+    els.team.appendChild(h("option", { value: "" }, t("chat.teamNone")));
+    for (const item of teams) {
+      const option = h("option", { value: item.id },
+        item.builtin ? `${item.name} · ${t("teams.builtin")}` : item.name);
+      if (team && team.id === item.id) option.selected = true;
+      els.team.appendChild(option);
+    }
+    els.team.disabled = !teams.length;
+  }
+
+  async function useTeam(teamId) {
+    await loadTeams();
+    team = teams.find((item) => item.id === teamId) || null;
+    renderTeamSelector();
+    updateHint();
+  }
+
+  async function refreshTeams() { await loadTeams(); }
 
   async function showSkills() {
     if (!projects.active) { UI.toast(t("skills.needProject"), "error"); return; }
@@ -490,6 +531,7 @@ const Chat = (() => {
     let key = `chat.hint.${mode}`;
     if (mode === "local" && cfg.model?.multi_model) key = "chat.hint.localMulti";
     if (mode !== "local" && (cfg.privacy?.tier || "LOCAL") === "LOCAL") key = "chat.hint.tierLocal";
+    if (team) key = "chat.hint.team";
     els.hint.textContent = t(key);
     updateAuthorButton();
   }
@@ -736,9 +778,19 @@ const Chat = (() => {
     showRecipeTag();
     const status = await codeStatus();
     if (!status.available) {
+      const prep = status.preparation?.status;
+      const notPrepared = prep === "missing" || prep === "stale";
+      const titleKey = prep === "preparing" ? "chat.codePreparing"
+        : prep === "refused" ? "chat.codeLowMemory"
+        : prep === "failed" ? "chat.codePrepareFailed"
+        : notPrepared ? "chat.codeNotPrepared" : "chat.codeUnavailable";
+      const hintKey = prep === "preparing" ? "chat.codePreparingHint"
+        : prep === "refused" ? "chat.codeLowMemoryHint"
+        : prep === "failed" ? "chat.codePrepareFailedHint"
+        : notPrepared ? "chat.codeNotPreparedHint" : "chat.codeUnavailableHint";
       return UI.modal(t("chat.recipeCode"), h("div.form-stack",
-        h("p", t("chat.codeUnavailable")),
-        h("p.muted", t("chat.codeUnavailableHint"))), [
+        h("p", t(titleKey)),
+        h("p.muted", t(hintKey))), [
         { label: t("common.close"), value: null, kind: "ghost" }]);
     }
     if (opts.correctionOf) {
@@ -1091,6 +1143,7 @@ const Chat = (() => {
     const extra = {};
     if (recipe) extra.recipe = recipe;
     if (skill) extra.skill = skill.name;
+    if (team) extra.team_id = team.id;
     if (els.useTools.checked) extra.use_tools = true;
     let researchAuthor = "";
     if (recipe === "research") {
@@ -1352,6 +1405,8 @@ const Chat = (() => {
     const sw = meta.swarm || {};
     const chips = [];
     if (meta.status === "stopped") chips.push(chip(t("chat.stopped"), "warn"));
+    if (meta.answer_status === "partial") chips.push(chip(t("chat.partial"), "warn",
+      t("chat.partialTitle")));
     if (meta.executed === "distributed") {
       const localOnly = (sw.nodes || []).length && (sw.nodes || []).every((n) => n.role === "local model");
       chips.push(chip(t(localOnly ? "chat.execLocalPool" : "chat.execDistributed"), "net"));
@@ -1367,6 +1422,9 @@ const Chat = (() => {
       "", t("chat.evidenceTitle").replace("{n}", sw.evidence.used)));
     if (meta.lce?.sources?.length) chips.push(chip(t("chat.lceChip").replace("{n}", meta.lce.sources.length),
       "", t("chat.lceTitle")));
+    if (sw.role_sources?.length) chips.push(chip(
+      t("chat.roleSourcesChip").replace("{n}", sw.role_sources.length),
+      "", t("chat.roleSourcesTitle")));
     // 3.3/3.4: a table built by code, and cells of any table that are in no passage
     if (meta.table && meta.table.by_code !== false) {
       if (meta.list) chips.push(chip(t("chat.listBuilt").replace("{n}", meta.list.count), "ok",
@@ -1741,6 +1799,24 @@ const Explore = (() => {
       readout(t("explore.skill"), meta.skill?.name || null, "measured"),
       readout(t("explore.skillSha"), meta.skill?.sha256 ? meta.skill.sha256.slice(0, 16) : null, "measured"))];
     if (meta.local_reason) sections.push(h("p.note", I18n.reason(meta.local_reason)));
+    if (sw.role_sources?.length) {
+      // WP4b: search/corpus material is third-party material, labelled with
+      // the member and circle the requester actually sent the task to.
+      sections.push(h("h3", t("explore.roleSources.title")),
+        h("ul.sources", sw.role_sources.map((s) => {
+          const origin = s.member_name
+            ? `${s.member_name} · ${s.circle_name || t("explore.roleSources.local")}`
+            : t("explore.roleSources.localPool");
+          const label = s.label || s.span || "•";
+          const safeUrl = /^https?:\/\//i.test(String(s.url || ""));
+          const target = safeUrl
+            ? h("a", { href: s.url, target: "_blank", rel: "noopener noreferrer" }, s.title || s.url)
+            : (s.title || s.url || "");
+          return h("li", `[${label}] `, target,
+            h("span.muted", ` — ${origin} · ${t(`explore.roleSources.${s.executor}`, s.executor)}`),
+            s.snippet ? h("span.muted", `: ${s.snippet}`) : null);
+        })));
+    }
     if (meta.passages_withheld) sections.push(h("p.note", meta.passages_withheld));
     if (meta.agent) {
       sections.push(h("h3", t("explore.agent.title")),
@@ -1820,6 +1896,9 @@ const Explore = (() => {
     else parts.push(h("ul.sources", r.envios.map((e) => h("li",
       chip(t(`explore.receipt.class.${e.clase}`, e.clase), e.clase === "terceros" ? "warn" : ""),
       h("span", ` ${e.destino} · ${t(`explore.receipt.kind.${e.tipo}`, e.tipo)}`),
+      e.circle_name ? h("span.muted", ` · ${e.circle_name}`) : null,
+      e.member_name ? h("span.muted", ` · ${e.member_name}`) : null,
+      e.pasajes ? h("span.muted", ` · ${e.pasajes} ${t("explore.receipt.passagesShort")}`) : null,
       ["entidad_publica", "consulta_aprobada", "parte_consulta", "palabra_suelta", "id_resultado"].includes(e.tipo)
         ? h("code", ` ${e.valor}`) : null))));
     if ((r.tools || []).length) {
@@ -1863,7 +1942,7 @@ const Explore = (() => {
     return h("div.consensus", h("p.muted", t("explore.agreementNote")), blocks);
   }
 
-  return { open };
+  return { open, useTeam, refreshTeams };
 })();
 
 App.register("chat", Chat);

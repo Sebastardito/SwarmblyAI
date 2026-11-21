@@ -17,6 +17,7 @@
       <nav class="nav" id="nav" aria-label="Sections">
         <button class="nav-btn" data-view="chat" type="button"><span class="nav-glyph" aria-hidden="true">⬡</span><span data-i18n="nav.chat">Chat</span></button>
         <button class="nav-btn" data-view="swarm" type="button"><span class="nav-glyph" aria-hidden="true">⬢</span><span data-i18n="nav.swarm">Swarm</span></button>
+        <button class="nav-btn" data-view="teams" type="button"><span class="nav-glyph" aria-hidden="true">☷</span><span data-i18n="nav.teams">Teams</span></button>
         <button class="nav-btn" data-view="memory" type="button"><span class="nav-glyph" aria-hidden="true">≋</span><span data-i18n="nav.memory">Memory</span></button>
         <button class="nav-btn" data-view="settings" type="button"><span class="nav-glyph" aria-hidden="true">⚙</span><span data-i18n="nav.settings">Settings</span></button>
       </nav>
@@ -24,8 +25,10 @@
     </aside>
 
     <main class="main" id="main" tabindex="-1">
+      <section class="sandbox-notice" id="sandbox-notice" role="status" aria-live="polite" hidden></section>
       <section class="view" id="view-chat"></section>
       <section class="view" id="view-swarm"></section>
+      <section class="view" id="view-teams"></section>
       <section class="view" id="view-memory"></section>
       <section class="view" id="view-settings"></section>
     </main>
@@ -51,6 +54,7 @@
   <script src="/js/app.js"></script>
   <script src="/js/chat.js"></script>
   <script src="/js/monitor.js"></script>
+  <script src="/js/teams.js"></script>
   <script src="/js/lce.js"></script>
   <script src="/js/settings.js"></script>
   <script src="/js/wizard.js"></script>

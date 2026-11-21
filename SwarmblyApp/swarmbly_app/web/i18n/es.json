@@ -1,6 +1,7 @@
 {
  "nav": {
   "chat": "Chat",
+  "teams": "Equipos",
   "swarm": "Enjambre",
   "memory": "Memoria",
   "settings": "Ajustes",
@@ -88,7 +89,9 @@
   "group": {
    "worker": "Compartir esta computadora (worker)",
    "evidence": "Evidencia pública",
-   "roles": "Modelos por papel"
+   "roles": "Modelos por papel",
+   "nodeRoles": "Roles del nodo",
+   "nodeExecutors": "Ejecutores de búsqueda y corpus"
   }
  },
  "node": {
@@ -115,6 +118,11 @@
   "export": "Exportar",
   "delete": "Eliminar",
   "placeholder": "Pregunta algo. Las listas y tareas por ítems pueden compartirse con el enjambre.",
+  "team": "Equipo",
+  "teamNone": "Sin equipo",
+  "hint.team": "Un equipo guardado ejecuta este mensaje como su plan. Las reglas de privacidad, rol y pasajes siguen aplicando.",
+  "partial": "respuesta parcial",
+  "partialTitle": "Algunos pasos no se pudieron completar; la respuesta los nombra y dice por qué.",
   "attach": "Adjuntar texto",
   "attachHint": "Archivos de texto de hasta 200 KB, leídos en esta computadora",
   "attachTooBig": "{name} supera los 200 KB",
@@ -154,6 +162,8 @@
   "replicas": "{n} réplicas",
   "evidenceChip": "Fuentes públicas · {n}",
   "evidenceTitle": "Se añadió contexto público de Wikipedia a {n} elementos; solo se enviaron los textos de esos elementos.",
+  "roleSourcesChip": "Fuentes de ejecutores · {n}",
+  "roleSourcesTitle": "Resultados de la búsqueda pública o del corpus compartido de un miembro del círculo. El solicitante no puede verificar qué motor respondió.",
   "lceChip": "Fuentes locales · {n}",
   "lceTitle": "La respuesta usó pasajes de tus fuentes (LCE C1); no salieron del equipo.",
   "publicOffer": "Buscar también en fuentes públicas",
@@ -240,9 +250,9 @@
   "authorName": "Nombre del autor (exacto)",
   "authorServices": "Servicios",
   "authorService": {
-    "orcid": "ORCID",
-    "openalex": "OpenAlex",
-    "pubmed": "PubMed"
+   "orcid": "ORCID",
+   "openalex": "OpenAlex",
+   "pubmed": "PubMed"
   },
   "authorConsent": "Este nombre se enviará a: {hosts}. Es el nombre de una persona.",
   "authorNoService": "ningún servicio seleccionado",
@@ -332,6 +342,14 @@
   "codeDone": "El script terminó.",
   "codeUnavailable": "El entorno aislado de Python no está instalado.",
   "codeUnavailableHint": "La receta 5 no está disponible hasta instalar el complemento opcional; no se ofrece nada más.",
+  "codePreparing": "El entorno aislado se está preparando en segundo plano.",
+  "codeNotPrepared": "El entorno aislado todavía no está preparado.",
+  "codeNotPreparedHint": "Prepáralo una vez desde el aviso del sandbox o Ajustes → Sistema (o ejecuta swarmbly-app --prepare-sandbox); esta solicitud sigue sin la receta de código.",
+  "codePreparingHint": "Esta solicitud sigue sin la receta de código. Puedes seguir conversando; vuelve a probar la receta cuando el aviso del sandbox diga que está lista.",
+  "codeLowMemory": "No hay suficiente memoria libre para preparar el entorno aislado con seguridad.",
+  "codeLowMemoryHint": "La receta de código sigue sin estar disponible; esta solicitud continúa sin ella. Cierra otras aplicaciones o usa una computadora con más memoria libre y vuelve a intentarlo desde Ajustes.",
+  "codePrepareFailed": "No se pudo preparar el entorno aislado.",
+  "codePrepareFailedHint": "Reinténtalo desde Ajustes → Sistema; esta solicitud sigue sin la receta de código.",
   "codeDownload": "Descargar",
   "codeCorrect": "Proponer un script corregido",
   "codeFilesProduced": "Archivos producidos",
@@ -376,6 +394,13 @@
   "exec": {
    "local": "modelo local",
    "distributed": "distribuida"
+  },
+  "roleSources": {
+   "title": "Material de búsqueda y corpus",
+   "local": "local",
+   "localPool": "pool local",
+   "search": "búsqueda pública",
+   "corpus": "corpus compartido"
   },
   "pipeline": "Pipeline",
   "attempts": "Intentos de despacho",
@@ -460,7 +485,8 @@
    "class": {
     "local": "local",
     "red_propia": "tu red",
-    "terceros": "terceros"
+    "terceros": "terceros",
+    "circulo": "círculo de confianza"
    },
    "kind": {
     "pregunta": "la pregunta",
@@ -485,7 +511,8 @@
    "consentNo": "hacía falta y no se dio: no se consultó nada",
    "consentNotNeeded": "no hacía falta",
    "consentBase": "Base:",
-   "consentScope": "Alcance:"
+   "consentScope": "Alcance:",
+   "passagesShort": "pasajes"
   },
   "citeTitle": "Cita estable: el hash del archivo y el párrafo. Sigue valiendo si el proyecto se mueve o se restaura en otra computadora.",
   "anchor": {
@@ -521,6 +548,13 @@
   "title": "Enjambre",
   "lede": "Computadoras con Swarmbly en tu red. Un nodo cuenta como autenticado cuando prueba su identidad; antes, sus anuncios no son de confianza.",
   "health": "Estado",
+  "nodeRoles": "Roles del nodo",
+  "nodeRolesNote": "Lo que esta computadora ofrece al enjambre como worker. Un rol de nodo es solo información de colocación: nunca amplía la admisión al círculo, la salida ni ningún otro permiso.",
+  "ownRoles": "Roles propios",
+  "noRoles": "ninguno",
+  "noneMarked": "ninguno marcado",
+  "largeModelMin": "Modelo grande desde",
+  "reasonerModels": "Modelos de razonamiento",
   "graph": "Mapa",
   "graphLabel": "Mapa de este nodo y sus pares",
   "graphEmpty": "Aún no hay pares. Activa la red local o conecta por dirección.",
@@ -571,10 +605,12 @@
    "address": "Dirección",
    "state": "Estado",
    "role": "Rol",
+   "roles": "Roles",
    "models": "Modelos",
    "rtt": "Latencia",
    "inflight": "En curso",
-   "seen": "Visto"
+   "seen": "Visto",
+   "link": "Enlace"
   },
   "cache": {
    "hint": "Nodo",
@@ -593,7 +629,10 @@
   "bytesIn": "Datos recibidos",
   "bytesOut": "Datos enviados",
   "sharedModels": "Modelos compartidos",
-  "availability": "Tiempo disponible"
+  "availability": "Tiempo disponible",
+  "bootstrap": "bootstrap: no admitido",
+  "direct": "directa",
+  "relayed": "por relay"
  },
  "memory": {
   "title": "Memoria",
@@ -650,6 +689,7 @@
    "system": "Sistema",
    "tools": "Herramientas"
   },
+  "noProject": "No compartir ningún proyecto",
   "sameModel": "Igual que la conversación",
   "sameEmbedder": "El embedder actual de la app",
   "secretStored": {
@@ -956,6 +996,34 @@
   "roles__writer__api_key": {
    "label": "Clave del servidor del redactor",
    "help": "Se guarda en el llavero del sistema, no en el archivo de configuración."
+  },
+  "node_roles__large_model_min_b": {
+   "label": "Umbral de modelo grande (B)",
+   "help": "Los modelos compartidos con al menos estos parámetros se anuncian como large_model; 7 B es el valor por defecto porque es la clase ampliamente disponible más pequeña claramente por encima de los modelos de 1–3 B que este enjambre suele usar."
+  },
+  "node_roles__reasoner_models": {
+   "label": "Modelos de razonamiento",
+   "help": "Los modelos compartidos que marques aquí se anuncian como reasoner y se usan con think: true. Vacío por defecto."
+  },
+  "node_roles__search__enabled": {
+   "label": "Compartir búsqueda pública",
+   "help": "Si está activo, este worker ejecuta una consulta pública en nombre de un miembro de un círculo de confianza; solo sale la consulta, nunca tus archivos ni tu conversación."
+  },
+  "node_roles__corpus__project_id": {
+   "label": "Corpus a compartir",
+   "help": "Un proyecto local. Solo los pares admitidos en los círculos que elijas ven su nombre visible y su tamaño; nunca títulos, rutas ni contenidos."
+  },
+  "node_roles__corpus__display_name": {
+   "label": "Nombre visible del corpus",
+   "help": "El nombre que ven los pares admitidos. Sin datos personales; máximo 40 caracteres."
+  },
+  "circle__admission_mode": {
+   "label": "Admisión de pares",
+   "help": "Solo mis círculos exige un manifiesto firmado y vigente que liste a ambos nodos. Mis propios dispositivos mantiene el comportamiento LAN de 3.4 (cualquier par autenticado en la LAN)."
+  },
+  "circle__node_name": {
+   "label": "Nombre visible del círculo",
+   "help": "El nombre que este nodo muestra en manifiestos e invitaciones. Vacío usa el nombre del equipo."
   }
  },
  "models": {
@@ -1035,6 +1103,52 @@
   "applied": "Recomendación aplicada",
   "reverted": "Ajustes anteriores restaurados",
   "reversible": "Al aplicar se guardan primero tus ajustes actuales. Una recomendación nunca activa la red local ni compartir esta computadora."
+ },
+
+ "sandbox": {
+  "noticeTitle": "Prepara el entorno aislado una vez",
+  "noticeBody": "La receta de código necesita un Python WebAssembly que se compila una vez en esta computadora: unos {time} s y {memory} GB de memoria. Prepararlo ahora ocurre en segundo plano y puedes seguir conversando.",
+  "expected": "Previsto: {time} s y {memory} GB; ahora hay {free} GB libres (se necesitan al menos {min} GB).",
+  "free": "Solo hay {free} GB de memoria libres; se necesitan al menos {min} GB para empezar con seguridad.",
+  "prepareNow": "Preparar ahora",
+  "prepareAnyway": "Preparar de todos modos",
+  "forceWarning": "La compilación puede tardar minutos y ralentizar esta computadora o usar swap. Cierra otras aplicaciones primero.",
+  "forcingToast": "Preparando de todos modos; la computadora puede ir lenta hasta que termine.",
+  "forcedNote": " (compilado con la anulación por poca memoria)",
+  "later": "Más tarde",
+  "retry": "Reintentar",
+  "preparingToast": "Preparando el entorno aislado en segundo plano.",
+  "readyToast": "El entorno aislado está listo.",
+  "failedToast": "No se pudo preparar el entorno aislado; mira el aviso.",
+  "preparing": "Preparando el entorno aislado ({stage}). Puedes seguir conversando; la receta de código espera a que esté lista.",
+  "ready": "El entorno aislado está listo: compilado en {time} s, pico de {peak} MiB.",
+  "failed": "La preparación falló: {reason}",
+  "refused": "No se inició: {reason}",
+  "notInstalled": "El complemento opcional del sandbox no está instalado; la receta de código no está disponible. Instálalo con pip install 'swarmbly-app[sandbox]'.",
+  "settingsTitle": "Entorno aislado (receta de código)",
+  "settingsBody": "La primera receta de código compila Python WebAssembly una vez y luego reutiliza la caché. Prepáralo aquí si omitiste el aviso del primer arranque.",
+  "compile": "Última compilación",
+  "peak": "Memoria pico",
+  "state": {
+   "not_installed": "no instalado",
+   "missing": "sin preparar",
+   "stale": "desactualizado",
+   "preparing": "preparando",
+   "ready": "listo",
+   "failed": "falló",
+   "refused": "no iniciado"
+  }
+ },
+ "doctorExport": {
+  "title": "Exportación de diagnóstico",
+  "body": "Escribe un JSON y un texto legible para adjuntar a un informe de error. Solo contiene versiones de App/LCE/Core, sistema y arquitectura, Python, clase de CPU/RAM/GPU, complementos instalados, si Ollama responde y sus etiquetas de modelo, el estado del sandbox y sus mediciones, contadores P2P y códigos de relay/envío, y los últimos códigos de error con su fecha.",
+  "never": "Nunca contiene identificadores de nodo ni claves, nombres, nombres de círculo o sus identificadores, nombres de miembros, direcciones IP ni nombres de host, rutas bajo tu carpeta personal, nombres de proyectos, títulos de documentos, preguntas, respuestas, glosario, memoria, claves de API ni el host del relay.",
+  "review": "Revisar y guardar…",
+  "previewTitle": "Exportación de diagnóstico: lo que se guardará",
+  "text": "Texto legible (el archivo exacto)",
+  "json": "JSON (el archivo exacto)",
+  "save": "Guardar estos dos archivos",
+  "saved": "Guardados {json} y {text}"
  },
  "doctor": {
   "venv": "Entorno aislado",
@@ -1316,5 +1430,169 @@
   "copied": "{n} archivos copiados.",
   "usedChip": "Skill: {name}",
   "usedTitle": "El modelo vio el cuerpo de esta skill como material citado (SHA-256 {sha}…)."
+ },
+ "circle": {
+  "title": "Círculos de confianza",
+  "lede": "Un círculo es una lista de miembros firmada y custodiada por su dueño. Solo los nodos de un manifiesto vigente y sin caducar pueden conectarse y recibir tareas.",
+  "none": "Aún no hay círculos. Crea uno o acepta una invitación de otro nodo.",
+  "create": "Crear círculo",
+  "createTitle": "Crear un círculo de confianza",
+  "name": "Nombre del círculo",
+  "accept": "Aceptar invitación",
+  "acceptTitle": "Aceptar una invitación a un círculo",
+  "code": "Código de invitación",
+  "codePlaceholder": "Pega aquí el código SWC1…",
+  "codeHelp": "El código lo firma el dueño. Al aceptarlo se envía una solicitud de unión firmada; el dueño todavía tiene que aprobarla.",
+  "invite": "Invitar",
+  "inviteTitle": "Invitar a un nodo",
+  "qr": "Escanea este QR con el otro dispositivo o envía el código.",
+  "copy": "Copiar código",
+  "copied": "Código de invitación copiado",
+  "leave": "Salir",
+  "delete": "Eliminar círculo",
+  "leaveConfirm": "¿Salir de este círculo? Sus miembros ya no admitirán a este dispositivo.",
+  "deleteConfirm": "¿Eliminar este círculo? Se avisará a los miembros de que se disolvió.",
+  "members": "Miembros",
+  "requests": "Solicitudes de unión",
+  "approve": "Aprobar",
+  "reject": "Rechazar",
+  "revoke": "Revocar",
+  "version": "versión {v}",
+  "owner": "dueño",
+  "member": "miembro",
+  "you": "este dispositivo",
+  "noRequests": "No hay solicitudes pendientes.",
+  "noticeTitle": "Tu instalación conservó la admisión LAN de 3.4",
+  "noticeBody": "Esta versión añade círculos de confianza; las instalaciones nuevas solo admiten pares mediante un manifiesto de círculo. Como esta instalación ya existía, mantiene la antigua admisión LAN de «mis propios dispositivos» hasta que elijas. Revisa la opción en Ajustes → Swarm, o cambia ahora a solo círculos.",
+  "noticeKeep": "Mantener mis propios dispositivos",
+  "noticeSwitch": "Cambiar a círculos",
+  "stale": "Este nodo no tiene el manifiesto vigente; lo obtendrá antes de ser admitido.",
+  "ownerOnly": "Solo el dueño del círculo puede hacerlo.",
+  "expires": "caduca {when}",
+  "unknown": "Círculo desconocido",
+  "modeCircle": "Solo mis círculos",
+  "modeOwn": "Mis propios dispositivos (LAN de 3.4)",
+  "accepted": "Solicitud enviada. Esperando la aprobación del dueño.",
+  "pending": "Guardada. Se enviará cuando el dueño esté disponible.",
+  "outgoing": "Solicitudes de unión enviadas",
+  "col": {
+   "circle": "círculo",
+   "status": "estado",
+   "name": "nombre",
+   "node": "nodo",
+   "endpoints": "endpoints",
+   "role": "rol"
+  },
+  "passages": "Pasajes de documentos",
+  "passagesHelp": "Si está activo, la receta 4 puede adjuntar pasajes de tus documentos a los elementos enviados a miembros de este círculo. Está apagado por defecto y es independiente de privacy.third_party_passages.",
+  "corpusShare": "Compartir corpus con este círculo",
+  "corpusShareHelp": "Este círculo puede recuperar pasajes del corpus compartido. Todos los pares admitidos ven su nombre visible y su tamaño.",
+  "corpusPickFirst": "Elige primero un proyecto en Ajustes → Swarm.",
+  "ownPassages": "Pasajes de documentos a mis propios dispositivos",
+  "ownPassagesHelp": "Si está activo, la receta 4 puede adjuntar pasajes de tus documentos a los elementos enviados a pares en modo mis propios dispositivos. Está apagado por defecto y es independiente de privacy.third_party_passages.",
+  "relay": "Relay",
+  "relaySet": "Configurar relay…",
+  "relayChange": "Cambiar relay…",
+  "relayRemove": "Quitar relay",
+  "relaySetTitle": "Configurar el relay del círculo",
+  "relayChangeTitle": "Cambiar el relay del círculo",
+  "relayHost": "Host del relay",
+  "relayPort": "Puerto del relay",
+  "relayPinLabel": "Pin SHA-256 del certificado del relay",
+  "relayHelp": "El pin es obligatorio. El dueño envía cada nueva versión firmada del manifiesto al relay por una conexión registrada; el archivo firmado en el directorio del operador es solo la copia de arranque y el respaldo.",
+  "relayPinRequired": "Un relay necesita dirección y pin de su certificado.",
+  "relayNone": "Este círculo no tiene relay.",
+  "relayNoneOwner": "Este círculo no tiene relay. Configura uno para que los miembros se alcancen fuera de la LAN.",
+  "relayConnected": "registrado",
+  "relayDown": "inaccesible (reintentando)",
+  "relayOff": "sin conectar",
+  "relayRefused": "rechazado por el relay",
+  "relayLimited": "no iniciado (límite de conexiones)",
+  "relaySecurity": "AVISO DE SEGURIDAD: el pin del certificado no coincide; este relay está detenido",
+  "relayPin": "pin {pin}",
+  "renew": "Renovar manifiesto",
+  "relayPush": "Envío al relay",
+  "relayPushNone": "nada enviado todavía",
+  "relayPushAck": "confirmado v{v}",
+  "relayPushPending": "en cola v{v}",
+  "relayPushRefused": "rechazado: {code}",
+  "relayPushUnreachable": "inaccesible, reintentando",
+  "relayPushSource": "El envío por red es el camino principal. El archivo firmado en el directorio del operador es la copia de arranque y el respaldo cuando el envío por red no puede funcionar.",
+  "relayPushUnknownCircle": "el operador debe instalar el primer manifiesto de este círculo en el relay",
+  "relayPushRateLimited": "el relay limita los envíos del dueño a 30 por hora; la versión más nueva sigue en cola",
+  "relayPushStale": "el relay ya tiene una versión más nueva",
+  "relayPushNotOwner": "este nodo no es el dueño actual del relay",
+  "relayPushOther": "revisa el estado del relay e inténtalo de nuevo"
+ },
+ "teams": {
+  "title": "Equipos",
+  "lede": "Un equipo es un plan guardado: pasos con nombre, cada uno con un rol de nodo opcional y dependencias de pasos anteriores. El mismo equipo corre en una computadora (su pool local de modelos) o entre miembros del círculo, por rol. Un equipo nunca agrega un permiso.",
+  "create": "Nuevo equipo",
+  "createTitle": "Nuevo equipo",
+  "editTitle": "Editar equipo",
+  "edit": "Editar",
+  "delete": "Eliminar",
+  "duplicate": "Duplicar",
+  "use": "Usar en el chat",
+  "builtin": "ejemplo",
+  "own": "tuyo",
+  "project": "este proyecto",
+  "none": "Todavía no hay equipos. Crea uno o duplica un ejemplo.",
+  "loadFailed": "No se pudieron leer los equipos: {e}",
+  "storage": "Guardado en {path}",
+  "name": "Nombre",
+  "description": "Descripción",
+  "step": "Paso {n}",
+  "stepName": "Nombre del paso",
+  "instruction": "Plantilla de instrucción",
+  "depends": "Corre después de",
+  "after": "después de",
+  "addStep": "Agregar paso",
+  "removeStep": "Quitar",
+  "save": "Guardar",
+  "saved": "Equipo guardado",
+  "deleted": "Equipo eliminado",
+  "nameRequired": "El equipo necesita un nombre.",
+  "stepsRequired": "Cada paso necesita un nombre y una instrucción.",
+  "placeholderRequired": "Al menos un paso debe contener {request}.",
+  "requestHint": "Usa {request} donde va el mensaje del usuario. Un paso solo puede depender de pasos anteriores.",
+  "duplicateHint": "La copia es tuya; el ejemplo sigue siendo de solo lectura.",
+  "copySuffix": "copia",
+  "deleteConfirm": "¿Eliminar el equipo «{name}»?",
+  "deleteHint": "Solo se quita la plantilla guardada; las respuestas ya hechas no se tocan.",
+  "picked": "El equipo «{name}» ejecutará el próximo mensaje.",
+  "unnamedStep": "paso sin nombre",
+  "roleLabel": "Rol de nodo",
+  "role": {
+   "none": "Sin rol (cualquier nodo)",
+   "search": "búsqueda",
+   "corpus": "corpus",
+   "large_model": "modelo grande",
+   "reasoner": "razonador"
+  }
+ },
+ "credits": {
+  "title": "Créditos de reciprocidad",
+  "lede": "Los créditos son una cortesía dentro de un círculo, no dinero. Cuando aceptas un resultado verificado de un miembro, firmas un recibo para ese miembro; puede ofrecerlo de vuelta justo antes de enviarte trabajo, y puede hacer que su tarea espere un turno libre. Un recibo pertenece solo al worker que nombra, solo en ese círculo, y caduca. No hay transferencia, venta, mercado ni libro contable compartido: el saldo es local y un gasto reportado dos veces se marca solo en el emisor: detección, no prevención.",
+  "empty": "Todavía no hay círculo. Los créditos se ganan dentro de un círculo de confianza.",
+  "issued": "Recibos emitidos",
+  "unit": "Unidad",
+  "unitReceipts": "un recibo = una cortesía",
+  "ttl": "Caducidad por defecto",
+  "withinDays": "en {days} días",
+  "flagged": "Reportes de doble gasto",
+  "flaggedHelp": "El emisor registra lo que emitió y lo que los workers reportaron como gastado. Es detección, no prevención, y nada se difunde fuera del círculo.",
+  "noFlagged": "Ningún recibo fue reportado como gastado dos veces.",
+  "col": {
+   "name": "círculo",
+   "balance": "saldo",
+   "earned": "ganados",
+   "spent": "gastados",
+   "expiring": "próximos a caducar",
+   "receipt": "recibo",
+   "worker": "worker",
+   "reports": "reportes",
+   "reason": "motivo"
+  }
  }
 }

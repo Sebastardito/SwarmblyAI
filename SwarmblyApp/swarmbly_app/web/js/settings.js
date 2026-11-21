@@ -11,6 +11,7 @@ const Settings = (() => {
   let tab = "recommended";
   const els = {};
   let installed = [];          // installed models (from /api/models)
+  let projects = { items: [] }; // local projects for the corpus picker
   const pulls = {};            // name -> progress element
   const toolProposals = new Map();   // server id -> live manifest shown for approval
 
@@ -64,6 +65,11 @@ const Settings = (() => {
     swarm: [
       { key: "swarm.mode", type: "select", options: [["local", "mode.local"], ["lan", "mode.lan"], ["auto", "mode.auto"]] },
       { key: "swarm.lan_enabled", type: "bool" },
+      // 3.5, D-015: circles are the default for new installs; an upgraded
+      // installation keeps "own_devices" until the user changes it.
+      { key: "circle.admission_mode", type: "select",
+        options: [["circle", "circle.modeCircle"], ["own_devices", "circle.modeOwn"]] },
+      { key: "circle.node_name", type: "text", advanced: true },
       { key: "swarm.k_min", type: "number", min: 1, max: 8 },
       { key: "swarm.k_max", type: "number", min: 1, max: 8 },
       { key: "swarm.n_fragments_max", type: "number", min: 2, max: 16 },
@@ -77,6 +83,19 @@ const Settings = (() => {
       { key: "swarm.worker_only_idle", type: "bool", group: "worker" },
       { key: "swarm.worker_only_plugged", type: "bool", group: "worker" },
       { key: "swarm.worker_max_task_seconds", type: "number", min: 5, max: 3600, group: "worker", advanced: true },
+      // 3.5, D-018: NODE roles (what this machine offers), not the model
+      // roles of the Models tab. A role is placement information only.
+      { key: "node_roles.large_model_min_b", type: "number", min: 0.1, max: 10000,
+        step: 0.5, group: "nodeRoles" },
+      { key: "node_roles.reasoner_models", type: "models", group: "nodeRoles" },
+      // 3.5, D-018 WP4b: executors, off by default. Search runs a public
+      // query on a circle member's behalf; corpus shares one project's
+      // documents with the circles selected in the circle cards below.
+      { key: "node_roles.search.enabled", type: "bool", group: "nodeExecutors" },
+      { key: "node_roles.corpus.project_id", type: "project", group: "nodeExecutors" },
+      { key: "node_roles.corpus.display_name", type: "text", group: "nodeExecutors",
+        placeholder: "Shared corpus",
+        showIf: (c) => !!c.node_roles?.corpus?.project_id },
       { key: "swarm.hedge_fallback_ms", type: "number", min: 200, max: 600000, step: 500, advanced: true },
       { key: "swarm.tau_sem", type: "number", min: 0, max: 1, step: 0.05, advanced: true },
       { key: "swarm.discovery_ttl_s", type: "number", min: 30, max: 86400, advanced: true },
@@ -135,6 +154,7 @@ const Settings = (() => {
       const data = await Api.get("/api/models");
       installed = (data.backends || []).flatMap((b) => (b.models || []).map((m) => ({ ...m, backend: b.name })));
     } catch (_) { installed = []; }
+    try { projects = await Api.get("/api/projects"); } catch (_) { projects = { items: [] }; }
     renderTab();
   }
 
@@ -178,7 +198,7 @@ const Settings = (() => {
       if (f.key === "language") return App.setLanguage(v);
       return App.saveConfig(nested(f.key, v)).then(() => {
         if (["model.multi_model", "profile", "roles.writer.backend",
-             "roles.embeddings.backend"].includes(f.key)) renderTab();
+             "roles.embeddings.backend", "node_roles.corpus.project_id"].includes(f.key)) renderTab();
       }).catch(() => renderTab());
     };
     let control;
@@ -202,6 +222,12 @@ const Settings = (() => {
       control = h("input", { type: "number", min: f.min, max: f.max, step: f.step || 1,
         value: value ?? "", "aria-label": label });
       control.addEventListener("change", () => save(Number(control.value)));
+    } else if (f.type === "project") {
+      // One local project/collection for the corpus executor. Empty shares
+      // nothing; the circles that may read it are selected in the Swarm view.
+      const options = [{ value: "", label: t("settings.noProject") }]
+        .concat((projects.items || []).map((p) => ({ value: p.id, label: p.name })));
+      control = select(options, value || "", save, { "aria-label": label });
     } else if (f.type === "model") {
       const chat = installed.filter((m) => m.kind !== "embedding").map((m) => ({ value: m.name,
         label: m.remote ? `${m.name} (${t("settings.cloudModel").replace("{host}", m.remote)})` : m.name }));
@@ -749,11 +775,34 @@ const Settings = (() => {
     }
     clear(els.body);
     els.body.appendChild(Doctor.view(d, () => renderTab()));
+    els.body.appendChild(await sandboxSection());
+    els.body.appendChild(h("section.subpanel",
+      h("h3", t("doctorExport.title")),
+      h("p.muted", t("doctorExport.body")),
+      h("p.note", t("doctorExport.never")),
+      DoctorExport.button()));
     els.body.appendChild(h("section.subpanel",
       h("h3", t("support.title")),
       h("p.muted", t("support.body")),
       h("p", h("a", { href: "https://buymeacoffee.com/swarmbly", target: "_blank",
         rel: "noopener noreferrer" }, t("support.link")))));
+  }
+
+  /* The compiled-cache state is shown here too, not only in the first-run
+     notice: a volunteer can prepare or retry it at any time. */
+  async function sandboxSection() {
+    const section = h("section.subpanel");
+    const paint = async () => {
+      let s;
+      try { s = await Api.get("/api/sandbox"); }
+      catch (e) { clear(section).appendChild(h("p.error", e.message)); return; }
+      clear(section);
+      section.appendChild(h("h3", t("sandbox.settingsTitle")));
+      section.appendChild(h("p.muted", t("sandbox.settingsBody")));
+      section.appendChild(SandboxNotice.view(s, paint));
+    };
+    await paint();
+    return section;
   }
 
   function relabel() { build(); renderTab(); }
@@ -897,6 +946,42 @@ const Doctor = (() => {
   }
 
   return { view };
+})();
+
+/* Doctor export (R-014): show the exact bytes first, then save that snapshot. */
+const DoctorExport = (() => {
+  const { h, t, button } = UI;
+
+  function buttonEl() {
+    return button(t("doctorExport.review"), review, "primary small");
+  }
+
+  async function review() {
+    let preview;
+    try { preview = await Api.get("/api/doctor/export/preview"); }
+    catch (err) { UI.toast(err.message, "error"); return; }
+    const body = h("div.form-stack",
+      h("p", t("doctorExport.body")),
+      h("p.note", t("doctorExport.never")),
+      h("h3", t("doctorExport.text")),
+      h("pre.code-preview", preview.text),
+      h("details", h("summary", t("doctorExport.json")),
+        h("pre.code-preview", preview.json_text)));
+    const ok = await UI.modal(t("doctorExport.previewTitle"), body, [
+      { label: t("common.cancel"), value: false, kind: "ghost" },
+      { label: t("doctorExport.save"), value: true, kind: "primary" }]);
+    if (!ok) return;
+    try {
+      const saved = await Api.post("/api/doctor/export",
+        { snapshot_id: preview.snapshot_id });
+      const base = (p) => String(p || "").split(/[\\/]/).pop();
+      UI.toast(t("doctorExport.saved")
+        .replace("{json}", base(saved.json_file))
+        .replace("{text}", base(saved.text_file)), "ok");
+    } catch (err) { UI.toast(err.message, "error"); }
+  }
+
+  return { button: buttonEl, review };
 })();
 
 App.register("settings", Settings);

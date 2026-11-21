@@ -93,6 +93,26 @@ def test_destination_classes(url, cls):
     assert egress.classify_url(url)[0] == cls
 
 
+def test_circle_and_unclassified_peer_policy():
+    policy = egress.Policy()
+    assert policy.allows(egress.CIRCLE, "peer-node", egress.FRAGMENT)[0]
+    # D-017: a peer outside every circle is refused, never labelled third party.
+    assert not policy.allows("", "peer-node", egress.FRAGMENT)[0]
+    with egress.request_ledger("circle-check"):
+        egress.check_call("peer://node-1", 10, "fragmento t0", kind=egress.FRAGMENT,
+                          destination_class=egress.CIRCLE,
+                          destination_label="nodo node-1",
+                          circle_id="c1", circle_name="Familia",
+                          member_name="Ana")
+    with egress.request_ledger("circle-block") as ledger:
+        with pytest.raises(egress.EgressDenied):
+            egress.check_call("peer://node-2", 10, "fragmento t0",
+                              kind=egress.FRAGMENT, destination_class="",
+                              destination_label="nodo node-2")
+    assert ledger.events[-1]["bloqueado"] is True
+    assert ledger.events[-1]["clase"] == ""
+
+
 def test_local_names_from_environment(monkeypatch):
     monkeypatch.setenv("SWARMBLY_LOCAL_HOSTS", "ollama,searxng")
     assert egress.classify_url("http://ollama:11434")[0] == egress.LOCAL
