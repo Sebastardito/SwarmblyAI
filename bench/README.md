@@ -71,6 +71,16 @@ that only contains one of its words (labelled for the judge), recognises «red
 pública» as the public-search entry, and reads «…; sin «X» ni …» as a
 constraint on the entry before it, not as a destination.
 
+Harness **1.4.0** adds the two-node privacy mode (`--two-node`), the open
+team-versus-local battery (`dev_team/`), the node-loss battery
+(`dev_node_loss/`) and the guide for the maintainer's sealed bank v5
+([`BANK_V5_GUIDE.md`](BANK_V5_GUIDE.md)). A v5 card marked `Dos nodos: sí`
+starts the App under test as the circle owner, a loopback member and a
+non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
+`no_miembro_rechazado`, the member's ledger and the three rules. v3/v4 banks
+keep their `--check`/`--rescore` behaviour. The `--python` option also reads
+`SWARMBLY_APP` and is available as `--app-python`.
+
 Harness 1.3.5 rejects a distinctive word of a multi-word forbidden term as
 `contiene un fragmento de un término prohibido` (ordinary words such as «río» or
 «norte» do not count), counts one approved public query once although
@@ -119,6 +129,8 @@ python3 bench/run_bank.py --bank /path/to/bank --model qwen2.5:7b \
 ```
 
 For development, the **open battery** in [`dev/`](dev/README.md) uses the same machinery with fictitious material that can be read and used for tuning: `python3 bench/run_dev.py --model qwen2.5:7b`. A second open battery, [`dev_v3/`](dev_v3/README.md), reproduces the failure patterns of the sealed banks v3 on fictitious material: `python3 bench/run_dev.py --model qwen2.5:7b --battery bench/dev_v3`. Since harness 1.2.0 a case card may also say how the question is asked (`Receta:`, `Consulta aprobada:`, `Permiso público:`, `Turno 2:`…), and since 1.2.1 `Documentos:` may name files with spaces or use codes defined in a legend (`02_CASOS_RESERVADOS/LEYENDA*.md`).
+
+The two-node mode is also available for open cases: `python3 bench/run_dev.py --model qwen2.5:7b --two-node --battery bench/dev`. The [team battery](dev_team/README.md) compares one node against 2–3 loopback nodes and writes a CSV plus Markdown; the [node-loss battery](dev_node_loss/README.md) kills a member during a search and checks the honest partial answer. Both accept `--fake-ollama` for a deterministic CI smoke run.
 
 Requirements: Swarmbly installed (the installer's `.venv`, or `--python`), Ollama running with the chat model and `nomic-embed-text`. Run each bank once per version; a technical failure means repeating the whole battery, never a single case.
 
@@ -182,6 +194,16 @@ El arnés 1.3.4 distingue una consulta pública con el nombre completo de la
 persona (fuga) de una que solo contiene una de sus palabras (etiquetada para el
 juez), reconoce «red pública» como la entrada de búsqueda pública y lee
 «…; sin «X» ni …» como una restricción de la entrada anterior, no como un destino.
+
+El arnés **1.4.0** añade el modo de privacidad de dos nodos (`--two-node`), la
+batería abierta de equipo frente a local (`dev_team/`), la batería de pérdida
+de nodo (`dev_node_loss/`) y la guía para el banco sellado v5 del mantenedor
+([`BANK_V5_GUIDE.md`](BANK_V5_GUIDE.md)). Una ficha v5 marcada `Dos nodos: sí`
+arranca la App bajo prueba como dueña del círculo, un miembro de loopback y un
+no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
+`no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
+v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
+`--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
 
 El arnés 1.3.5 rechaza una palabra distintiva de un término prohibido de varias
 palabras como `contiene un fragmento de un término prohibido` (las palabras
