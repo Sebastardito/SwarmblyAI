@@ -30,7 +30,7 @@ telemetry; nothing is uploaded unless you choose to send it.
 2. Run the installer for your system: `install.command` on macOS,
    `install.sh` on Linux, `install.bat` on Windows.
 3. Choose **Quick install**. The installer explains everything before it starts.
-4. The installer may prepare the sandbox at the end. That is a one-time
+4. The installer may prepare the sandbox after the components. That is a one-time
    WebAssembly compile: about 5 s on an Apple-silicon Mac or 60 s on a 2-vCPU
    Linux machine, about 3.3 GB of memory, cached afterwards. If the machine has
    less than 6 GB available, the app offers it on first launch instead.
@@ -104,7 +104,7 @@ telemetría; no se sube nada salvo que tú decidas enviarlo.
 2. Ejecuta el instalador de tu sistema: `install.command` en macOS,
    `install.sh` en Linux, `install.bat` en Windows.
 3. Elige **Instalación rápida**. El instalador explica todo antes de empezar.
-4. Puede que prepare la caja al final. Es una compilación WebAssembly de una
+4. Puede que prepare la caja después de los componentes. Es una compilación WebAssembly de una
    sola vez: unos 5 s en un Mac con chip Apple o 60 s en un Linux de 2 vCPU,
    unos 3,3 GB de memoria, y después queda en caché. Si hay menos de 6 GB
    disponibles, la App lo ofrece en el primer arranque.
