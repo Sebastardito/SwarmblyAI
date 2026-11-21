@@ -1,6 +1,6 @@
 # Architecture of release 3.5 · Teams and trusted circles · private beta
 
-**Status:** proposal, 2026-11-21. Decisions marked *proposed* wait for the maintainer; they become D-015… in [`DECISIONS.md`](DECISIONS.md) when taken.
+**Status:** accepted 2026-11-21 (D-015…D-022 in [`DECISIONS.md`](DECISIONS.md)). The maintainer chose an own relay already in 3.5 (D-016).
 **Inputs:** the read-only map T10.1 (network layer, roles, teams, off-LAN, installers, credits, tests), [`ROADMAP.md`](../ROADMAP.md) row 3.5 and decision 8, the 3.4 ledger.
 
 ## 1. Where 3.5 starts
@@ -41,7 +41,7 @@ Today's swarm is **LAN-only, requester-central, authenticated but not authorised
 
 ## 3. Proposed design
 
-### 3.1 Circle, membership and invitation (*proposed* D-015, D-016)
+### 3.1 Circle, membership and invitation (D-015)
 
 **The circle:**
 - A **circle** is a signed **membership manifest**: `circle_id`, owner key, member `node_id`s with display names, expiry, version and an optional endpoint hint per member.
@@ -61,17 +61,19 @@ Today's swarm is **LAN-only, requester-central, authenticated but not authorised
 - Mutual TLS and the SPEC's `TRUSTED` tier stay out of 3.5; circle work keeps tier `GLOBAL`, lane `PUBLIC`.
 - A circle CA is reconsidered in 3.6.
 
-### 3.2 Beyond the LAN (*proposed* D-017)
+### 3.2 Beyond the LAN: own rendezvous and relay (D-016)
 
-The App **dials an address**; it does not manage the network. Two ways are supported and documented:
-- **(a) a direct address** with a forwarded port;
-- **(b) an overlay of the circle's choice** (self-hosted Headscale/WireGuard recommended; Tailscale or Nebula work the same way), dialled by overlay hostname or IP.
+- **The service:** a small **rendezvous and relay service** (`relay/` in the umbrella, a separate process, AGPL like the rest) that a circle owner runs on a host with a public address (a VPS or a home server with a forwarded port).
+- **Nodes:** each node keeps one outbound connection to its circle's relay and registers its `node_id`, signed and proven by the key.
+- **Pairing:** two members ask the relay to pair; the relay checks both against the circle manifest it holds and **splices the two connections**.
+- **End-to-end channel:** the nodes then run their normal TLS 1.3 and the channel-bound handshake **through** the splice, so the relay forwards ciphertext it cannot read.
+- **What the relay sees:** who talks to whom, when and how many bytes. It is honest about this, and the receipt names the relay as a transport destination of class `THIRD_PARTY`-transport (metadata only).
+- **Abuse limits:** connection and byte limits per member, no open registration (circle members only), idle timeouts, and the relay never stores payloads.
+- **Direct path:** direct addresses (`host:port` in the manifest) keep working and are tried first. An overlay network the circle runs needs nothing from the App.
+- **NAT traversal:** hole punching (UDP/QUIC) is a stretch goal; if it is not ready it moves to 3.6 with automatic updates.
+- **Wire:** the relay protocol is a thin outer framing (register, pair, splice) **outside** the end-to-end TLS; the task wire inside stays 0.2.
 
-Endpoints travel in the manifest or in the invitation. mDNS stays the LAN path.
-
-Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
-
-### 3.3 Honest classification and the egress gate (*proposed* D-018)
+### 3.3 Honest classification and the egress gate (D-017)
 
 - **A new destination class `CIRCLE`:** between `OWN_NETWORK` (my own devices) and `THIRD_PARTY`.
 - **Peer sends go through `egress.check_call`** like every other outbound call, with purpose `FRAGMENT`.
@@ -79,7 +81,7 @@ Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
 - **Passages to peers:** a new per-circle switch `circle_passages`, off by default, separate from `privacy.third_party_passages` (whose name is about model services). Recipe 4 uses it.
 - **Docs:** `ARCHITECTURE.md` is corrected where it says passages go "nowhere".
 
-### 3.4 Roles (*proposed* D-019)
+### 3.4 Roles (D-018)
 
 - The signed advertisement gains `roles`: `search`, `large_model`, `reasoner`, `corpus`. Each role has a small, validated metadata block:
   - large model: the model and its parameter count;
@@ -89,7 +91,7 @@ Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
 - Roles are **self-declared**. The scheduler uses them for placement and records per-role success, so a role that fails is avoided; no reputation is trusted from the advertiser.
 - New local executors so that roles are real on one node: a search executor (public search on the worker, query-only, through its own egress policy), a corpus executor (retrieval on the worker's own LCE, answering only with what the circle may see) and a reasoner flag carried in the packet.
 
-### 3.5 Teams and honest partial results (*proposed* D-020)
+### 3.5 Teams and honest partial results (D-019)
 
 **Teams:**
 - A **team** is a named, stored plan template: roles, steps, dependencies. It runs with the existing **requester-central** scheduler.
@@ -100,20 +102,20 @@ Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
 - 3.5 assembles a **partial answer**: completed steps, missing steps named, and why. Recipe 4 keeps its per-item statuses, and a failed wave no longer aborts the whole list.
 - A coordinator that disappears is the requester itself, so a lost coordinator ends the run; no plan migration in 3.5.
 
-### 3.6 Credits (*proposed* D-021)
+### 3.6 Credits (D-020)
 
 - **Earning:** each accepted task yields a **signed, non-transferable credit receipt**, signed by the requester for the worker: task id, circle, worker, tokens and time, model, timestamp, expiry.
 - **The wallet:** the worker's wallet is local. It is spendable only by submitting work to the **same circle**, and expires.
 - **Verification:** a requester verifies spent receipts it issued itself, or that a circle member issued. Double spending inside a circle is detected by the issuer's receipt log, exchanged on the control plane.
 - No transfer, no market and no global ledger, as SPEC §18 and GOVERNANCE require. The existing daily counters stay as the dashboard.
 
-### 3.7 Wire (*proposed* D-022)
+### 3.7 Wire (D-021)
 
 - The task plane stays **wire 0.2**.
 - Circle control (manifest fetch, invitation acceptance, credit-receipt exchange) uses **new message types on the same TLS session**, MINOR-safe, so older nodes ignore them.
 - They are documented as an appendix to the SPEC with conformance tests. The 0.3 bump waits for 3.6, when relay and rendezvous arrive.
 
-### 3.8 Signed installers (*proposed* D-023, needs the maintainer's accounts)
+### 3.8 Signed installers (D-022, the maintainer opens the Apple and Windows signing accounts)
 
 - **macOS:** a Developer ID-signed and notarised `.pkg` (or app bundle), produced in CI from secrets the maintainer provides.
 - **Windows:** an Authenticode-signed installer (an OV certificate or Azure Trusted Signing).
@@ -148,13 +150,13 @@ Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
 | WP | Content | Depends on |
 |---|---|---|
 | WP0 | Baseline hygiene: the 2 P2P family tests, Windows P2P CI, installer Python 3.11, CHANGELOG/ARCHITECTURE drift | — |
-| WP1 | Circle manifest, invitation (file/code/QR), admission at handshake and worker | D-015, D-016 |
-| WP2 | Destination class `CIRCLE`, peer sends through the egress gate, receipts, `circle_passages` | WP1, D-018 |
-| WP3 | Off-LAN dialling: endpoints in manifest/invitation, overlay guide, address handling (IPv6, hostnames) | WP1, D-017 |
-| WP4 | Roles in the advertisement, role-aware placement, search/corpus/reasoner executors | WP2, D-019 |
-| WP5 | Teams (stored templates) and honest partial results | WP4, D-020 |
-| WP6 | Credit receipts, local wallet, control-plane exchange | WP2, D-021, D-022 |
-| WP7 | Signed installers, first-launch sandbox compile, beta kit | D-023 |
+| WP1 | Circle manifest, invitation (file/code/QR), admission at handshake and worker | D-015 |
+| WP2 | Destination class `CIRCLE`, peer sends through the egress gate, receipts, `circle_passages` | WP1, D-017 |
+| WP3 | Off-LAN: rendezvous and relay service, node registration and pairing, end-to-end TLS through the splice, direct addresses first, relay in the receipt, deployment guide for a circle owner | WP1, D-016 |
+| WP4 | Roles in the advertisement, role-aware placement, search/corpus/reasoner executors | WP2, D-018 |
+| WP5 | Teams (stored templates) and honest partial results | WP4, D-019 |
+| WP6 | Credit receipts, local wallet, control-plane exchange | WP2, D-020, D-021 |
+| WP7 | Signed installers, first-launch sandbox compile, beta kit | D-022 |
 | WP8 | Batteries: team vs local, node loss, two-node privacy harness; guide for bank v5 | WP2–WP6 |
 | WP9 | Leftovers from 3.4: T9.9 rest, T9.6/T9.10, glossary scan cache | — |
 
@@ -169,3 +171,4 @@ Native rendezvous, relay and NAT traversal remain 3.6, as the roadmap says.
 | R-012 | Credit receipts gamed or double-spent | Requester-signed receipts, issuer logs, expiry, circle-scoped |
 | R-013 | Signing depends on paid accounts and CI secrets | Fallback with Sigstore/minisign; secrets only in the maintainer's CI |
 | R-014 | The beta collects personal data by accident | No telemetry; doctor export reviewed for personal data; consent form |
+| R-015 | The relay is a new public service: abuse, denial of service, metadata exposure, a bug that lets a non-member pair | Members only (manifest check), limits per member, no payload storage, end-to-end TLS through the splice, its own test suite and an external port scan before the beta |

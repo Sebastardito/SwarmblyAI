@@ -65,11 +65,11 @@ Status: `todo` · `running` · `review` · `done` · `blocked` · `dropped`. Ver
 
 # Tasks · release 3.5 "Teams and trusted circles · private beta"
 
-Architecture: [`ARCH_3.5.md`](ARCH_3.5.md) (proposal; decisions pending).
+Architecture: [`ARCH_3.5.md`](ARCH_3.5.md) (accepted, D-015…D-022).
 
 | ID | Repo | Goal | Depends on | Status | Verification | Next |
 |---|---|---|---|---|---|---|
 | T10.1 | all | Read-only map for 3.5: network layer, roles, teams, off-LAN, installers, credits, tests, risks, decisions | — | done | Spot checks: peers hard-coded `OWN_NETWORK` in receipts (`chat.py:2826`); `trusted_nodes` read nowhere; `_register` has no membership check | ARCH_3.5 |
-| T10.2 | all | Architecture 3.5 and decisions D-015…D-023 with the maintainer | T10.1 | review | — | Maintainer decides |
+| T10.2 | all | Architecture 3.5 and decisions D-015…D-022 with the maintainer | T10.1 | done | Maintainer chose: signed manifests and invitations, own relay in 3.5, per-task signed credit receipts, Apple and Windows signing accounts | WP0, WP1, WP3 spike |
 | T10.3 | all | WP0 baseline hygiene: 2 P2P family tests, Windows P2P CI, installer Python 3.11, doc drift | — | todo | — | — |
 
