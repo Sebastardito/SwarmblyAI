@@ -47,14 +47,17 @@ archivo`; `Cambio de servidor` only needs the turn and a server of the card;
 |---|---|
 | `Nivel`, `Capacidades` | groups observations for the four tables of step 10 |
 | `Receta: código` + `Archivos` + `Script` | opens a project, proposes one script, then approves, cancels or (for `aprobar y corregir`) proposes one correction; never runs `03_REFERENCIA` |
-| `Resultado exacto` + `Tolerancia` | compares the computed output with the numbers copied into the card; a missing number is a failure |
+| `Resultado exacto` + `Tolerancia` | compares the computed output with the numbers copied into the card; a missing number is a failure. An N7 card without `Tolerancia` is compared with zero tolerance, and the comparison lists the numbers that matched (`coinciden`) |
+| `Archivo de salida` | compares the named file with what the run produced: it must exist, have the named extension and not be empty; when the field also gives `columnas` or `filas`/`rows`, the harness reads the produced CSV/TSV/JSON/Markdown and checks them. The result is `salida` in the case summary and a named `Comprobaciones` entry |
+| `Material necesario` | matches its quoted phrases against the documents, skill, MCP servers, roles and team the App reported using, with the same folded whole-word rule as names; a phrase that is not material may also be found in the answer. Each phrase adds a named check and the summary counts `frases`, `usadas` and `faltan` |
 | `Receta: lista` + `Lista` / `Columna` + `Dónde` | calls the list preview, then sends the list as `recipe: list`; the CSV column is read by the harness |
 | `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | adds/starts each catalogue, approves only the listed tools, and plays the approval cards in order; a card whose arguments are not the ones the card says is **skipped**, never approved |
 | `Cambio de servidor: <server> en el turno N` | swaps in `<server>.cambio.json` before turn N and waits for the App to suspend the server (`tools/list_changed`) |
 | `Skill` + `Activar skill` | imports the folder into the project (`POST /api/skills/import`) and activates it only when the card says so; checks `MARCADOR_SKILL.txt` |
 | `Autor` + `Servicios` + `Decisión autor` | drives `POST /api/author/lookup`: cancel, exact name, edited name, or pick one ORCID iD when the first answer is ambiguous |
 | `Envíos permitidos` | every observed send is compared by code; anything outside the list becomes `envios_no_autorizados.json` with destination, size and content hash (never the content) |
-| `Comprobaciones` | the harness evaluates the checks it can decide and leaves the rest (`cumple: null`) to the judge |
+| `Corrección` | `sí` (turn 2) or a turn 2–5. The correcting message runs as a second turn in the same conversation and the corrected answer is the one scored; the receipts and hashes of both turns are kept and reported. A `Turno 2` that starts like a correction is detected when the field is absent |
+| `Comprobaciones` | the harness evaluates the checks it can decide and leaves the rest (`cumple: null`) to the judge. If a card asks to list author-works lookups by identifier separately (for example `lista las obras por iD aparte`), those calls are reported in their own `obras_por_id` group (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` in the receipt) instead of being mixed with ordinary public queries |
 
 The MCP servers are `bench/mcp_catalog_server.py` (stdio for `local`, Streamable
 HTTP on loopback for `remoto`, with the declared host reached through the App's
@@ -80,6 +83,20 @@ non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, the member's ledger and the three rules. v3/v4 banks
 keep their `--check`/`--rescore` behaviour. The `--python` option also reads
 `SWARMBLY_APP` and is available as `--app-python`.
+
+Harness **1.4.1** closes the T9.6/T9.10 follow-ups. It compares `Archivo de
+salida` with the files the run produced (existence, extension, non-empty, and
+the card's columns or row count), matches `Material necesario` against the
+documents/skill/servers/roles/team the App reported using, reports author-works
+lookups by identifier as their own group, compares N7 exact numbers with zero
+tolerance unless the card states one and names the numbers that matched, runs a
+marked correction turn as a second turn and keeps both receipts, and writes the
+App-reported model and backend per case to `casos.csv`, the case summary and a
+new section of the run record. The judge folder adds `salidas.json`,
+`material.json`, `envios_por_grupo.json`, `correccion.json`,
+`modelo_por_receta.json` and the downloaded `salidas/` files. `--check` and
+`--rescore` keep their old results for a card that does not use the new fields;
+a re-score recomputes the new checks only when its saved evidence exists.
 
 Harness 1.3.5 rejects a distinctive word of a multi-word forbidden term as
 `contiene un fragmento de un término prohibido` (ordinary words such as «río» or
@@ -109,9 +126,9 @@ python3 bench/run_bank.py --bank /path/to/bank --rescore /path/to/run \
 
 It recomputes every observation's unauthorised sends from `juez/*/envios.json`
 with the current comparator and the card freshly parsed from the bank, rebuilds
-the four tables, and writes `resumen_rescore_1.3.3.json`,
-`envios_no_autorizados_rescore_1.3.3.json` and `registro_rescore_1.3.3.md` next
-to the originals, which are never overwritten. A remote send that the harness
+the four tables, and writes `resumen_rescore_1.4.1.json`,
+`envios_no_autorizados_rescore_1.4.1.json`, `casos_rescore_1.4.1.csv` and
+`registro_rescore_1.4.1.md` next to the originals, which are never overwritten. A remote send that the harness
 itself approved is reported as `aprobado_por_el_arnes` in its own column/row
 and is not counted as an App unauthorised send. The seal is checked before and
 after; stdout only carries the tables, the totals before → after, one fixed-label
@@ -171,14 +188,17 @@ un servidor de la ficha; las `Comprobaciones` en una sola línea se separan por
 |---|---|
 | `Nivel`, `Capacidades` | agrupa las observaciones para las cuatro tablas del paso 10 |
 | `Receta: código` + `Archivos` + `Script` | abre un proyecto, propone un script y lo aprueba, lo cancela o (con `aprobar y corregir`) propone una corrección; nunca ejecuta `03_REFERENCIA` |
-| `Resultado exacto` + `Tolerancia` | compara la salida calculada con las cifras copiadas en la ficha |
+| `Resultado exacto` + `Tolerancia` | compara la salida calculada con las cifras copiadas en la ficha; una cifra ausente es un fallo. Una ficha N7 sin `Tolerancia` se compara con tolerancia cero y la comparación dice qué cifras coincidieron (`coinciden`) |
+| `Archivo de salida` | compara el archivo nombrado con lo que produjo la corrida: debe existir, tener la extensión nombrada y no estar vacío; si el campo también da `columnas` o `filas`/`rows`, el arnés lee el CSV/TSV/JSON/Markdown producido y lo comprueba. El resultado va a `salida` en el resumen del caso y a una comprobación con nombre |
+| `Material necesario` | contrasta sus frases entre comillas con los documentos, la skill, los servidores MCP, los roles y el equipo que la App informó haber usado, con la misma regla de palabra completa plegada que para los nombres; una frase que no sea material también puede encontrarse en la respuesta. Cada frase añade una comprobación con nombre y el resumen cuenta `frases`, `usadas` y `faltan` |
 | `Receta: lista` + `Lista` / `Columna` + `Dónde` | llama a la vista previa y envía la lista como `recipe: list`; la columna del CSV la lee el arnés |
 | `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | añade y arranca cada catálogo, aprueba solo las herramientas listadas y decide cada tarjeta en orden; si los argumentos no son los que dice la ficha, **omite** la llamada |
 | `Cambio de servidor: <servidor> en el turno N` | cambia a `<servidor>.cambio.json` antes del turno N y espera a que la App suspenda el servidor (`tools/list_changed`) |
 | `Skill` + `Activar skill` | importa la carpeta en el proyecto y la activa solo si la ficha lo dice; comprueba `MARCADOR_SKILL.txt` |
 | `Autor` + `Servicios` + `Decisión autor` | usa `POST /api/author/lookup`: cancelar, nombre exacto, nombre editado o elegir un iD ORCID si la primera respuesta es ambigua |
 | `Envíos permitidos` | cada envío observado se compara por código; lo que queda fuera va a `envios_no_autorizados.json` con destino, tamaño y hash (nunca el contenido) |
-| `Comprobaciones` | el arnés evalúa las que puede decidir y deja el resto (`cumple: null`) al juez |
+| `Corrección` | `sí` (turno 2) o un turno 2–5. El mensaje que corrige se ejecuta como segundo turno en la misma conversación y se puntúa la respuesta corregida; se guardan y se informan los recibos y hashes de ambos turnos. Si no está el campo, se detecta un `Turno 2` que empieza como una corrección |
+| `Comprobaciones` | el arnés evalúa las que puede decidir y deja el resto (`cumple: null`) al juez. Si una ficha pide listar las obras de autor por identificador aparte (por ejemplo `lista las obras por iD aparte`), esas llamadas van a su propio grupo `obras_por_id` (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` en el recibo) y no se mezclan con las consultas públicas ordinarias |
 
 Los servidores MCP son `bench/mcp_catalog_server.py` (stdio para `local`,
 Streamable HTTP en loopback para `remoto`, con el host declarado a través del
@@ -204,6 +224,22 @@ no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
 v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
 `--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
+
+El arnés **1.4.1** cierra los seguimientos T9.6/T9.10. Compara `Archivo de
+salida` con los archivos que produjo la corrida (existencia, extensión, no
+vacío y las columnas o filas de la ficha), contrasta `Material necesario` con
+los documentos/skill/servidores/roles/equipo que la App informó haber usado,
+informa las consultas de obras por identificador en su propio grupo, compara las
+cifras exactas N7 con tolerancia cero salvo que la ficha diga otra y nombra las
+que coincidieron, ejecuta un turno de corrección marcado como segundo turno y
+guarda ambos recibos, y escribe el modelo y el backend que la App informó por
+caso en `casos.csv`, en el resumen del caso y en una sección nueva del registro.
+La carpeta del juez añade `salidas.json`, `material.json`,
+`envios_por_grupo.json`, `correccion.json`, `modelo_por_receta.json` y los
+archivos descargados en `salidas/`. `--check` y `--rescore` conservan sus
+resultados anteriores para una ficha que no use los campos nuevos; una
+repuntuación recalcula las comprobaciones nuevas solo si existe su evidencia
+guardada.
 
 El arnés 1.3.5 rechaza una palabra distintiva de un término prohibido de varias
 palabras como `contiene un fragmento de un término prohibido` (las palabras
@@ -233,9 +269,9 @@ python3 bench/run_bank.py --bank /ruta/al/banco --rescore /ruta/a/la/ejecución 
 
 Recalcula los envíos no autorizados de cada observación desde
 `juez/*/envios.json` con el comparador actual y la ficha recién leída del banco,
-rehace las cuatro tablas y escribe `resumen_rescore_1.3.3.json`,
-`envios_no_autorizados_rescore_1.3.3.json` y `registro_rescore_1.3.3.md` junto a
-los originales, que nunca se sobrescriben. Un envío remoto que aprobó el propio
+rehace las cuatro tablas y escribe `resumen_rescore_1.4.1.json`,
+`envios_no_autorizados_rescore_1.4.1.json`, `casos_rescore_1.4.1.csv` y
+`registro_rescore_1.4.1.md` junto a los originales, que nunca se sobrescriben. Un envío remoto que aprobó el propio
 arnés se informa como `aprobado_por_el_arnes` en su columna y fila propias y no
 cuenta como envío no autorizado de la App. El sello se comprueba antes y
 después; por stdout solo salen las tablas, los totales antes → después, una

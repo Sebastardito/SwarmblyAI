@@ -3,8 +3,10 @@
 **Language / Idioma:** [English](#english) · [Español](#español)
 
 **Status:** guide for the maintainer who writes bank v5. The bank itself stays
-outside this repository. Harness **1.4.0** adds the two-node mode, the node-loss
-battery and the team battery; v3/v4 banks keep their old behaviour.
+outside this repository. Harness **1.4.1** keeps the two-node mode, the
+node-loss battery and the team battery, and adds the output-file, material,
+works-by-iD, N7-number, correction-turn and model-per-recipe follow-ups; v3/v4
+banks keep their old behaviour.
 
 ---
 
@@ -30,7 +32,7 @@ organisation, and no example copied from an existing sealed card.
 
 The v3/v4 fields are unchanged (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 `Documentos`, `Receta`, `Lista`, `Dónde`, `Envíos permitidos`,
-`Comprobaciones`, …). Harness 1.4.0 adds:
+`Comprobaciones`, …). Harness 1.4.1 adds:
 
 | Field | Values | Meaning |
 |---|---|---|
@@ -38,6 +40,9 @@ The v3/v4 fields are unchanged (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 | `Pasajes a pares` | `sí` / `no` | the owner's `circle_passages` switch for this card |
 | `Pasajes esperados` | `sí` / `no` / absent | `sí` requires at least one passage at a peer; `no` requires zero; absent leaves it descriptive |
 | `Equipo` | a stored or built-in team id | runs the message with `team_id` (for partial-result cards); `example-write-review` is a safe built-in |
+| `Archivo de salida` | `resultado.csv`, optionally `(columnas: a, b; filas: 3)` | compares the named produced file with the run: exists, extension, non-empty, and the columns/row count when written |
+| `Material necesario` | quoted phrases | matches each phrase against the documents, skill, MCP servers, roles and team the App reported using; a non-material phrase may also be found in the answer |
+| `Corrección` | `sí` or a turn 2–5 | runs that turn as a correcting second message in the same conversation and scores the corrected answer, keeping both receipts |
 
 `Envíos permitidos` accepts a **circle** entry for these cards, for example
 `cualquier envío al círculo` or `círculo: sí`. It allows any observed send
@@ -55,6 +60,12 @@ Put these exact phrases in `Comprobaciones`; the harness decides them:
 | `non-member refused` / `el no miembro es rechazado` | the non-member was not admitted and received no task |
 | `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | every `CIRCLE` receipt row has `circle_id`, `circle_name` and `member_name` |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` names host/port, `metadata_only: true`, `content: false` (requires a relay in the run) |
+
+To report author-works lookups by identifier apart from ordinary public
+queries, put an ask such as `lista las obras por iD aparte` in `Comprobaciones`
+(or `Capacidades`). The case summary then carries `envios_obras_por_id` and
+`envios_por_grupo`, and the receipt carries `resumen_por_grupo`; the
+`obras_por_id` group is never mixed with public queries.
 
 The run report adds `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, `miembro_ledger` (the member's own worker ledger) and
@@ -181,7 +192,7 @@ organizaciones reales y sin copiar un ejemplo de un banco sellado existente.
 
 Los campos v3/v4 no cambian (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 `Documentos`, `Receta`, `Lista`, `Dónde`, `Envíos permitidos`,
-`Comprobaciones`, …). El arnés 1.4.0 añade:
+`Comprobaciones`, …). El arnés 1.4.1 añade:
 
 | Campo | Valores | Significado |
 |---|---|---|
@@ -189,6 +200,9 @@ Los campos v3/v4 no cambian (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 | `Pasajes a pares` | `sí` / `no` | el interruptor `circle_passages` del dueño para esta ficha |
 | `Pasajes esperados` | `sí` / `no` / ausente | `sí` exige al menos un pasaje a un par; `no` exige cero; ausente queda descriptivo |
 | `Equipo` | id de un equipo guardado o integrado | envía el mensaje con `team_id` (fichas de resultado parcial); `example-write-review` es un equipo integrado seguro |
+| `Archivo de salida` | `resultado.csv`, opcionalmente `(columnas: a, b; filas: 3)` | compara el archivo producido con la corrida: existe, extensión, no vacío y las columnas/filas cuando se escriben |
+| `Material necesario` | frases entre comillas | contrasta cada frase con los documentos, la skill, los servidores MCP, los roles y el equipo que la App informó haber usado; una frase que no sea material también puede aparecer en la respuesta |
+| `Corrección` | `sí` o un turno 2–5 | ejecuta ese turno como segundo mensaje de corrección en la misma conversación y puntúa la respuesta corregida, guardando ambos recibos |
 
 `Envíos permitidos` acepta una entrada de **círculo** para estas fichas, por
 ejemplo `cualquier envío al círculo` o `círculo: sí`. Permite cualquier envío
@@ -206,6 +220,13 @@ Pon estas frases exactas en `Comprobaciones`; las decide el arnés:
 | `non-member refused` / `el no miembro es rechazado` | el no miembro no fue admitido y no recibió tarea |
 | `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | cada fila `CIRCLE` tiene `circle_id`, `circle_name` y `member_name` |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` nombra host/puerto, `metadata_only: true`, `content: false` (requiere un relay en la corrida) |
+
+Para informar las obras de autor por identificador aparte de las consultas
+públicas ordinarias, pon una petición como `lista las obras por iD aparte` en
+`Comprobaciones` (o en `Capacidades`). El resumen del caso lleva entonces
+`envios_obras_por_id` y `envios_por_grupo`, y el recibo lleva
+`resumen_por_grupo`; el grupo `obras_por_id` nunca se mezcla con las consultas
+públicas.
 
 El informe añade `envios_circulo`, `pasajes_a_pares`, `no_miembro_rechazado`,
 `miembro_ledger` (el libro del propio miembro) y `two_node_rules`. El libro del
