@@ -514,6 +514,8 @@ def two_node_report(receipt: dict[str, Any], member_events: list[dict[str, Any]]
     only_with_permission = (passages == 0) if not circle_passages else True
     if expected_passages is True:
         only_with_permission = only_with_permission and passages > 0
+    elif expected_passages is False:
+        only_with_permission = only_with_permission and passages == 0
     rules = {
         "pasajes_solo_con_permiso": bool(only_with_permission),
         "no_miembro_rechazado": bool(nonmember_refused),
