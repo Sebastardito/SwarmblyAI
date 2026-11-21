@@ -1,15 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Per-member limits for the relay: concurrent splices and bytes per day.
+"""Per-member limits for the relay: splices, bytes and manifest pushes.
 
 The counters are in memory by design: the relay stores no payloads and no
-long-term member history.  A restart resets the byte counter; operators get a
-daily budget, not an accounting system.
+long-term member history.  A restart resets the byte and push counters;
+operators get budgets, not an accounting system.
 """
 
 from __future__ import annotations
 
 import datetime as dt
 from dataclasses import dataclass
+from typing import Callable
 
 
 @dataclass
@@ -67,3 +68,39 @@ class LimitTracker:
         usage = self._get(node_id)
         usage.bytes += max(0, int(count))
         return usage.bytes <= self.bytes_per_day
+
+
+class PushRateLimiter:
+    """A fixed-window hourly cap on owner manifest pushes.
+
+    ``allow`` counts an attempt and returns False once the window is full.
+    The key is the authenticated node id, which for an accepted push is the
+    owner; a non-owner's attempts are refused before this limiter is reached.
+    """
+
+    def __init__(self, max_per_hour: int = 30, *,
+                 clock: Callable[[], str] | None = None) -> None:
+        self.max_per_hour = max(1, int(max_per_hour))
+        self._clock = clock or self._utc_hour
+        self._windows: dict[str, tuple[str, int]] = {}
+
+    @staticmethod
+    def _utc_hour() -> str:
+        return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H")
+
+    def remaining(self, node_id: str) -> int:
+        window, count = self._windows.get(node_id, ("", 0))
+        if window != self._clock():
+            return self.max_per_hour
+        return max(0, self.max_per_hour - count)
+
+    def allow(self, node_id: str) -> bool:
+        window = self._clock()
+        current_window, count = self._windows.get(node_id, (window, 0))
+        if current_window != window:
+            count = 0
+        if count >= self.max_per_hour:
+            return False
+        self._windows[node_id] = (window, count + 1)
+        return True
+

@@ -53,6 +53,12 @@ class FrameError(RelayError):
         super().__init__("bad_frame", message)
 
 
+def frame_size(message: dict[str, Any]) -> int:
+    """Encoded JSON body size of a frame, without the length prefix."""
+    return len(json.dumps(message, ensure_ascii=False,
+                          separators=(",", ":")).encode("utf-8"))
+
+
 def encode_frame(message: dict[str, Any]) -> bytes:
     if not isinstance(message, dict):
         raise FrameError("a relay frame must be a JSON object")
@@ -144,3 +150,20 @@ def challenge_frame(nonce: bytes) -> dict[str, Any]:
 def registered_frame(circle_id: str, node_id: str) -> dict[str, Any]:
     return {"type": "registered", "v": PROTOCOL_VERSION,
             "circle_id": circle_id, "node_id": node_id}
+
+
+def manifest_ack_frame(circle_id: str, version: int,
+                       member_count: int) -> dict[str, Any]:
+    """Accepted ``manifest_update``: metadata only, never the member list."""
+    return {"type": "manifest_ack", "v": PROTOCOL_VERSION,
+            "circle_id": circle_id, "version": version,
+            "member_count": member_count}
+
+
+def manifest_refused_frame(code: str, message: str = "") -> dict[str, Any]:
+    """A push the relay chose not to apply; the connection stays registered."""
+    frame: dict[str, Any] = {"type": "manifest_refused", "v": PROTOCOL_VERSION,
+                             "code": code}
+    if message:
+        frame["message"] = message
+    return frame

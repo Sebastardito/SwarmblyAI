@@ -8,8 +8,9 @@ import struct
 import pytest
 
 from relay.protocol import (MAX_FRAME_BYTES, FrameError, b64url, canonical_bytes,
-                            encode_frame, read_frame, sign_register_proof,
-                            verify_register_proof)
+                            encode_frame, frame_size, manifest_ack_frame,
+                            manifest_refused_frame, read_frame,
+                            sign_register_proof, verify_register_proof)
 from relay.tests.support import make_identity
 
 
@@ -62,3 +63,19 @@ def test_register_proof_verifies_only_for_the_right_key_and_challenge():
 def test_base64url_has_no_padding():
     assert "=" not in b64url(b"abc")
     assert b64url(b"") == ""
+
+
+def test_frame_size_matches_the_encoded_body():
+    message = {"type": "manifest_ack", "circle_id": "c", "version": 2}
+    assert frame_size(message) == len(encode_frame(message)) - 4
+
+
+def test_manifest_ack_carries_metadata_not_members():
+    ack = manifest_ack_frame("circle-test", 4, 7)
+    assert ack == {"type": "manifest_ack", "v": 1, "circle_id": "circle-test",
+                   "version": 4, "member_count": 7}
+    refused = manifest_refused_frame("stale_version", "already held")
+    assert refused["type"] == "manifest_refused"
+    assert refused["code"] == "stale_version"
+    assert refused["message"] == "already held"
+
