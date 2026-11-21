@@ -1,0 +1,105 @@
+name: Beta bug report
+description: Report a problem in the 3.5 private beta without personal data
+title: "[beta] "
+labels: ["beta"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Read this first.** This issue is public. Do not paste names, e-mail
+        addresses, home-folder paths, documents, chats, prompts, answers, API
+        keys, node keys, invitations or member ids.
+
+        The doctor export helps: run `swarmbly doctor`, copy the report, and
+        remove your username and home-folder path before pasting it.
+        `install.log` helps too. The maintainer will add the `severe` label if
+        the bug meets the beta definition.
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+      placeholder: "e.g. macOS 14.6, Ubuntu 24.04, Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Swarmbly release
+      placeholder: "e.g. v3.5.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Does this block you?
+      options:
+        - I cannot install
+        - I can install but cannot join or pair
+        - Data loss or exposed private data
+        - Repeated crash
+        - Other problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Describe the problem, not the contents of your documents or chats.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Choose ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Doctor export
+      description: |
+        Paste the output of `swarmbly doctor` after removing your username and
+        home-folder path. If you prefer not to publish it, say so and the
+        maintainer will propose another channel.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: install_log
+    attributes:
+      label: Relevant install.log lines
+      description: Remove personal data before pasting.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before sending
+      options:
+        - label: I removed names, e-mail addresses and home-folder paths.
+          required: true
+        - label: I did not include documents, chats, prompts, answers, keys, invitations or member ids.
+          required: true
+        - label: I understand this issue is public.
+          required: true
+        - label: I read the privacy notice in docs/beta/consent-and-privacy.md.
+          required: true
