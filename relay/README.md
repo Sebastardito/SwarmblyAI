@@ -141,8 +141,9 @@ follow:
 | `rate_limited` | the per-owner hourly push limit is exhausted |
 | `persist_failed` | the file could not be written; memory is unchanged |
 
-A frame above the relay's 128 KiB hard control bound is not buffered; it is
-closed with `bad_frame`.  The 48 KiB manifest bound is the useful one.
+A frame above the relay's control-frame read bound (128 KiB by default) is not
+buffered; the connection is closed with `bad_frame`.  The manifest bound is the
+useful one.
 
 ## Client
 

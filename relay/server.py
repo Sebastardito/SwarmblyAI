@@ -224,7 +224,8 @@ class RelayServer:
         # it is read under a separate, larger bound and then checked against
         # ``max_manifest_bytes`` so an oversize manifest gets ``too_large``.
         read_limit = max(self.config.max_frame_bytes,
-                         self.config.max_manifest_frame_bytes)
+                         self.config.max_manifest_frame_bytes,
+                         self.config.max_manifest_bytes + 4096)
         while not session.in_splice and not session.closed:
             try:
                 frame = await read_frame(
