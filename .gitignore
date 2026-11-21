@@ -16,3 +16,5 @@ bench/dev_list/ejecuciones/
 bench/dev_code/ejecuciones/
 
 bench/bank_selftest_v4/04_SALIDAS_AUDITORIA/
+bench/dev_team/ejecuciones/
+bench/dev_node_loss/ejecuciones/

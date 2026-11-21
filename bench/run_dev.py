@@ -1020,7 +1020,6 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model", required=True)
     ap.add_argument("--embed-model", default="nomic-embed-text")
     ap.add_argument("--ollama", default="http://127.0.0.1:11434")
-    ap.add_argument("--python", default=None, help="Python with Swarmbly installed (default: .venv)")
     ap.add_argument("--temperature", type=float, default=0.2)
     ap.add_argument("--only", default="", help="comma-separated case IDs")
     ap.add_argument("--repeat", type=int, default=1, help="runs per case (the model has no fixed seed)")
@@ -1029,6 +1028,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--compare", default="", help="an earlier run folder, or the label of the latest run with it")
     ap.add_argument("--case-timeout", type=float, default=600.0)
     ap.add_argument("--battery", default=str(DEV), help="battery folder (casos.json, corpus/, publico/)")
+    ap.add_argument("--app-python", "--python", dest="python", default=None,
+                    help="Python with Swarmbly installed (default: $SWARMBLY_APP or .venv)")
+    ap.add_argument("--two-node", action="store_true",
+                    help="start a loopback circle member and a non-member for cases with dos_nodos")
+    ap.add_argument("--members", type=int, default=1,
+                    help="loopback circle members for --two-node (default 1)")
     if argv is None:
         argv = sys.argv[1:]
     if argv[:1] == ["--rescore"]:
@@ -1045,6 +1050,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.only:
         wanted = {x.strip() for x in args.only.split(",") if x.strip()}
         cases = [c for c in cases if c["id"] in wanted]
+    if any(c.get("dos_nodos") for c in cases) and not args.two_node:
+        print("La batería tiene casos «dos_nodos»; usa --two-node.")
+        return 2
     list_mode = any(is_list_case(c) for c in cases)
     code_mode = any(is_code_case(c) for c in cases)
     if sum((list_mode, code_mode)) > 1 or (list_mode and not all(is_list_case(c) for c in cases)) \
@@ -1102,6 +1110,18 @@ def main(argv: list[str] | None = None) -> int:
                     "evidence.searxng_managed": "", "swarm.p2p_port": rb.free_port(), **extra,
                     **(case.get("ajustes") or {}),
                 }
+                case_two = bool(args.two_node and case.get("dos_nodos"))
+                if case_two:
+                    settings.update({
+                        "privacy.tier": "GLOBAL", "model.embedder": "hash",
+                        "swarm.mode": "lan", "swarm.lan_enabled": True,
+                        "swarm.worker_enabled": True, "swarm.worker_allow_lan": True,
+                        "swarm.worker_models": [args.model],
+                        "circle.admission_mode": "circle",
+                        "swarm.k_min": 2, "swarm.k_max": 2,
+                        "node_roles.large_model_min_b": 1.0,
+                        "node_roles.reasoner_models": [args.model],
+                    })
                 app = rb.AppInstance(python, work / "datos", sources, settings, proxy.url,
                                      run_dir / "logs" / f"{case['id']}_r{rep}_app.log")
                 proxy.log.drain()
@@ -1110,8 +1130,22 @@ def main(argv: list[str] | None = None) -> int:
                                        "preview": {}}
                 meta: dict[str, Any] = {}
                 answer = ""
+                two_env = None
+                two_mod = None
                 try:
                     app.start()
+                    if case_two:
+                        here = str(Path(__file__).resolve().parent)
+                        if here not in sys.path:
+                            sys.path.insert(0, here)
+                        import two_node as two_mod
+                        two_env = two_mod.TwoNodeEnv(
+                            owner=app, python=python, work_root=work / "nodes",
+                            proxy_url=proxy.url, model=args.model,
+                            embed_model=args.embed_model, ollama_url=args.ollama,
+                            temperature=args.temperature, log_dir=run_dir / "logs")
+                        two_env.start(members=max(1, int(args.members)), nonmember=True)
+                        two_env.set_circle_passages(bool(case.get("pasajes_al_circulo")))
                     if is_code_case(case):
                         played = play_code(app, case, args.case_timeout)
                         row["proposal"] = played.get("proposal") or {}
@@ -1139,11 +1173,28 @@ def main(argv: list[str] | None = None) -> int:
                 except Exception as exc:
                     row.update(estado="error", error=str(exc)[:500])
                 finally:
+                    if two_env is not None:
+                        two_env.close()
                     app.stop()
                     shutil.rmtree(work, ignore_errors=True)
                 reg_ev, prx_ev = registry.log.drain(), proxy.log.drain()
                 receipt = meta.get("receipt") or {}
                 sends = max(len(receipt.get("envios") or []), len(reg_ev) + len(prx_ev))
+                if two_env is not None and two_mod is not None:
+                    report = two_mod.two_node_report(
+                        receipt, two_env.member_ledger(),
+                        nonmember_refused=two_env.nonmember_refused,
+                        circle_passages=bool(case.get("pasajes_al_circulo")),
+                        expected_passages=case.get("pasajes_esperados"))
+                    row.update({
+                        "dos_nodos": True,
+                        "envios_circulo": report["envios_circulo"],
+                        "envios_circulo_detalle": report["envios_circulo_detalle"],
+                        "pasajes_a_pares": report["pasajes_a_pares"],
+                        "miembro_ledger": report["miembro_ledger"],
+                        "no_miembro_rechazado": report["no_miembro_rechazado"],
+                        "two_node_rules": report["two_node_rules"],
+                    })
                 row["respuesta"] = answer
                 row["red"] = {"registro": reg_ev, "proxy": prx_ev}
                 row["meta"] = meta

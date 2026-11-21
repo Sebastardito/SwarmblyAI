@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.3.5"
+HARNESS_VERSION = "1.4.0"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -189,6 +189,11 @@ class Case:
     rubric: str = ""             # "Rúbrica:"
     material: str = ""           # "Material necesario:"
     notes: str = ""              # "Notas:"
+    # 1.4.0 (bank v5): peer-aware privacy cards
+    two_node: bool = False       # "Dos nodos: sí" -> --two-node
+    circle_passages: bool = False  # "Pasajes a pares: sí" -> circle_passages on
+    expected_passages: bool | None = None  # "Pasajes esperados: sí|no"
+    team: str = ""               # "Equipo:" a stored/built-in team id
     raw: str = ""                # the whole ```text block (for --check's counts only)
 
 
@@ -204,7 +209,8 @@ _KNOWN_FIELDS = {
     "Usar herramientas", "Servidores", "Aprobadas en Ajustes", "Decisiones",
     "Cambio de servidor", "Skill", "Activar skill", "Autor", "Servicios", "Decisión autor",
     "Envíos permitidos", "Comprobaciones", "Datos clave", "Errores graves", "Rúbrica",
-    "Material necesario", "Notas",
+    "Material necesario", "Notas", "Dos nodos", "Pasajes a pares",
+    "Pasajes esperados", "Equipo",
 }
 _PIPE = re.compile(r"\s+\|\s+")
 
@@ -418,6 +424,17 @@ def parse_cases(path: Path) -> list[Case]:
             rubric=_field_value(block, "Rúbrica"),
             material=_field_value(block, "Material necesario"),
             notes=_field_value(block, "Notas"),
+            two_node=_field_value(block, "Dos nodos").strip().lower().startswith(
+                ("sí", "si", "yes", "true")),
+            circle_passages=_field_value(block, "Pasajes a pares").strip().lower().startswith(
+                ("sí", "si", "yes", "true")),
+            expected_passages=(
+                True if _field_value(block, "Pasajes esperados").strip().lower().startswith(
+                    ("sí", "si", "yes", "true"))
+                else False if _field_value(block, "Pasajes esperados").strip().lower().startswith(
+                    ("no", "false"))
+                else None),
+            team=_field_value(block, "Equipo").strip(),
             raw=block,
         ))
     return cases
@@ -700,6 +717,7 @@ class AllowedSend:
     forbidden: list[str] = field(default_factory=list)
     key_values: dict[str, str] = field(default_factory=dict)
     public_search: bool = False
+    circle: bool = False
 
 
 def _fold_text(value: Any) -> str:
@@ -762,6 +780,10 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
             allowed.public_search = True
             allowed.destinations.update({"registro_publico_simulado", "buscador público",
                                          "searxng", "public_search"})
+        elif any(label in folded_destination for label in
+                 ("circulo", "círculo", "circle", "par del circulo", "miembro",
+                  "member", "peer")):
+            allowed.circle = True
         elif "orcid" in destination and "openalex" in destination:
             allowed.destinations.update({"pub.orcid.org", "api.openalex.org"})
         elif "orcid" in destination:
@@ -856,7 +878,10 @@ def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
     reasons: list[str] = []
     for entry in allowed:
         matches = False
-        if entry.public_search:
+        if entry.circle:
+            matches = bool(send.get("circle_id")) or _fold_text(
+                str(send.get("clase") or "")) in ("circulo", "circle")
+        elif entry.public_search:
             matches = kind in PUBLIC_SEND_TYPES or any(
                 token in destination for token in
                 ("registro_publico", "searxng", "buscador", "public_search"))
@@ -984,6 +1009,10 @@ def validate_case(bank: Bank, case: Case) -> tuple[list[str], dict[str, Any]]:
         problems.append("falta «Capacidades»")
     if not case.allowed_sends.strip():
         problems.append("falta «Envíos permitidos»")
+    if case.circle_passages and not case.two_node:
+        problems.append("«Pasajes a pares» exige «Dos nodos: sí»")
+    if case.expected_passages is not None and not case.two_node:
+        problems.append("«Pasajes esperados» exige «Dos nodos: sí»")
     missing = unresolved_documents(bank, case)
     info["documentos"] = len(case_documents(bank, case)[0])
     info["publicos"] = len(case_documents(bank, case)[1])
@@ -1101,6 +1130,10 @@ def check_bank(bank: Bank, cases: list[Case]) -> int:
             extra.append("skill")
         if case.author:
             extra.append("autor")
+        if case.two_node:
+            extra.append("dos nodos")
+        if case.circle_passages:
+            extra.append("pasajes al par")
         print(f"      {case.case_id:6} {case.level or '?':2} docs {info['documentos']} · "
               f"públicos {info['publicos']} · comprobaciones {info['comprobaciones']} · "
               f"envíos {'sí' if not _fold_text(case.allowed_sends).startswith('ninguno') else 'no'}"
@@ -1564,6 +1597,7 @@ def utc_now() -> str:
 
 
 def find_python(explicit: str | None) -> str:
+    explicit = explicit or os.environ.get("SWARMBLY_APP")
     if explicit:
         return explicit
     here = Path(__file__).resolve().parents[1]
@@ -2102,6 +2136,8 @@ def play_chat(app: AppInstance, case: Case, project_id: str,
                 body["recipe"] = case.recipe
             if case.use_tools:
                 body["use_tools"] = True
+            if case.team:
+                body["team_id"] = case.team
             if case.skill and case.activate_skill:
                 body["skill"] = case.skill
             query = case.approved_query
@@ -2548,11 +2584,36 @@ def evaluate_checks(case: Case, ctx: dict[str, Any]) -> list[dict[str, Any]]:
     permissions = ctx.get("permissions") or {}
     changed = ctx.get("changed_files") or []
     preview = (ctx.get("list_preview") or {})
+    two = ctx.get("two_node") or {}
     for text in case.checks:
         low = _fold_text(text)
         verdict: bool | None = None
         reason = ""
-        if "nada sale antes de aprobar" in low:
+        if "circle_passages" in low and ("pasaje" in low or "passage" in low):
+            verdict = bool((two.get("two_node_rules") or {}).get(
+                "pasajes_solo_con_permiso"))
+            reason = ("sin pasajes a pares con el interruptor apagado"
+                      if verdict else "hubo pasajes a pares con el interruptor apagado")
+        elif ("no miembro" in low or "non-member" in low or "nonmember" in low):
+            verdict = bool((two.get("two_node_rules") or {}).get(
+                "no_miembro_rechazado"))
+            reason = ("el no miembro no fue admitido" if verdict
+                      else "el no miembro fue admitido")
+        elif ("recibo" in low and "círculo" in low and "miembro" in low) or \
+                ("receipt" in low and "circle" in low and "member" in low):
+            verdict = bool((two.get("two_node_rules") or {}).get(
+                "recibo_nombra_circulo_y_miembro"))
+            reason = ("el recibo nombra círculo y miembro" if verdict
+                      else "el recibo no nombra círculo y miembro")
+        elif "relay" in low and ("metadato" in low or "metadata" in low):
+            hops = receipt.get("saltos_relay") or []
+            verdict = bool(hops) and all(
+                isinstance(hop, dict) and hop.get("metadata_only") is True
+                and hop.get("content") is False and hop.get("host")
+                for hop in hops)
+            reason = (f"{len(hops)} salto(s) de relay, solo metadatos" if verdict
+                      else "no hay un salto de relay con solo metadatos")
+        elif "nada sale antes de aprobar" in low:
             # Author consent, not the code recipe's approvals.
             verdict = bool(author.get("accion")) and author.get("accion") != "cancel"
             reason = "la búsqueda se hizo después de la decisión"
@@ -2895,6 +2956,11 @@ def collect_sends(receipt: dict[str, Any], mcp_log: list[dict[str, Any]],
                  "payload": "" if valor.startswith("(") else valor,
                  "valor": valor, "bytes": int(event.get("bytes") or 0),
                  "personal_name": bool(event.get("personal_name")),
+                 "clase": str(event.get("clase") or ""),
+                 "circle_id": str(event.get("circle_id") or ""),
+                 "circle_name": str(event.get("circle_name") or ""),
+                 "member_name": str(event.get("member_name") or ""),
+                 "passages": int(event.get("passages") or event.get("pasajes") or 0),
                  "source": "recibo_app"})
     return sends
 
@@ -2981,6 +3047,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                 handles: list[MCPHandle] = []
                 author_proc: subprocess.Popen | None = None
                 app: AppInstance | None = None
+                two_env: Any = None
                 actions: dict[str, Any] = {"caso": case.case_id, "rep": rep}
                 summary: dict[str, Any] = {"caso": case.case_id, "rep": rep,
                                             "nivel": case.level,
@@ -3019,6 +3086,21 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "permissions.internet": False,
                         "swarm.mode": "local", "swarm.p2p_port": free_port(),
                     }
+                    two_node_case = bool(getattr(args, "two_node", False) and case.two_node)
+                    if two_node_case:
+                        settings.update({
+                            "privacy.tier": "GLOBAL",
+                            "model.embedder": "hash",
+                            "swarm.mode": "lan", "swarm.lan_enabled": True,
+                            "swarm.worker_enabled": True,
+                            "swarm.worker_allow_lan": True,
+                            "swarm.worker_models": [args.model],
+                            "circle.admission_mode": "circle",
+                            "swarm.k_min": 2, "swarm.k_max": 2,
+                            "node_roles.large_model_min_b": 1.0,
+                            "node_roles.reasoner_models": [args.model],
+                            "swarm.p2p_port": free_port(),
+                        })
                     app = AppInstance(python, work / "datos", sources, settings,
                                       proxy.url, run_dir / "logs" / f"{tag}_app.log",
                                       test_host_map=map_path if map_entries else None)
@@ -3026,6 +3108,26 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                     registry.log.drain()
                     app.start()
                     summary["test_mode"] = bool((app.health.get("test_mode") or {}).get("active"))
+                    if two_node_case:
+                        here = str(Path(__file__).resolve().parent)
+                        if here not in sys.path:
+                            sys.path.insert(0, here)
+                        import two_node as two_mod
+                        two_env = two_mod.TwoNodeEnv(
+                            owner=app, python=python, work_root=work / "nodes",
+                            proxy_url=proxy.url, model=args.model,
+                            embed_model=args.embed_model, ollama_url=args.ollama,
+                            temperature=args.temperature, log_dir=run_dir / "logs",
+                            language="es")
+                        two_env.start(members=max(1, int(getattr(args, "members", 1))),
+                                      nonmember=True)
+                        two_env.set_circle_passages(bool(case.circle_passages))
+                        actions["dos_nodos"] = {
+                            "circle_id": two_env.circle_id,
+                            "circle_name": two_env.circle_name,
+                            "members": len(two_env.members),
+                            "nonmember_refused": two_env.nonmember_refused,
+                        }
                     project, project_sources = _project(
                         app, f"{case.case_id} r{rep}", work / "proyectos", user_docs)
                     actions["proyecto"] = {"id": project.get("id"),
@@ -3107,6 +3209,13 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                                           reg_events,
                                           receipts=played.get("receipts") or [])
                     counted_sends = dedupe_public_queries(sends)
+                    two_report: dict[str, Any] = {}
+                    if two_env is not None:
+                        two_report = two_mod.two_node_report(
+                            app_receipt, two_env.member_ledger(),
+                            nonmember_refused=two_env.nonmember_refused,
+                            circle_passages=bool(case.circle_passages),
+                            expected_passages=case.expected_passages)
                     unauthorized = unauthorized_sends(
                         case, counted_sends, persona,
                         str((actions.get("autor") or {}).get("orcid_elegido") or ""))
@@ -3141,6 +3250,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "permissions": permissions_static,
                         "permissions_before": permissions_mid,
                         "permissions_after": permissions_after,
+                        "two_node": two_report,
                     })
                     permissions = permission_report(case, {
                         "cards": played.get("cards") or [], "calls": calls,
@@ -3183,6 +3293,11 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                                      if key != "detalles"},
                         "tarjetas": len(played.get("cards") or []),
                         "mensaje_tras_cancelar": actions.get("mensaje_tras_cancelar"),
+                        "dos_nodos": bool(two_env is not None),
+                        "envios_circulo": int(two_report.get("envios_circulo") or 0),
+                        "pasajes_a_pares": int(two_report.get("pasajes_a_pares") or 0),
+                        "no_miembro_rechazado": two_report.get("no_miembro_rechazado"),
+                        "two_node_rules": two_report.get("two_node_rules") or {},
                     })
                     judge_dir = run_dir / "juez" / tag
                     judge_dir.mkdir(parents=True, exist_ok=True)
@@ -3227,6 +3342,9 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         permissions, ensure_ascii=False, indent=2), encoding="utf-8")
                     (judge_dir / "comprobaciones.json").write_text(json.dumps(
                         checks, ensure_ascii=False, indent=2), encoding="utf-8")
+                    if two_report:
+                        (judge_dir / "dos_nodos.json").write_text(json.dumps(
+                            two_report, ensure_ascii=False, indent=2), encoding="utf-8")
                     (judge_dir / "acciones.json").write_text(json.dumps(
                         actions, ensure_ascii=False, indent=2), encoding="utf-8")
                     (judge_dir / "mcp.json").write_text(json.dumps(
@@ -3242,6 +3360,11 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "marcador": summary["marcador"],
                         "permisos": summary["permisos"],
                         "mensaje_tras_cancelar": summary.get("mensaje_tras_cancelar"),
+                        "dos_nodos": summary.get("dos_nodos", False),
+                        "envios_circulo": summary.get("envios_circulo", 0),
+                        "pasajes_a_pares": summary.get("pasajes_a_pares", 0),
+                        "no_miembro_rechazado": summary.get("no_miembro_rechazado"),
+                        "two_node_rules": summary.get("two_node_rules") or {},
                         "respuesta_sha256": hashlib.sha256(
                             ((message or {}).get("content", "")).encode("utf-8")).hexdigest(),
                         "recibo_sha256": hashlib.sha256(json.dumps(
@@ -3275,6 +3398,8 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                     summaries.append(summary)
                     print(f"      {case.case_id:6} r{rep} ERROR: {summary['error'][:160]}")
                 finally:
+                    if two_env is not None:
+                        two_env.close()
                     if app is not None:
                         app.stop()
                     for handle in handles:
@@ -3829,7 +3954,7 @@ def write_run_record(run_dir: Path, run_id: str, started_at: str, bank: Bank,
     permission_rows = [[row["fila"], row["total"], row["fichas_n"],
                         ", ".join(row["fichas"])] for row in tables["permisos"]]
     unauthorized = tables["envios_no_autorizados"]
-    record = f"""# Registro de ejecución · arnés 1.3
+    record = f"""# Registro de ejecución · arnés {HARNESS_VERSION}
 
 ```text
 run_id:              {run_id}
@@ -3889,7 +4014,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--persona", default="", help="name of the bank's fictitious user, to detect if it is ever sent")
     ap.add_argument("--executor", default="", help="who runs the battery (for the run record)")
     ap.add_argument("--witness", default="", help="optional witness")
-    ap.add_argument("--python", default=None, help="Python with Swarmbly installed (default: the installer's .venv)")
+    ap.add_argument("--python", "--app-python", dest="python", default=None,
+                    help="Python with Swarmbly installed (default: $SWARMBLY_APP or the installer's .venv)")
+    ap.add_argument("--two-node", action="store_true",
+                    help="start a loopback circle member and a non-member for cards with «Dos nodos: sí»")
+    ap.add_argument("--members", type=int, default=1,
+                    help="loopback circle members for --two-node (default 1)")
     ap.add_argument("--temperature", type=float, default=0.2)
     ap.add_argument("--case-timeout", type=float, default=1200.0, help="seconds per case")
     ap.add_argument("--repeat", type=int, default=1, help="repetitions per case (a scored v4 run uses 3)")
@@ -3922,6 +4052,9 @@ def main(argv: list[str] | None = None) -> int:
         cases = [c for c in cases if c.case_id in wanted]
     print(f"[2/5] casos: {len(cases)} ({', '.join(c.case_id for c in cases)})")
     if not cases:
+        return 2
+    if not args.check and any(case.two_node for case in cases) and not args.two_node:
+        print("      La batería tiene fichas que necesitan «--two-node»; no se ejecuta nada.")
         return 2
     if args.check:
         if bank.kind == "v4":
