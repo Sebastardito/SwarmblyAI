@@ -2,9 +2,29 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
-## Unreleased — 3.5
+## 3.5.0 — Teams and trusted circles (2026-11-21)
 
+Release notes: [`docs/releases/v3.5.0.md`](docs/releases/v3.5.0.md). The software for the private beta, built and tested on loopback with canned models. No sealed bank was run for this version; the team-versus-local and node-loss batteries have not run with real models, and the relay has not run between real machines on different networks. The beta's exit criteria are measured during the beta and published as they are.
+
+- **SwarmblyApp 0.8.0** (mirror at tag `v0.8.0`, `cd219d0`):
+  - **Trusted circles:** signed membership manifests, invitations by code or QR, admission at the handshake and at the worker gate; new installs are circle-only, existing ones keep their mode until the user chooses.
+  - **`CIRCLE` destination class:** every peer send goes through the egress gate, receipts name the circle and the member, and `circle_passages` is set per circle.
+  - **Off-LAN through the circle's relay:** the relay address and certificate pin travel signed in the manifest and the invitation; the nodes' TLS runs end to end through the splice; the owner's App pushes each signed manifest version to the relay; the receipt lists the relay hop.
+  - **Node roles:** large model and reasoner, opt-in search and corpus executors, role-aware placement; a role never widens a permission.
+  - **Teams and honest partial results:** stored plan templates (roles, steps, dependencies); each step complete, partial or failed; dependent steps blocked; recipe 4 continues after a failed wave.
+  - **Reciprocity credits:** signed, non-transferable receipts in a local wallet, offered only to a busy worker, double spends detected at the issuer; control messages in a SPEC appendix.
+  - **Sandbox prepared at first launch:** recipe 5 never compiles inside a request; below 4 GiB of free memory the user can prepare anyway (`--prepare-sandbox --force`, `{"force": true}`). **Doctor export** from an allow-list.
+  - **Leftovers of the 3.4 evaluation:** MCP suspensions reported to the user, no raw tool block, skills keep the passages, the conversation language in every recipe, Cancel keeps the text, recipe 5 on the writer role with the model actually used recorded.
+  - The two-node P2P tests also run on Windows.
+- **Circle relay** (`relay/`, prototype): members-only pairing with a signed challenge checked against the signed manifest, byte splicing without payload storage, authenticated owner `manifest_update` with revocation of removed members, per-member and push limits, a Dockerfile and a systemd unit.
+- **Signed release artifacts** (`.github/workflows/release.yml`, `scripts/verify_release.py`, `docs/releases/SIGNING.md`): SHA-256 checksums and Sigstore keyless signatures for the installer bundle and the Docker image, attached to the existing release or to a draft, never published by the workflow; Apple and Windows jobs run only with the maintainer's secrets.
+- **Installer:** Python 3.11 required; the sandbox prepared at install time when memory allows.
+- **Beta kit** (`docs/beta/`, drafts) and a beta bug template.
+- **Benchmark:** loopback two-node privacy mode; pre-registered team-versus-local battery and node-loss battery (run end to end on loopback with canned models only); guide for sealed bank v5; harness 1.4.0.
 - **Benchmark harness 1.4.1** (`bench/run_bank.py`): compares `Archivo de salida` with the files a run produced (existence, extension, non-empty, and the card's columns or row count); matches `Material necesario` against the documents, skill, MCP servers, roles and team the App reported using; reports author-works lookups by identifier as their own `obras_por_id` group in the case summary and receipt; compares N7 exact numbers with zero tolerance unless the card states one and names the numbers that matched; runs a marked correction turn as a second turn, scores the corrected answer and keeps both receipts; and records the App-reported model and backend per case in `casos.csv`, the case summary and a new section of the run record. The v5 guide and the harness README document the new fields; `--check` and `--rescore` keep their old results for cards that do not use them.
+
+- **SwarmblyLCE 0.2.1** and **swarmbly-agent 0.1.0** unchanged.
+- **Roadmap:** a light footprint as a later milestone, once the public network works.
 
 ## 3.4.0 — Tools (2026-11-20)
 

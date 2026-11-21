@@ -14,8 +14,8 @@ The nodes' own TLS 1.3 session and channel-bound handshake run **through** the
 splice.  The relay sees who talks to whom, when, and how many bytes; it never
 sees plaintext and it never stores payload.
 
-Status: **spike prototype for T10.5**, with the D-023 owner push added; not
-wired into the App yet.  See
+Status: **prototype** (T10.5), with the D-023 owner push; SwarmblyApp 0.8.0
+(Swarmbly AI 3.5.0) registers, pairs and pushes manifests through it.  See
 [`docs/orchestration/spikes/T10.5_relay_design.md`](../docs/orchestration/spikes/T10.5_relay_design.md)
 for the protocol, threat model, deployment checklist and open questions.
 
