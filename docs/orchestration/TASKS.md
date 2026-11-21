@@ -62,3 +62,14 @@ Status: `todo` · `running` · `review` · `done` · `blocked` · `dropped`. Ver
 | T9.8 | umbrella (bench) | Harness 1.3.1–1.3.4: v4.2 card format (fields joined by « \| », legend codes for files, skills and servers, one-line checks); offline `--rescore` of finished runs; the simulated user never approves a remote call outside «Envíos permitidos»; «red pública» and «sin «X» ni …»; persona's whole name vs one word; real App commit in the run record | T9.3 | done (`4e34e29`, `4361e83`, `237626e`, `3d1d286`, `38a61fb`, `7a38ade`) | Linux: 95 bench tests; self-test `--check` 24/0; diff read. Banks v4.1 and v4.2 run once each (×3, harness 1.3.2, App `ec3d206`, qwen2.5:7b), then re-scored with 1.3.4 without re-running: seal OK, 0 technical failures, all eight permission rows 0 in both; unauthorised App sends v4.1 18→0, v4.2 9→6 (S2-06: the persona's whole name in a public query, one query per repetition counted twice; S4-16: 3 approved by the harness, not the App) | Judge: S2/S3 rubric, S2-06, v4.1 N9 checks 30/39 |
 | T9.1 | all | Open battery 3.4, injected-instruction test ("a page cannot widen permissions"), CI on Linux and Windows | all | todo | — | — |
 | T9.2 | maintainer | New sealed bank (confirms zero unauthorised sends, R-003) | T9.1 | todo | — | Written by the maintainer |
+
+# Tasks · release 3.5 "Teams and trusted circles · private beta"
+
+Architecture: [`ARCH_3.5.md`](ARCH_3.5.md) (proposal; decisions pending).
+
+| ID | Repo | Goal | Depends on | Status | Verification | Next |
+|---|---|---|---|---|---|---|
+| T10.1 | all | Read-only map for 3.5: network layer, roles, teams, off-LAN, installers, credits, tests, risks, decisions | — | done | Spot checks: peers hard-coded `OWN_NETWORK` in receipts (`chat.py:2826`); `trusted_nodes` read nowhere; `_register` has no membership check | ARCH_3.5 |
+| T10.2 | all | Architecture 3.5 and decisions D-015…D-023 with the maintainer | T10.1 | review | — | Maintainer decides |
+| T10.3 | all | WP0 baseline hygiene: 2 P2P family tests, Windows P2P CI, installer Python 3.11, doc drift | — | todo | — | — |
+
