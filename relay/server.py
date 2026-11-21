@@ -27,9 +27,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .limits import LimitTracker
-from .manifest import ManifestStore
+from .limits import LimitTracker, PushRateLimiter
+from .manifest import (ManifestError, ManifestStore, document_circle_id,
+                       parse_manifest)
 from .protocol import (MAX_FRAME_BYTES, RelayError, challenge_frame, error_frame,
+                       frame_size, manifest_ack_frame, manifest_refused_frame,
                        read_frame, registered_frame, verify_register_proof,
                        write_frame)
 
@@ -37,6 +39,9 @@ log = logging.getLogger("swarmbly.relay")
 
 # The relay only needs to see control frames; payload is spliced, never parsed.
 PUMP_CHUNK = 64 * 1024
+DEFAULT_MAX_MANIFEST_BYTES = 48 * 1024
+DEFAULT_MAX_MANIFEST_FRAME_BYTES = 128 * 1024
+DEFAULT_MANIFEST_PUSHES_PER_HOUR = 30
 
 
 @dataclass
@@ -53,6 +58,9 @@ class RelayConfig:
     max_splices_per_member: int = 4
     bytes_per_day: int = 2 * 1024 ** 3
     max_connections: int = 1024
+    max_manifest_bytes: int = DEFAULT_MAX_MANIFEST_BYTES
+    max_manifest_frame_bytes: int = DEFAULT_MAX_MANIFEST_FRAME_BYTES
+    manifest_pushes_per_hour: int = DEFAULT_MANIFEST_PUSHES_PER_HOUR
     logger: logging.Logger | None = None
 
 
@@ -93,12 +101,14 @@ class RelayServer:
         self.limits = LimitTracker(
             max_splices_per_member=config.max_splices_per_member,
             bytes_per_day=config.bytes_per_day)
+        self.push_limits = PushRateLimiter(config.manifest_pushes_per_hour)
         self.port = config.port
         self._server: asyncio.Server | None = None
         self._sessions: set[Session] = set()
         self._by_node: dict[tuple[str, str], set[Session]] = defaultdict(set)
         self._pairs: dict[str, PairState] = {}
         self._tasks: set[asyncio.Task] = set()
+        self._manifest_lock = asyncio.Lock()
 
     # -- lifecycle ---------------------------------------------------------
     async def start(self) -> None:
@@ -210,15 +220,26 @@ class RelayServer:
                       self._short(circle_id), self._short(node_id), session.peer)
 
     async def _control_loop(self, session: Session) -> None:
+        # A manifest push may legitimately exceed the 64 KiB control-frame cap;
+        # it is read under a separate, larger bound and then checked against
+        # ``max_manifest_bytes`` so an oversize manifest gets ``too_large``.
+        read_limit = max(self.config.max_frame_bytes,
+                         self.config.max_manifest_frame_bytes)
         while not session.in_splice and not session.closed:
             try:
                 frame = await read_frame(
-                    session.reader, max_bytes=self.config.max_frame_bytes,
+                    session.reader, max_bytes=read_limit,
                     timeout=max(self.config.idle_timeout,
                                 self.config.pair_timeout + 5.0, 30.0))
             except asyncio.TimeoutError:
                 return
             kind = frame.get("type")
+            if kind == "manifest_update":
+                await self._manifest_update(session, frame)
+                continue
+            if frame_size(frame) > self.config.max_frame_bytes:
+                raise RelayError("bad_frame",
+                                 f"frame too large: {frame_size(frame)} bytes")
             if kind == "pair":
                 await self._request_pair(session, frame)
             elif kind == "pair_accept":
@@ -229,6 +250,118 @@ class RelayServer:
                 return
             else:
                 raise RelayError("unknown_message", str(kind))
+
+    # -- owner manifest push (D-023) --------------------------------------
+    async def _manifest_update(self, session: Session,
+                               frame: dict[str, Any]) -> None:
+        """Validate and atomically install an owner-signed manifest version.
+
+        Authority always comes from the manifest the relay already holds: the
+        registered node must be that manifest's owner, and a document that
+        changes the owner is refused.  The new document's own ``owner`` field
+        is only used to verify its signature, never to grant the push.
+        """
+        document = frame.get("manifest")
+        if not isinstance(document, dict):
+            await self._refuse_manifest(session, "bad_signature",
+                                        "manifest_update needs a signed manifest object")
+            return
+        circle_id = document_circle_id(document)
+        if not circle_id:
+            await self._refuse_manifest(session, "bad_signature",
+                                        "manifest has no circle id")
+            return
+
+        async with self._manifest_lock:
+            self.store.reload()
+            held = self.store.get(circle_id)
+            if held is None:
+                await self._refuse_manifest(session, "unknown_circle",
+                                            "the relay does not serve this circle")
+                return
+            if circle_id != session.circle_id:
+                await self._refuse_manifest(session, "circle_mismatch",
+                                            "this connection is registered for another circle")
+                return
+            if held.owner_node_id != session.node_id:
+                await self._refuse_manifest(session, "not_owner",
+                                            "only the current manifest owner may push")
+                return
+            if frame_size(document) > self.config.max_manifest_bytes:
+                await self._refuse_manifest(session, "too_large",
+                                            f"manifest exceeds {self.config.max_manifest_bytes} bytes")
+                return
+            if not self.push_limits.allow(session.node_id):
+                await self._refuse_manifest(session, "rate_limited",
+                                            "too many manifest pushes this hour")
+                return
+            try:
+                parsed = parse_manifest(document, source="push")
+            except ManifestError as exc:
+                code = ("expired" if exc.code == "manifest_expired"
+                        else "bad_signature")
+                await self._refuse_manifest(session, code, exc.message)
+                return
+            if parsed.owner_node_id != held.owner_node_id:
+                await self._refuse_manifest(
+                    session, "owner_change_refused",
+                    "the owner cannot be changed by a push in this version")
+                return
+            if parsed.version <= held.version:
+                await self._refuse_manifest(
+                    session, "stale_version",
+                    f"version {parsed.version} is not greater than {held.version}")
+                return
+            try:
+                self.store.commit(parsed, document)
+            except (OSError, ManifestError) as exc:
+                self.log.exception("manifest push could not be persisted circle=%s",
+                                   self._short(circle_id))
+                await self._refuse_manifest(session, "persist_failed", str(exc))
+                return
+            revoked = held.members - parsed.members
+
+        await self._close_revoked(circle_id, revoked)
+        await write_frame(session.writer,
+                          manifest_ack_frame(circle_id, parsed.version,
+                                             len(parsed.members)))
+        self.log.info(
+            "manifest push accepted circle=%s version=%d node=%s members=%d added=%d removed=%d",
+            self._short(circle_id), parsed.version, self._short(session.node_id),
+            len(parsed.members), len(parsed.members - held.members), len(revoked))
+
+    async def _refuse_manifest(self, session: Session, code: str,
+                               message: str = "") -> None:
+        self.log.info("manifest push refused circle=%s node=%s code=%s",
+                      self._short(session.circle_id),
+                      self._short(session.node_id), code)
+        with contextlib.suppress(Exception):
+            await write_frame(session.writer,
+                              manifest_refused_frame(code, message))
+
+    async def _close_revoked(self, circle_id: str, revoked: set[str]) -> None:
+        """Close every registration and splice of members no longer listed."""
+        if not revoked:
+            return
+        closed = 0
+        for session in list(self._sessions):
+            if (session.closed or session.circle_id != circle_id
+                    or session.node_id not in revoked):
+                continue
+            closed += 1
+            pair = session.pair
+            if session.in_splice or (pair is not None and pair.started.is_set()):
+                # The splice task owns cleanup (pair release, close, detach);
+                # closing the socket makes both pumps end now, which cuts the
+                # peer's side of the splice too.
+                with contextlib.suppress(Exception):
+                    session.writer.close()
+            else:
+                await self._safe_error(session, "revoked",
+                                       "member removed from the circle")
+                await self._close_session(session)
+        self.log.info("manifest revocation circle=%s sessions_closed=%d",
+                      self._short(circle_id), closed)
 
     # -- pairing -----------------------------------------------------------
     def _idle_session(self, circle_id: str, node_id: str) -> Session | None:
@@ -449,6 +582,12 @@ def _parser() -> argparse.ArgumentParser:
                         help="seconds without bytes before a splice closes")
     parser.add_argument("--pair-timeout", type=float, default=30.0)
     parser.add_argument("--register-timeout", type=float, default=10.0)
+    parser.add_argument("--manifest-pushes-per-hour", type=int,
+                        default=DEFAULT_MANIFEST_PUSHES_PER_HOUR,
+                        help="owner manifest pushes allowed per node per UTC hour")
+    parser.add_argument("--max-manifest-bytes", type=int,
+                        default=DEFAULT_MAX_MANIFEST_BYTES,
+                        help="maximum size of one signed manifest document")
     parser.add_argument("--log-level", default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     return parser
@@ -480,6 +619,8 @@ def main(argv: list[str] | None = None) -> int:
         idle_timeout=args.idle_timeout,
         pair_timeout=args.pair_timeout,
         register_timeout=args.register_timeout,
+        manifest_pushes_per_hour=args.manifest_pushes_per_hour,
+        max_manifest_bytes=args.max_manifest_bytes,
         logger=logging.getLogger("swarmbly.relay"))
     try:
         asyncio.run(_serve(config, asyncio.Event()))

@@ -5,6 +5,7 @@ Typical use (inside the App's asyncio transport)::
 
     client = RelayClient(address, circle_id, node_id, identity.sign)
     await client.connect()                 # TLS to the relay, registered
+    ack = await client.push_manifest(signed_manifest)  # owner only
     stream = await client.pair(peer_node_id)
     # stream is a socket-like byte stream; wrap it in the node TLS 1.3 layer
 
@@ -158,6 +159,27 @@ class RelayClient:
         self.log.info("registered circle=%s node=%s",
                       self._short(self.circle_id), self._short(self.node_id))
         return self
+
+    async def push_manifest(self, manifest: dict[str, Any]) -> dict[str, Any]:
+        """Push a complete signed manifest version to the relay (owner only).
+
+        ``manifest`` is the App's signed document, either the
+        ``{"manifest": {...}, "sig": "..."}`` envelope or the payload with a
+        ``sig`` field.  Returns the relay's ``manifest_ack`` frame; a refusal
+        raises :class:`RelayRefused` with the relay's stable code.
+        """
+        if not self.registered or self._in_splice:
+            raise RelayError("not_registered", "connect() first, once per stream")
+        await self._send({"type": "manifest_update", "v": PROTOCOL_VERSION,
+                          "manifest": manifest})
+        reply = await self._receive(self.timeout)
+        if reply.get("type") == "manifest_refused":
+            raise RelayRefused(str(reply.get("code") or "refused"),
+                               str(reply.get("message") or ""))
+        self._raise_on_error(reply)
+        if reply.get("type") != "manifest_ack":
+            raise RelayError("protocol_error", "expected manifest_ack")
+        return reply
 
     async def pair(self, peer_node_id: str) -> RelayStream:
         if not self.registered or self._in_splice:
