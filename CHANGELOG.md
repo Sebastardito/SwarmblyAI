@@ -100,7 +100,7 @@ Release notes: [`docs/releases/v3.0.1.md`](docs/releases/v3.0.1.md).
   - the default image is `:latest`, the last release (`:edge` follows `main`).
 - **Roadmap rewritten** ([`docs/ROADMAP.md`](docs/ROADMAP.md)). It now covers:
   - the project's history from the first idea (August 2026) to today;
-  - the versions leading to a public network with volunteers (3.0.1 destinations, 3.1 projects, 3.2 providers and recipes, 3.3 tools, 3.4 trusted circles and private beta, 3.5 public beta, 4.0 protocol 1.0);
+  - the versions leading to a public network with volunteers (3.0.1 destinations, 3.1 projects, 3.2 providers and recipes, 3.3 tools, 3.4 MCP and skills, 3.5 teams and trusted circles · private beta, 3.6 public network · public beta, 4.0 protocol 1.0);
   - the volunteer programme;
   - the decisions of 4 November 2026.
 - `scripts/sync_components.py` records the commit of an annotated tag, not the tag object.

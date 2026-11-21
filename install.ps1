@@ -3,7 +3,7 @@
 #   .\install.ps1 --quick      everything recommended, no questions
 #   .\install.ps1 --custom     step by step
 #   .\install.ps1 --doctor | --uninstall | --help
-# Finds Python 3.10+ (offers to install it with winget) and runs installer\install.py.
+# Finds Python 3.11+ (offers to install it with winget) and runs installer\install.py.
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
 $es = (Get-Culture).TwoLetterISOLanguageName -eq "es"
@@ -12,12 +12,12 @@ function Find-Python {
     $candidates = @()
     if ($env:PYTHON) { $candidates += ,@($env:PYTHON) }
     $candidates += ,@("py", "-3.13"); $candidates += ,@("py", "-3.12"); $candidates += ,@("py", "-3.11")
-    $candidates += ,@("py", "-3.10"); $candidates += ,@("python"); $candidates += ,@("python3")
+    $candidates += ,@("python"); $candidates += ,@("python3")
     foreach ($c in $candidates) {
         $exe = $c[0]; $rest = @($c | Select-Object -Skip 1)
         if (-not (Get-Command $exe -ErrorAction SilentlyContinue)) { continue }
         try {
-            & $exe @rest -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" 2>$null
+            & $exe @rest -c "import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)" 2>$null
             if ($LASTEXITCODE -eq 0) { return ,$c }
         } catch { }
     }
@@ -26,8 +26,8 @@ function Find-Python {
 
 $py = Find-Python
 if (-not $py) {
-    if ($es) { Write-Host "Swarmbly AI necesita Python 3.10 o superior y no se encontró." }
-    else { Write-Host "Swarmbly AI needs Python 3.10 or newer, and none was found." }
+    if ($es) { Write-Host "Swarmbly AI necesita Python 3.11 o superior y no se encontró." }
+    else { Write-Host "Swarmbly AI needs Python 3.11 or newer, and none was found." }
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         $q = if ($es) { "¿Instalar Python 3.12 con winget ahora? [S/n]" } else { "Install Python 3.12 with winget now? [Y/n]" }
         $a = Read-Host $q

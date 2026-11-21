@@ -6,16 +6,16 @@
 #   ./install.sh --doctor     check an existing installation
 #   ./install.sh --uninstall
 #   ./install.sh --help       all options
-# Finds Python 3.10+ and hands over to installer/install.py (standard library only).
+# Finds Python 3.11+ and hands over to installer/install.py (standard library only).
 set -euo pipefail
 cd "$(dirname "$0")"
 
 pick_python() {
-  local candidates=("${PYTHON:-}" python3.13 python3.12 python3.11 python3.10 python3)
+  local candidates=("${PYTHON:-}" python3.13 python3.12 python3.11 python3)
   for py in "${candidates[@]}"; do
     [[ -z "$py" ]] && continue
     command -v "$py" >/dev/null 2>&1 || continue
-    if "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+    if "$py" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' 2>/dev/null; then
       echo "$py"; return 0
     fi
   done
@@ -25,9 +25,9 @@ pick_python() {
 if ! PY="$(pick_python)"; then
   case "${LANG:-}" in es*) es=1 ;; *) es=0 ;; esac
   if [[ $es == 1 ]]; then
-    echo "Swarmbly AI necesita Python 3.10 o superior y no se encontró."
+    echo "Swarmbly AI necesita Python 3.11 o superior y no se encontró."
   else
-    echo "Swarmbly AI needs Python 3.10 or newer, and none was found."
+    echo "Swarmbly AI needs Python 3.11 or newer, and none was found."
   fi
   case "$(uname -s)" in
     Darwin) echo "  https://www.python.org/downloads/   or:  brew install python@3.12" ;;

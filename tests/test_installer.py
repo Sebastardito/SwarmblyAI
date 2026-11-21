@@ -61,3 +61,25 @@ def test_on_macos_the_environment_goes_to_a_folder_icloud_does_not_sync(tmp_path
     assert install.venv_target(venv, False) == venv
     (tmp_path / "custom").mkdir()
     assert install.venv_target(tmp_path / "custom", True) == tmp_path / "custom"
+
+
+def test_python_minimum_is_311():
+    assert install.MIN_PYTHON == (3, 11)
+    assert install.python_supported((3, 11, 0))
+    assert install.python_supported((3, 12, 4))
+    assert not install.python_supported((3, 10, 14))
+    assert not install.python_supported((3, 9, 19))
+
+
+def test_main_refuses_python_310(monkeypatch, capsys):
+    monkeypatch.setattr(install, "python_supported", lambda: False)
+    assert install.main(["--quick", "--dry-run", "--lang", "en"]) == 1
+    assert "3.11" in capsys.readouterr().out
+
+
+def test_no_installer_or_doc_accepts_python_310():
+    """The installer, both finders and the install guide must agree with the App."""
+    for relative in ("installer/install.py", "install.sh", "install.ps1", "docs/INSTALL.md"):
+        text = (ROOT / relative).read_text(encoding="utf-8-sig")
+        assert "3.10" not in text, relative
+

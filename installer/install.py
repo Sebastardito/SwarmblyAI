@@ -47,6 +47,9 @@ IS_MAC = sys.platform == "darwin"
 IS_LINUX = sys.platform.startswith("linux")
 OLLAMA = os.environ.get("OLLAMA_HOST", "127.0.0.1:11434")
 OLLAMA = OLLAMA if OLLAMA.startswith("http") else "http://" + OLLAMA
+# The App requires 3.11 (D-006), so the installer must not accept an older
+# interpreter and then fail while installing the components.
+MIN_PYTHON = (3, 11)
 EMBED_MODEL = ("nomic-embed-text", 0.27)
 # (minimum RAM in GB, model, download GB) — the same models as the app's catalog
 CHAT_MODELS = [(24, "qwen2.5:7b", 4.7), (10, "qwen2.5:3b", 1.9), (0, "qwen2.5:1.5b", 1.0)]
@@ -77,9 +80,8 @@ T = {
   "yes": "s", "no": "n",
   "skipped": "omitido", "done": "listo", "failed": "falló", "pending": "pendiente",
   "step_python": "Python",
-  "why_python": "Swarmbly necesita Python 3.10 o superior. Se usa solo para crear un entorno aislado; el Python del sistema no se modifica.",
+  "why_python": "Swarmbly necesita Python 3.11 o superior (la App y sus dependencias lo exigen). Se usa para crear un entorno aislado; el Python del sistema no se modifica.",
   "py_ok": "Python {v} — correcto",
-  "py_searx": "Nota: la búsqueda web local (SearXNG) necesita Python 3.11+, Docker o uv; si no hay ninguno, se omitirá.",
   "step_env": "Entorno aislado",
   "why_env": "Una carpeta propia (.venv) con las bibliotecas de Swarmbly, separada del resto del sistema. Desinstalar = borrar esa carpeta.",
   "env_where": "Ubicación del entorno",
@@ -146,9 +148,8 @@ T = {
   "yes": "y", "no": "n",
   "skipped": "skipped", "done": "done", "failed": "failed", "pending": "pending",
   "step_python": "Python",
-  "why_python": "Swarmbly needs Python 3.10 or newer, only to create an isolated environment; the system Python is not changed.",
+  "why_python": "Swarmbly needs Python 3.11 or newer (the App and its dependencies require it). It is used to create an isolated environment; the system Python is not changed.",
   "py_ok": "Python {v} — OK",
-  "py_searx": "Note: local web search (SearXNG) needs Python 3.11+, Docker or uv; without any of them it is skipped.",
   "step_env": "Isolated environment",
   "why_env": "A folder of its own (.venv) with Swarmbly's libraries, apart from the rest of the system. Uninstalling = deleting that folder.",
   "env_where": "Environment location",
@@ -205,6 +206,12 @@ def pick_lang(arg: str | None) -> str:
         except Exception:
             loc = ""
     return "es" if loc.lower().startswith("es") or "spanish" in loc.lower() else "en"
+
+
+def python_supported(version_info=None) -> bool:
+    """True when Python can install and run the App (D-006: 3.11+)."""
+    version = sys.version_info if version_info is None else version_info
+    return tuple(version[:2]) >= MIN_PYTHON
 
 
 # ---------------------------------------------------------------------------- console
@@ -398,8 +405,6 @@ def plan_models(ram: float, extra: bool = False) -> list[tuple[str, float]]:
 def step_python(ctx: Ctx) -> None:
     v = "%d.%d.%d" % sys.version_info[:3]
     ctx.ui.result(ctx.ui["step_python"], "done", ctx.ui["py_ok"].format(v=v))
-    if sys.version_info < (3, 11) and not shutil.which("uv") and not shutil.which("docker"):
-        ctx.ui.say(c("2", "    " + ctx.ui["py_searx"]))
 
 
 def venv_target(venv: Path, is_mac: bool) -> Path:
@@ -776,7 +781,7 @@ def doctor(ctx: Ctx) -> int:
         ctx.venv = Path(info.get("venv") or ctx.venv)
     except Exception:
         pass
-    checks.append(("Python ≥ 3.10", sys.version_info >= (3, 10), "%d.%d" % sys.version_info[:2]))
+    checks.append(("Python ≥ 3.11", python_supported(), "%d.%d" % sys.version_info[:2]))
     checks.append((".venv", ctx.py.exists(), str(ctx.venv)))
     ok_import = False
     if ctx.py.exists():
@@ -932,8 +937,8 @@ def main(argv: list[str] | None = None) -> int:
                     "ollama,models,pdf,searxng,shortcuts,sources")
     args = ap.parse_args(argv)
     lang = pick_lang(args.lang)
-    if sys.version_info < (3, 10):
-        print("Swarmbly AI needs Python 3.10+." if lang == "en" else "Swarmbly AI necesita Python 3.10+.")
+    if not python_supported():
+        print("Swarmbly AI needs Python 3.11+." if lang == "en" else "Swarmbly AI necesita Python 3.11+.")
         return 1
     mode = ("quick" if args.quick else "custom" if args.custom else
             "doctor" if args.doctor else "uninstall" if args.uninstall else None)

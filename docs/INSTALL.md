@@ -11,7 +11,7 @@
 | | Minimum | Recommended |
 |---|---|---|
 | System | macOS 12+, Linux (x86-64 or ARM64), Windows 10/11 | — |
-| Python | 3.10 | 3.11+ (needed for the native web search; the installer can use Docker or `uv` instead) |
+| Python | 3.11 | 3.12 (the App, its dependencies and the native web search need 3.11+) |
 | Memory | 8 GB RAM (1.5 B model) | 16 GB+ (3–7 B models) |
 | Disk | 3 GB | 10 GB (several models) |
 
@@ -75,7 +75,7 @@ swarmbly-app            # opens http://127.0.0.1:8765
 
 | Symptom | What to do |
 |---|---|
-| "needs Python 3.10" | Install Python from python.org (macOS: `brew install python@3.12`; Linux: your package manager), or `PYTHON=/path/to/python3.12 ./install.sh` |
+| "needs Python 3.11" | Install Python from python.org (macOS: `brew install python@3.12`; Linux: your package manager), or `PYTHON=/path/to/python3.12 ./install.sh` |
 | Ollama "pending" at the end | Run the command shown, or install from <https://ollama.com/download>, then `swarmbly doctor` |
 | PDFs "cannot be read" in Memory | Install pdftotext (command in the summary) and reopen the app |
 | Web search "not answering" | Settings → Privacy → Web search → Reinstall; the app's own installer explains what is missing |
@@ -91,7 +91,7 @@ swarmbly-app            # opens http://127.0.0.1:8765
 | | Mínimo | Recomendado |
 |---|---|---|
 | Sistema | macOS 12+, Linux (x86-64 o ARM64), Windows 10/11 | — |
-| Python | 3.10 | 3.11+ (para la búsqueda web nativa; si no, el instalador puede usar Docker o `uv`) |
+| Python | 3.11 | 3.12 (la App, sus dependencias y la búsqueda web nativa necesitan 3.11+) |
 | Memoria | 8 GB de RAM (modelo de 1,5 B) | 16 GB o más (modelos de 3–7 B) |
 | Disco | 3 GB | 10 GB (varios modelos) |
 
@@ -155,7 +155,7 @@ swarmbly-app            # abre http://127.0.0.1:8765
 
 | Síntoma | Qué hacer |
 |---|---|
-| «necesita Python 3.10» | Instala Python desde python.org (macOS: `brew install python@3.12`; Linux: tu gestor de paquetes), o `PYTHON=/ruta/a/python3.12 ./install.sh` |
+| «necesita Python 3.11» | Instala Python desde python.org (macOS: `brew install python@3.12`; Linux: tu gestor de paquetes), o `PYTHON=/ruta/a/python3.12 ./install.sh` |
 | Ollama «pendiente» al final | Ejecuta el comando indicado, o instálalo desde <https://ollama.com/download>, y luego `swarmbly doctor` |
 | PDF «no se puede leer» en Memoria | Instala pdftotext (el comando está en el resumen) y vuelve a abrir la app |
 | Búsqueda web «sin responder» | Ajustes → Privacidad → Búsqueda web → Reinstalar; el instalador de la app explica qué falta |
