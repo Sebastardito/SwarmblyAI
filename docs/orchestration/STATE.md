@@ -18,8 +18,8 @@ Last releases: Swarmbly AI 3.3.0 (10.5281/zenodo.24330451), SwarmblyApp 0.6.0 (1
 
 **Integrated:** App `main` at `890254f` (from `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suites, agent adapter, author search in the chat, spreadsheets in recipe 5, CI with extras, sandbox CI on three systems, the test seam and its Python 3.12 fix, private glossary entries); App suite 970 passed with 2 known env-only P2P family failures. Umbrella `edge` at `eb2e3a9`; release branch `release-3.4.0` at `1bd17d3`.
 
-**In progress:** WP0 baseline hygiene; WP1 circles; WP3 relay design spike.
+**In progress:** WP2 (CIRCLE class, egress gate, circle passages).
 
 **Blockers:** none for the release. Exit criteria 1 (zero unauthorised sends) and 3 (exact result ≥ 90 %) are not met on the sealed banks and are reported as such (D-014); T9.7 stays open until a new sealed bank.
 
-**Next action:** review WP0 and WP1; the maintainer opens the signing accounts and chooses where the relay runs.
+**Next action:** review WP2; then WP3 integration of the relay in the App (needs where the relay runs); the maintainer opens the signing accounts.
