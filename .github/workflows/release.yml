@@ -17,10 +17,10 @@ on:
         required: true
         type: string
 
+# Least privilege: jobs read only; the release job alone may write the
+# release and request the OIDC token for Sigstore.
 permissions:
-  contents: write
-  id-token: write
-  packages: read
+  contents: read
 
 concurrency:
   group: release-${{ github.event.inputs.tag || github.ref_name }}
@@ -101,6 +101,10 @@ jobs:
   release:
     name: Build, sign and publish
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      packages: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -242,9 +246,15 @@ jobs:
           TAG: ${{ steps.vars.outputs.tag }}
           VERSION: ${{ steps.vars.outputs.version }}
         run: |
+          # The maintainer writes and publishes the release (its notes and the
+          # Zenodo DOI follow the publication). This job only attaches the
+          # signed artifacts: to the existing release, or to a new *draft*
+          # that the maintainer completes and publishes, so a tag push never
+          # publishes a release (and never triggers an archive) on its own.
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" \
-              --title "Swarmbly AI ${VERSION}" --generate-notes
+            gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --draft \
+              --title "Swarmbly AI ${VERSION}" \
+              --notes "Draft created by the release workflow with the signed artifacts; the maintainer completes the notes and publishes it."
           fi

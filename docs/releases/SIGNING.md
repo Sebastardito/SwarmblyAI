@@ -36,6 +36,11 @@ existing tag). It builds:
   the workflow run URL;
 - `SHA256SUMS` over all of the above.
 
+The workflow never publishes a release by itself: it attaches these files to
+the release the maintainer already created, or to a new **draft** the
+maintainer completes and publishes. Publishing stays a manual step because
+the Zenodo archive and DOI follow the publication.
+
 It then signs `SHA256SUMS` with **Sigstore keyless** using the GitHub Actions
 OIDC identity:
 
@@ -201,6 +206,11 @@ con una etiqueta existente). Construye:
 - `SIGNING.txt`: identidad exacta del certificado Sigstore, emisor OIDC y URL
   de la ejecución;
 - `SHA256SUMS` sobre todo lo anterior.
+
+El workflow nunca publica una versión por sí solo: adjunta estos archivos a la
+versión que el mantenedor ya creó, o a un **borrador** nuevo que el mantenedor
+completa y publica. Publicar sigue siendo un paso manual porque el archivo y el
+DOI de Zenodo siguen a la publicación.
 
 Después firma `SHA256SUMS` con **Sigstore sin clave**, usando la identidad OIDC
 de GitHub Actions:
