@@ -13,9 +13,13 @@ accepted only when the canonical JSON verifies with the owner's key.
 
 from __future__ import annotations
 
+import contextlib
 import datetime as dt
 import json
 import logging
+import os
+import re
+import tempfile
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -82,6 +86,19 @@ def _payload(document: dict[str, Any]) -> dict[str, Any]:
         if isinstance(candidate, dict):
             return candidate
     return document
+
+
+def document_circle_id(document: dict[str, Any]) -> str | None:
+    """Circle id from an unverified document, using the parser's tolerant keys.
+
+    This only routes a push to the right held manifest; authority is still
+    decided by the held manifest's owner and by the signature check.
+    """
+    if not isinstance(document, dict):
+        return None
+    payload = _payload(document)
+    value = payload.get("circle_id") or payload.get("id") or payload.get("circle")
+    return value if isinstance(value, str) and value else None
 
 
 def _signature(document: dict[str, Any], payload: dict[str, Any]) -> str:
@@ -262,6 +279,77 @@ class ManifestStore:
 
     def all(self) -> list[CircleManifest]:
         return list(self._manifests.values())
+
+    # -- owner push persistence -------------------------------------------
+    @staticmethod
+    def _safe_filename(circle_id: str) -> str:
+        name = re.sub(r"[^A-Za-z0-9._-]+", "_", circle_id).strip("._")
+        return (name or "circle")[:80]
+
+    def target_path(self, circle_id: str) -> Path:
+        """Where the authoritative file for ``circle_id`` lives.
+
+        A manifest loaded from a file keeps that file.  A manifest installed
+        in memory only (embedded relays, tests) goes to the first directory
+        passed to the store, or to the single file path when there is one.
+        """
+        current = self._manifests.get(circle_id)
+        if current is not None and current.source:
+            return Path(current.source)
+        for path in self.paths:
+            if path.is_dir():
+                return path / f"{self._safe_filename(circle_id)}.json"
+        if len(self.paths) == 1 and not self.paths[0].is_dir():
+            return self.paths[0]
+        raise ManifestError("not_persistable",
+                            f"no writable path for circle {circle_id}")
+
+    def _write_document(self, target: Path, document: dict[str, Any]) -> None:
+        """Write one signed document with a same-directory atomic replace."""
+        parent = target.parent
+        parent.mkdir(parents=True, exist_ok=True)
+        try:
+            mode = target.stat().st_mode & 0o777
+        except OSError:
+            mode = 0o640
+        fd, temp_name = tempfile.mkstemp(
+            prefix=f".{target.name}.", suffix=".tmp", dir=str(parent))
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(document, handle, ensure_ascii=False,
+                          sort_keys=True, indent=2)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.chmod(temp_name, mode)
+            os.replace(temp_name, target)
+        except Exception:
+            with contextlib.suppress(OSError):
+                os.unlink(temp_name)
+            raise
+        with contextlib.suppress(OSError):
+            dir_fd = os.open(parent, os.O_RDONLY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+
+    def commit(self, manifest: CircleManifest,
+               document: dict[str, Any]) -> Path:
+        """Persist a verified push, then make it the held manifest.
+
+        The file is replaced first, so a write failure leaves both the file
+        and the in-memory view on the previous version.  The caller runs this
+        under the server's manifest lock to serialise concurrent pushes.
+        """
+        target = self.target_path(manifest.circle_id)
+        self._write_document(target, document)
+        stored = replace(manifest, source=str(target))
+        self._manifests[manifest.circle_id] = stored
+        stamp = self._stamp(target)
+        if stamp is not None:
+            self._stamps[target] = stamp
+        return target
 
     def replace(self, manifest: CircleManifest) -> None:
         """Install a manifest directly (used by tests and embedded relays)."""
