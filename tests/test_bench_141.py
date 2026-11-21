@@ -142,7 +142,10 @@ def test_works_by_id_is_its_own_group_only_when_the_card_asks():
 
 
 def test_n7_exact_numbers_use_zero_tolerance_unless_the_card_states_one():
-    no_tolerance = rb.Case("N7-01", "¿?", level="N7")
+    assert rb.compares_exact_numbers(
+        rb.Case("N7-00", "¿?", level="N7", exact_result="4,1"))
+    assert not rb.compares_exact_numbers(rb.Case("N7-00", "¿?", level="N7"))
+    no_tolerance = rb.Case("N7-01", "¿?", level="N7", exact_result="4,1")
     stated = rb.Case("N7-02", "¿?", level="N7", tolerance="±0,01")
     other = rb.Case("N5-01", "¿?", level="N5", tolerance="±0,01")
     assert rb.effective_tolerance(no_tolerance) == 0.0

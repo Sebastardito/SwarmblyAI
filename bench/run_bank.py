@@ -1377,6 +1377,12 @@ def effective_tolerance(case: "Case") -> float:
     return parse_tolerance(case.tolerance)
 
 
+def compares_exact_numbers(case: "Case") -> bool:
+    """A card that requires exact numbers: código-exacto, or any N7 card."""
+    return bool(case.exact_result) and (
+        "código-exacto" in case.capabilities or case.level == "N7")
+
+
 def expected_numbers(raw: str) -> list[float]:
     """Numbers written in ``Resultado exacto`` (reference paths and IDs removed)."""
     text = re.sub(r"03_REFERENCIA/\S+", " ", raw or "")
@@ -3915,7 +3921,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "permissions_after": permissions_after,
                     })
                     exact = None
-                    if "código-exacto" in case.capabilities and case.exact_result:
+                    if compares_exact_numbers(case):
                         if case.recipe == "code":
                             comparison_text = code_output_text(
                                 (message or {}).get("content", ""))
@@ -4478,7 +4484,7 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
         registro = _json_file(folder / "registro.json", {})
         if not isinstance(registro, dict):
             registro = {}
-        if (case.exact_result and "código-exacto" in case.capabilities
+        if (compares_exact_numbers(case)
                 and isinstance(registro.get("respuesta"), str)):
             comparison_text = (code_output_text(registro["respuesta"])
                                if case.recipe == "code" else registro["respuesta"])
