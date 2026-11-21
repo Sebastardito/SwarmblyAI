@@ -68,8 +68,11 @@ for a technical failure, never to select a favourable result.
 ### Run
 
 ```bash
-# One node, then two loopback members; real Ollama models:
-python3 bench/run_team.py --model qwen2.5:7b --local --distributed --members 2
+# One node, then two loopback members; real Ollama models.
+# The local pool needs two chat models: repeat --local-model.
+python3 bench/run_team.py --model qwen2.5:7b \
+  --local-model qwen2.5:7b --local-model qwen2.5:3b \
+  --local --distributed --members 2
 
 # Real machines: create/accept the circle first, then give the peers:
 python3 bench/run_team.py --model qwen2.5:7b --distributed \
@@ -144,8 +147,11 @@ repite solo por un fallo técnico, nunca para elegir un resultado favorable.
 ### Ejecutar
 
 ```bash
-# Un nodo y luego dos miembros de loopback; modelos reales de Ollama:
-python3 bench/run_team.py --model qwen2.5:7b --local --distributed --members 2
+# Un nodo y luego dos miembros de loopback; modelos reales de Ollama.
+# El pool local necesita dos modelos de chat: repite --local-model.
+python3 bench/run_team.py --model qwen2.5:7b \
+  --local-model qwen2.5:7b --local-model qwen2.5:3b \
+  --local --distributed --members 2
 
 # Máquinas reales: crea/acepta el círculo y pasa los pares:
 python3 bench/run_team.py --model qwen2.5:7b --distributed \
