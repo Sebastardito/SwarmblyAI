@@ -6,6 +6,9 @@
 
 ## English
 
+> **3.5 private beta:** the volunteer guide, consent form, feedback form and
+> install checklist are in [`docs/beta/`](beta/README.md).
+
 ### Requirements
 
 | | Minimum | Recommended |
@@ -140,6 +143,9 @@ beta; do not disable the operating system's security checks.
 ---
 
 ## Español
+
+> **Beta privada de 3.5:** la guía, el consentimiento, el formulario de opinión
+> y la lista de instalación están en [`docs/beta/`](beta/README.md).
 
 ### Requisitos
 
