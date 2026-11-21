@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "descripcion": "Open team-versus-local battery. Fictitious, neutral material written before any run.",
+  "casos": [
+    {
+      "id": "TEAM-01",
+      "cat": "explicacion",
+      "question": "Explain why a fictitious spring river rises."
+    },
+    {
+      "id": "TEAM-02",
+      "cat": "comparacion",
+      "question": "Compare fictitious materials A and B briefly."
+    },
+    {
+      "id": "TEAM-03",
+      "cat": "procedimiento",
+      "question": "List three steps to test fictitious pond water."
+    }
+  ]
+}
