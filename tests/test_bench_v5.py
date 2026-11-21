@@ -65,7 +65,7 @@ def test_v5_card_fields_are_parsed_and_validated(tmp_path):
     root = _bank_v5(tmp_path, CARD)
     bank = rb.detect_bank(root)
     cases = rb.parse_cases(bank.cases_file)
-    assert rb.HARNESS_VERSION == "1.4.0"
+    assert rb.HARNESS_VERSION == "1.4.1"
     assert len(cases) == 1
     case = cases[0]
     assert case.two_node is True

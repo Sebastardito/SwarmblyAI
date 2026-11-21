@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.4.0"
+HARNESS_VERSION = "1.4.1"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -189,6 +189,7 @@ class Case:
     rubric: str = ""             # "Rúbrica:"
     material: str = ""           # "Material necesario:"
     notes: str = ""              # "Notas:"
+    correction_turn: int = 0     # "Corrección:" sí/2..5, or a correcting "Turno N:"
     # 1.4.0 (bank v5): peer-aware privacy cards
     two_node: bool = False       # "Dos nodos: sí" -> --two-node
     circle_passages: bool = False  # "Pasajes a pares: sí" -> circle_passages on
@@ -210,7 +211,7 @@ _KNOWN_FIELDS = {
     "Cambio de servidor", "Skill", "Activar skill", "Autor", "Servicios", "Decisión autor",
     "Envíos permitidos", "Comprobaciones", "Datos clave", "Errores graves", "Rúbrica",
     "Material necesario", "Notas", "Dos nodos", "Pasajes a pares",
-    "Pasajes esperados", "Equipo",
+    "Pasajes esperados", "Equipo", "Corrección", "Turno de corrección",
 }
 _PIPE = re.compile(r"\s+\|\s+")
 
@@ -374,6 +375,417 @@ def _where_value(raw: str) -> str:
     return low
 
 
+# --------------------------------------------------------------------------------------
+# 1.4.1: expected output files, material used, works by iD, correction steps
+# --------------------------------------------------------------------------------------
+@dataclass
+class OutputSpec:
+    raw: str
+    name: str
+    extension: str
+    columns: list[str] = field(default_factory=list)
+    rows: int | None = None
+
+
+_OUTPUT_FILE = re.compile(
+    r"[`«\"]?((?:[\w.-]+/)*[\w.-]+\.[A-Za-z0-9]{1,8})[`»\"]?")
+_OUTPUT_COLUMNS = re.compile(
+    r"(?:columnas?|columns?)\s*[:=]?\s*(.+?)"
+    r"(?=\s*(?:;|/|\bfilas?\b|\brows?\b|$))", re.I)
+_OUTPUT_ROWS = re.compile(
+    r"(?:(?P<before>\d+)\s*(?:filas?|rows?)|(?:filas?|rows?)\s*[:=]?\s*"
+    r"(?P<after>\d+))", re.I)
+
+
+def _clean_list_item(item: str) -> str:
+    return item.strip().strip(_QUOTES + "`»").strip()
+
+
+def parse_output_spec(raw: str) -> OutputSpec:
+    """``Archivo de salida: resultado.csv (columnas: a, b; filas: 3)``.
+
+    The file name is the first token with an extension; without one, the first
+    token before a parenthesis or a comma. ``columnas``/``columns`` accepts a
+    comma, semicolon or pipe list, and a row count may be written either way.
+    """
+    text = (raw or "").strip()
+    match = _OUTPUT_FILE.search(text)
+    name = match.group(1).strip() if match else ""
+    if not name:
+        head = re.split(r"[,(;]", text, 1)[0].strip()
+        name = head.split(" ", 1)[0].strip(_QUOTES + "`»")
+    extension = Path(name).suffix.lower() if name else ""
+    columns: list[str] = []
+    match = _OUTPUT_COLUMNS.search(text)
+    if match:
+        columns = [_clean_list_item(item)
+                   for item in re.split(r",|;|\||\s+y\s+", match.group(1))
+                   if _clean_list_item(item)]
+    rows = None
+    match = _OUTPUT_ROWS.search(text)
+    if match:
+        try:
+            rows = int(match.group("before") or match.group("after"))
+        except (TypeError, ValueError):
+            rows = None
+    return OutputSpec(raw=text, name=name, extension=extension,
+                      columns=columns, rows=rows)
+
+
+def produced_file_entries(meta: dict[str, Any]) -> list[dict[str, Any]]:
+    """The files the App reported producing, in its metadata."""
+    raw: Any = []
+    code_run = meta.get("code_run") if isinstance(meta.get("code_run"), dict) else {}
+    for key in ("files", "salidas", "outputs"):
+        if code_run.get(key):
+            raw = code_run[key]
+            break
+    if not raw:
+        for key in ("files", "salidas", "outputs"):
+            if meta.get(key):
+                raw = meta[key]
+                break
+    if isinstance(raw, dict):
+        raw = [raw]
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in raw:
+        if isinstance(item, str):
+            item = {"name": item}
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or item.get("archivo") or item.get("path") or "")
+        if not name:
+            continue
+        out.append({"name": name,
+                    "size": int(item.get("size") or item.get("bytes") or 0),
+                    "sha256": str(item.get("sha256") or ""),
+                    "url": str(item.get("url") or "")})
+    return out
+
+
+def _safe_output_path(folder: Path, name: str) -> Path | None:
+    rel = Path(name)
+    if rel.is_absolute() or any(part in ("", ".", "..") for part in rel.parts):
+        return None
+    return folder / rel
+
+
+def fetch_produced_files(app: Any, meta: dict[str, Any], folder: Path) -> list[dict[str, Any]]:
+    """Download each produced file while the App is still running.
+
+    The download is local, through the App's own API and token, and is kept in
+    the judge folder so a re-score can compare it without the App.
+    """
+    entries = produced_file_entries(meta)
+    if not entries:
+        return []
+    folder.mkdir(parents=True, exist_ok=True)
+    for entry in entries:
+        target = _safe_output_path(folder, entry["name"])
+        if target is None:
+            entry["error"] = "nombre no válido"
+            continue
+        entry["local"] = str(target.relative_to(folder))
+        url = str(entry.get("url") or "")
+        if not url:
+            continue
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            request = urllib.request.Request(f"{app.base}{url}")
+            if getattr(app, "token", ""):
+                request.add_header("X-Swarmbly-Token", app.token)
+            opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(request, timeout=60) as response:
+                data = response.read(50 * 1024 * 1024 + 1)
+            if len(data) > 50 * 1024 * 1024:
+                entry["error"] = "archivo demasiado grande"
+                continue
+            target.write_bytes(data)
+            entry["bytes_leidos"] = len(data)
+        except Exception as exc:
+            entry["error"] = f"{type(exc).__name__}: {exc}"[:200]
+    return entries
+
+
+def _tabular_rows(path: Path) -> tuple[list[str], list[list[str]]] | None:
+    suffix = path.suffix.lower()
+    try:
+        if suffix in (".csv", ".tsv"):
+            delimiter = "\t" if suffix == ".tsv" else ","
+            with open(path, encoding="utf-8-sig", newline="") as fh:
+                rows = [row for row in csv.reader(fh, delimiter=delimiter) if any(row)]
+            return (rows[0], rows[1:]) if rows else None
+        if suffix == ".json":
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                data = next((value for value in data.values()
+                             if isinstance(value, list)), [])
+            if not isinstance(data, list) or not data:
+                return None
+            if all(isinstance(row, dict) for row in data):
+                header = list(dict.fromkeys(
+                    key for row in data for key in row.keys()))
+                return header, [[str(row.get(key, "")) for key in header] for row in data]
+            return ["valor"], [[str(value)] for value in data]
+        if suffix in (".md", ".markdown"):
+            lines = [line.strip() for line in path.read_text(
+                encoding="utf-8", errors="replace").splitlines() if line.strip()]
+            table = [line for line in lines if line.startswith("|")]
+            if len(table) >= 2:
+                header = [_clean_list_item(cell) for cell in table[0].strip("|").split("|")]
+                body = [[cell.strip() for cell in line.strip("|").split("|")]
+                        for line in table[2:]]
+                return header, body
+        if suffix in (".txt", ".log"):
+            lines = [line for line in path.read_text(
+                encoding="utf-8", errors="replace").splitlines() if line.strip()]
+            return (["línea"], [[line] for line in lines]) if lines else None
+    except (OSError, ValueError, UnicodeError):
+        return None
+    return None
+
+
+def evaluate_output(spec: OutputSpec, entries: list[dict[str, Any]],
+                    folder: Path) -> dict[str, Any]:
+    """Existence, extension, size and (when asked) columns and rows."""
+    report: dict[str, Any] = {"archivo": spec.name, "existe": False, "extension": "",
+                              "bytes": 0, "columnas": None, "filas": None,
+                              "ok": False, "motivo": ""}
+    if not spec.name:
+        report["motivo"] = "la ficha no dice el archivo"
+        return report
+    folded = _fold_text(spec.name)
+    entry = next((item for item in entries
+                  if _fold_text(item.get("name") or "") == folded
+                  or _fold_text(Path(str(item.get("name") or "")).name)
+                  == _fold_text(Path(spec.name).name)), None)
+    if entry is None:
+        report["motivo"] = "el archivo no está entre los producidos"
+        return report
+    report["existe"] = True
+    produced_name = str(entry.get("name") or "")
+    report["extension"] = Path(produced_name).suffix.lower()
+    report["bytes"] = int(entry.get("size") or entry.get("bytes_leidos") or 0)
+    local = entry.get("local")
+    path = (folder / str(local)) if local else None
+    if path is not None and path.is_file():
+        report["bytes"] = max(report["bytes"], path.stat().st_size)
+    if spec.extension and report["extension"] != spec.extension:
+        report["motivo"] = (f"extensión {report['extension'] or '?'} "
+                            f"en vez de {spec.extension}")
+        return report
+    if report["bytes"] <= 0:
+        report["motivo"] = "el archivo está vacío"
+        return report
+    if spec.columns or spec.rows is not None:
+        if path is None or not path.is_file():
+            report["motivo"] = "no se pudo leer el archivo producido"
+            return report
+        table = _tabular_rows(path)
+        if table is None:
+            report["motivo"] = "el archivo producido no tiene filas legibles"
+            return report
+        header, body = table
+        report["columnas"] = header
+        report["filas"] = len(body)
+        if spec.columns:
+            have = {_fold_text(column) for column in header}
+            missing = [column for column in spec.columns
+                       if _fold_text(column) not in have]
+            if missing:
+                report["motivo"] = "faltan columnas: " + ", ".join(missing)
+                return report
+        if spec.rows is not None and report["filas"] != spec.rows:
+            report["motivo"] = (f"{report['filas']} filas en vez de {spec.rows}")
+            return report
+    report["ok"] = True
+    report["motivo"] = "existe, extensión correcta, no vacío"
+    if spec.columns or spec.rows is not None:
+        report["motivo"] += (f", columnas {len(spec.columns)}"
+                             f", filas {report['filas']}")
+    return report
+
+
+def material_phrases(raw: str) -> list[str]:
+    """The phrases of ``Material necesario``, quoted ones first.
+
+    Quoted phrases are the card's material; without quotes, one phrase per
+    ``;`` or newline keeps a sentence with commas whole.
+    """
+    quoted = _quoted(raw) or [item.strip() for item in
+                              re.findall(r"[\"“]([^\"”]+)[\"”]", raw or "")
+                              if item.strip()]
+    if quoted:
+        return list(dict.fromkeys(quoted))
+    chunks = re.split(r";|\n", raw or "")
+    out = [_clean_list_item(chunk) for chunk in chunks if _clean_list_item(chunk)]
+    return list(dict.fromkeys(out))
+
+
+def _material_matches(phrase: str, value: str) -> bool:
+    folded_phrase, folded_value = _fold_text(phrase), _fold_text(value)
+    if not folded_phrase or not folded_value:
+        return False
+    return _contains_folded_word(folded_value, folded_phrase) \
+        or folded_phrase in folded_value
+
+
+def collect_used_material(case: Case, meta: dict[str, Any],
+                          actions: dict[str, Any] | None = None,
+                          receipts: list[dict[str, Any]] | None = None
+                          ) -> list[dict[str, str]]:
+    """What the App said it used: documents, skill, servers, roles and team."""
+    found: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+
+    def add(kind: str, value: Any, source: str) -> None:
+        text = str(value or "").strip()
+        if not text:
+            return
+        key = (_fold_text(kind), _fold_text(text))
+        if key in seen:
+            return
+        seen.add(key)
+        found.append({"tipo": kind, "valor": text, "fuente": source})
+
+    actions = actions or {}
+    project = actions.get("proyecto") if isinstance(actions.get("proyecto"), dict) else {}
+    for name in project.get("documentos") or []:
+        add("documento", name, "proyecto")
+    lce = meta.get("lce") if isinstance(meta.get("lce"), dict) else {}
+    for source in lce.get("sources") or []:
+        if not isinstance(source, dict):
+            continue
+        for key in ("source", "rel", "label"):
+            if source.get(key):
+                add("documento", source[key], f"meta.lce.{key}")
+    skill_meta = meta.get("skill")
+    if isinstance(skill_meta, dict):
+        add("skill", skill_meta.get("name") or skill_meta.get("skill"), "meta.skill")
+    elif skill_meta:
+        add("skill", skill_meta, "meta.skill")
+    imported = actions.get("skill") if isinstance(actions.get("skill"), dict) else {}
+    if imported and not imported.get("error"):
+        add("skill", case.skill or imported.get("name"), "actions.skill")
+    for current in receipts or []:
+        skill = current.get("skill") if isinstance(current.get("skill"), dict) else {}
+        if skill.get("name"):
+            add("skill", skill["name"], "recibo.skill")
+    for entry in actions.get("mcp") or []:
+        if not isinstance(entry, dict):
+            continue
+        add("servidor", entry.get("servidor"), "actions.mcp")
+        for tool in entry.get("tools") or []:
+            add("servidor", tool, "actions.mcp.tools")
+    agent = meta.get("agent") if isinstance(meta.get("agent"), dict) else {}
+    for tool in agent.get("tools") or []:
+        if isinstance(tool, dict):
+            add("servidor", tool.get("server") or tool.get("name") or tool.get("id"),
+                "meta.agent.tools")
+        else:
+            add("servidor", tool, "meta.agent.tools")
+    for value in (case.team, meta.get("team"), meta.get("team_id"),
+                  (meta.get("swarm") or {}).get("team") if isinstance(meta.get("swarm"), dict)
+                  else ""):
+        add("equipo", value, "ficha/meta")
+    roles = meta.get("roles") if isinstance(meta.get("roles"), dict) else {}
+    for role, value in roles.items():
+        add("rol", role, "meta.roles")
+        if isinstance(value, dict):
+            add("rol", value.get("model"), f"meta.roles.{role}")
+    for attempt in ((meta.get("swarm") or {}).get("attempts") or []) \
+            if isinstance(meta.get("swarm"), dict) else []:
+        if isinstance(attempt, dict):
+            add("rol", attempt.get("role") or attempt.get("model"), "meta.swarm.attempts")
+    return found
+
+
+def _looks_like_material(phrase: str, case: Case) -> bool:
+    text = _fold_text(phrase)
+    if re.search(r"\.(?:md|csv|tsv|json|txt|docx|pdf|html|xlsx|xlsm|log)$", text):
+        return True
+    known = {_fold_text(case.skill), *(_fold_text(item) for item in case.servers),
+             _fold_text(case.team), _fold_text(case.author)}
+    return bool(text) and text in {item for item in known if item}
+
+
+def evaluate_material(case: Case, meta: dict[str, Any],
+                      actions: dict[str, Any] | None = None,
+                      receipts: list[dict[str, Any]] | None = None,
+                      answer: str = "") -> dict[str, Any]:
+    """Every phrase of ``Material necesario`` against what the App reported using."""
+    phrases = material_phrases(case.material)
+    used = collect_used_material(case, meta, actions, receipts)
+    folded_answer = _fold_text(answer)
+    detail: list[dict[str, Any]] = []
+    missing: list[str] = []
+    for phrase in phrases:
+        hit = next((item for item in used
+                    if _material_matches(phrase, item["valor"])), None)
+        matched = hit is not None
+        kind = hit["tipo"] if hit else ""
+        reason = ""
+        if hit is not None:
+            reason = f"usado como {hit['tipo']}: {hit['valor']}"
+        elif (not _looks_like_material(phrase, case)
+              and _material_matches(phrase, folded_answer)):
+            matched, kind = True, "respuesta"
+            reason = "aparece en la respuesta"
+        else:
+            missing.append(phrase)
+            reason = "no aparece en el material usado ni en la respuesta"
+        detail.append({"frase": phrase, "usada": matched,
+                       "tipo": kind, "motivo": reason})
+    return {"frases": len(phrases), "usadas": len(phrases) - len(missing),
+            "faltan": missing, "detalle": detail,
+            "material_usado": used}
+
+
+def check_text_for_material(phrase: str) -> str:
+    return f"Material necesario: {phrase}"
+
+
+_CORRECTION_START = re.compile(
+    r"^\s*(?:no\b|en realidad\b|corrige\b|corrija\b|correcci[oó]n\b|"
+    r"me equivoqu[eé]\b|perd[oó]n\b|actually\b|correction\b|i meant\b)", re.I)
+
+
+def _correction_turn(raw: str, follow_ups: list[str]) -> int:
+    """The turn that corrects the previous answer, or 0.
+
+    ``Corrección: sí`` (or ``Turno de corrección: 2``) marks turn 2; a turn
+    number 2–5 marks that turn. Without the field, a `Turno 2` that starts like
+    a correction («No, …», «En realidad …», «Corrige …») is one too.
+    """
+    folded = _fold_text(raw).strip()
+    if not folded or folded in ("no", "ninguno", "ninguna", "false") \
+            or folded.startswith(("no ", "ningun ")):
+        return 0
+    match = re.search(r"\bturno\s*([2-5])\b", folded)
+    if match:
+        return int(match.group(1))
+    match = re.search(r"\b([2-5])\b", folded)
+    if match:
+        return int(match.group(1))
+    if folded.startswith(("si", "yes", "true", "corrige", "correccion")):
+        return 2
+    return 0
+
+
+def _correction_turn_of(block: str, follow_ups: list[str]) -> int:
+    raw = _field_value(block, "Corrección") or _field_value(block, "Turno de corrección")
+    turn = _correction_turn(raw, follow_ups)
+    if turn:
+        return turn
+    if raw.strip():
+        return 0                    # --check reports the unreadable value
+    if follow_ups and _CORRECTION_START.match(follow_ups[0]):
+        return 2
+    return 0
+
+
 def parse_cases(path: Path) -> list[Case]:
     text = path.read_text(encoding="utf-8")
     cases: list[Case] = []
@@ -424,6 +836,7 @@ def parse_cases(path: Path) -> list[Case]:
             rubric=_field_value(block, "Rúbrica"),
             material=_field_value(block, "Material necesario"),
             notes=_field_value(block, "Notas"),
+            correction_turn=_correction_turn_of(block, turns),
             two_node=_field_value(block, "Dos nodos").strip().lower().startswith(
                 ("sí", "si", "yes", "true")),
             circle_passages=_field_value(block, "Pasajes a pares").strip().lower().startswith(
@@ -957,6 +1370,13 @@ def parse_tolerance(raw: str) -> float:
     return abs(float(match.group(1).replace(",", ".")))
 
 
+def effective_tolerance(case: "Case") -> float:
+    """N7 exact numbers are compared with zero tolerance unless the card says one."""
+    if case.level == "N7" and not (case.tolerance or "").strip():
+        return 0.0
+    return parse_tolerance(case.tolerance)
+
+
 def expected_numbers(raw: str) -> list[float]:
     """Numbers written in ``Resultado exacto`` (reference paths and IDs removed)."""
     text = re.sub(r"03_REFERENCIA/\S+", " ", raw or "")
@@ -982,16 +1402,25 @@ def observed_numbers(text: str) -> list[float]:
 
 
 def compare_numbers(expected: list[float], text: str, tolerance: float) -> dict[str, Any]:
-    """Every expected number must appear in the text within the card's tolerance."""
+    """Every expected number must appear in the text within the card's tolerance.
+
+    ``coinciden`` names the expected values that matched, so a run can report
+    which numbers passed and which did not.
+    """
     observed = observed_numbers(text)
     detail = []
+    matched: list[float] = []
     for value in expected:
         closest = min(observed, key=lambda item: abs(item - value)) if observed else None
         inside = closest is not None and abs(closest - value) <= tolerance + 1e-12
+        if inside:
+            matched.append(value)
         detail.append({"esperado": value, "encontrado": closest,
                        "diferencia": None if closest is None else round(abs(closest - value), 6),
                        "dentro": bool(inside)})
     return {"esperado": expected, "tolerancia": tolerance, "detalle": detail,
+            "coinciden": matched,
+            "no_coinciden": [item["esperado"] for item in detail if not item["dentro"]],
             "ok": bool(expected) and all(item["dentro"] for item in detail)}
 
 
@@ -1094,6 +1523,21 @@ def validate_case(bank: Bank, case: Case) -> tuple[list[str], dict[str, Any]]:
                 path = bank.materials / "autores" / f"{service}.json"
                 if not path.is_file():
                     problems.append(f"registro de autores no encontrado: {service}.json")
+    if case.output_file:
+        spec = parse_output_spec(case.output_file)
+        info["salida"] = spec.name
+        if not spec.name:
+            problems.append("«Archivo de salida» no nombra un archivo")
+        elif not spec.extension:
+            problems.append("«Archivo de salida» no dice la extensión del archivo")
+    if case.material and not material_phrases(case.material):
+        problems.append("«Material necesario» no contiene frases")
+    correction_raw = (_field_value(case.raw, "Corrección")
+                      or _field_value(case.raw, "Turno de corrección"))
+    if correction_raw.strip() and not case.correction_turn:
+        problems.append("«Corrección» debe ser «sí» o un turno 2–5")
+    elif case.correction_turn and case.correction_turn > len(case.follow_ups) + 1:
+        problems.append("«Corrección» apunta a un turno que la ficha no escribe")
     if case.exact_result and "03_REFERENCIA/" in case.exact_result:
         for ref in re.findall(r"03_REFERENCIA/([\w.-]+\.py)", case.exact_result):
             path = (bank.reference_dir / ref) if bank.reference_dir else None
@@ -1134,6 +1578,14 @@ def check_bank(bank: Bank, cases: list[Case]) -> int:
             extra.append("dos nodos")
         if case.circle_passages:
             extra.append("pasajes al par")
+        if case.output_file:
+            extra.append("archivo de salida")
+        if case.material:
+            extra.append("material")
+        if case.correction_turn:
+            extra.append(f"corrección en el turno {case.correction_turn}")
+        if asks_works_by_id(case):
+            extra.append("obras por iD")
         print(f"      {case.case_id:6} {case.level or '?':2} docs {info['documentos']} · "
               f"públicos {info['publicos']} · comprobaciones {info['comprobaciones']} · "
               f"envíos {'sí' if not _fold_text(case.allowed_sends).startswith('ninguno') else 'no'}"
@@ -2107,8 +2559,10 @@ def play_chat(app: AppInstance, case: Case, project_id: str,
     turns = [case.question, *case.follow_ups]
     records: list[dict[str, Any]] = []
     message = None
+    message_by_turn: dict[int, dict[str, Any]] = {}
     approved_cards: list[dict[str, Any]] = []
     turn_receipts: list[dict[str, Any]] = []
+    receipt_by_turn: dict[int, dict[str, Any]] = {}
     for number, text in enumerate(turns, 1):
         change = re.match(r"\s*([\w.-]+)\s+en el turno\s+([2-5])",
                           case.server_change or "", re.I)
@@ -2156,13 +2610,19 @@ def play_chat(app: AppInstance, case: Case, project_id: str,
                                case=case, persona=persona or [])
         message = settled.get("message")
         meta = (message or {}).get("meta") or {}
+        if message is not None:
+            message_by_turn[number] = message
         receipt = meta.get("receipt")
         if isinstance(receipt, dict) and receipt:
             turn_receipts.append(receipt)
+            receipt_by_turn[number] = receipt
+        used_model = model_from_meta(meta, receipt if isinstance(receipt, dict) else None)
         records.append({
             "n": number, "texto": text, "consulta": body.get("web_query", ""),
             "receta": body.get("recipe", ""), "estado": meta.get("status", "timeout"),
             "latencia_s": result.get("latency_s"),
+            "modelo": used_model["modelo"], "backend": used_model["backend"],
+            "destino_modelo": used_model["destino_modelo"],
             "respuesta": (message or {}).get("content", ""),
             "respuesta_sha256": hashlib.sha256(
                 ((message or {}).get("content", "")).encode("utf-8")).hexdigest(),
@@ -2172,8 +2632,31 @@ def play_chat(app: AppInstance, case: Case, project_id: str,
     actions["tarjetas"] = approved_cards
     actions["decisiones"] = list(queue.actions)
     actions["turnos"] = records
-    return {"message": message, "conversation_id": conv_id, "turns": records,
-            "cards": approved_cards, "receipts": turn_receipts}
+    correction_turn = case.correction_turn or 0
+    scored_message = message_by_turn.get(correction_turn, message) \
+        if correction_turn else message
+    correction = None
+    if correction_turn:
+        correction = {
+            "turno": correction_turn,
+            "puntuada": correction_turn,
+            "turnos": [{"n": item["n"], "estado": item["estado"],
+                        "respuesta": item["respuesta"],
+                        "respuesta_sha256": item["respuesta_sha256"],
+                        "modelo": item["modelo"], "backend": item["backend"],
+                        "recibo_sha256": hashlib.sha256(json.dumps(
+                            receipt_by_turn.get(item["n"]) or {}, ensure_ascii=False,
+                            sort_keys=True).encode("utf-8")).hexdigest()
+                        if receipt_by_turn.get(item["n"]) else ""}
+                       for item in records],
+            "recibos": [receipt_by_turn.get(item["n"]) or {} for item in records],
+        }
+        actions["correccion"] = correction
+    return {"message": message, "scored_message": scored_message,
+            "scored_turn": correction_turn or len(records),
+            "conversation_id": conv_id, "turns": records,
+            "cards": approved_cards, "receipts": turn_receipts,
+            "correction": correction}
 
 
 def _messages_snapshot(app: AppInstance, conversation_id: str) -> list[dict[str, Any]]:
@@ -2935,6 +3418,7 @@ def collect_sends(receipt: dict[str, Any], mcp_log: list[dict[str, Any]],
         add({"destino": str(entry.get("host") or ""), "tipo": "consulta_autor",
              "payload": payload, "valor": payload, "args": args,
              "orcid": payload if is_orcid else "",
+             "campo": str(entry.get("campo") or ""),
              "bytes": int(entry.get("bytes") or len(payload.encode("utf-8"))),
              "personal_name": True, "source": "servidor_autores"})
 
@@ -2968,6 +3452,144 @@ def collect_sends(receipt: dict[str, Any], mcp_log: list[dict[str, Any]],
 def _send_payload_hash(send: dict[str, Any]) -> str:
     payload = str(send.get("payload") or send.get("valor") or "")
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def asks_works_by_id(case: Case) -> bool:
+    """A card that asks for author-works lookups by identifier, listed apart."""
+    text = _fold_text(" ".join([*(case.checks or []), *(case.capabilities or []),
+                                case.notes or "", case.material or ""]))
+    works = re.search(r"\b(obras?|trabajos?|publicaciones?|works?|publications?)\b", text)
+    by_id = re.search(r"\b(por|by)\s+(?:el\s+|the\s+)?"
+                      r"(?:i\.?\s?d\.?|identificador|identifier|orcid)\b", text) \
+        or re.search(r"\b(obras?|works?)\s+(por|by)\s+(i\.?\s?d\.?|identificador|identifier)\b",
+                     text)
+    separate = re.search(r"\b(aparte|separad[oa]s?|aparte|grupo propio|own group|"
+                         r"separate(?:ly)?|distint[oa]s?)\b", text)
+    return bool(works and by_id and separate)
+
+
+def send_group(send: dict[str, Any]) -> str:
+    """The group an observed send belongs to; works by iD is its own group."""
+    kind = str(send.get("tipo") or "")
+    if kind == "consulta_autor":
+        args = send.get("args") if isinstance(send.get("args"), dict) else {}
+        filter_text = _fold_text(args.get("filter") or "")
+        by_id = bool(send.get("orcid")) or str(send.get("campo") or "") in ("orcid", "id") \
+            or "author.orcid" in filter_text or bool(args.get("ids"))
+        return "obras_por_id" if by_id else "autores_por_nombre"
+    if kind in PUBLIC_SEND_TYPES:
+        return "publicas"
+    if kind in ("herramienta_remota", "herramienta remota") \
+            or str(send.get("tool") or "").startswith("mcp:"):
+        return "herramientas"
+    if send.get("circle_id") or _fold_text(send.get("clase") or "") in ("circulo", "circle"):
+        return "circulo"
+    return "otras"
+
+
+def group_sends(sends: list[dict[str, Any]]) -> dict[str, Any]:
+    """Sends by group, with destination/size/hash only (never the payload)."""
+    groups: dict[str, dict[str, Any]] = {}
+    for send in sends:
+        name = send_group(send)
+        group = groups.setdefault(name, {"total": 0, "items": []})
+        group["total"] += 1
+        group["items"].append({
+            "destino": str(send.get("destino") or ""),
+            "tipo": str(send.get("tipo") or ""),
+            "bytes": int(send.get("bytes") or 0),
+            "sha256": _send_payload_hash(send),
+        })
+    return groups
+
+
+def model_from_meta(meta: dict[str, Any],
+                    receipt: dict[str, Any] | None = None) -> dict[str, Any]:
+    """The model and backend the App reported for one answer."""
+    inner = meta.get("meta") if isinstance(meta.get("meta"), dict) else {}
+    model = str(meta.get("model") or inner.get("model") or "")
+    backend = str(inner.get("backend") or meta.get("backend") or "")
+    roles = meta.get("roles") if isinstance(meta.get("roles"), dict) else {}
+    if not model:
+        for value in roles.values():
+            if isinstance(value, dict) and value.get("model"):
+                model = str(value["model"])
+                break
+    destination = meta.get("model_destination")
+    if not isinstance(destination, dict) or not destination:
+        destination = (receipt or {}).get("destino_modelo")
+    if not isinstance(destination, dict):
+        destination = {}
+    destination = {str(key): str(value) for key, value in destination.items() if value}
+    if not backend:
+        backend = str(destination.get("backend") or "")
+    return {"modelo": model, "backend": backend, "destino_modelo": destination}
+
+
+def model_report(case: Case, meta: dict[str, Any],
+                 receipt: dict[str, Any] | None = None,
+                 turns: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Per case (and per turn) the model and backend each recipe used."""
+    current = model_from_meta(meta, receipt)
+    per_turn: list[dict[str, Any]] = []
+    for turn in turns or []:
+        if not isinstance(turn, dict):
+            continue
+        per_turn.append({
+            "turno": int(turn.get("n") or 0),
+            "receta": str(turn.get("receta") or case.recipe or "chat"),
+            "modelo": str(turn.get("modelo") or ""),
+            "backend": str(turn.get("backend") or ""),
+            "destino_modelo": turn.get("destino_modelo") or {},
+        })
+    models = list(dict.fromkeys(item["modelo"] for item in per_turn if item["modelo"])) \
+        or ([current["modelo"]] if current["modelo"] else [])
+    backends = list(dict.fromkeys(item["backend"] for item in per_turn if item["backend"])) \
+        or ([current["backend"]] if current["backend"] else [])
+    return {
+        "receta": case.recipe or "chat",
+        "modelo": current["modelo"] or " · ".join(models),
+        "backend": current["backend"] or " · ".join(backends),
+        "destino_modelo": current["destino_modelo"],
+        "por_turno": per_turn,
+    }
+
+
+CASE_CSV_HEADERS = [
+    "caso", "rep", "nivel", "receta", "estado", "modelo", "backend",
+    "destino_modelo", "latencia_s", "envios", "envios_no_autorizados",
+    "comprobaciones_ok", "comprobaciones_total", "exacto_ok", "obras_por_id",
+    "correccion_turno",
+]
+
+
+def write_cases_csv(path: Path, summaries: list[dict[str, Any]]) -> None:
+    """One row per observation, with the model and backend actually reported."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=CASE_CSV_HEADERS, extrasaction="ignore")
+        writer.writeheader()
+        for item in summaries:
+            models = item.get("modelo_por_receta") or {}
+            destination = models.get("destino_modelo") or {}
+            exact = item.get("exacto") or {}
+            writer.writerow({
+                "caso": item.get("caso", ""), "rep": item.get("rep", ""),
+                "nivel": item.get("nivel", ""), "receta": models.get("receta", ""),
+                "estado": item.get("estado", ""),
+                "modelo": models.get("modelo", ""),
+                "backend": models.get("backend", ""),
+                "destino_modelo": (f"{destination.get('clase', '')}"
+                                   f"{'@' + str(destination['host']) if destination.get('host') else ''}"),
+                "latencia_s": item.get("latencia_s", ""),
+                "envios": item.get("envios", ""),
+                "envios_no_autorizados": item.get("envios_no_autorizados", ""),
+                "comprobaciones_ok": item.get("comprobaciones_ok", ""),
+                "comprobaciones_total": item.get("comprobaciones_total", ""),
+                "exacto_ok": "" if item.get("exacto") is None else bool(exact.get("ok")),
+                "obras_por_id": item.get("envios_obras_por_id", ""),
+                "correccion_turno": (item.get("correccion") or {}).get("turno", ""),
+            })
 
 
 def dedupe_public_queries(sends: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -3153,6 +3775,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                                 pass
                         marker_before = find_marker(Path(project["path"]),
                                                     work / "datos", work)
+                        actions["skill"] = skill_import
                     mcp_state = setup_mcp(app, project["id"], case, handles, actions)
                     server_changes: list[dict[str, Any]] = []
                     if case.use_tools or case.recipe == "code" or case.recipe == "list" \
@@ -3183,8 +3806,11 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         played = play_chat(app, case, project["id"], queue, actions,
                                            args.case_timeout, {h.name: h for h in handles},
                                            persona)
-                        message = played.get("message")
+                        message = played.get("scored_message") or played.get("message")
                         meta = (message or {}).get("meta") or {}
+                    judge_dir = run_dir / "juez" / tag
+                    judge_dir.mkdir(parents=True, exist_ok=True)
+                    output_files = fetch_produced_files(app, meta, judge_dir / "salidas")
                     after_hashes = snapshot_tree(project_sources)
                     changed = [name for name in before_hashes
                                if after_hashes.get(name) != before_hashes[name]]
@@ -3252,6 +3878,35 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "permissions_after": permissions_after,
                         "two_node": two_report,
                     })
+                    output_report = None
+                    if case.output_file:
+                        output_report = evaluate_output(
+                            parse_output_spec(case.output_file), output_files,
+                            judge_dir / "salidas")
+                        checks.append({
+                            "texto": f"Archivo de salida: {case.output_file}",
+                            "cumple": bool(output_report["ok"]),
+                            "motivo": str(output_report["motivo"]),
+                        })
+                    material_report = None
+                    if case.material:
+                        material_report = evaluate_material(
+                            case, meta, actions, played.get("receipts") or [],
+                            (message or {}).get("content", ""))
+                        for item in material_report["detalle"]:
+                            checks.append({
+                                "texto": check_text_for_material(item["frase"]),
+                                "cumple": bool(item["usada"]),
+                                "motivo": str(item["motivo"]),
+                            })
+                    works_by_id = asks_works_by_id(case)
+                    send_groups = group_sends(counted_sends) if works_by_id else {}
+                    if send_groups:
+                        app_receipt = {
+                            **app_receipt,
+                            "resumen_por_grupo": send_groups,
+                            "resumen_por_grupo_anadido_por": "arnés",
+                        }
                     permissions = permission_report(case, {
                         "cards": played.get("cards") or [], "calls": calls,
                         "meta": meta, "actions": actions, "marker": marker_after,
@@ -3268,7 +3923,12 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                             comparison_text = (message or {}).get("content", "")
                         exact = compare_numbers(expected_numbers(case.exact_result),
                                                 comparison_text,
-                                                parse_tolerance(case.tolerance))
+                                                effective_tolerance(case))
+                        exact["tolerancia_de_la_ficha"] = parse_tolerance(case.tolerance)
+                        exact["tolerancia_cero_por_nivel"] = (
+                            case.level == "N7" and not (case.tolerance or "").strip())
+                    model_used = model_report(case, meta, app_receipt,
+                                              played.get("turns") or [])
                     state = str(meta.get("status") or ("timeout" if played.get("timeout") else "?"))
                     if case.author and played.get("state"):
                         state = str(played["state"])
@@ -3278,6 +3938,19 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                                                              "aprobar y corregir"))
                             and not (meta.get("code_run"))):
                         state = "cancelled"
+                    correction = played.get("correction") or {}
+                    correction_summary = {
+                        "turno": int(correction.get("turno") or 0),
+                        "puntuada": int(correction.get("puntuada") or 0),
+                        "turnos": [{"n": int(item.get("n") or 0),
+                                    "estado": str(item.get("estado") or ""),
+                                    "respuesta_sha256": str(
+                                        item.get("respuesta_sha256") or ""),
+                                    "recibo_sha256": str(item.get("recibo_sha256") or ""),
+                                    "modelo": str(item.get("modelo") or ""),
+                                    "backend": str(item.get("backend") or "")}
+                                   for item in correction.get("turnos") or []],
+                    } if correction else {}
                     summary.update({
                         "estado": state,
                         "latencia_s": (played.get("turns") or [{}])[-1].get("latencia_s")
@@ -3298,9 +3971,20 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "pasajes_a_pares": int(two_report.get("pasajes_a_pares") or 0),
                         "no_miembro_rechazado": two_report.get("no_miembro_rechazado"),
                         "two_node_rules": two_report.get("two_node_rules") or {},
+                        "modelo_por_receta": model_used,
+                        "modelo": model_used.get("modelo", ""),
+                        "backend": model_used.get("backend", ""),
+                        "salida": output_report,
+                        "material": ({"frases": material_report["frases"],
+                                      "usadas": material_report["usadas"],
+                                      "faltan": len(material_report["faltan"])}
+                                     if material_report else None),
+                        "envios_obras_por_id": int(
+                            (send_groups.get("obras_por_id") or {}).get("total") or 0),
+                        "envios_por_grupo": send_groups,
+                        "correccion": correction_summary,
+                        "turno_puntuado": int(played.get("scored_turn") or 0),
                     })
-                    judge_dir = run_dir / "juez" / tag
-                    judge_dir.mkdir(parents=True, exist_ok=True)
                     (judge_dir / "pregunta.txt").write_text(case.question, encoding="utf-8")
                     (judge_dir / "respuesta.md").write_text(
                         (message or {}).get("content", ""), encoding="utf-8")
@@ -3310,6 +3994,10 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "Errores graves": case.expected_errors, "Rúbrica": case.rubric,
                         "Comprobaciones": case.checks, "Envíos permitidos": case.allowed_sends,
                         "Resultado exacto": case.exact_result, "Tolerancia": case.tolerance,
+                        "Tolerancia aplicada": effective_tolerance(case),
+                        "Archivo de salida": case.output_file,
+                        "Material necesario": case.material,
+                        "Corrección": case.correction_turn,
                     }, ensure_ascii=False, indent=2), encoding="utf-8")
                     (judge_dir / "recibo_app.json").write_text(json.dumps(
                         {"caso": case.case_id, "recibo": app_receipt}, ensure_ascii=False,
@@ -3342,6 +4030,19 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         permissions, ensure_ascii=False, indent=2), encoding="utf-8")
                     (judge_dir / "comprobaciones.json").write_text(json.dumps(
                         checks, ensure_ascii=False, indent=2), encoding="utf-8")
+                    (judge_dir / "salidas.json").write_text(json.dumps(
+                        {"esperada": output_report,
+                         "producidas": output_files}, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+                    (judge_dir / "material.json").write_text(json.dumps(
+                        material_report or {}, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+                    (judge_dir / "envios_por_grupo.json").write_text(json.dumps(
+                        send_groups, ensure_ascii=False, indent=2), encoding="utf-8")
+                    (judge_dir / "correccion.json").write_text(json.dumps(
+                        correction or {}, ensure_ascii=False, indent=2), encoding="utf-8")
+                    (judge_dir / "modelo_por_receta.json").write_text(json.dumps(
+                        model_used, ensure_ascii=False, indent=2), encoding="utf-8")
                     if two_report:
                         (judge_dir / "dos_nodos.json").write_text(json.dumps(
                             two_report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -3365,6 +4066,15 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "pasajes_a_pares": summary.get("pasajes_a_pares", 0),
                         "no_miembro_rechazado": summary.get("no_miembro_rechazado"),
                         "two_node_rules": summary.get("two_node_rules") or {},
+                        "modelo_por_receta": summary.get("modelo_por_receta") or {},
+                        "modelo": summary.get("modelo", ""),
+                        "backend": summary.get("backend", ""),
+                        "salida": summary.get("salida"),
+                        "material": summary.get("material"),
+                        "envios_obras_por_id": summary.get("envios_obras_por_id", 0),
+                        "envios_por_grupo": summary.get("envios_por_grupo") or {},
+                        "correccion": summary.get("correccion") or {},
+                        "turno_puntuado": summary.get("turno_puntuado", 0),
                         "respuesta_sha256": hashlib.sha256(
                             ((message or {}).get("content", "")).encode("utf-8")).hexdigest(),
                         "recibo_sha256": hashlib.sha256(json.dumps(
@@ -3424,6 +4134,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
         indent=2), encoding="utf-8")
     (run_dir / "verificacion_sello_post.json").write_text(json.dumps(
         post, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_cases_csv(run_dir / "casos.csv", summaries)
     write_run_record(run_dir, run_id, started_at, bank, args, versions, ollama_version,
                      seal, post, summaries, failures, tables, python)
     print(f"[5/5] sello después: {'OK' if post['ok'] else 'FALLA'} · "
@@ -3764,6 +4475,41 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
         exact = _json_file(folder / "comparacion_numerica.json", None)
         if not isinstance(exact, dict) or not exact:
             exact = None
+        registro = _json_file(folder / "registro.json", {})
+        if not isinstance(registro, dict):
+            registro = {}
+        if (case.exact_result and "código-exacto" in case.capabilities
+                and isinstance(registro.get("respuesta"), str)):
+            comparison_text = (code_output_text(registro["respuesta"])
+                               if case.recipe == "code" else registro["respuesta"])
+            exact = compare_numbers(expected_numbers(case.exact_result),
+                                    comparison_text, effective_tolerance(case))
+            exact["tolerancia_de_la_ficha"] = parse_tolerance(case.tolerance)
+            exact["tolerancia_cero_por_nivel"] = (
+                case.level == "N7" and not (case.tolerance or "").strip())
+        output_report = None
+        if case.output_file and isinstance(registro, dict) and registro:
+            saved_output = _json_file(folder / "salidas.json", {})
+            entries = (saved_output.get("producidas")
+                       if isinstance(saved_output, dict) else []) or []
+            output_report = evaluate_output(
+                parse_output_spec(case.output_file), entries, folder / "salidas")
+            text = f"Archivo de salida: {case.output_file}"
+            if not any(isinstance(item, dict) and item.get("texto") == text
+                       for item in checks):
+                checks.append({"texto": text, "cumple": bool(output_report["ok"]),
+                               "motivo": str(output_report["motivo"])})
+        material_report = None
+        if case.material and isinstance(registro, dict) and registro:
+            material_report = evaluate_material(
+                case, registro.get("meta") or {}, acciones, [],
+                str(registro.get("respuesta") or ""))
+            for item in material_report["detalle"]:
+                text = check_text_for_material(item["frase"])
+                if not any(isinstance(check, dict) and check.get("texto") == text
+                           for check in checks):
+                    checks.append({"texto": text, "cumple": bool(item["usada"]),
+                                   "motivo": str(item["motivo"])})
         permisos = _json_file(folder / "permisos.json", {})
         if not isinstance(permisos, dict):
             permisos = {}
@@ -3813,6 +4559,24 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
                    or (bool(new_reasons) and set(new_reasons) != set(old_reasons)))
         if changed:
             changes.append((tag, old_verdict, new_verdict))
+        model_used = model_report(
+            case, registro.get("meta") or {}, registro.get("recibo") or {},
+            acciones.get("turnos") or [])
+        if not model_used.get("modelo") and not model_used.get("backend"):
+            model_used = base_row.get("modelo_por_receta") or model_used
+        send_groups = group_sends(sends) if asks_works_by_id(case) else {}
+        correction_raw = acciones.get("correccion") or base_row.get("correccion") or {}
+        correction_summary = {
+            "turno": int(correction_raw.get("turno") or 0),
+            "puntuada": int(correction_raw.get("puntuada") or 0),
+            "turnos": [{"n": int(item.get("n") or 0),
+                        "estado": str(item.get("estado") or ""),
+                        "respuesta_sha256": str(item.get("respuesta_sha256") or ""),
+                        "recibo_sha256": str(item.get("recibo_sha256") or ""),
+                        "modelo": str(item.get("modelo") or ""),
+                        "backend": str(item.get("backend") or "")}
+                       for item in correction_raw.get("turnos") or []],
+        } if correction_raw else {}
         row = dict(base_row)
         row.update({
             "caso": case_id, "rep": rep, "nivel": case.level,
@@ -3831,6 +4595,23 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
             "tarjetas": len(cards),
             "tests": checks,
         })
+        if (model_used.get("modelo") or model_used.get("backend")
+                or model_used.get("destino_modelo")):
+            row.update({"modelo_por_receta": model_used,
+                        "modelo": model_used.get("modelo", ""),
+                        "backend": model_used.get("backend", "")})
+        if output_report is not None:
+            row["salida"] = output_report
+        if material_report is not None:
+            row["material"] = {"frases": material_report["frases"],
+                               "usadas": material_report["usadas"],
+                               "faltan": len(material_report["faltan"])}
+        if send_groups:
+            row["envios_obras_por_id"] = int(
+                (send_groups.get("obras_por_id") or {}).get("total") or 0)
+            row["envios_por_grupo"] = send_groups
+        if correction_summary:
+            row["correccion"] = correction_summary
         rows.append(row)
 
     if not base.get("tablas"):
@@ -3884,6 +4665,7 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
                     "aprobados_por_el_arnes": {
                         "total": len(harness_approved), "items": harness_approved}},
                    ensure_ascii=False, indent=2), encoding="utf-8")
+    write_cases_csv(run_dir / f"casos_rescore_{suffix}.csv", rows)
     unauthorized = tables["envios_no_autorizados"]
     record = f"""# Registro de repuntuación · arnés {HARNESS_VERSION}
 
@@ -3953,6 +4735,18 @@ def write_run_record(run_dir: Path, run_id: str, started_at: str, bank: Bank,
                        for row in tables["por_capacidad"]]
     permission_rows = [[row["fila"], row["total"], row["fichas_n"],
                         ", ".join(row["fichas"])] for row in tables["permisos"]]
+    model_rows = []
+    for item in summaries:
+        used = item.get("modelo_por_receta") or {}
+        destination = used.get("destino_modelo") or {}
+        model_rows.append([
+            item.get("caso", ""), item.get("rep", ""),
+            used.get("receta", ""), used.get("modelo", "") or "no informado",
+            used.get("backend", "") or "no informado",
+            (f"{destination.get('clase', '')}"
+             f"{'@' + str(destination['host']) if destination.get('host') else ''}")
+            or "no informado",
+        ])
     unauthorized = tables["envios_no_autorizados"]
     record = f"""# Registro de ejecución · arnés {HARNESS_VERSION}
 
@@ -3992,6 +4786,14 @@ Aprobados por el arnés (no cuentan como envío no autorizado de la App): **{una
 ## 4. Permisos
 
 {md_table(["Fila", "Total", "Fichas", "IDs"], permission_rows)}
+
+## 5. Modelo por receta
+
+{md_table(["Caso", "Rep", "Receta", "Modelo", "Backend", "Destino del modelo"], model_rows)}
+
+> El modelo y el backend son los que la App informó en `meta`/recibo de cada
+> respuesta; «no informado» significa que la App no los reportó, no que no se
+> usara un modelo. El detalle por turno está en `juez/<ID>_r<rep>/modelo_por_receta.json`.
 
 > Estas tablas son las comprobaciones por código del arnés. La puntuación de
 > `Datos clave` y de la rúbrica de las fichas S2/S3 la hace el juez con la
