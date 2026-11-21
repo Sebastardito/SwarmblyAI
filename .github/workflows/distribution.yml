@@ -58,6 +58,14 @@ jobs:
           python-version: "3.12"
       - name: Install in developer mode
         run: python installer/install.py --quick --yes --lang en --dev --skip ollama,models,pdf,searxng,shortcuts
+      - name: Optional extras of the App for its tests (MCP SDK, in-tree agent runtime)
+        # Like the App's own CI (D-012): tests that need an extra skip without
+        # it, so CI installs the extras to run them. Installed directly, not as
+        # SwarmblyApp[...], so the in-tree LCE and Core of this checkout stay the
+        # ones under test; the agent runtime also comes from this checkout.
+        run: |
+          .venv/bin/python -m pip install --quiet "mcp==2.3.0"
+          .venv/bin/python -m pip install --quiet --no-deps -e SwarmblyCore/agent
       - name: SwarmblyApp tests
         run: cd SwarmblyApp && ../.venv/bin/python -m pytest -q
       - name: SwarmblyLCE tests
