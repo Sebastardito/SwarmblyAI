@@ -28,8 +28,8 @@ from pathlib import Path
 from typing import Any
 
 from .limits import LimitTracker, PushRateLimiter
-from .manifest import (ManifestError, ManifestStore, document_circle_id,
-                       parse_manifest)
+from .manifest import (CircleManifest, ManifestError, ManifestStore,
+                       document_circle_id, parse_manifest)
 from .protocol import (MAX_FRAME_BYTES, RelayError, challenge_frame, error_frame,
                        frame_size, manifest_ack_frame, manifest_refused_frame,
                        read_frame, registered_frame, verify_register_proof,
@@ -253,6 +253,53 @@ class RelayServer:
                 raise RelayError("unknown_message", str(kind))
 
     # -- owner manifest push (D-023) --------------------------------------
+    def _install_manifest(
+            self, session: Session, document: dict[str, Any], circle_id: str
+    ) -> tuple[str, str, CircleManifest | None, CircleManifest | None,
+               set[str]]:
+        """Validate and commit one push.  Returns ``(code, message, new, held,
+        revoked)``; an empty code means the push was installed."""
+        self.store.reload()
+        held = self.store.get(circle_id)
+        if held is None:
+            return ("unknown_circle", "the relay does not serve this circle",
+                    None, None, set())
+        if circle_id != session.circle_id:
+            return ("circle_mismatch",
+                    "this connection is registered for another circle",
+                    None, None, set())
+        if held.owner_node_id != session.node_id:
+            return ("not_owner", "only the current manifest owner may push",
+                    None, None, set())
+        if frame_size(document) > self.config.max_manifest_bytes:
+            return ("too_large",
+                    f"manifest exceeds {self.config.max_manifest_bytes} bytes",
+                    None, None, set())
+        if not self.push_limits.allow(session.node_id):
+            return ("rate_limited", "too many manifest pushes this hour",
+                    None, None, set())
+        try:
+            parsed = parse_manifest(document, source="push")
+        except ManifestError as exc:
+            code = ("expired" if exc.code == "manifest_expired"
+                    else "bad_signature")
+            return (code, exc.message, None, None, set())
+        if parsed.owner_node_id != held.owner_node_id:
+            return ("owner_change_refused",
+                    "the owner cannot be changed by a push in this version",
+                    None, None, set())
+        if parsed.version <= held.version:
+            return ("stale_version",
+                    f"version {parsed.version} is not greater than {held.version}",
+                    None, None, set())
+        try:
+            self.store.commit(parsed, document)
+        except (OSError, ManifestError) as exc:
+            self.log.exception("manifest push could not be persisted circle=%s",
+                               self._short(circle_id))
+            return ("persist_failed", str(exc), None, None, set())
+        return "", "", parsed, held, held.members - parsed.members
+
     async def _manifest_update(self, session: Session,
                                frame: dict[str, Any]) -> None:
         """Validate and atomically install an owner-signed manifest version.
@@ -274,53 +321,12 @@ class RelayServer:
             return
 
         async with self._manifest_lock:
-            self.store.reload()
-            held = self.store.get(circle_id)
-            if held is None:
-                await self._refuse_manifest(session, "unknown_circle",
-                                            "the relay does not serve this circle")
-                return
-            if circle_id != session.circle_id:
-                await self._refuse_manifest(session, "circle_mismatch",
-                                            "this connection is registered for another circle")
-                return
-            if held.owner_node_id != session.node_id:
-                await self._refuse_manifest(session, "not_owner",
-                                            "only the current manifest owner may push")
-                return
-            if frame_size(document) > self.config.max_manifest_bytes:
-                await self._refuse_manifest(session, "too_large",
-                                            f"manifest exceeds {self.config.max_manifest_bytes} bytes")
-                return
-            if not self.push_limits.allow(session.node_id):
-                await self._refuse_manifest(session, "rate_limited",
-                                            "too many manifest pushes this hour")
-                return
-            try:
-                parsed = parse_manifest(document, source="push")
-            except ManifestError as exc:
-                code = ("expired" if exc.code == "manifest_expired"
-                        else "bad_signature")
-                await self._refuse_manifest(session, code, exc.message)
-                return
-            if parsed.owner_node_id != held.owner_node_id:
-                await self._refuse_manifest(
-                    session, "owner_change_refused",
-                    "the owner cannot be changed by a push in this version")
-                return
-            if parsed.version <= held.version:
-                await self._refuse_manifest(
-                    session, "stale_version",
-                    f"version {parsed.version} is not greater than {held.version}")
-                return
-            try:
-                self.store.commit(parsed, document)
-            except (OSError, ManifestError) as exc:
-                self.log.exception("manifest push could not be persisted circle=%s",
-                                   self._short(circle_id))
-                await self._refuse_manifest(session, "persist_failed", str(exc))
-                return
-            revoked = held.members - parsed.members
+            code, message, parsed, held, revoked = self._install_manifest(
+                session, document, circle_id)
+        if code:
+            await self._refuse_manifest(session, code, message)
+            return
+        assert parsed is not None and held is not None
 
         await self._close_revoked(circle_id, revoked)
         await write_frame(session.writer,
