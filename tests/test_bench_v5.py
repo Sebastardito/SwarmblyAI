@@ -6,7 +6,10 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
+VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
 sys.path.insert(0, str(ROOT / "bench"))
 import run_bank as rb  # noqa: E402
 import run_node_loss as loss  # noqa: E402
@@ -214,3 +217,52 @@ def test_two_node_check_phrases_evaluate_the_report():
     assert [item["cumple"] for item in out] == [True, True, True]
     report["two_node_rules"]["no_miembro_rechazado"] = False
     assert tn.two_node_check(checks, report)[1]["cumple"] is False
+
+
+@pytest.mark.skipif(not VENV_PYTHON.is_file(),
+                    reason="the App venv is not installed in this clone")
+def test_two_node_report_fields_with_the_real_app_on_loopback(tmp_path):
+    """Live smoke: owner + approved member + non-member, all on loopback."""
+    from fake_ollama import FakeOllama
+    from run_bank import AppInstance
+    from run_team import settings_for
+
+    fake = FakeOllama(models=("fake:7b", "nomic-embed-text"))
+    work = tmp_path / "live"
+    work.mkdir()
+    logs = work / "logs"
+    logs.mkdir()
+    settings = settings_for(model="fake:7b", embed_model="nomic-embed-text",
+                            ollama_url=fake.url, local_roles=False,
+                            p2p_port=rb.free_port())
+    app = AppInstance(str(VENV_PYTHON), work / "owner" / "datos",
+                      work / "owner" / "sources", settings,
+                      "http://127.0.0.1:9", logs / "owner.log")
+    env = None
+    try:
+        app.start()
+        env = tn.TwoNodeEnv(
+            owner=app, python=str(VENV_PYTHON), work_root=work / "nodes",
+            proxy_url="http://127.0.0.1:9", model="fake:7b",
+            embed_model="nomic-embed-text", ollama_url=fake.url,
+            temperature=0.0, log_dir=logs)
+        env.start(members=1, nonmember=True)
+        team_id = env.create_team("live", [
+            {"id": "s1", "name": "Draft", "role": "large_model",
+             "instruction": "Write a short note: {request}"},
+            {"id": "s2", "name": "Review", "role": "reasoner",
+             "depends_on": ["s1"], "instruction": "Review the note: {request}"},
+        ])
+        played = env.ask_team("Explain a fictitious spring river.", team_id, 90)
+        meta = (played.get("message") or {}).get("meta") or {}
+        report = tn.two_node_report(
+            meta.get("receipt") or {}, env.member_ledger(),
+            nonmember_refused=env.nonmember_refused, circle_passages=False)
+        assert report["envios_circulo"] >= 1
+        assert report["no_miembro_rechazado"] is True
+        assert report["two_node_rules"]["recibo_nombra_circulo_y_miembro"] is True
+    finally:
+        if env is not None:
+            env.close()
+        app.stop()
+        fake.close()
