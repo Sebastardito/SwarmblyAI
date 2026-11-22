@@ -165,27 +165,30 @@ jobs:
       - name: Resolve the Docker image digest
         env:
           TAG: ${{ steps.vars.outputs.tag }}
+          VERSION: ${{ steps.vars.outputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # The docker workflow tags images with docker/metadata-action's semver
+          # pattern, which drops the "v": git tag v3.5.0 -> image tag 3.5.0.
           image="ghcr.io/$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')/swarmbly"
           echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           digest=""
           for attempt in $(seq 1 60); do
-            if digest="$(docker buildx imagetools inspect "${image}:${TAG}" \
+            if digest="$(docker buildx imagetools inspect "${image}:${VERSION}" \
                 --format '{{.Manifest.Digest}}' 2>/dev/null)"; then
               digest="$(echo "$digest" | tr -d '"[:space:]')"
               [ -n "$digest" ] && break
             fi
-            echo "waiting for ${image}:${TAG} (${attempt}/60)"
+            echo "waiting for ${image}:${VERSION} (${attempt}/60)"
             sleep 30
           done
           if [ -z "$digest" ]; then
-            echo "::error::The Docker image ${image}:${TAG} was not published by the docker workflow."
+            echo "::error::The Docker image ${image}:${VERSION} (git tag ${TAG}) was not published by the docker workflow."
             exit 1
           fi
           {
             echo "image=${image}"
-            echo "tag=${TAG}"
+            echo "tag=${VERSION}"
             echo "digest=${digest}"
             echo "reference=${image}@${digest}"
           } > "dist/swarmbly-${TAG#v}-docker-image.txt"
