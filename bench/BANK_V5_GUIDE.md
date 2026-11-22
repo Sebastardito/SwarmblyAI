@@ -3,7 +3,9 @@
 **Language / Idioma:** [English](#english) · [Español](#español)
 
 **Status:** guide for the maintainer who writes bank v5. The bank itself stays
-outside this repository. Harness **1.4.1** keeps the two-node mode, the
+outside this repository. Harness **1.4.2** prepares the recipe-5 sandbox
+before each code card (App 0.8.0 no longer compiles it inside a request).
+Harness **1.4.1** keeps the two-node mode, the
 node-loss battery and the team battery, and adds the output-file, material,
 works-by-iD, N7-number, correction-turn and model-per-recipe follow-ups; v3/v4
 banks keep their old behaviour.

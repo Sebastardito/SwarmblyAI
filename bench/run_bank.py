@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.4.1"
+HARNESS_VERSION = "1.4.2"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -1759,6 +1759,53 @@ def http_json(method: str, url: str, token: str = "", body: Any = None,
     with opener.open(req, timeout=timeout) as resp:
         raw = resp.read().decode("utf-8")
     return json.loads(raw) if raw else None
+
+
+def prepare_sandbox(app: "AppInstance", timeout: float = 900.0,
+                    poll: float = 1.0) -> dict[str, Any]:
+    """Prepare the recipe-5 sandbox of a fresh App before a code card (1.4.2).
+
+    From SwarmblyApp 0.8.0 recipe 5 never compiles the WebAssembly module
+    inside a request: an unprepared cache reports the recipe as unavailable.
+    Every case starts the App with a fresh data folder, so the harness does
+    what a user does once (Settings, «Prepare now») through the local API and
+    waits for ``ready``. Below the App's free-memory floor the plain request is
+    refused (409); the harness then uses the explicit override and records it
+    (``forzado``). Anything but ``ready`` raises, so the case counts as a
+    technical failure instead of a model failure.
+    """
+    url = f"{app.base}/api/sandbox"
+    record: dict[str, Any] = {"forzado": False}
+    status = http_json("GET", url, app.token) or {}
+    record["inicial"] = status.get("status")
+    if status.get("status") == "not_installed":
+        raise RuntimeError("the App under test has no [sandbox] extra; install it "
+                           "before running cards with Receta: código")
+    if status.get("status") != "ready":
+        try:
+            http_json("POST", f"{url}/prepare", app.token, {"consent": True})
+        except urllib.error.HTTPError as exc:
+            if exc.code != 409:
+                raise
+            record["forzado"] = True
+            http_json("POST", f"{url}/prepare", app.token, {"consent": True, "force": True})
+        deadline = time.monotonic() + timeout
+        while True:
+            status = http_json("GET", url, app.token) or {}
+            state = status.get("status")
+            if state == "ready":
+                break
+            if state in ("failed", "refused", "not_installed"):
+                raise RuntimeError(
+                    f"sandbox preparation {state}: "
+                    f"{status.get('last_error_code') or status.get('last_error') or '?'}")
+            if time.monotonic() > deadline:
+                raise RuntimeError(f"sandbox preparation did not finish in {timeout:.0f} s")
+            time.sleep(poll)
+    record.update({"estado": "ready", "segundos": status.get("elapsed_s"),
+                   "memoria_libre_gb": status.get("started_free_memory_gb"),
+                   "forzado_app": bool(status.get("forced"))})
+    return record
 
 
 class AppInstance:
@@ -3736,6 +3783,8 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                     registry.log.drain()
                     app.start()
                     summary["test_mode"] = bool((app.health.get("test_mode") or {}).get("active"))
+                    if case.recipe == "code":
+                        actions["sandbox"] = prepare_sandbox(app)
                     if two_node_case:
                         here = str(Path(__file__).resolve().parent)
                         if here not in sys.path:

@@ -2,6 +2,10 @@
 
 Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [SwarmblyLCE](SwarmblyLCE/), [SwarmblyApp](SwarmblyApp/docs/CHANGELOG.md).
 
+## Unreleased
+
+- **Benchmark harness 1.4.2** (`bench/run_bank.py`, `bench/run_dev.py`): before a card with `Receta: código` the harness prepares the App's recipe-5 sandbox through `/api/sandbox/prepare` (with consent) and waits for `ready`, because SwarmblyApp 0.8.0 never compiles it inside a request and each case starts with a fresh data folder. Below the App's free-memory floor it uses the explicit override and records it; any other outcome is a technical failure.
+
 ## 3.5.0 — Teams and trusted circles (2026-11-21)
 
 Release notes: [`docs/releases/v3.5.0.md`](docs/releases/v3.5.0.md). The software for the private beta, built and tested on loopback with canned models. No sealed bank was run for this version; the team-versus-local and node-loss batteries have not run with real models, and the relay has not run between real machines on different networks. The beta's exit criteria are measured during the beta and published as they are.

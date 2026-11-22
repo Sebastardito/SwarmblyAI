@@ -84,6 +84,14 @@ non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
 keep their `--check`/`--rescore` behaviour. The `--python` option also reads
 `SWARMBLY_APP` and is available as `--app-python`.
 
+Harness **1.4.2** prepares the recipe-5 sandbox before every code card. From
+SwarmblyApp 0.8.0 recipe 5 never compiles inside a request, and each case
+starts the App with a fresh data folder, so the harness asks the App to prepare
+it through `/api/sandbox/prepare` with consent and waits for `ready`. Below the
+App's free-memory floor it uses the explicit override and records
+`forzado: true` in the case actions; any other outcome is a technical failure.
+`bench/run_dev.py` does the same for the open code battery.
+
 Harness **1.4.1** closes the T9.6/T9.10 follow-ups. It compares `Archivo de
 salida` with the files the run produced (existence, extension, non-empty, and
 the card's columns or row count), matches `Material necesario` against the
@@ -224,6 +232,15 @@ no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
 v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
 `--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
+
+El arnés **1.4.2** prepara la caja de la receta 5 antes de cada ficha de código.
+Desde SwarmblyApp 0.8.0 la receta 5 nunca compila dentro de una solicitud, y
+cada caso arranca la App con una carpeta de datos nueva, así que el arnés pide a
+la App que la prepare por `/api/sandbox/prepare` con consentimiento y espera
+`ready`. Por debajo del mínimo de memoria libre de la App usa la opción
+explícita y registra `forzado: true` en las acciones del caso; cualquier otro
+resultado es un fallo técnico. `bench/run_dev.py` hace lo mismo con la batería
+abierta de código.
 
 El arnés **1.4.1** cierra los seguimientos T9.6/T9.10. Compara `Archivo de
 salida` con los archivos que produjo la corrida (existencia, extensión, no

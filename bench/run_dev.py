@@ -1147,6 +1147,7 @@ def main(argv: list[str] | None = None) -> int:
                         two_env.start(members=max(1, int(args.members)), nonmember=True)
                         two_env.set_circle_passages(bool(case.get("pasajes_al_circulo")))
                     if is_code_case(case):
+                        row["sandbox"] = rb.prepare_sandbox(app)
                         played = play_code(app, case, args.case_timeout)
                         row["proposal"] = played.get("proposal") or {}
                         row["cancelled"] = played.get("cancelled") or {}
