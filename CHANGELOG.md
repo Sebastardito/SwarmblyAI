@@ -4,6 +4,7 @@ Each component keeps its own changelog: [SwarmblyCore](SwarmblyCore/), [Swarmbly
 
 ## Unreleased
 
+- **Benchmark harness 1.4.3** (`bench/run_bank.py`): `Archivo de salida: ninguno` (also `no aplica`, `—`) means that the card expects no file, like `Documentos: ninguno`; before, `--check` reported it as a file name without an extension and the run would have looked for a file called «ninguno».
 - **Benchmark harness 1.4.2** (`bench/run_bank.py`, `bench/run_dev.py`): before a card with `Receta: código` the harness prepares the App's recipe-5 sandbox through `/api/sandbox/prepare` (with consent) and waits for `ready`, because SwarmblyApp 0.8.0 never compiles it inside a request and each case starts with a fresh data folder. Below the App's free-memory floor it uses the explicit override and records it; any other outcome is a technical failure.
 
 ## 3.5.0 — Teams and trusted circles (2026-11-21)

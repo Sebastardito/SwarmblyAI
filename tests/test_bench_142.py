@@ -83,8 +83,8 @@ def make_app():
         app.close()
 
 
-def test_harness_version_is_142():
-    assert rb.HARNESS_VERSION == "1.4.2"
+def test_harness_version_is_143():
+    assert rb.HARNESS_VERSION == "1.4.3"
 
 
 def test_a_ready_sandbox_is_not_prepared_again(make_app):
@@ -133,3 +133,26 @@ def test_the_code_card_paths_call_the_preparation():
     dev = (Path(rb.__file__).with_name("run_dev.py")).read_text(encoding="utf-8")
     assert 'if case.recipe == "code":\n                        actions["sandbox"] = prepare_sandbox(app)' in bank
     assert 'row["sandbox"] = rb.prepare_sandbox(app)' in dev
+
+
+# 1.4.3: «Archivo de salida: ninguno» means the card expects no file.
+@pytest.mark.parametrize("raw", ["ninguno", "Ninguno.", "ninguna", "No", "no aplica",
+                                 "N/A", "—", "-", "sin archivo", "Ninguno (solo texto)"])
+def test_no_output_file_is_empty(raw):
+    assert rb._output_field(raw) == ""
+
+
+@pytest.mark.parametrize("raw", ["resultado.csv", "notas_finales.md (filas: 3)",
+                                 "nombres.csv (columnas: a, b; filas: 2)"])
+def test_a_named_output_file_is_kept(raw):
+    assert rb._output_field(raw) == raw
+
+
+def test_a_card_with_no_output_file_passes_the_check_field(tmp_path):
+    block = ("ID: S4-01\nNivel: N7\nCapacidades: código\nPregunta: x\nReceta: código\n"
+             "Archivos: datos.csv\nScript: aprobar\nArchivo de salida: ninguno\n"
+             "Envíos permitidos: ninguno\n")
+    cases_file = tmp_path / "casos.md"
+    cases_file.write_text("```text\n" + block + "```\n", encoding="utf-8")
+    case = rb.parse_cases(cases_file)[0]
+    assert case.output_file == ""

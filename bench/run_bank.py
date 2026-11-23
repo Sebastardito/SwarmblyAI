@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.4.2"
+HARNESS_VERSION = "1.4.3"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -399,6 +399,16 @@ _OUTPUT_ROWS = re.compile(
 
 def _clean_list_item(item: str) -> str:
     return item.strip().strip(_QUOTES + "`»").strip()
+
+
+_NO_OUTPUT = re.compile(r"^(?:ningun[oa]?|no\b|no aplica|n/?a\b|sin archivo|[—–-]+$)")
+
+
+def _output_field(raw: str) -> str:
+    """``Archivo de salida`` as written, or empty when the card says there is no
+    file (``ninguno``, ``no aplica``, ``—``), like ``Documentos: ninguno`` (1.4.3)."""
+    value = (raw or "").strip()
+    return "" if _NO_OUTPUT.match(_fold_text(value)) else value
 
 
 def parse_output_spec(raw: str) -> OutputSpec:
@@ -816,7 +826,7 @@ def parse_cases(path: Path) -> list[Case]:
             code_script=_field_value(block, "Script").strip().lower(),
             exact_result=_field_value(block, "Resultado exacto"),
             tolerance=_field_value(block, "Tolerancia"),
-            output_file=_field_value(block, "Archivo de salida"),
+            output_file=_output_field(_field_value(block, "Archivo de salida")),
             use_tools=_field_value(block, "Usar herramientas").strip().lower().startswith(
                 ("sí", "si", "yes")),
             servers=_split_names(_field_value(block, "Servidores")),

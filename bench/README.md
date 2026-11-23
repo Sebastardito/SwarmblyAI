@@ -84,6 +84,10 @@ non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
 keep their `--check`/`--rescore` behaviour. The `--python` option also reads
 `SWARMBLY_APP` and is available as `--app-python`.
 
+Harness **1.4.3** reads `Archivo de salida: ninguno` (also `no aplica`, `—`) as
+"no file expected", like `Documentos: ninguno`, instead of a file name without
+an extension.
+
 Harness **1.4.2** prepares the recipe-5 sandbox before every code card. From
 SwarmblyApp 0.8.0 recipe 5 never compiles inside a request, and each case
 starts the App with a fresh data folder, so the harness asks the App to prepare
@@ -232,6 +236,10 @@ no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
 v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
 `--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
+
+El arnés **1.4.3** lee `Archivo de salida: ninguno` (también `no aplica`, `—`)
+como «no se espera archivo», igual que `Documentos: ninguno`, en vez de un
+nombre de archivo sin extensión.
 
 El arnés **1.4.2** prepara la caja de la receta 5 antes de cada ficha de código.
 Desde SwarmblyApp 0.8.0 la receta 5 nunca compila dentro de una solicitud, y
