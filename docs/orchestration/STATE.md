@@ -18,8 +18,8 @@ Last releases: Swarmbly AI 3.5.0 (10.5281/zenodo.24431442), SwarmblyApp 0.8.0 (1
 
 **Integrated:** App `main` at `890254f` (from `2eeab60`: Anthropic provider, Python 3.11, broker, skills loader, MCP client, sandbox runner, recipe 4, recipe 5, author search, embeddings role, the recipe 4 wave fix, sandbox test timing, MCP settings, skills in the app, injected-instruction suites, agent adapter, author search in the chat, spreadsheets in recipe 5, CI with extras, sandbox CI on three systems, the test seam and its Python 3.12 fix, private glossary entries); App suite 970 passed with 2 known env-only P2P family failures. Umbrella `edge` at `eb2e3a9`; release branch `release-3.4.0` at `1bd17d3`.
 
-**In progress:** nothing running. Bank v5 measured and judged (T10.24): 3.5 exit criterion 1 (zero unauthorised sends) and the N7 exact-result target are not met; circle rules held.
+**In progress:** T11.1 (App 0.8.1 fixes) and T11.2 (harness 1.4.4), both delegated to DSH (D-025).
 
 **Blockers:** none for the release. Open for the beta (D-024): sealed bank v5, the team-versus-local and node-loss batteries with real models, a circle between real machines on different networks, where the relay runs, the Apple and Windows signing accounts, the review of the beta kit drafts. From 3.4: zero unauthorised sends and the exact-result target stay unconfirmed until bank v5 (T9.7).
 
-**Next action:** the maintainer decides on 3.5.1 (App privacy and recipe-5 fixes, team status), harness 1.4.4 with `--rescore` of both runs, and the repeat of v5.2 required by its technical failure.
+**Next action:** review T11.1/T11.2; rescore v5.1/v5.2 with 1.4.4; the maintainer repeats v5.2 with App 0.8.0 before 0.8.1 is synced into the umbrella.
