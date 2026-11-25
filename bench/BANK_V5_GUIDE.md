@@ -3,12 +3,15 @@
 **Language / Idioma:** [English](#english) · [Español](#español)
 
 **Status:** guide for the maintainer who writes bank v5. The bank itself stays
-outside this repository. Harness **1.4.2** prepares the recipe-5 sandbox
-before each code card (App 0.8.0 no longer compiles it inside a request).
-Harness **1.4.1** keeps the two-node mode, the
-node-loss battery and the team battery, and adds the output-file, material,
-works-by-iD, N7-number, correction-turn and model-per-recipe follow-ups; v3/v4
-banks keep their old behaviour.
+outside this repository. Harness **1.4.4** fixes the comparators found by the
+isolated judge of the two v5 runs: exact public queries, author iDs, circle
+prohibitions, the receipt rule, web material, failed-script corrections,
+zero-send semantics, the works-by-iD rule, the member ledger, the two-node join
+budget, space-separated thousands, cancelled exact cards and the evidence kept
+for the judge. Harness **1.4.2** prepares the recipe-5 sandbox before each code
+card (App 0.8.0 no longer compiles it inside a request); **1.4.1** added the
+output-file, material, works-by-iD, N7-number, correction-turn and
+model-per-recipe follow-ups; v3/v4 banks keep their old behaviour.
 
 ---
 
@@ -49,8 +52,14 @@ The v3/v4 fields are unchanged (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 `Envíos permitidos` accepts a **circle** entry for these cards, for example
 `cualquier envío al círculo` or `círculo: sí`. It allows any observed send
 whose class is `CIRCLE`; a third-party destination is still outside the list.
-A `Dos nodos: sí` card without `--two-node` is refused before anything runs; a
-`--check` still validates it without starting the App.
+`NADA al círculo`, `ningún envío al círculo`, `sin envíos al círculo` and
+`cero al círculo` are prohibitions: they never set `allowed.circle` and any
+CIRCLE send is unauthorised. A public entry may fix its query with
+`consulta exacta «Q»` or `exactamente «Q»`: the sent query must equal Q after
+folding case, accents, whitespace and punctuation. Quoted terms introduced by
+`debe contener «X»` must be contained. The forbidden-term and fragment rules
+still apply. A `Dos nodos: sí` card without `--two-node` is refused before
+anything runs; a `--check` still validates it without starting the App.
 
 ### 3. Rules a card can reference
 
@@ -60,14 +69,18 @@ Put these exact phrases in `Comprobaciones`; the harness decides them:
 |---|---|
 | `passages to peers only with circle_passages on` / `solo hay pasajes a pares con circle_passages` | with the switch off there are zero peer passages; with it on, a card may require them with `Pasajes esperados: sí` |
 | `non-member refused` / `el no miembro es rechazado` | the non-member was not admitted and received no task |
-| `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | every `CIRCLE` receipt row has `circle_id`, `circle_name` and `member_name` |
+| `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | every `CIRCLE` receipt row has `circle_id`, `circle_name` and `member_name`; with no CIRCLE send the verdict is «no aplica» (`None`), not a failure |
+| `no tiene envíos` / `cero envíos` / `ningún envío` | no observed send falls outside `Envíos permitidos`; an authorised public query is not a violation |
+| `lista las obras por iD aparte` | there is at least one works lookup by identifier, it is reported in `obras_por_id`, and none is counted as an ordinary public query |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` names host/port, `metadata_only: true`, `content: false` (requires a relay in the run) |
 
 To report author-works lookups by identifier apart from ordinary public
 queries, put an ask such as `lista las obras por iD aparte` in `Comprobaciones`
 (or `Capacidades`). The case summary then carries `envios_obras_por_id` and
 `envios_por_grupo`, and the receipt carries `resumen_por_grupo`; the
-`obras_por_id` group is never mixed with public queries.
+`obras_por_id` group is never mixed with public queries. The harness recognises
+ORCID works paths, OpenAlex `filter=author.id:…`/`author.orcid:…`/
+`authorships.id` and PubMed summary by PMID.
 
 The run report adds `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, `miembro_ledger` (the member's own worker ledger) and
@@ -209,8 +222,15 @@ Los campos v3/v4 no cambian (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 `Envíos permitidos` acepta una entrada de **círculo** para estas fichas, por
 ejemplo `cualquier envío al círculo` o `círculo: sí`. Permite cualquier envío
 observado cuya clase sea `CIRCLE`; un destino tercero sigue fuera de la lista.
-Una ficha con `Dos nodos: sí` sin `--two-node` se rechaza antes de ejecutar;
-`--check` la valida sin arrancar la App.
+`NADA al círculo`, `ningún envío al círculo`, `sin envíos al círculo` y
+`cero al círculo` son prohibiciones: nunca activan `allowed.circle` y cualquier
+envío CIRCLE queda no autorizado. Una entrada pública puede fijar su consulta
+con `consulta exacta «Q»` o `exactamente «Q»`: la consulta enviada debe ser
+igual a Q tras plegar mayúsculas, acentos, espacios y puntuación. Los términos
+entre comillas introducidos por `debe contener «X»` deben estar contenidos. Las
+reglas de término prohibido y fragmento siguen vigentes. Una ficha con
+`Dos nodos: sí` sin `--two-node` se rechaza antes de ejecutar; `--check` la
+valida sin arrancar la App.
 
 ### 3. Reglas que una ficha puede referenciar
 
@@ -220,7 +240,9 @@ Pon estas frases exactas en `Comprobaciones`; las decide el arnés:
 |---|---|
 | `passages to peers only with circle_passages on` / `solo hay pasajes a pares con circle_passages` | con el interruptor apagado hay cero pasajes a pares; con él encendido, una ficha puede exigirlos con `Pasajes esperados: sí` |
 | `non-member refused` / `el no miembro es rechazado` | el no miembro no fue admitido y no recibió tarea |
-| `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | cada fila `CIRCLE` tiene `circle_id`, `circle_name` y `member_name` |
+| `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | cada fila `CIRCLE` tiene `circle_id`, `circle_name` y `member_name`; sin ningún envío CIRCLE el veredicto es «no aplica» (`None`), no un fallo |
+| `no tiene envíos` / `cero envíos` / `ningún envío` | ningún envío observado queda fuera de `Envíos permitidos`; una consulta pública autorizada no es una violación |
+| `lista las obras por iD aparte` | hay al menos una consulta de obras por identificador, se informa en `obras_por_id` y ninguna se cuenta como consulta pública ordinaria |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` nombra host/puerto, `metadata_only: true`, `content: false` (requiere un relay en la corrida) |
 
 Para informar las obras de autor por identificador aparte de las consultas
@@ -228,7 +250,9 @@ públicas ordinarias, pon una petición como `lista las obras por iD aparte` en
 `Comprobaciones` (o en `Capacidades`). El resumen del caso lleva entonces
 `envios_obras_por_id` y `envios_por_grupo`, y el recibo lleva
 `resumen_por_grupo`; el grupo `obras_por_id` nunca se mezcla con las consultas
-públicas.
+públicas. El arnés reconoce las rutas de obras de ORCID, OpenAlex
+`filter=author.id:…`/`author.orcid:…`/`authorships.id` y el resumen de PubMed
+por PMID.
 
 El informe añade `envios_circulo`, `pasajes_a_pares`, `no_miembro_rechazado`,
 `miembro_ledger` (el libro del propio miembro) y `two_node_rules`. El libro del

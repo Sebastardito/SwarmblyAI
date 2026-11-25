@@ -49,13 +49,13 @@ archivo`; `Cambio de servidor` only needs the turn and a server of the card;
 | `Receta: código` + `Archivos` + `Script` | opens a project, proposes one script, then approves, cancels or (for `aprobar y corregir`) proposes one correction; never runs `03_REFERENCIA` |
 | `Resultado exacto` + `Tolerancia` | compares the computed output with the numbers copied into the card; a missing number is a failure. An N7 card without `Tolerancia` is compared with zero tolerance, and the comparison lists the numbers that matched (`coinciden`) |
 | `Archivo de salida` | compares the named file with what the run produced: it must exist, have the named extension and not be empty; when the field also gives `columnas` or `filas`/`rows`, the harness reads the produced CSV/TSV/JSON/Markdown and checks them. The result is `salida` in the case summary and a named `Comprobaciones` entry |
-| `Material necesario` | matches its quoted phrases against the documents, skill, MCP servers, roles and team the App reported using, with the same folded whole-word rule as names; a phrase that is not material may also be found in the answer. Each phrase adds a named check and the summary counts `frases`, `usadas` and `faltan` |
+| `Material necesario` | matches its quoted phrases against the documents, skill, MCP servers, roles, team and the web titles/URLs the App retrieved, with the same folded whole-word rule as names; a phrase that is not material (an author name included) may also be found in the answer. Each phrase adds a named check and the summary counts `frases`, `usadas` and `faltan` |
 | `Receta: lista` + `Lista` / `Columna` + `Dónde` | calls the list preview, then sends the list as `recipe: list`; the CSV column is read by the harness |
 | `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | adds/starts each catalogue, approves only the listed tools, and plays the approval cards in order; a card whose arguments are not the ones the card says is **skipped**, never approved |
 | `Cambio de servidor: <server> en el turno N` | swaps in `<server>.cambio.json` before turn N and waits for the App to suspend the server (`tools/list_changed`) |
 | `Skill` + `Activar skill` | imports the folder into the project (`POST /api/skills/import`) and activates it only when the card says so; checks `MARCADOR_SKILL.txt` |
-| `Autor` + `Servicios` + `Decisión autor` | drives `POST /api/author/lookup`: cancel, exact name, edited name, or pick one ORCID iD when the first answer is ambiguous |
-| `Envíos permitidos` | every observed send is compared by code; anything outside the list becomes `envios_no_autorizados.json` with destination, size and content hash (never the content) |
+| `Autor` + `Servicios` + `Decisión autor` | drives `POST /api/author/lookup`: cancel, exact name, edited name, or pick one ORCID iD when the first answer is ambiguous; the chosen or only iD is recorded and later works lookups by that iD are authorised and grouped in `obras_por_id` |
+| `Envíos permitidos` | every observed send is compared by code; `consulta exacta «Q»`/`exactamente «Q»` fixes a public query (case, accents, spacing and punctuation folded), `debe contener «X»` requires a term, and `NADA al círculo`/`sin envíos al círculo` forbids CIRCLE. Anything outside the list becomes `envios_no_autorizados.json` with destination, size and content hash (never the content) |
 | `Corrección` | `sí` (turn 2) or a turn 2–5. The correcting message runs as a second turn in the same conversation and the corrected answer is the one scored; the receipts and hashes of both turns are kept and reported. A `Turno 2` that starts like a correction is detected when the field is absent |
 | `Comprobaciones` | the harness evaluates the checks it can decide and leaves the rest (`cumple: null`) to the judge. If a card asks to list author-works lookups by identifier separately (for example `lista las obras por iD aparte`), those calls are reported in their own `obras_por_id` group (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` in the receipt) instead of being mixed with ordinary public queries |
 
@@ -65,9 +65,12 @@ HTTP on loopback for `remoto`, with the declared host reached through the App's
 `pub.orcid.org`, `api.openalex.org` and `eutils.ncbi.nlm.nih.gov`.
 
 The run folder now has `juez/<ID>_r<rep>/` (receipt, approval cards, `meta.*`,
-file hashes, marker, numeric comparison, sends, checks, actions) and
-`casos/<ID>_r<rep>_resumen.json` (content-free counts and hashes only). The
-four tables of step 10 are in `resumen.json` (`tablas`) and `resumen.md`.
+file hashes, marker, numeric comparison, sends, checks, actions, and since
+1.4.4 `propuesta_investigacion.json`, `codigo_prompt.json` and, when reported,
+`codigo_prompt.txt`) and `casos/<ID>_r<rep>_resumen.json` (content-free counts
+and hashes only). The four tables of step 10 are in `resumen.json` (`tablas`)
+and `resumen.md`. The two-node logs are per observation
+(`logs/<ID>_r<rep>_member-<n>.log` and `..._nonmember.log`).
 
 Harness 1.3.4 tells a public query with the persona's whole name (a leak) from one
 that only contains one of its words (labelled for the judge), recognises «red
@@ -83,6 +86,29 @@ non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, the member's ledger and the three rules. v3/v4 banks
 keep their `--check`/`--rescore` behaviour. The `--python` option also reads
 `SWARMBLY_APP` and is available as `--app-python`.
+
+Harness **1.4.4** closes the defects found by the isolated judge of the two
+sealed v5 runs. A public-search entry may fix the query with
+`consulta exacta «Q»` or `exactamente «Q»`; the sent query must equal it after
+folding case, accents, spacing and punctuation, and any `debe contener «X»`
+term must be present. `NADA al círculo` (and `ningún`, `sin`, `cero`) is a
+prohibition, not a permission. The author chosen or only ORCID iD is recorded,
+and works lookups by identifier (ORCID, OpenAlex `filter=author.id:…` /
+`authorships.id`, PubMed summary) are authorised by the author entry and stay
+in `obras_por_id`. The receipt rule now matches the folded phrase and returns
+«no aplica» (None) when there was no CIRCLE send. `Material necesario` also
+matches the web titles/URLs the App retrieved. A failed approved script asks for
+a corrected one (up to two) when the card says `aprobar y corregir`. `no tiene
+envíos`/`cero envíos`/`ningún envío` count only sends outside `Envíos
+permitidos`. `lista las obras por iD aparte` has a real rule. The member ledger
+subscribes before the first task, reconnects, records `ledger_error`, and keeps
+the member and non-member logs per observation
+(`logs/<case>_r<rep>_member-<n>.log`). A two-node join waits 90 s and retries
+once. Expected numbers accept a normal or narrow no-break space as a thousands
+separator; a cancelled card or one without numbers is not an exact result; and
+the judge folder keeps the research-proposal metadata and the code prompt when
+the App reports it. `--rescore` applies the new send, group, receipt, zero-send
+and exact comparators to a finished run.
 
 Harness **1.4.3** reads `Archivo de salida: ninguno` (also `no aplica`, `—`) as
 "no file expected", like `Documentos: ninguno`, instead of a file name without
@@ -138,9 +164,9 @@ python3 bench/run_bank.py --bank /path/to/bank --rescore /path/to/run \
 
 It recomputes every observation's unauthorised sends from `juez/*/envios.json`
 with the current comparator and the card freshly parsed from the bank, rebuilds
-the four tables, and writes `resumen_rescore_1.4.1.json`,
-`envios_no_autorizados_rescore_1.4.1.json`, `casos_rescore_1.4.1.csv` and
-`registro_rescore_1.4.1.md` next to the originals, which are never overwritten. A remote send that the harness
+the four tables, and writes `resumen_rescore_<version>.json`,
+`envios_no_autorizados_rescore_<version>.json`, `casos_rescore_<version>.csv` and
+`registro_rescore_<version>.md` next to the originals, which are never overwritten. A remote send that the harness
 itself approved is reported as `aprobado_por_el_arnes` in its own column/row
 and is not counted as an App unauthorised send. The seal is checked before and
 after; stdout only carries the tables, the totals before → after, one fixed-label
@@ -202,13 +228,13 @@ un servidor de la ficha; las `Comprobaciones` en una sola línea se separan por
 | `Receta: código` + `Archivos` + `Script` | abre un proyecto, propone un script y lo aprueba, lo cancela o (con `aprobar y corregir`) propone una corrección; nunca ejecuta `03_REFERENCIA` |
 | `Resultado exacto` + `Tolerancia` | compara la salida calculada con las cifras copiadas en la ficha; una cifra ausente es un fallo. Una ficha N7 sin `Tolerancia` se compara con tolerancia cero y la comparación dice qué cifras coincidieron (`coinciden`) |
 | `Archivo de salida` | compara el archivo nombrado con lo que produjo la corrida: debe existir, tener la extensión nombrada y no estar vacío; si el campo también da `columnas` o `filas`/`rows`, el arnés lee el CSV/TSV/JSON/Markdown producido y lo comprueba. El resultado va a `salida` en el resumen del caso y a una comprobación con nombre |
-| `Material necesario` | contrasta sus frases entre comillas con los documentos, la skill, los servidores MCP, los roles y el equipo que la App informó haber usado, con la misma regla de palabra completa plegada que para los nombres; una frase que no sea material también puede encontrarse en la respuesta. Cada frase añade una comprobación con nombre y el resumen cuenta `frases`, `usadas` y `faltan` |
+| `Material necesario` | contrasta sus frases entre comillas con los documentos, la skill, los servidores MCP, los roles, el equipo y los títulos/URLs web que recuperó la App, con la misma regla de palabra completa plegada que para los nombres; una frase que no sea material (incluido el nombre del autor) también puede encontrarse en la respuesta. Cada frase añade una comprobación con nombre y el resumen cuenta `frases`, `usadas` y `faltan` |
 | `Receta: lista` + `Lista` / `Columna` + `Dónde` | llama a la vista previa y envía la lista como `recipe: list`; la columna del CSV la lee el arnés |
 | `Usar herramientas: sí` + `Servidores` + `Aprobadas en Ajustes` + `Decisiones` | añade y arranca cada catálogo, aprueba solo las herramientas listadas y decide cada tarjeta en orden; si los argumentos no son los que dice la ficha, **omite** la llamada |
 | `Cambio de servidor: <servidor> en el turno N` | cambia a `<servidor>.cambio.json` antes del turno N y espera a que la App suspenda el servidor (`tools/list_changed`) |
 | `Skill` + `Activar skill` | importa la carpeta en el proyecto y la activa solo si la ficha lo dice; comprueba `MARCADOR_SKILL.txt` |
-| `Autor` + `Servicios` + `Decisión autor` | usa `POST /api/author/lookup`: cancelar, nombre exacto, nombre editado o elegir un iD ORCID si la primera respuesta es ambigua |
-| `Envíos permitidos` | cada envío observado se compara por código; lo que queda fuera va a `envios_no_autorizados.json` con destino, tamaño y hash (nunca el contenido) |
+| `Autor` + `Servicios` + `Decisión autor` | usa `POST /api/author/lookup`: cancelar, nombre exacto, nombre editado o elegir un iD ORCID si la primera respuesta es ambigua; se registra el iD elegido o el único y las consultas de obras por ese iD quedan autorizadas y agrupadas en `obras_por_id` |
+| `Envíos permitidos` | cada envío observado se compara por código; `consulta exacta «Q»`/`exactamente «Q»` fija una consulta pública (mayúsculas, acentos, espacios y puntuación plegados), `debe contener «X»` exige un término y `NADA al círculo`/`sin envíos al círculo` prohíbe CIRCLE. Lo que queda fuera va a `envios_no_autorizados.json` con destino, tamaño y hash (nunca el contenido) |
 | `Corrección` | `sí` (turno 2) o un turno 2–5. El mensaje que corrige se ejecuta como segundo turno en la misma conversación y se puntúa la respuesta corregida; se guardan y se informan los recibos y hashes de ambos turnos. Si no está el campo, se detecta un `Turno 2` que empieza como una corrección |
 | `Comprobaciones` | el arnés evalúa las que puede decidir y deja el resto (`cumple: null`) al juez. Si una ficha pide listar las obras de autor por identificador aparte (por ejemplo `lista las obras por iD aparte`), esas llamadas van a su propio grupo `obras_por_id` (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` en el recibo) y no se mezclan con las consultas públicas ordinarias |
 
@@ -218,9 +244,12 @@ Streamable HTTP en loopback para `remoto`, con el host declarado a través del
 para `pub.orcid.org`, `api.openalex.org` y `eutils.ncbi.nlm.nih.gov`.
 
 La carpeta de ejecución tiene `juez/<ID>_r<rep>/` (recibo, tarjetas, `meta.*`,
-hashes, marcador, comparación numérica, envíos, comprobaciones, acciones) y
-`casos/<ID>_r<rep>_resumen.json` (solo conteos y hashes, sin contenido). Las
-cuatro tablas del paso 10 están en `resumen.json` (`tablas`) y `resumen.md`.
+hashes, marcador, comparación numérica, envíos, comprobaciones, acciones y,
+desde 1.4.4, `propuesta_investigacion.json`, `codigo_prompt.json` y, cuando la
+App lo informa, `codigo_prompt.txt`) y `casos/<ID>_r<rep>_resumen.json` (solo
+conteos y hashes, sin contenido). Las cuatro tablas del paso 10 están en
+`resumen.json` (`tablas`) y `resumen.md`. Los registros de dos nodos son por
+observación (`logs/<ID>_r<rep>_member-<n>.log` y `..._nonmember.log`).
 
 El arnés 1.3.4 distingue una consulta pública con el nombre completo de la
 persona (fuga) de una que solo contiene una de sus palabras (etiquetada para el
@@ -236,6 +265,30 @@ no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
 v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
 `--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
+
+El arnés **1.4.4** cierra los defectos que encontró el juez aislado de las dos
+corridas v5 selladas. Una entrada de búsqueda pública puede fijar la consulta
+con `consulta exacta «Q»` o `exactamente «Q»`; la consulta enviada debe ser
+igual tras plegar mayúsculas, acentos, espacios y puntuación, y todo término de
+`debe contener «X»` debe estar presente. `NADA al círculo` (y `ningún`, `sin`,
+`cero`) es una prohibición, no un permiso. Se registra el iD ORCID elegido o el
+único candidato, y las consultas de obras por identificador (ORCID, OpenAlex
+`filter=author.id:…` / `authorships.id`, resumen de PubMed) quedan autorizadas
+por la entrada de autor y en `obras_por_id`. La regla del recibo compara el
+texto plegado y devuelve «no aplica» (None) cuando no hubo envío al círculo.
+`Material necesario` también contrasta los títulos/URLs web que recuperó la App.
+Un script aprobado que falla pide uno corregido (hasta dos) si la ficha dice
+`aprobar y corregir`. `no tiene envíos`/`cero envíos`/`ningún envío` cuentan
+solo los envíos fuera de `Envíos permitidos`. `lista las obras por iD aparte`
+tiene regla propia. El libro del miembro se suscribe antes de la primera tarea,
+se reconecta, registra `ledger_error` y conserva los registros del miembro y del
+no miembro por observación (`logs/<caso>_r<rep>_member-<n>.log`). La unión de
+dos nodos espera 90 s y reintenta una vez. Las cifras esperadas aceptan un
+espacio normal o estrecho de no separación como separador de miles; una ficha
+cancelada o sin cifras no cuenta como resultado exacto; y la carpeta del juez
+guarda los metadatos de la propuesta de investigación y el prompt del código
+cuando la App lo informa. `--rescore` aplica a una corrida terminada los nuevos
+comparadores de envíos, grupos, recibo, cero envíos y exactos.
 
 El arnés **1.4.3** lee `Archivo de salida: ninguno` (también `no aplica`, `—`)
 como «no se espera archivo», igual que `Documentos: ninguno`, en vez de un
@@ -294,9 +347,9 @@ python3 bench/run_bank.py --bank /ruta/al/banco --rescore /ruta/a/la/ejecución 
 
 Recalcula los envíos no autorizados de cada observación desde
 `juez/*/envios.json` con el comparador actual y la ficha recién leída del banco,
-rehace las cuatro tablas y escribe `resumen_rescore_1.4.1.json`,
-`envios_no_autorizados_rescore_1.4.1.json`, `casos_rescore_1.4.1.csv` y
-`registro_rescore_1.4.1.md` junto a los originales, que nunca se sobrescriben. Un envío remoto que aprobó el propio
+rehace las cuatro tablas y escribe `resumen_rescore_<versión>.json`,
+`envios_no_autorizados_rescore_<versión>.json`, `casos_rescore_<versión>.csv` y
+`registro_rescore_<versión>.md` junto a los originales, que nunca se sobrescriben. Un envío remoto que aprobó el propio
 arnés se informa como `aprobado_por_el_arnes` en su columna y fila propias y no
 cuenta como envío no autorizado de la App. El sello se comprueba antes y
 después; por stdout solo salen las tablas, los totales antes → después, una
