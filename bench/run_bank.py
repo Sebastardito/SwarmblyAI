@@ -5043,6 +5043,15 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
         # files, so a fixed comparator also applies to an existing run.
         two_report = _json_file(folder / "dos_nodos.json", {})
         two_report = two_report if isinstance(two_report, dict) else {}
+        if not two_report and any(send_group(send) == "circulo" for send in sends):
+            # A saved run without dos_nodos.json still has the receipt rows;
+            # the receipt rule can be recomputed from them.
+            two_report = {
+                "envios_circulo": sum(1 for send in sends
+                                      if send_group(send) == "circulo"),
+                "two_node_rules": {
+                    "recibo_nombra_circulo_y_miembro": receipt_names_rule(sends)},
+            }
         if two_report:
             names_ok = receipt_names_rule(sends)
             rules = dict(two_report.get("two_node_rules") or {})
