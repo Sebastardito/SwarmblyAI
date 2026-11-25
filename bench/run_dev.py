@@ -1143,7 +1143,8 @@ def main(argv: list[str] | None = None) -> int:
                             owner=app, python=python, work_root=work / "nodes",
                             proxy_url=proxy.url, model=args.model,
                             embed_model=args.embed_model, ollama_url=args.ollama,
-                            temperature=args.temperature, log_dir=run_dir / "logs")
+                            temperature=args.temperature, log_dir=run_dir / "logs",
+                            tag=f"{case['id']}_r{rep}")
                         two_env.start(members=max(1, int(args.members)), nonmember=True)
                         two_env.set_circle_passages(bool(case.get("pasajes_al_circulo")))
                     if is_code_case(case):
@@ -1186,13 +1187,15 @@ def main(argv: list[str] | None = None) -> int:
                         receipt, two_env.member_ledger(),
                         nonmember_refused=two_env.nonmember_refused,
                         circle_passages=bool(case.get("pasajes_al_circulo")),
-                        expected_passages=case.get("pasajes_esperados"))
+                        expected_passages=case.get("pasajes_esperados"),
+                        ledger_error=two_env.ledger_error)
                     row.update({
                         "dos_nodos": True,
                         "envios_circulo": report["envios_circulo"],
                         "envios_circulo_detalle": report["envios_circulo_detalle"],
                         "pasajes_a_pares": report["pasajes_a_pares"],
                         "miembro_ledger": report["miembro_ledger"],
+                        "ledger_error": report["ledger_error"],
                         "no_miembro_rechazado": report["no_miembro_rechazado"],
                         "two_node_rules": report["two_node_rules"],
                     })
