@@ -645,3 +645,24 @@ def test_a_circle_send_reaches_the_member_ledger_live(tmp_path, monkeypatch):
 
 def test_harness_version_is_144():
     assert rb.HARNESS_VERSION == "1.4.4"
+
+
+def test_quoted_example_terms_of_a_public_entry_are_not_required():
+    import run_bank as rb  # noqa: PLC0415
+    allowed = rb.parse_allowed_sends(
+        "buscador público: una consulta con solo términos públicos («río Ejemplo», "
+        "«caudal», «estación Sur») NO puede contener «Punta Privada»")
+    send = {"destino": "registro_publico_simulado", "tipo": "consulta_aprobada",
+            "payload": "río Ejemplo estación Sur", "valor": "río Ejemplo estación Sur"}
+    ok, why = rb.send_authorized(send, allowed)
+    assert ok, why
+    leak = dict(send, payload="Privada río Ejemplo", valor="Privada río Ejemplo")
+    assert not rb.send_authorized(leak, allowed)[0]
+
+
+def test_debe_contener_is_still_required():
+    import run_bank as rb  # noqa: PLC0415
+    allowed = rb.parse_allowed_sends("buscador público: debe contener «río Ejemplo»")
+    send = {"destino": "registro_publico_simulado", "tipo": "consulta_aprobada",
+            "payload": "estación Sur", "valor": "estación Sur"}
+    assert not rb.send_authorized(send, allowed)[0]

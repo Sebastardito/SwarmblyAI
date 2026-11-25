@@ -1580,10 +1580,10 @@ def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
             elif not all(_fold_text(value) in haystack for value in entry.exact):
                 reasons.append("no lleva el nombre exacto que la ficha permite")
                 continue
+        # Only «debe contener «X»» is a requirement. Other quoted terms of a
+        # public entry describe the allowed vocabulary («solo términos
+        # públicos («A», «B»)»); a query that uses some of them is not a leak.
         required = list(entry.must_contain)
-        if entry.public_search:
-            required.extend(value for value in entry.contains
-                            if value not in required)
         for value in required:
             if _fold_text(value) not in haystack:
                 reasons.append("el envío no contiene un término que la ficha exige")
