@@ -60,7 +60,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-HARNESS_VERSION = "1.4.3"
+HARNESS_VERSION = "1.4.4"
 RECEIPT_SCHEMA = "swarmbly.privacy_receipt/1.0"
 REGISTRY_NAME = "registro_publico_simulado"
 _HEX64 = re.compile(r"^([0-9a-f]{64})\s+\*?(.+)$")
@@ -671,6 +671,43 @@ def collect_used_material(case: Case, meta: dict[str, Any],
         for key in ("source", "rel", "label"):
             if source.get(key):
                 add("documento", source[key], f"meta.lce.{key}")
+    # 1.4.4: the public sources the App retrieved are used material too.
+    web = meta.get("web_search")
+    if isinstance(web, list):
+        web = {"results": web}
+    if isinstance(web, dict):
+        for result in web.get("results") or []:
+            if not isinstance(result, dict):
+                continue
+            for key in ("title", "url", "label", "source", "provider",
+                        "fixture", "name"):
+                if result.get(key):
+                    add("fuente_web", result[key], f"meta.web_search.results.{key}")
+                    url = str(result.get("url") or "")
+                    if key == "url" and "/" in url:
+                        add("fuente_web", url.rstrip("/").rsplit("/", 1)[-1],
+                            "meta.web_search.results.url")
+        for key in ("fixture", "source", "url"):
+            if web.get(key):
+                add("fuente_web", web[key], f"meta.web_search.{key}")
+    for current in receipts or []:
+        if not isinstance(current, dict):
+            continue
+        for event in current.get("envios") or []:
+            if not isinstance(event, dict):
+                continue
+            if str(event.get("tipo") or "") not in PUBLIC_SEND_TYPES:
+                continue
+            for key in ("title", "url", "fixture", "destino", "valor"):
+                if event.get(key):
+                    add("fuente_web", event[key], f"recibo.envios.{key}")
+    autor = actions.get("autor") if isinstance(actions.get("autor"), dict) else {}
+    if autor.get("accion") == "run":
+        add("autor", autor.get("nombre") or case.author, "actions.autor")
+        for candidate in ((autor.get("primera") or {}).get("candidates") or []):
+            if isinstance(candidate, dict):
+                add("autor", candidate.get("name"), "actions.autor.candidates")
+                add("autor", candidate.get("orcid"), "actions.autor.candidates")
     skill_meta = meta.get("skill")
     if isinstance(skill_meta, dict):
         add("skill", skill_meta.get("name") or skill_meta.get("skill"), "meta.skill")
@@ -680,6 +717,8 @@ def collect_used_material(case: Case, meta: dict[str, Any],
     if imported and not imported.get("error"):
         add("skill", case.skill or imported.get("name"), "actions.skill")
     for current in receipts or []:
+        if not isinstance(current, dict):
+            continue
         skill = current.get("skill") if isinstance(current.get("skill"), dict) else {}
         if skill.get("name"):
             add("skill", skill["name"], "recibo.skill")
@@ -717,7 +756,7 @@ def _looks_like_material(phrase: str, case: Case) -> bool:
     if re.search(r"\.(?:md|csv|tsv|json|txt|docx|pdf|html|xlsx|xlsm|log)$", text):
         return True
     known = {_fold_text(case.skill), *(_fold_text(item) for item in case.servers),
-             _fold_text(case.team), _fold_text(case.author)}
+             _fold_text(case.team)}
     return bool(text) and text in {item for item in known if item}
 
 
@@ -755,6 +794,46 @@ def evaluate_material(case: Case, meta: dict[str, Any],
 
 def check_text_for_material(phrase: str) -> str:
     return f"Material necesario: {phrase}"
+
+
+def proposal_evidence(proposed: dict[str, Any] | None, question: str,
+                      approved: str) -> dict[str, Any]:
+    """The research-proposal metadata the judge needs (1.4.4).
+
+    Keeps every field the App returned (``removed``, ``removed_terms``…) and
+    names the query before and after the private guard explicitly.
+    """
+    proposed = proposed if isinstance(proposed, dict) else {}
+    record = dict(proposed)
+    before = (proposed.get("query_before_guard") or proposed.get("query_original")
+              or proposed.get("original_query") or question)
+    after = proposed.get("query") if "query" in proposed else approved
+    record.update({
+        "consulta_antes_guardia": str(before or ""),
+        "consulta_despues_guardia": str(after or ""),
+        "consulta_aprobada": str(approved or ""),
+        "removed": list(proposed.get("removed") or []),
+        "removed_terms": list(proposed.get("removed_terms") or []),
+        "respuesta_app": dict(proposed),
+    })
+    return record
+
+
+def code_prompt_evidence(proposal: dict[str, Any] | None,
+                         meta: dict[str, Any] | None) -> dict[str, Any]:
+    """The code prompt the App reports, if its API exposes one."""
+    proposal = proposal if isinstance(proposal, dict) else {}
+    meta = meta if isinstance(meta, dict) else {}
+    code = meta.get("code") if isinstance(meta.get("code"), dict) else {}
+    for source, value in (
+            ("propuesta.prompt", proposal.get("prompt")),
+            ("propuesta.code_prompt", proposal.get("code_prompt")),
+            ("meta.code.prompt", code.get("prompt")),
+            ("meta.code_run.prompt", (meta.get("code_run") or {}).get("prompt")
+             if isinstance(meta.get("code_run"), dict) else "")):
+        if str(value or "").strip():
+            return {"disponible": True, "fuente": source, "prompt": str(value)}
+    return {"disponible": False, "fuente": "", "prompt": ""}
 
 
 _CORRECTION_START = re.compile(
@@ -1136,11 +1215,13 @@ class AllowedSend:
     raw: str
     destinations: set[str] = field(default_factory=set)
     contains: list[str] = field(default_factory=list)
+    must_contain: list[str] = field(default_factory=list)
     exact: list[str] = field(default_factory=list)
     forbidden: list[str] = field(default_factory=list)
     key_values: dict[str, str] = field(default_factory=dict)
     public_search: bool = False
     circle: bool = False
+    prohibits_circle: bool = False
 
 
 def _fold_text(value: Any) -> str:
@@ -1165,6 +1246,129 @@ def _quoted(text: str) -> list[str]:
     return [item.strip() for item in re.findall(r"«([^»]+)»", text or "") if item.strip()]
 
 
+def _normalise_query(value: Any) -> str:
+    """A public query for equality: case, accents, punctuation and spacing.
+
+    ``_fold_text`` covers case and accents; punctuation becomes a space so
+    «Río  Ejemplo!» and «rio ejemplo» are the same approved query.
+    """
+    folded = _fold_text(value)
+    folded = re.sub(r"[^\w\s]+", " ", folded)
+    return " ".join(folded.split())
+
+
+def _send_query(send: dict[str, Any]) -> str:
+    """The public query an observed send carried."""
+    for key in ("payload", "valor"):
+        value = str(send.get(key) or "").strip()
+        if value and not value.startswith("("):
+            return value
+    args = send.get("args") if isinstance(send.get("args"), dict) else {}
+    for key in ("q", "query", "search", "term"):
+        value = str(args.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _send_is_circle(send: dict[str, Any]) -> bool:
+    return bool(send.get("circle_id")) or _fold_text(
+        str(send.get("clase") or "")) in ("circulo", "circle")
+
+
+# Works indexes that take an author identifier instead of a name: OpenAlex
+# ``filter=author.id:…``/``author.orcid:…`` and ``authorships.id``, ORCID's
+# works path and PubMed's summary by PMID.
+_AUTHOR_ID_FILTERS = ("author.id", "author.orcid", "authorships.id",
+                      "authorships.author.id", "ids")
+_AUTHOR_HOSTS = frozenset({"pub.orcid.org", "api.openalex.org",
+                           "eutils.ncbi.nlm.nih.gov"})
+
+
+def _author_lookup_by_id(send: dict[str, Any]) -> bool:
+    """Whether an author send is a lookup by identifier, not by name."""
+    if str(send.get("tipo") or "") != "consulta_autor":
+        return False
+    if send.get("by_id") or send.get("orcid"):
+        return True
+    if _fold_text(str(send.get("campo") or "")) in ("orcid", "id"):
+        return True
+    args = send.get("args") if isinstance(send.get("args"), dict) else {}
+    filter_text = _fold_text(args.get("filter") or "")
+    if any(token in filter_text for token in _AUTHOR_ID_FILTERS):
+        return True
+    if args.get("ids") or args.get("id") or args.get("orcid"):
+        return True
+    query = args.get("query") if isinstance(args.get("query"), dict) else {}
+    filter_text = _fold_text(query.get("filter") or "")
+    return any(token in filter_text for token in _AUTHOR_ID_FILTERS)
+
+
+def _card_authorises_author(allowed: list[AllowedSend]) -> bool:
+    return any(entry.destinations & _AUTHOR_HOSTS for entry in allowed)
+
+
+def _author_identifiers(actions: dict[str, Any] | None,
+                        author_orcid: str = "") -> list[str]:
+    """Chosen or observed author identifiers, canonicalised for comparison."""
+    out: list[str] = []
+    for value in (author_orcid,):
+        if value and canonical_orcid(value) not in out:
+            out.append(canonical_orcid(value))
+    autor = (actions or {}).get("autor")
+    if not isinstance(autor, dict):
+        return out
+    for key in ("orcid_elegido", "openalex_id", "pmid", "identificador"):
+        value = str(autor.get(key) or "")
+        if value and value not in out:
+            out.append(value)
+    for candidate in ((autor.get("primera") or {}).get("candidates") or []):
+        if isinstance(candidate, dict):
+            value = canonical_orcid(candidate.get("orcid") or "")
+            if value and value not in out:
+                out.append(value)
+    for value in autor.get("identificadores") or []:
+        value = str(value or "")
+        if value and value not in out:
+            out.append(value)
+    return out
+
+
+def _circle_prohibition(entry: str) -> bool:
+    """«NADA al círculo», «ningún envío al círculo», «sin envíos al círculo»…"""
+    folded = _fold_text(entry)
+    if "circulo" not in folded:
+        return False
+    return bool(re.search(
+        r"\b(?:nada|ningun[oa]?|ninguna|cero|sin|no\s+hay|no\s+se\s+permiten?)\b"
+        r"(?:\s+\w+){0,3}\s+(?:al\s+|a\s+la\s+|a\s+los\s+)?circulo\b", folded))
+
+
+def _parse_exact_phrases(entry: str) -> list[str]:
+    """The values of «consulta exacta «Q»» and «exactamente «Q»».
+
+    The card nests guillemets (``«consulta exacta «Q»»``), so the prefix is
+    matched before the quoted value; a plain ``_quoted`` would stop at the
+    inner closing mark.
+    """
+    out: list[str] = []
+    for match in re.finditer(
+            r"(?:consulta\s+exacta|exactamente)\s+«([^»]+)»", entry, re.I):
+        value = match.group(1).strip()
+        if value and value not in out:
+            out.append(value)
+    return out
+
+
+def _parse_contains_phrases(entry: str) -> list[str]:
+    out: list[str] = []
+    for chunk in re.finditer(
+            r"(?:debe\s+contener|tiene\s+que\s+contener)\s+"
+            r"((?:«[^»]+»\s*(?:,\s*|y\s*)?)+)", entry, re.I):
+        out.extend(_quoted(chunk.group(1)))
+    return list(dict.fromkeys(out))
+
+
 def parse_allowed_sends(raw: str) -> list[AllowedSend]:
     """The closed list of ``Envíos permitidos``.
 
@@ -1182,24 +1386,35 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
     out: list[AllowedSend] = []
     for entry in entries:
         # «…; sin «X» ni el nombre» qualifies the entry before it: it is not a
-        # destination of its own.
-        if out and re.match(r"(?:sin|ni|no puede|excepto|salvo|nunca)\b",
-                            _fold_text(entry)):
+        # destination of its own. «sin envíos al círculo» is a prohibition,
+        # not a qualifier, even when it follows another entry.
+        if (out and not _circle_prohibition(entry)
+                and re.match(r"(?:sin|ni|no puede|excepto|salvo|nunca)\b",
+                             _fold_text(entry))):
             out[-1].raw += "; " + entry
             out[-1].forbidden.extend(q for q in _quoted(entry)
                                      if q not in out[-1].forbidden)
             continue
+        allowed = AllowedSend(raw=entry)
+        exact_values = _parse_exact_phrases(entry)
+        contains_values = _parse_contains_phrases(entry)
+        if _circle_prohibition(entry):
+            # A prohibition is a rule of its own: it never grants CIRCLE.
+            allowed.prohibits_circle = True
+            out.append(allowed)
+            continue
         before, sep, after = entry.partition(":")
         destination = before.strip().lower() if sep else entry.strip().lower()
-        allowed = AllowedSend(raw=entry)
         # The card may name the public-search entry in several ways; the
-        # label before «:» decides. Folded so «búsqueda» also matches.
+        # label before «:» decides. Folded so «búsqueda» also matches. An
+        # entry that is only an exact or contains constraint is public too.
         folded_destination = _fold_text(destination)
         public_labels = ("buscador", "busqueda publica", "busqueda web", "consulta publica",
                          "registro publico", "red publica", "internet", "fuente publica",
                          "receta investigar",
                          "searxng", "public search")
-        if any(label in folded_destination for label in public_labels):
+        if any(label in folded_destination for label in public_labels) \
+                or (not sep and (exact_values or contains_values)):
             allowed.public_search = True
             allowed.destinations.update({"registro_publico_simulado", "buscador público",
                                          "searxng", "public_search"})
@@ -1207,14 +1422,13 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
                  ("circulo", "círculo", "circle", "par del circulo", "miembro",
                   "member", "peer")):
             allowed.circle = True
-        elif "orcid" in destination and "openalex" in destination:
-            allowed.destinations.update({"pub.orcid.org", "api.openalex.org"})
-        elif "orcid" in destination:
-            allowed.destinations.add("pub.orcid.org")
-        elif "openalex" in destination:
-            allowed.destinations.add("api.openalex.org")
-        elif "pubmed" in destination:
-            allowed.destinations.add("eutils.ncbi.nlm.nih.gov")
+        elif any(name in destination for name in ("orcid", "openalex", "pubmed")):
+            if "orcid" in destination:
+                allowed.destinations.add("pub.orcid.org")
+            if "openalex" in destination:
+                allowed.destinations.add("api.openalex.org")
+            if "pubmed" in destination:
+                allowed.destinations.add("eutils.ncbi.nlm.nih.gov")
         elif "." in destination and " " not in destination:
             allowed.destinations.add(destination.strip("`'\" "))
         else:
@@ -1223,15 +1437,19 @@ def parse_allowed_sends(raw: str) -> list[AllowedSend]:
         for chunk in re.finditer(r"(?:NO puede contener|sin|ni)\s+((?:«[^»]+»\s*(?:,\s*|y\s*)?)+)",
                                  entry, re.I):
             allowed.forbidden.extend(_quoted(chunk.group(1)))
-        for match in re.finditer(r"exactamente\s+«([^»]+)»", entry, re.I):
-            allowed.exact.append(match.group(1).strip())
+        allowed.exact.extend(exact_values)
         for match in re.finditer(r"([A-Za-z_][\w.]*)\s*=\s*([^,;)]+)", entry):
             key, value = match.group(1), match.group(2).strip().strip("«»`'\" ")
             if key.lower() not in {"http", "https"}:
                 allowed.key_values[key] = value
         quoted = [q for q in _quoted(entry)
-                  if q not in allowed.exact and q not in allowed.forbidden]
-        allowed.contains.extend(quoted)
+                  if q not in allowed.exact and q not in allowed.forbidden
+                  and q not in contains_values
+                  and "consulta exacta" not in _fold_text(q)
+                  and not _fold_text(q).startswith("exactamente")]
+        allowed.must_contain.extend(contains_values)
+        allowed.contains.extend(contains_values)
+        allowed.contains.extend(q for q in quoted if q not in allowed.contains)
         out.append(allowed)
     return out
 
@@ -1289,21 +1507,27 @@ def forbidden_finding(haystack: str, terms: list[str] | None) -> str:
 
 def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
                     private_terms: list[str] | None = None,
-                    author_orcid: str = "") -> tuple[bool, str]:
+                    author_orcid: str = "",
+                    author_ids: list[str] | None = None) -> tuple[bool, str]:
     """Whether one observed send is inside the card's closed list."""
     if not allowed:
         return False, "la ficha no permite ningún envío"
+    if _send_is_circle(send) and any(entry.prohibits_circle for entry in allowed):
+        return False, "la ficha prohíbe los envíos al círculo"
     destination = _fold_text(send.get("destino") or "")
     kind = str(send.get("tipo") or "")
     haystack = _send_haystack(send)
     args = send.get("args") if isinstance(send.get("args"), dict) else None
     private = [item for item in (private_terms or []) if item]
+    known_ids = {value for value in _author_identifiers(
+        {"autor": {"orcid_elegido": author_orcid, "identificadores": author_ids or []}})
+        if value}
+    by_id = _author_lookup_by_id(send)
     reasons: list[str] = []
     for entry in allowed:
         matches = False
         if entry.circle:
-            matches = bool(send.get("circle_id")) or _fold_text(
-                str(send.get("clase") or "")) in ("circulo", "circle")
+            matches = _send_is_circle(send)
         elif entry.public_search:
             matches = kind in PUBLIC_SEND_TYPES or any(
                 token in destination for token in
@@ -1318,9 +1542,25 @@ def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
             return False, FORBIDDEN_TERM
         if forbidden == "fragment":
             return False, FORBIDDEN_FRAGMENT
-        if (kind == "consulta_autor" and author_orcid
-                and _fold_text(send.get("orcid") or "") == _fold_text(author_orcid)):
-            return True, "el iD que la persona eligió en la ficha"
+        if kind == "consulta_autor" and entry.destinations & _AUTHOR_HOSTS:
+            # The second lookup is by the chosen/only iD, not by the person's
+            # name: it is authorised by the same entry that authorises the
+            # author search.  It stays in the obras_por_id group.
+            if by_id:
+                identifier = str(send.get("orcid") or _send_query(send) or "")
+                if _is_orcid(identifier):
+                    if not known_ids or any(
+                            _fold_text(value) == _fold_text(identifier)
+                            for value in known_ids):
+                        return True, "consulta por el iD que la persona eligió en la ficha"
+                    reasons.append("la consulta por iD no es la que la persona eligió")
+                    continue
+                # An OpenAlex author id or a PubMed PMID derived from the
+                # chosen person: the same author search authorised it.
+                return True, "consulta por el iD que la persona eligió en la ficha"
+            elif known_ids and _fold_text(send.get("orcid") or "") in {
+                    _fold_text(value) for value in known_ids}:
+                return True, "el iD que la persona eligió en la ficha"
         if entry.public_search and private:
             # The persona's whole name is a leak. A distinctive word alone is
             # still outside the list, but labelled so the judge can tell the two
@@ -1330,36 +1570,54 @@ def send_authorized(send: dict[str, Any], allowed: list[AllowedSend],
             if any(_fold_text(name) not in _SPANISH_COMMON_WORDS
                    and _contains_folded_word(haystack, name) for name in private):
                 return False, PRIVATE_WORD_ONLY
-        if entry.exact and not all(_fold_text(value) in haystack for value in entry.exact):
-            reasons.append("no lleva el nombre exacto que la ficha permite")
-            continue
-        key_ok = True
-        for key, value in entry.key_values.items():
-            if args is not None and key in args:
-                if _fold_text(args[key]) != _fold_text(value):
+        if entry.exact:
+            if entry.public_search:
+                query = _send_query(send)
+                if not any(_normalise_query(query) == _normalise_query(value)
+                           for value in entry.exact):
+                    reasons.append("la consulta pública no es exactamente la que la ficha permite")
+                    continue
+            elif not all(_fold_text(value) in haystack for value in entry.exact):
+                reasons.append("no lleva el nombre exacto que la ficha permite")
+                continue
+        required = list(entry.must_contain)
+        if entry.public_search:
+            required.extend(value for value in entry.contains
+                            if value not in required)
+        for value in required:
+            if _fold_text(value) not in haystack:
+                reasons.append("el envío no contiene un término que la ficha exige")
+                break
+        else:
+            key_ok = True
+            for key, value in entry.key_values.items():
+                if args is not None and key in args:
+                    if _fold_text(args[key]) != _fold_text(value):
+                        key_ok = False
+                        break
+                elif _fold_text(value) not in haystack:
                     key_ok = False
                     break
-            elif _fold_text(value) not in haystack:
-                key_ok = False
-                break
-        if not key_ok:
-            reasons.append("los argumentos no coinciden con la ficha")
-            continue
-        if entry.public_search and kind == "pasaje":
-            reasons.append("la consulta pública llevaría un pasaje")
-            continue
-        return True, "coincide con la lista de envíos permitidos"
+            if not key_ok:
+                reasons.append("los argumentos no coinciden con la ficha")
+                continue
+            if entry.public_search and kind == "pasaje":
+                reasons.append("la consulta pública llevaría un pasaje")
+                continue
+            return True, "coincide con la lista de envíos permitidos"
     return False, (reasons[0] if reasons else "el destino no está en la lista de envíos permitidos")
 
 
 def unauthorized_sends(case: Case, sends: list[dict[str, Any]],
                        private_terms: list[str] | None = None,
-                       author_orcid: str = "") -> list[dict[str, Any]]:
+                       author_orcid: str = "",
+                       author_ids: list[str] | None = None) -> list[dict[str, Any]]:
     """Sends outside the card, with destination, size and hash, never content."""
     allowed = parse_allowed_sends(case.allowed_sends)
     out: list[dict[str, Any]] = []
     for send in sends:
-        ok, reason = send_authorized(send, allowed, private_terms, author_orcid)
+        ok, reason = send_authorized(send, allowed, private_terms, author_orcid,
+                                     author_ids)
         if ok:
             continue
         payload = str(send.get("payload") or send.get("valor") or "")
@@ -1387,10 +1645,43 @@ def effective_tolerance(case: "Case") -> float:
     return parse_tolerance(case.tolerance)
 
 
+def code_card_cancels(case: "Case") -> bool:
+    """A code card whose script is cancelled (or never approved)."""
+    return (case.recipe == "code"
+            and (case.code_script == "cancelar"
+                 or case.code_script not in ("aprobar", "aprobar y corregir")))
+
+
 def compares_exact_numbers(case: "Case") -> bool:
-    """A card that requires exact numbers: código-exacto, or any N7 card."""
-    return bool(case.exact_result) and (
-        "código-exacto" in case.capabilities or case.level == "N7")
+    """A card that requires exact numbers: código-exacto, or any N7 card.
+
+    1.4.4: a cancelled code card and a card whose ``Resultado exacto`` has no
+    numbers are not part of the exact columns.
+    """
+    if not case.exact_result or code_card_cancels(case):
+        return False
+    if not expected_numbers(case.exact_result):
+        return False
+    return "código-exacto" in case.capabilities or case.level == "N7"
+
+
+# Thousands may be grouped with a normal or a narrow no-break space, only in
+# groups of three digits: «12 345,6» is one number, not 12 and 345.6.
+_THOUSANDS_SPACE = r"[ \u00a0\u202f]"
+_NUMBER_TOKEN = re.compile(
+    rf"(?<![\w/.-])([-+]?(?:\d{{1,3}}(?:{_THOUSANDS_SPACE}\d{{3}})+|\d+)"
+    rf"(?:[.,]\d+)?)(?![\w/.-])")
+
+
+def _number_tokens(text: str) -> list[float]:
+    out: list[float] = []
+    for token in _NUMBER_TOKEN.findall(text or ""):
+        cleaned = re.sub(_THOUSANDS_SPACE, "", token).replace(",", ".")
+        try:
+            out.append(float(cleaned))
+        except ValueError:
+            continue
+    return out
 
 
 def expected_numbers(raw: str) -> list[float]:
@@ -1398,23 +1689,11 @@ def expected_numbers(raw: str) -> list[float]:
     text = re.sub(r"03_REFERENCIA/\S+", " ", raw or "")
     text = re.sub(r"\b(?:EJ|S)\d+-\d+\b", " ", text)
     text = re.sub(r"\bN[1-9]\b", " ", text)
-    out: list[float] = []
-    for token in re.findall(r"(?<![\w/.-])([-+]?\d+(?:[.,]\d+)?)(?![\w/.-])", text):
-        try:
-            out.append(float(token.replace(",", ".")))
-        except ValueError:
-            continue
-    return out
+    return _number_tokens(text)
 
 
 def observed_numbers(text: str) -> list[float]:
-    out: list[float] = []
-    for token in re.findall(r"(?<![\w/.-])([-+]?\d+(?:[.,]\d+)?)(?![\w/.-])", text or ""):
-        try:
-            out.append(float(token.replace(",", ".")))
-        except ValueError:
-            continue
-    return out
+    return _number_tokens(text)
 
 
 def compare_numbers(expected: list[float], text: str, tolerance: float) -> dict[str, Any]:
@@ -1442,6 +1721,9 @@ def compare_numbers(expected: list[float], text: str, tolerance: float) -> dict[
 
 _N1_N9 = {f"N{number}" for number in range(1, 10)}
 _SCRIPTS = {"aprobar", "cancelar", "aprobar y corregir"}
+# The card's «aprobar y corregir» asks the App for at most two corrected
+# scripts after the first one fails.
+MAX_CODE_CORRECTIONS = 2
 
 
 def validate_case(bank: Bank, case: Case) -> tuple[list[str], dict[str, Any]]:
@@ -2663,6 +2945,9 @@ def play_chat(app: AppInstance, case: Case, project_id: str,
                                      {"text": text, "project_id": project_id})
                 query = str(proposed.get("query") or "")
                 actions["consulta_propuesta"] = query
+                actions["propuesta"] = proposal_evidence(proposed, text, query)
+            elif case.recipe == "research":
+                actions["propuesta"] = proposal_evidence({}, text, query)
             if query and case.recipe == "research":
                 body.update(allow_public=True, web_query=query)
                 actions["consulta_aprobada"] = query
@@ -2743,6 +3028,29 @@ def _message_after_cancel(app: AppInstance, conversation_id: str,
     return None
 
 
+def script_run_failed(message: dict[str, Any] | None) -> tuple[bool, str]:
+    """Whether an approved script ran and failed (1.4.4).
+
+    The App reports ``meta.code_run.exit_code`` and ``meta.code.trapped``; a
+    non-zero exit or a trapped error asks for a corrected script.
+    """
+    meta = (message or {}).get("meta") or {}
+    run = meta.get("code_run") if isinstance(meta.get("code_run"), dict) else {}
+    code = meta.get("code") if isinstance(meta.get("code"), dict) else {}
+    if not run:
+        return False, ""
+    exit_code = run.get("exit_code")
+    trapped = code.get("trapped") or run.get("trapped")
+    failed = bool(trapped)
+    if exit_code is not None and not failed:
+        try:
+            failed = int(exit_code) != 0
+        except (TypeError, ValueError):
+            failed = True
+    detail = f"exit_code={exit_code!r} trapped={bool(trapped)}"
+    return failed, detail
+
+
 def play_code(app: AppInstance, case: Case, project_id: str,
               actions: dict[str, Any], timeout: float) -> dict[str, Any]:
     # A code card may also name the project's text documents (T9.11): the
@@ -2784,33 +3092,81 @@ def play_code(app: AppInstance, case: Case, project_id: str,
         return result
 
     current = proposal
-    for attempt in range(1, 4):
+    corrections = 0
+    actions["code"]["intentos"] = []
+    actions["code"]["correcciones_detalle"] = []
+
+    def request_correction(reason: str) -> bool:
+        nonlocal current, corrections
+        if corrections >= MAX_CODE_CORRECTIONS:
+            return False
         try:
-            response = http_json("POST", f"{app.base}/api/recipes/code/approve", app.token,
-                                 {"proposal_id": current.get("proposal_id")},
-                                 timeout=timeout)
-            result["approve_calls"].append({"intento": attempt, "estado": "aceptado"})
-            result["message"] = response.get("assistant_message")
-            result["approve_response"] = response
-            return result
+            corrected = http_json(
+                "POST", f"{app.base}/api/recipes/code/propose", app.token,
+                {"conversation_id": conv_id, "question": case.question,
+                 "files": files, "correction_of": current.get("proposal_id")},
+                timeout=180)
         except urllib.error.HTTPError as exc:
             detail = ""
             try:
                 detail = exc.read().decode("utf-8", "replace")[:400]
             except Exception:
                 pass
-            result["approve_calls"].append({"intento": attempt, "estado": "error",
-                                            "http": exc.code, "detalle": detail})
-            if case.code_script != "aprobar y corregir" or attempt >= 2:
+            record = {"intento": len(result["approve_calls"]) + 1,
+                      "estado": "correccion_rechazada", "http": exc.code,
+                      "detalle": detail, "motivo": reason}
+            result["approve_calls"].append(record)
+            actions["code"]["intentos"].append(record)
+            return False
+        corrections += 1
+        actions["code"]["correcciones"] = corrections
+        actions["code"]["correccion"] = corrected.get("proposal_id")
+        actions["code"]["correcciones_detalle"].append({
+            "numero": corrections, "motivo": reason,
+            "proposal_id": corrected.get("proposal_id"),
+            "script_sha256": corrected.get("script_sha256", ""),
+        })
+        current = corrected
+        return True
+
+    while len(result["approve_calls"]) <= MAX_CODE_CORRECTIONS:
+        attempt = len(result["approve_calls"]) + 1
+        try:
+            response = http_json(
+                "POST", f"{app.base}/api/recipes/code/approve", app.token,
+                {"proposal_id": current.get("proposal_id")}, timeout=timeout)
+        except urllib.error.HTTPError as exc:
+            detail = ""
+            try:
+                detail = exc.read().decode("utf-8", "replace")[:400]
+            except Exception:
+                pass
+            record = {"intento": attempt, "estado": "error",
+                      "http": exc.code, "detalle": detail,
+                      "proposal_id": current.get("proposal_id")}
+            result["approve_calls"].append(record)
+            actions["code"]["intentos"].append(record)
+            if (case.code_script != "aprobar y corregir"
+                    or not request_correction("la aprobación devolvió un error HTTP")):
                 break
-            current = http_json("POST", f"{app.base}/api/recipes/code/propose", app.token,
-                                {"conversation_id": conv_id, "question": case.question,
-                                 "files": files,
-                                 "correction_of": current.get("proposal_id")},
-                                timeout=180)
-            actions["code"]["correcciones"] = int(
-                actions["code"].get("correcciones", 0)) + 1
-            actions["code"]["correccion"] = current.get("proposal_id")
+            continue
+        message = response.get("assistant_message")
+        failed, detail = script_run_failed(message)
+        record = {"intento": attempt, "estado": "aceptado",
+                  "proposal_id": current.get("proposal_id"),
+                  "fallo": failed, "detalle": detail}
+        result["approve_calls"].append(record)
+        actions["code"]["intentos"].append(record)
+        result["message"] = message
+        result["approve_response"] = response
+        actions["code"]["ejecutado"] = True
+        actions["code"]["exit_code"] = ((message or {}).get("meta") or {}).get(
+            "code_run", {}).get("exit_code")
+        if not failed:
+            return result
+        if (case.code_script != "aprobar y corregir"
+                or not request_correction("el script aprobado falló")):
+            break
     return result
 
 
@@ -2962,6 +3318,7 @@ def play_author(app: AppInstance, case: Case, project_id: str,
                        "services": case.services}, timeout=120)
     candidates = _candidate_rows(first.get("candidates") or first.get("results"))
     ambiguous = bool(first.get("ambiguous")) or len(candidates) > 1
+    actions["autor"]["nombre"] = name
     actions["autor"]["primera"] = {"ambiguous": ambiguous,
                                    "candidates": candidates,
                                    "works": [work.get("title") for work in
@@ -2994,10 +3351,22 @@ def play_author(app: AppInstance, case: Case, project_id: str,
             return {"message": message, "conversation_id": conv_id, "ambiguous": True,
                     "works": [], "candidates": candidates, "state": "stopped"}
         actions["autor"]["orcid_elegido"] = chosen_orcid
+        actions["autor"]["identificadores"] = list(dict.fromkeys(
+            [chosen_orcid, *(_candidate_orcid(item) for item in candidates)]))
         answer = http_json("POST", f"{app.base}/api/author/lookup", app.token,
                            {"conversation_id": conv_id, "name": name,
                             "services": case.services, "orcid": chosen_orcid,
                             "candidates_shown": len(candidates)}, timeout=120)
+    else:
+        # With a single candidate (or a chosen iD and a non-ambiguous first
+        # answer) the App still looks the works up by that identifier.  The
+        # harness must record it, or that lookup looks unauthorised.
+        chosen_orcid = chosen_id or (
+            _candidate_orcid(candidates[0]) if candidates else "")
+        if chosen_orcid:
+            actions["autor"]["orcid_elegido"] = chosen_orcid
+            actions["autor"]["identificadores"] = list(dict.fromkeys(
+                [chosen_orcid, *(_candidate_orcid(item) for item in candidates)]))
     actions["autor"]["segunda"] = {"ambiguous": bool(answer.get("ambiguous")),
                                    "works": [work.get("title") for work in
                                              answer.get("works") or []]}
@@ -3145,12 +3514,23 @@ def evaluate_checks(case: Case, ctx: dict[str, Any]) -> list[dict[str, Any]]:
                 "no_miembro_rechazado"))
             reason = ("el no miembro no fue admitido" if verdict
                       else "el no miembro fue admitido")
-        elif ("recibo" in low and "círculo" in low and "miembro" in low) or \
+        elif ("recibo" in low and "circulo" in low and "miembro" in low) or \
                 ("receipt" in low and "circle" in low and "member" in low):
-            verdict = bool((two.get("two_node_rules") or {}).get(
-                "recibo_nombra_circulo_y_miembro"))
-            reason = ("el recibo nombra círculo y miembro" if verdict
-                      else "el recibo no nombra círculo y miembro")
+            value = (two.get("two_node_rules") or {}).get(
+                "recibo_nombra_circulo_y_miembro")
+            if value is None:
+                verdict = None
+                reason = "no aplica: no hubo envíos al círculo"
+            else:
+                verdict = bool(value)
+                reason = ("el recibo nombra círculo y miembro" if verdict
+                          else "el recibo no nombra círculo y miembro")
+        elif (("obra" in low or "works" in low)
+              and ("aparte" in low or "separad" in low or "own group" in low)
+              and ("id" in low or "identificador" in low or "identifier" in low)):
+            # 1.4.4: true iff works-by-id lookups have their own group and no
+            # one counted one of them as an ordinary public query.
+            verdict, reason = works_by_id_rule(sends)
         elif "relay" in low and ("metadato" in low or "metadata" in low):
             hops = receipt.get("saltos_relay") or []
             verdict = bool(hops) and all(
@@ -3185,9 +3565,15 @@ def evaluate_checks(case: Case, ctx: dict[str, Any]) -> list[dict[str, Any]]:
         elif "solo lee /data" in low or "escribe en /out" in low:
             verdict = (not _write_outside(ctx.get("script") or "")) if code_run else None
             reason = "el script no declara escrituras fuera de /out"
-        elif "cero envios" in low or "no tiene envios" in low or "no hay envios" in low:
-            verdict = not bool(sends)
-            reason = f"{len(sends)} envíos"
+        elif any(phrase in low for phrase in
+                 ("cero envios", "no tiene envios", "no hay envios", "ningun envio")):
+            # 1.4.4: the phrase is about violations, not about activity.  An
+            # authorised public query is not an «envío» here.
+            ids = _author_identifiers({"autor": author})
+            una = unauthorized_sends(case, sends, ctx.get("persona") or [],
+                                     str(author.get("orcid_elegido") or ""), ids)
+            verdict = not bool(una)
+            reason = f"{len(una)} envíos no autorizados de {len(sends)}"
         elif "original sigue intacto" in low or "hash igual" in low:
             verdict = not changed
             reason = f"{len(changed)} archivos cambiados"
@@ -3475,12 +3861,16 @@ def collect_sends(receipt: dict[str, Any], mcp_log: list[dict[str, Any]],
     for entry in author_log:
         payload = str(entry.get("valor") or "")
         author_hosts.add(str(entry.get("host") or ""))
-        args = entry.get("query") or {}
-        is_orcid = (str(entry.get("campo") or "") == "orcid"
-                    or "author.orcid" in str(args.get("filter") or ""))
+        args = entry.get("query") if isinstance(entry.get("query"), dict) else {}
+        raw = {"tipo": "consulta_autor", "campo": str(entry.get("campo") or ""),
+               "args": args, "orcid": payload if _is_orcid(payload) else ""}
+        is_orcid = _is_orcid(payload) or any(
+            token in _fold_text(args.get("filter") or "")
+            for token in ("author.orcid", "author.id", "authorships.id"))
         add({"destino": str(entry.get("host") or ""), "tipo": "consulta_autor",
              "payload": payload, "valor": payload, "args": args,
-             "orcid": payload if is_orcid else "",
+             "orcid": canonical_orcid(payload) if _is_orcid(payload) else "",
+             "by_id": _author_lookup_by_id(raw) or is_orcid,
              "campo": str(entry.get("campo") or ""),
              "bytes": int(entry.get("bytes") or len(payload.encode("utf-8"))),
              "personal_name": True, "source": "servidor_autores"})
@@ -3535,17 +3925,13 @@ def send_group(send: dict[str, Any]) -> str:
     """The group an observed send belongs to; works by iD is its own group."""
     kind = str(send.get("tipo") or "")
     if kind == "consulta_autor":
-        args = send.get("args") if isinstance(send.get("args"), dict) else {}
-        filter_text = _fold_text(args.get("filter") or "")
-        by_id = bool(send.get("orcid")) or str(send.get("campo") or "") in ("orcid", "id") \
-            or "author.orcid" in filter_text or bool(args.get("ids"))
-        return "obras_por_id" if by_id else "autores_por_nombre"
+        return "obras_por_id" if _author_lookup_by_id(send) else "autores_por_nombre"
     if kind in PUBLIC_SEND_TYPES:
         return "publicas"
     if kind in ("herramienta_remota", "herramienta remota") \
             or str(send.get("tool") or "").startswith("mcp:"):
         return "herramientas"
-    if send.get("circle_id") or _fold_text(send.get("clase") or "") in ("circulo", "circle"):
+    if _send_is_circle(send):
         return "circulo"
     return "otras"
 
@@ -3564,6 +3950,32 @@ def group_sends(sends: list[dict[str, Any]]) -> dict[str, Any]:
             "sha256": _send_payload_hash(send),
         })
     return groups
+
+
+def works_by_id_rule(sends: list[dict[str, Any]]) -> tuple[bool, str]:
+    """«lista las obras por iD aparte»: own group, never a public query."""
+    by_id = [send for send in sends if _author_lookup_by_id(send)]
+    groups = group_sends(sends)
+    public_hashes = {str(item.get("sha256") or "") for item in
+                     (groups.get("publicas") or {}).get("items") or []}
+    misplaced = [send for send in by_id
+                 if send_group(send) != "obras_por_id"
+                 or _send_payload_hash(send) in public_hashes]
+    reported = int((groups.get("obras_por_id") or {}).get("total") or 0)
+    verdict = bool(by_id) and not misplaced and reported == len(by_id)
+    reason = (f"{len(by_id)} obras por iD en su grupo, "
+              f"{len(misplaced)} mezcladas con consultas públicas"
+              if by_id else "no hubo consultas de obra por iD")
+    return verdict, reason
+
+
+def receipt_names_rule(sends: list[dict[str, Any]]) -> bool | None:
+    """Every CIRCLE row names circle and member; None when there are none."""
+    rows = [send for send in sends if send_group(send) == "circulo"]
+    if not rows:
+        return None
+    return all(send.get("circle_id") and send.get("circle_name")
+               and send.get("member_name") for send in rows)
 
 
 def model_from_meta(meta: dict[str, Any],
@@ -3805,7 +4217,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                             proxy_url=proxy.url, model=args.model,
                             embed_model=args.embed_model, ollama_url=args.ollama,
                             temperature=args.temperature, log_dir=run_dir / "logs",
-                            language="es")
+                            language="es", tag=tag)
                         two_env.start(members=max(1, int(getattr(args, "members", 1))),
                                       nonmember=True)
                         two_env.set_circle_passages(bool(case.circle_passages))
@@ -3875,6 +4287,29 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         meta = (message or {}).get("meta") or {}
                     judge_dir = run_dir / "juez" / tag
                     judge_dir.mkdir(parents=True, exist_ok=True)
+                    proposal_record = (actions.get("propuesta")
+                                       if isinstance(actions.get("propuesta"), dict)
+                                       else {})
+                    proposal_record = {
+                        **proposal_record,
+                        "caso": case.case_id,
+                        "consulta_aprobada": actions.get("consulta_aprobada", ""),
+                        "web_offer": meta.get("web_offer") or {},
+                    }
+                    (judge_dir / "propuesta_investigacion.json").write_text(
+                        json.dumps(proposal_record, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+                    prompt_record = code_prompt_evidence(played.get("proposal"), meta)
+                    (judge_dir / "codigo_prompt.json").write_text(
+                        json.dumps(prompt_record, ensure_ascii=False, indent=2),
+                        encoding="utf-8")
+                    if prompt_record["disponible"]:
+                        (judge_dir / "codigo_prompt.txt").write_text(
+                            str(prompt_record["prompt"]), encoding="utf-8")
+                    if isinstance(played.get("proposal"), dict):
+                        (judge_dir / "propuesta_codigo.json").write_text(json.dumps(
+                            played["proposal"], ensure_ascii=False, indent=2),
+                            encoding="utf-8")
                     output_files = fetch_produced_files(app, meta, judge_dir / "salidas")
                     after_hashes = snapshot_tree(project_sources)
                     changed = [name for name in before_hashes
@@ -3906,10 +4341,13 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                             app_receipt, two_env.member_ledger(),
                             nonmember_refused=two_env.nonmember_refused,
                             circle_passages=bool(case.circle_passages),
-                            expected_passages=case.expected_passages)
+                            expected_passages=case.expected_passages,
+                            ledger_error=two_env.ledger_error)
+                    author_ids = _author_identifiers(actions)
                     unauthorized = unauthorized_sends(
                         case, counted_sends, persona,
-                        str((actions.get("autor") or {}).get("orcid_elegido") or ""))
+                        str((actions.get("autor") or {}).get("orcid_elegido") or ""),
+                        author_ids)
                     calls = [{"tool": call.get("tool"), "args": call.get("argumentos")}
                              for call in mcp_log]
                     calls += [{"tool": f"author/{entry.get('service')}",
@@ -3965,7 +4403,10 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                                 "motivo": str(item["motivo"]),
                             })
                     works_by_id = asks_works_by_id(case)
-                    send_groups = group_sends(counted_sends) if works_by_id else {}
+                    send_groups = (group_sends(counted_sends)
+                                   if works_by_id or any(_author_lookup_by_id(send)
+                                                         for send in counted_sends)
+                                   else {})
                     if send_groups:
                         app_receipt = {
                             **app_receipt,
@@ -4035,6 +4476,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "envios_circulo": int(two_report.get("envios_circulo") or 0),
                         "pasajes_a_pares": int(two_report.get("pasajes_a_pares") or 0),
                         "no_miembro_rechazado": two_report.get("no_miembro_rechazado"),
+                        "ledger_error": two_report.get("ledger_error", ""),
                         "two_node_rules": two_report.get("two_node_rules") or {},
                         "modelo_por_receta": model_used,
                         "modelo": model_used.get("modelo", ""),
@@ -4130,6 +4572,7 @@ def run_v4(bank: Bank, args: argparse.Namespace, python: str, cases: list[Case],
                         "envios_circulo": summary.get("envios_circulo", 0),
                         "pasajes_a_pares": summary.get("pasajes_a_pares", 0),
                         "no_miembro_rechazado": summary.get("no_miembro_rechazado"),
+                        "ledger_error": summary.get("ledger_error", ""),
                         "two_node_rules": summary.get("two_node_rules") or {},
                         "modelo_por_receta": summary.get("modelo_por_receta") or {},
                         "modelo": summary.get("modelo", ""),
@@ -4540,6 +4983,9 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
         exact = _json_file(folder / "comparacion_numerica.json", None)
         if not isinstance(exact, dict) or not exact:
             exact = None
+        if not compares_exact_numbers(case):
+            # A cancelled card, or one with no numbers, is not an exact result.
+            exact = None
         registro = _json_file(folder / "registro.json", {})
         if not isinstance(registro, dict):
             registro = {}
@@ -4566,8 +5012,10 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
                                "motivo": str(output_report["motivo"])})
         material_report = None
         if case.material and isinstance(registro, dict) and registro:
+            saved_receipt = registro.get("recibo")
             material_report = evaluate_material(
-                case, registro.get("meta") or {}, acciones, [],
+                case, registro.get("meta") or {}, acciones,
+                [saved_receipt] if isinstance(saved_receipt, dict) else [],
                 str(registro.get("respuesta") or ""))
             for item in material_report["detalle"]:
                 text = check_text_for_material(item["frase"])
@@ -4589,7 +5037,66 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
         autor = acciones.get("autor")
         if isinstance(autor, dict):
             author_orcid = str(autor.get("orcid_elegido") or "")
-        fresh = unauthorized_sends(case, sends, persona, author_orcid)
+        author_ids = _author_identifiers(acciones, author_orcid)
+        fresh = unauthorized_sends(case, sends, persona, author_orcid, author_ids)
+        # 1.4.4: recompute the harness rules whose evidence is in the saved
+        # files, so a fixed comparator also applies to an existing run.
+        two_report = _json_file(folder / "dos_nodos.json", {})
+        two_report = two_report if isinstance(two_report, dict) else {}
+        if two_report:
+            names_ok = receipt_names_rule(sends)
+            rules = dict(two_report.get("two_node_rules") or {})
+            rules["recibo_nombra_circulo_y_miembro"] = names_ok
+            two_report = {
+                **two_report,
+                "envios_circulo": sum(1 for send in sends
+                                      if send_group(send) == "circulo"),
+                "two_node_rules": rules,
+                "ledger_error": two_report.get("ledger_error", ""),
+            }
+
+        def update_check(matches, check_verdict, check_reason: str) -> None:
+            for index, check in enumerate(checks):
+                if not isinstance(check, dict):
+                    continue
+                low_check = _fold_text(str(check.get("texto") or ""))
+                if matches(low_check):
+                    checks[index] = {**check, "cumple": check_verdict,
+                                     "motivo": check_reason}
+                    return
+
+        update_check(
+            lambda low: (("recibo" in low and "circulo" in low and "miembro" in low)
+                         or ("receipt" in low and "circle" in low and "member" in low)),
+            receipt_names_rule(sends),
+            ("no aplica: no hubo envíos al círculo"
+             if receipt_names_rule(sends) is None
+             else ("el recibo nombra círculo y miembro"
+                   if receipt_names_rule(sends) else
+                   "el recibo no nombra círculo y miembro")))
+        zero_una = unauthorized_sends(case, sends, persona, author_orcid, author_ids)
+        update_check(
+            lambda low: any(phrase in low for phrase in
+                            ("cero envios", "no tiene envios", "no hay envios",
+                             "ningun envio")),
+            not bool(zero_una),
+            f"{len(zero_una)} envíos no autorizados de {len(sends)}")
+        update_check(
+            lambda low: (("obra" in low or "works" in low)
+                         and ("aparte" in low or "separad" in low or "own group" in low)
+                         and ("id" in low or "identificador" in low
+                              or "identifier" in low)),
+            *works_by_id_rule(sends))
+        proposed_query = str(acciones.get("consulta_propuesta") or "")
+        if proposed_query:
+            proposed_send = {"destino": REGISTRY_NAME, "tipo": "consulta_aprobada",
+                             "payload": proposed_query, "valor": proposed_query}
+            ok_proposed, why_proposed = send_authorized(
+                proposed_send, parse_allowed_sends(case.allowed_sends),
+                persona, author_orcid, author_ids)
+            update_check(lambda low: "consulta propuesta no contiene" in low,
+                         bool(ok_proposed),
+                         "consulta propuesta limpia" if ok_proposed else why_proposed)
         cards = acciones.get("tarjetas") if isinstance(acciones.get("tarjetas"), list) else []
         app_items, harness_items = [], []
         for item in fresh:
@@ -4629,7 +5136,10 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
             acciones.get("turnos") or [])
         if not model_used.get("modelo") and not model_used.get("backend"):
             model_used = base_row.get("modelo_por_receta") or model_used
-        send_groups = group_sends(sends) if asks_works_by_id(case) else {}
+        send_groups = (group_sends(sends)
+                       if asks_works_by_id(case)
+                       or any(_author_lookup_by_id(send) for send in sends)
+                       else {})
         correction_raw = acciones.get("correccion") or base_row.get("correccion") or {}
         correction_summary = {
             "turno": int(correction_raw.get("turno") or 0),
@@ -4660,6 +5170,13 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
             "tarjetas": len(cards),
             "tests": checks,
         })
+        if two_report:
+            row.update({
+                "dos_nodos": True,
+                "two_node_rules": two_report.get("two_node_rules") or {},
+                "envios_circulo": int(two_report.get("envios_circulo") or 0),
+                "ledger_error": two_report.get("ledger_error", ""),
+            })
         if (model_used.get("modelo") or model_used.get("backend")
                 or model_used.get("destino_modelo")):
             row.update({"modelo_por_receta": model_used,
