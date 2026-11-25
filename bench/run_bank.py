@@ -4967,6 +4967,15 @@ def rescore_run(bank: Bank, run_dir: Path, args: argparse.Namespace) -> int:
             print(f"La ficha {case_id} ya no está en el banco; no se puede repuntuar.")
             return 2
         folder = juez_root / tag
+        saved_row = base_by_tag.get(tag) or {}
+        if str(saved_row.get("estado") or "") in ("error", "timeout"):
+            # A technical failure has no evidence to re-score: it stays a
+            # technical failure in the tables, with its original fields.
+            rows.append({**saved_row, "caso": case_id, "rep": rep,
+                         "nivel": case.level,
+                         "capacidades": list(case.capabilities)})
+            diagnostics.append(f"{tag}: fallo técnico en la corrida; se conserva sin repuntuar")
+            continue
         for needed in ("envios.json", "acciones.json", "comprobaciones.json",
                        "permisos.json", "comparacion_numerica.json"):
             if not (folder / needed).is_file():

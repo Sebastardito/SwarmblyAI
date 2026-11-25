@@ -476,6 +476,15 @@ Archivos:      informe.md
 Resultado exacto: 12 345,6
 Envíos permitidos: ninguno
 ```
+
+```text
+ID:            ERR-01
+Nivel:         N9
+Capacidades:   círculo
+Pregunta:      Una observación que falló antes de la pregunta.
+Dos nodos:     sí
+Envíos permitidos: ninguno
+```
 """
     root = _bank_v4(tmp_path, cards)
     run = root / "salidas" / "run1"
@@ -554,6 +563,12 @@ Envíos permitidos: ninguno
                   "envios_no_autorizados": 0, "comprobaciones_ok": 0,
                   "comprobaciones_total": 0, "exacto": None, "permisos": {},
                   "tarjetas": 0} for tag in tags]
+    # a technical failure has no judge folder and must not stop the rescore
+    summaries.append({"caso": "ERR-01", "rep": 1, "nivel": "N9", "capacidades": [],
+                      "estado": "error", "error": "TwoNodeError: join timeout",
+                      "envios": 0, "envios_no_autorizados": 0,
+                      "comprobaciones_ok": 0, "comprobaciones_total": 0,
+                      "exacto": None, "permisos": {}, "tarjetas": 0})
     (run / "resumen.json").write_text(json.dumps({
         "run_id": "run1", "fecha_utc": "2026-11-21T00:00:00Z",
         "modelo": "fake:7b", "arnes": "1.4.3", "casos": summaries,
@@ -578,6 +593,7 @@ Envíos permitidos: ninguno
     assert by_case["CIR-01"]["two_node_rules"][
         "recibo_nombra_circulo_y_miembro"] is True
     assert by_case["CAN-01"]["exacto"] is None
+    assert by_case["ERR-01"]["estado"] == "error"
 
 
 # --------------------------------------------------------------------------- live
