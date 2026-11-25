@@ -6,11 +6,10 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
-VENV_PYTHON = ROOT / ".venv" / "bin" / "python"
 sys.path.insert(0, str(ROOT / "bench"))
+sys.path.insert(0, str(ROOT / "tests"))
+import bench_app_support as app_support  # noqa: E402
 import run_bank as rb  # noqa: E402
 import run_node_loss as loss  # noqa: E402
 import run_team as team  # noqa: E402
@@ -65,7 +64,7 @@ def test_v5_card_fields_are_parsed_and_validated(tmp_path):
     root = _bank_v5(tmp_path, CARD)
     bank = rb.detect_bank(root)
     cases = rb.parse_cases(bank.cases_file)
-    assert rb.HARNESS_VERSION == "1.4.3"
+    assert rb.HARNESS_VERSION == "1.4.4"
     assert len(cases) == 1
     case = cases[0]
     assert case.two_node is True
@@ -219,10 +218,9 @@ def test_two_node_check_phrases_evaluate_the_report():
     assert tn.two_node_check(checks, report)[1]["cumple"] is False
 
 
-@pytest.mark.skipif(not VENV_PYTHON.is_file(),
-                    reason="the App venv is not installed in this clone")
-def test_two_node_report_fields_with_the_real_app_on_loopback(tmp_path):
+def test_two_node_report_fields_with_the_real_app_on_loopback(tmp_path, monkeypatch):
     """Live smoke: owner + approved member + non-member, all on loopback."""
+    python = app_support.require_app_python(monkeypatch)
     from fake_ollama import FakeOllama
     from run_bank import AppInstance
     from run_team import settings_for
@@ -235,14 +233,14 @@ def test_two_node_report_fields_with_the_real_app_on_loopback(tmp_path):
     settings = settings_for(model="fake:7b", embed_model="nomic-embed-text",
                             ollama_url=fake.url, local_roles=False,
                             p2p_port=rb.free_port())
-    app = AppInstance(str(VENV_PYTHON), work / "owner" / "datos",
+    app = AppInstance(python, work / "owner" / "datos",
                       work / "owner" / "sources", settings,
                       "http://127.0.0.1:9", logs / "owner.log")
     env = None
     try:
         app.start()
         env = tn.TwoNodeEnv(
-            owner=app, python=str(VENV_PYTHON), work_root=work / "nodes",
+            owner=app, python=python, work_root=work / "nodes",
             proxy_url="http://127.0.0.1:9", model="fake:7b",
             embed_model="nomic-embed-text", ollama_url=fake.url,
             temperature=0.0, log_dir=logs)
