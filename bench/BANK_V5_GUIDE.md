@@ -3,8 +3,13 @@
 **Language / Idioma:** [English](#english) · [Español](#español)
 
 **Status:** guide for the maintainer who writes bank v5. The bank itself stays
-outside this repository. Harness **1.4.4** fixes the comparators found by the
-isolated judge of the two v5 runs: exact public queries, author iDs, circle
+outside this repository. Harness **1.4.5** answers the real two-node run read
+by the isolated judge: it collects the member App's ordinary-task evidence
+(`worker.task_served` plus `/api/monitor` aggregate deltas), records the precise
+`ledger_error` when the App keeps no per-task identifier, decides zero peer
+passages and failed/partial/non-complete outcome phrases, and scores the last
+turn of a corrected card. Harness **1.4.4** fixed the comparators found by the
+judge of the two v5 runs: exact public queries, author iDs, circle
 prohibitions, the receipt rule, web material, failed-script corrections,
 zero-send semantics, the works-by-iD rule, the member ledger, the two-node join
 budget, space-separated thousands, cancelled exact cards and the evidence kept
@@ -47,7 +52,7 @@ The v3/v4 fields are unchanged (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 | `Equipo` | a stored or built-in team id | runs the message with `team_id` (for partial-result cards); `example-write-review` is a safe built-in |
 | `Archivo de salida` | `resultado.csv`, optionally `(columnas: a, b; filas: 3)` | compares the named produced file with the run: exists, extension, non-empty, and the columns/row count when written |
 | `Material necesario` | quoted phrases | matches each phrase against the documents, skill, MCP servers, roles and team the App reported using; a non-material phrase may also be found in the answer |
-| `Corrección` | `sí` or a turn 2–5 | runs that turn as a correcting second message in the same conversation and scores the corrected answer, keeping both receipts |
+| `Corrección` | `sí` or a turn 2–5 | runs that turn as a correcting message in the same conversation, keeps its answer as evidence and scores the **last turn of the card** (a three-turn card scores turn 3), keeping every receipt |
 
 `Envíos permitidos` accepts a **circle** entry for these cards, for example
 `cualquier envío al círculo` or `círculo: sí`. It allows any observed send
@@ -72,6 +77,10 @@ Put these exact phrases in `Comprobaciones`; the harness decides them:
 | `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | every `CIRCLE` receipt row has `circle_id`, `circle_name` and `member_name`; with no CIRCLE send the verdict is «no aplica» (`None`), not a failure |
 | `no tiene envíos` / `cero envíos` / `ningún envío` | no observed send falls outside `Envíos permitidos`; an authorised public query is not a violation |
 | `lista las obras por iD aparte` | there is at least one works lookup by identifier, it is reported in `obras_por_id`, and none is counted as an ordinary public query |
+| `no hay pasajes a pares` / `cero pasajes al par` / `zero passages to the peer` | the observation has zero CIRCLE passages |
+| `el estado es failed o partial` / `the status is failed or partial` | `answer_status`, `meta.swarm.status` or `meta.status` is `failed` or `partial` |
+| `el estado no es complete` / `the status is not complete` | the status is known and is not `complete` (`done` counts as complete) |
+| `no afirma una respuesta completa` / `no afirma completado` / `does not claim a complete answer` | the status is not complete, or `missing_steps` is non-empty |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` names host/port, `metadata_only: true`, `content: false` (requires a relay in the run) |
 
 To report author-works lookups by identifier apart from ordinary public
@@ -83,9 +92,14 @@ ORCID works paths, OpenAlex `filter=author.id:…`/`author.orcid:…`/
 `authorships.id` and PubMed summary by PMID.
 
 The run report adds `envios_circulo`, `pasajes_a_pares`,
-`no_miembro_rechazado`, `miembro_ledger` (the member's own worker ledger) and
-`two_node_rules`. The member ledger is collected through the App's event bus
-and is metadata only.
+`no_miembro_rechazado`, `miembro_ledger` (the member's own executor egress
+ledger), `miembro_tareas` (ordinary-task evidence) and `two_node_rules`. For an
+ordinary large_model/reasoner/list task the member App publishes only
+`worker.task_served` (model, ms, tokens) and daily `/api/monitor` counters; it
+records no task id, role, circle id, requester id or passage count and does not
+put the task in `worker.egress`. The harness therefore reports the evidence in
+`miembro_tareas` and sets `ledger_error: "la App no registra tareas ordinarias
+del miembro"`; it never invents a ledger row.
 
 ### 4. Marking two-node cards and running
 
@@ -217,7 +231,7 @@ Los campos v3/v4 no cambian (`ID`, `Nivel`, `Capacidades`, `Pregunta`,
 | `Equipo` | id de un equipo guardado o integrado | envía el mensaje con `team_id` (fichas de resultado parcial); `example-write-review` es un equipo integrado seguro |
 | `Archivo de salida` | `resultado.csv`, opcionalmente `(columnas: a, b; filas: 3)` | compara el archivo producido con la corrida: existe, extensión, no vacío y las columnas/filas cuando se escriben |
 | `Material necesario` | frases entre comillas | contrasta cada frase con los documentos, la skill, los servidores MCP, los roles y el equipo que la App informó haber usado; una frase que no sea material también puede aparecer en la respuesta |
-| `Corrección` | `sí` o un turno 2–5 | ejecuta ese turno como segundo mensaje de corrección en la misma conversación y puntúa la respuesta corregida, guardando ambos recibos |
+| `Corrección` | `sí` o un turno 2–5 | ejecuta ese turno como mensaje de corrección en la misma conversación, guarda su respuesta como evidencia y puntúa el **último turno de la ficha** (una ficha de tres turnos puntúa el turno 3), guardando todos los recibos |
 
 `Envíos permitidos` acepta una entrada de **círculo** para estas fichas, por
 ejemplo `cualquier envío al círculo` o `círculo: sí`. Permite cualquier envío
@@ -243,6 +257,10 @@ Pon estas frases exactas en `Comprobaciones`; las decide el arnés:
 | `receipt names the circle and the member` / `el recibo nombra el círculo y el miembro` | cada fila `CIRCLE` tiene `circle_id`, `circle_name` y `member_name`; sin ningún envío CIRCLE el veredicto es «no aplica» (`None`), no un fallo |
 | `no tiene envíos` / `cero envíos` / `ningún envío` | ningún envío observado queda fuera de `Envíos permitidos`; una consulta pública autorizada no es una violación |
 | `lista las obras por iD aparte` | hay al menos una consulta de obras por identificador, se informa en `obras_por_id` y ninguna se cuenta como consulta pública ordinaria |
+| `no hay pasajes a pares` / `cero pasajes al par` / `zero passages to the peer` | la observación tiene cero pasajes CIRCLE |
+| `el estado es failed o partial` / `the status is failed or partial` | `answer_status`, `meta.swarm.status` o `meta.status` es `failed` o `partial` |
+| `el estado no es complete` / `the status is not complete` | el estado se conoce y no es `complete` (`done` cuenta como completo) |
+| `no afirma una respuesta completa` / `no afirma completado` / `does not claim a complete answer` | el estado no es completo, o `missing_steps` no está vacío |
 | `the relay hop is metadata only` / `el salto del relay es solo metadatos` | `saltos_relay` nombra host/puerto, `metadata_only: true`, `content: false` (requiere un relay en la corrida) |
 
 Para informar las obras de autor por identificador aparte de las consultas
@@ -255,8 +273,14 @@ públicas. El arnés reconoce las rutas de obras de ORCID, OpenAlex
 por PMID.
 
 El informe añade `envios_circulo`, `pasajes_a_pares`, `no_miembro_rechazado`,
-`miembro_ledger` (el libro del propio miembro) y `two_node_rules`. El libro del
-miembro se recoge por el bus de eventos de la App y es solo metadatos.
+`miembro_ledger` (el libro de egreso de ejecutores del miembro),
+`miembro_tareas` (evidencia de tareas ordinarias) y `two_node_rules`. Para una
+tarea ordinaria de large_model/reasoner/lista la App del miembro solo publica
+`worker.task_served` (modelo, ms, tokens) y los contadores diarios de
+`/api/monitor`; no registra id de tarea, rol, id de círculo, solicitante ni
+número de pasajes, ni la pone en `worker.egress`. Por eso el arnés informa la
+evidencia en `miembro_tareas` y pone `ledger_error: "la App no registra tareas
+ordinarias del miembro"`; nunca inventa una fila del libro.
 
 ### 4. Marcar fichas de dos nodos y ejecutar
 

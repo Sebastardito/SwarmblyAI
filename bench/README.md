@@ -56,8 +56,23 @@ archivo`; `Cambio de servidor` only needs the turn and a server of the card;
 | `Skill` + `Activar skill` | imports the folder into the project (`POST /api/skills/import`) and activates it only when the card says so; checks `MARCADOR_SKILL.txt` |
 | `Autor` + `Servicios` + `Decisión autor` | drives `POST /api/author/lookup`: cancel, exact name, edited name, or pick one ORCID iD when the first answer is ambiguous; the chosen or only iD is recorded and later works lookups by that iD are authorised and grouped in `obras_por_id` |
 | `Envíos permitidos` | every observed send is compared by code; `consulta exacta «Q»`/`exactamente «Q»` fixes a public query (case, accents, spacing and punctuation folded), `debe contener «X»` requires a term, and `NADA al círculo`/`sin envíos al círculo` forbids CIRCLE. Anything outside the list becomes `envios_no_autorizados.json` with destination, size and content hash (never the content) |
-| `Corrección` | `sí` (turn 2) or a turn 2–5. The correcting message runs as a second turn in the same conversation and the corrected answer is the one scored; the receipts and hashes of both turns are kept and reported. A `Turno 2` that starts like a correction is detected when the field is absent |
+| `Corrección` | `sí` (turn 2) or a turn 2–5. The correcting message runs as a second turn in the same conversation; the correction turn is evidence, and the **last turn of the card** is the scored answer (so a three-turn card scores turn 3). The receipts and hashes of every turn are kept and reported. A `Turno 2` that starts like a correction is detected when the field is absent |
 | `Comprobaciones` | the harness evaluates the checks it can decide and leaves the rest (`cumple: null`) to the judge. If a card asks to list author-works lookups by identifier separately (for example `lista las obras por iD aparte`), those calls are reported in their own `obras_por_id` group (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` in the receipt) instead of being mixed with ordinary public queries |
+
+
+Rules the harness decides from saved metadata:
+
+| Phrase (English or Spanish) | Passes when |
+|---|---|
+| `no hay pasajes a pares` / `cero pasajes al par` / `zero passages to the peer` | the observation has zero CIRCLE passages |
+| `el estado es failed o partial` / `the status is failed or partial` | `answer_status`, `meta.swarm.status` or `meta.status` is `failed` or `partial` |
+| `el estado no es complete` / `the status is not complete` | the same status is known and is not `complete` (`done` counts as complete) |
+| `no afirma una respuesta completa` / `no afirma completado` / `does not claim a complete answer` | the status is not complete, or `missing_steps` is non-empty |
+
+When the App records only aggregate counters for an ordinary member task,
+`miembro_tareas` carries the `worker.task_served` events and the
+`/api/monitor` before/after counters, and `ledger_error` says precisely
+`la App no registra tareas ordinarias del miembro`; no ledger row is invented.
 
 The MCP servers are `bench/mcp_catalog_server.py` (stdio for `local`, Streamable
 HTTP on loopback for `remoto`, with the declared host reached through the App's
@@ -67,7 +82,7 @@ HTTP on loopback for `remoto`, with the declared host reached through the App's
 The run folder now has `juez/<ID>_r<rep>/` (receipt, approval cards, `meta.*`,
 file hashes, marker, numeric comparison, sends, checks, actions, and since
 1.4.4 `propuesta_investigacion.json`, `codigo_prompt.json` and, when reported,
-`codigo_prompt.txt`) and `casos/<ID>_r<rep>_resumen.json` (content-free counts
+`codigo_prompt.txt`; otherwise the JSON says `la App no expone el prompt`) and `casos/<ID>_r<rep>_resumen.json` (content-free counts
 and hashes only). The four tables of step 10 are in `resumen.json` (`tablas`)
 and `resumen.md`. The two-node logs are per observation
 (`logs/<ID>_r<rep>_member-<n>.log` and `..._nonmember.log`).
@@ -86,6 +101,21 @@ non-member; the report adds `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, the member's ledger and the three rules. v3/v4 banks
 keep their `--check`/`--rescore` behaviour. The `--python` option also reads
 `SWARMBLY_APP` and is available as `--app-python`.
+
+Harness **1.4.5** follows the real two-node run read by the isolated judge. The
+member App publishes `worker.task_served` (model, generation time and tokens)
+and keeps daily aggregate counters behind `/api/monitor` (served tasks, time,
+tokens and bytes in/out), but it records no task id, role, circle id, requester
+id or passage count for an ordinary large_model/reasoner/list task, and does not
+put it in the executor egress ledger. The harness now collects that task
+evidence in `miembro_tareas` and records
+`ledger_error: "la App no registra tareas ordinarias del miembro"` when such a
+task was served; it never invents a `miembro_ledger` row. `codigo_prompt.json`
+now says `motivo: "la App no expone el prompt"` when no prompt is available.
+New saved-data rules decide zero peer passages, failed/partial status and
+"does not claim a complete answer"; `--rescore` applies them. With `Corrección`,
+the correction turn remains evidence but the scored answer is the last turn of
+the card.
 
 Harness **1.4.4** closes the defects found by the isolated judge of the two
 sealed v5 runs. A public-search entry may fix the query with
@@ -235,8 +265,24 @@ un servidor de la ficha; las `Comprobaciones` en una sola línea se separan por
 | `Skill` + `Activar skill` | importa la carpeta en el proyecto y la activa solo si la ficha lo dice; comprueba `MARCADOR_SKILL.txt` |
 | `Autor` + `Servicios` + `Decisión autor` | usa `POST /api/author/lookup`: cancelar, nombre exacto, nombre editado o elegir un iD ORCID si la primera respuesta es ambigua; se registra el iD elegido o el único y las consultas de obras por ese iD quedan autorizadas y agrupadas en `obras_por_id` |
 | `Envíos permitidos` | cada envío observado se compara por código; `consulta exacta «Q»`/`exactamente «Q»` fija una consulta pública (mayúsculas, acentos, espacios y puntuación plegados), `debe contener «X»` exige un término y `NADA al círculo`/`sin envíos al círculo` prohíbe CIRCLE. Lo que queda fuera va a `envios_no_autorizados.json` con destino, tamaño y hash (nunca el contenido) |
-| `Corrección` | `sí` (turno 2) o un turno 2–5. El mensaje que corrige se ejecuta como segundo turno en la misma conversación y se puntúa la respuesta corregida; se guardan y se informan los recibos y hashes de ambos turnos. Si no está el campo, se detecta un `Turno 2` que empieza como una corrección |
+| `Corrección` | `sí` (turno 2) o un turno 2–5. El mensaje que corrige se ejecuta como segundo turno en la misma conversación; el turno de corrección es evidencia y la respuesta puntuada es el **último turno de la ficha** (una ficha de tres turnos puntúa el turno 3). Se guardan y se informan los recibos y hashes de todos los turnos. Si no está el campo, se detecta un `Turno 2` que empieza como una corrección |
 | `Comprobaciones` | el arnés evalúa las que puede decidir y deja el resto (`cumple: null`) al juez. Si una ficha pide listar las obras de autor por identificador aparte (por ejemplo `lista las obras por iD aparte`), esas llamadas van a su propio grupo `obras_por_id` (`envios_obras_por_id`, `envios_por_grupo`, `resumen_por_grupo` en el recibo) y no se mezclan con las consultas públicas ordinarias |
+
+
+Reglas que el arnés decide con metadatos guardados:
+
+| Frase (inglés o español) | Pasa cuando |
+|---|---|
+| `no hay pasajes a pares` / `cero pasajes al par` / `zero passages to the peer` | la observación tiene cero pasajes CIRCLE |
+| `el estado es failed o partial` / `the status is failed or partial` | `answer_status`, `meta.swarm.status` o `meta.status` es `failed` o `partial` |
+| `el estado no es complete` / `the status is not complete` | el estado se conoce y no es `complete` (`done` cuenta como completo) |
+| `no afirma una respuesta completa` / `no afirma completado` / `does not claim a complete answer` | el estado no es completo, o `missing_steps` no está vacío |
+
+Cuando la App solo registra contadores agregados de una tarea ordinaria del
+miembro, `miembro_tareas` lleva los eventos `worker.task_served` y los
+contadores de `/api/monitor` antes/después, y `ledger_error` dice exactamente
+`la App no registra tareas ordinarias del miembro`; no se inventa ninguna fila
+del libro.
 
 Los servidores MCP son `bench/mcp_catalog_server.py` (stdio para `local`,
 Streamable HTTP en loopback para `remoto`, con el host declarado a través del
@@ -246,7 +292,7 @@ para `pub.orcid.org`, `api.openalex.org` y `eutils.ncbi.nlm.nih.gov`.
 La carpeta de ejecución tiene `juez/<ID>_r<rep>/` (recibo, tarjetas, `meta.*`,
 hashes, marcador, comparación numérica, envíos, comprobaciones, acciones y,
 desde 1.4.4, `propuesta_investigacion.json`, `codigo_prompt.json` y, cuando la
-App lo informa, `codigo_prompt.txt`) y `casos/<ID>_r<rep>_resumen.json` (solo
+App lo informa, `codigo_prompt.txt`; si no, el JSON dice `la App no expone el prompt`) y `casos/<ID>_r<rep>_resumen.json` (solo
 conteos y hashes, sin contenido). Las cuatro tablas del paso 10 están en
 `resumen.json` (`tablas`) y `resumen.md`. Los registros de dos nodos son por
 observación (`logs/<ID>_r<rep>_member-<n>.log` y `..._nonmember.log`).
@@ -265,6 +311,21 @@ no miembro; el informe añade `envios_circulo`, `pasajes_a_pares`,
 `no_miembro_rechazado`, el libro del miembro y las tres reglas. Los bancos
 v3/v4 conservan su comportamiento de `--check`/`--rescore`. La opción
 `--python` también lee `SWARMBLY_APP` y está disponible como `--app-python`.
+
+El arnés **1.4.5** responde a la corrida real de dos nodos leída por el juez
+aislado. La App del miembro publica `worker.task_served` (modelo, tiempo de
+generación y tokens) y guarda contadores diarios agregados en `/api/monitor`
+(tareas servidas, tiempo, tokens y bytes de entrada/salida), pero no registra
+id de tarea, rol, id de círculo, solicitante ni número de pasajes para una
+tarea ordinaria de large_model/reasoner/lista, ni la pone en el libro de egreso
+de ejecutores. El arnés recoge esa evidencia en `miembro_tareas` y registra
+`ledger_error: "la App no registra tareas ordinarias del miembro"` cuando se
+sirvió una tarea así; nunca inventa una fila de `miembro_ledger`.
+`codigo_prompt.json` ahora dice `motivo: "la App no expone el prompt"` cuando no
+hay prompt. Nuevas reglas con datos guardados deciden cero pasajes a pares,
+estado failed/partial y «no afirma una respuesta completa»; `--rescore` las
+aplica. Con `Corrección`, el turno de corrección sigue siendo evidencia pero la
+respuesta puntuada es el último turno de la ficha.
 
 El arnés **1.4.4** cierra los defectos que encontró el juez aislado de las dos
 corridas v5 selladas. Una entrada de búsqueda pública puede fijar la consulta
