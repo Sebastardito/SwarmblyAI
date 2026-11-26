@@ -1188,13 +1188,15 @@ def main(argv: list[str] | None = None) -> int:
                         nonmember_refused=two_env.nonmember_refused,
                         circle_passages=bool(case.get("pasajes_al_circulo")),
                         expected_passages=case.get("pasajes_esperados"),
-                        ledger_error=two_env.ledger_error)
+                        ledger_error=two_env.ledger_error,
+                        member_tasks=two_env.member_tasks())
                     row.update({
                         "dos_nodos": True,
                         "envios_circulo": report["envios_circulo"],
                         "envios_circulo_detalle": report["envios_circulo_detalle"],
                         "pasajes_a_pares": report["pasajes_a_pares"],
                         "miembro_ledger": report["miembro_ledger"],
+                        "miembro_tareas": report["miembro_tareas"],
                         "ledger_error": report["ledger_error"],
                         "no_miembro_rechazado": report["no_miembro_rechazado"],
                         "two_node_rules": report["two_node_rules"],

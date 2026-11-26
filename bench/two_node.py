@@ -35,6 +35,7 @@ class TwoNodeError(RuntimeError):
 # one retry is allowed before the observation is a technical failure.
 JOIN_TIMEOUT = 90.0
 CIRCLE_TIMEOUT = 90.0
+ORDINARY_TASK_ERROR = "la App no registra tareas ordinarias del miembro"
 
 
 # --------------------------------------------------------------------------- http
@@ -179,6 +180,7 @@ class WorkerLedger:
         self._token = app.token
         self._ws: _WebSocket | None = None
         self._events: list[dict[str, Any]] = []
+        self._tasks: list[dict[str, Any]] = []
         self._lock = threading.Lock()
         self._stop = threading.Event()
         self._ready = threading.Event()
@@ -240,21 +242,39 @@ class WorkerLedger:
                 self._ws = None
                 continue
             for event in events:
+                if not isinstance(event, dict):
+                    continue
+                kind = str(event.get("type") or "")
                 payload = event.get("payload") or {}
-                if event.get("type") != "worker.egress":
-                    continue
-                entries = payload.get("events") if isinstance(payload, dict) else None
-                if not isinstance(entries, list):
-                    self._set_error("worker.egress sin lista de eventos")
-                    continue
-                with self._lock:
-                    self._events.extend(dict(item) for item in entries
-                                        if isinstance(item, dict))
+                if kind == "worker.egress":
+                    entries = payload.get("events") if isinstance(payload, dict) else None
+                    if not isinstance(entries, list):
+                        self._set_error("worker.egress sin lista de eventos")
+                        continue
+                    with self._lock:
+                        self._events.extend(dict(item) for item in entries
+                                            if isinstance(item, dict))
+                elif kind in ("worker.task_served", "worker.executor_served"):
+                    # The ordinary-task evidence the App actually publishes:
+                    # model, time and tokens (no attempt id, role, circle or
+                    # requester).  Keep it as an event, never as a fake peer
+                    # ledger row.
+                    row = {"tipo": kind, "evento_id": str(event.get("id") or ""),
+                           "ts": event.get("ts")}
+                    if isinstance(payload, dict):
+                        row.update(payload)
+                    with self._lock:
+                        self._tasks.append(row)
             time.sleep(0.05)
 
     def drain(self) -> list[dict[str, Any]]:
         with self._lock:
             out, self._events = self._events, []
+        return out
+
+    def drain_tasks(self) -> list[dict[str, Any]]:
+        with self._lock:
+            out, self._tasks = self._tasks, []
         return out
 
     def close(self) -> None:
@@ -323,6 +343,9 @@ class TwoNodeEnv:
         self.circle_passages = False
         self._ledgers: list[WorkerLedger] = []
         self._member_rows: list[dict[str, Any]] = []
+        self._task_rows: list[dict[str, Any]] = []
+        self._member_stats_before: list[dict[str, Any]] = []
+        self._member_stats_after: list[dict[str, Any]] = []
         self.ledger_errors: list[str] = []
         self.join_attempts: list[dict[str, Any]] = []
         self.nonmember_refused = False
@@ -360,6 +383,10 @@ class TwoNodeEnv:
                              "swarm.worker_models": []})
             self.nonmember = self._new_app("nonmember", settings)
         if self.members:
+            # The App's only aggregate for served tasks is /api/monitor; take a
+            # baseline before the first task (metadata only).
+            self._member_stats_before = [self._contribution(member)
+                                         for member in self.members]
             # Subscribe before the circle is built, so no member event can be
             # published before the WebSocket client exists.
             for member in self.members:
@@ -519,12 +546,56 @@ class TwoNodeEnv:
         return {"message": message, "latency_s": round(time.monotonic() - started, 2),
                 "timeout": message is None}
 
+    @staticmethod
+    def _contribution(member: Any) -> dict[str, Any]:
+        """The member's measured contribution counters (no task content)."""
+        try:
+            payload = http_json("GET", f"{member.base}/api/monitor",
+                                member.token, timeout=10)
+        except Exception as exc:           # noqa: BLE001 - reported, not hidden
+            return {"error": f"{type(exc).__name__}: {exc}"[:300]}
+        contribution = ((payload or {}).get("contribution")
+                        if isinstance(payload, dict) else {})
+        contribution = contribution if isinstance(contribution, dict) else {}
+        transferred = (contribution.get("bytes_transferred")
+                       if isinstance(contribution.get("bytes_transferred"), dict)
+                       else {})
+
+        def _int(value: Any) -> int:
+            try:
+                return int(value or 0)
+            except (TypeError, ValueError):
+                return 0
+        return {
+            "tasks_served": _int(contribution.get("tasks_served")),
+            "processing_time_ms": _int(contribution.get("processing_time_ms")),
+            "tokens_generated": _int(contribution.get("tokens_generated")),
+            "bytes_in": _int(transferred.get("in")),
+            "bytes_out": _int(transferred.get("out")),
+        }
+
+    @staticmethod
+    def _stats_delta(before: list[dict[str, Any]],
+                     after: list[dict[str, Any]]) -> dict[str, int]:
+        keys = ("tasks_served", "processing_time_ms", "tokens_generated",
+                "bytes_in", "bytes_out")
+        delta: dict[str, int] = {}
+        for key in keys:
+            total = 0
+            for left, right in zip(before, after):
+                if "error" in left or "error" in right:
+                    continue
+                total += max(0, int(right.get(key) or 0) - int(left.get(key) or 0))
+            delta[key] = total
+        return delta
+
     def _drain_ledgers(self) -> int:
         fresh = 0
         for ledger in self._ledgers:
             rows = ledger.drain()
             fresh += len(rows)
             self._member_rows.extend(rows)
+            self._task_rows.extend(ledger.drain_tasks())
             if ledger.error and ledger.error not in self.ledger_errors:
                 self.ledger_errors.append(ledger.error)
         return fresh
@@ -558,12 +629,60 @@ class TwoNodeEnv:
         self._drain_ledgers()
         return list(self._member_rows)
 
+    def member_tasks(self, wait: float = 0.0) -> dict[str, Any]:
+        """What the member App records for the tasks it served (metadata only).
+
+        The App publishes ``worker.task_served`` with the model, generation
+        time and tokens, and keeps daily aggregate counters (served tasks,
+        time, tokens, bytes in/out) behind ``/api/monitor``.  It records no
+        attempt/task id, role, circle id, requester id or passage count for an
+        ordinary large_model/reasoner/list task, and does not put those tasks
+        in the executor egress ledger.  This method returns the evidence that
+        does exist and a precise ``ledger_error``; it never fabricates rows.
+        """
+        if wait:
+            time.sleep(max(0.0, float(wait)))
+        self._drain_ledgers()
+        after = self._member_stats_after or [
+            self._contribution(member) for member in self.members]
+        before = self._member_stats_before or []
+        events = list(self._task_rows)
+        ordinary = [event for event in events
+                    if str(event.get("tipo")) == "worker.task_served"]
+        executor = [event for event in events
+                    if str(event.get("tipo")) == "worker.executor_served"]
+        delta = self._stats_delta(before, after)
+        note = ""
+        if ordinary or delta.get("tasks_served", 0) > len(executor):
+            note = ORDINARY_TASK_ERROR
+        return {
+            "eventos": events,
+            "eventos_ordinarios": len(ordinary),
+            "eventos_executor": len(executor),
+            "antes": before,
+            "despues": after,
+            "delta": delta,
+            "registro": ("worker.task_served (modelo, ms, tokens) y los "
+                         "contadores diarios de /api/monitor (tareas, tiempo, "
+                         "tokens, bytes); sin id de tarea, rol, círculo, "
+                         "solicitante ni pasajes"),
+            "ids_de_tarea": False,
+            "roles": False,
+            "circle_id": False,
+            "requester_id": False,
+            "ledger_error": note,
+        }
+
     def close(self) -> None:
         for ledger in self._ledgers:
             ledger.close()
             self._member_rows.extend(ledger.drain())
+            self._task_rows.extend(ledger.drain_tasks())
             if ledger.error and ledger.error not in self.ledger_errors:
                 self.ledger_errors.append(ledger.error)
+        if not self._member_stats_after:
+            self._member_stats_after = [self._contribution(member)
+                                        for member in self.members]
         self._ledgers.clear()
         for app in [*self.members, self.nonmember]:
             if app is not None:
@@ -647,10 +766,17 @@ def two_node_report(receipt: dict[str, Any], member_events: list[dict[str, Any]]
                     *, nonmember_refused: bool,
                     circle_passages: bool,
                     expected_passages: bool | None = None,
-                    ledger_error: str = "") -> dict[str, Any]:
+                    ledger_error: str = "",
+                    member_tasks: dict[str, Any] | None = None) -> dict[str, Any]:
     """The new report fields and the three v5 rules for one observation."""
     sends = circle_send_rows(receipt)
     ledger = member_ledger_rows(member_events)
+    task_evidence = member_tasks if isinstance(member_tasks, dict) else {}
+    task_error = str(task_evidence.get("ledger_error") or "")
+    if not task_error and int(task_evidence.get("eventos_ordinarios") or 0) > 0:
+        task_error = ORDINARY_TASK_ERROR
+    errors = [value for value in (ledger_error, task_error) if value]
+    ledger_error = " · ".join(dict.fromkeys(errors))
     member_passages = sum(row["passages"] for row in ledger)
     passages = max(sum(row["passages"] for row in sends), member_passages)
     # 1.4.4: with no CIRCLE send this rule does not apply (None), it is not a
@@ -680,6 +806,7 @@ def two_node_report(receipt: dict[str, Any], member_events: list[dict[str, Any]]
         "pasajes_a_pares": passages,
         "pasajes_ledger_miembro": member_passages,
         "miembro_ledger": ledger,
+        "miembro_tareas": task_evidence,
         "ledger_error": str(ledger_error or ""),
         "no_miembro_rechazado": bool(nonmember_refused),
         "two_node_rules": rules,
