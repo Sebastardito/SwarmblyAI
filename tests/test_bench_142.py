@@ -84,7 +84,7 @@ def make_app():
 
 
 def test_harness_version_is_143():
-    assert rb.HARNESS_VERSION == "1.4.4"
+    assert rb.HARNESS_VERSION == "1.4.5"
 
 
 def test_a_ready_sandbox_is_not_prepared_again(make_app):

@@ -388,6 +388,9 @@ def test_proposal_and_code_prompt_evidence_keep_the_needed_fields():
     assert record["respuesta_app"]["empty"] is False
     prompt = rb.code_prompt_evidence({"prompt": "Escribe un script…"}, {})
     assert prompt["disponible"] and prompt["fuente"] == "propuesta.prompt"
+    missing = rb.code_prompt_evidence({"proposal_id": "p1", "script": "print(1)"}, {})
+    assert missing["disponible"] is False
+    assert missing["motivo"] == "la App no expone el prompt"
 
 
 def test_member_and_non_member_logs_are_per_observation(tmp_path):
@@ -660,7 +663,7 @@ def test_a_circle_send_reaches_the_member_ledger_live(tmp_path, monkeypatch):
 
 
 def test_harness_version_is_144():
-    assert rb.HARNESS_VERSION == "1.4.4"
+    assert rb.HARNESS_VERSION == "1.4.5"
 
 
 def test_quoted_example_terms_of_a_public_entry_are_not_required():
