@@ -207,6 +207,22 @@ def _expected_duplicates(case: dict[str, Any]) -> dict[int, int]:
     return {int(d["n"]): int(d["of"]) for d in case.get("expected_duplicates") or []}
 
 
+# The App writes the status cell in the answer's language (chat._LIST_STATUS)
+# while rows_data keeps the English status: a cell is right when it is the
+# row's status in either language.
+_LIST_STATUS_LABELS = {
+    "answered": ("answered", "respondido"),
+    "missing": ("missing", "sin respuesta"),
+    "disagreement": ("disagreement", "desacuerdo"),
+    "failed": ("failed", "fallido"),
+}
+
+
+def _status_cell_ok(cell: Any, status: Any) -> bool:
+    labels = _LIST_STATUS_LABELS.get(str(status or ""))
+    return bool(labels) and str(cell).strip().lower() in labels
+
+
 def score_list(case: dict[str, Any], preview: dict[str, Any], meta: dict[str, Any],
                sends: int, red: dict[str, Any] | None = None) -> dict[str, Any]:
     """Score one recipe 4 answer against the cells fixed in the case file.
@@ -245,7 +261,8 @@ def score_list(case: dict[str, Any], preview: dict[str, Any], meta: dict[str, An
         and str(header[-1]).strip().lower() in ("estado", "status")
         and len(cells) == total
         and all(isinstance(c, list) and len(c) == 4 for c in cells)
-        and all(str(c[3]) in ("answered", "missing", "disagreement") for c in cells)
+        and all(_status_cell_ok(c[3], (by_n.get(i) or {}).get("status"))
+                for i, c in enumerate(cells, 1))
         and all(str(c[0]) == str(i) and str(c[1]) == str((by_n.get(i) or {}).get("item_cell"))
                 for i, c in enumerate(cells, 1))
     )

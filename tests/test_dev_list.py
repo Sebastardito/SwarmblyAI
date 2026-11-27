@@ -268,3 +268,14 @@ def test_rescore_reuses_the_stored_answer_for_a_list_run(tmp_path):
     assert summary["total"]["aprobados"] == 1
     assert summary["total"]["celdas"] == [7, 7]
     assert (battery / "ejecuciones" / "run1" / "resumen.md").is_file()
+
+
+def test_a_localized_status_cell_counts_and_a_wrong_one_does_not():
+    preview, meta = _output(
+        "CL-01", ["vocal", "consonante", "vocal", "consonante", "vocal", "vocal", "consonante"])
+    for cell in meta["table"]["cells"]:
+        cell[3] = "respondido"
+    assert rd.score_list(CASES["CL-01"], preview, meta, 0)["comprobaciones"]["columnas"] is True
+
+    meta["table"]["cells"][2][3] = "sin respuesta"
+    assert rd.score_list(CASES["CL-01"], preview, meta, 0)["comprobaciones"]["columnas"] is False
