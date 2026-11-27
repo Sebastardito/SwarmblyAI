@@ -70,6 +70,17 @@ def _out_stats(out_dir: Path) -> tuple[int, int, int]:
     return logical, allocated, entries
 
 
+def _roots_stats(roots: list[Path]) -> tuple[int, int, int]:
+    """Sum the output and scratch trees: both count against the disk quota."""
+    logical = allocated = entries = 0
+    for root in roots:
+        part = _out_stats(root)
+        logical += part[0]
+        allocated += part[1]
+        entries += part[2]
+    return logical, allocated, entries
+
+
 def _discard_bytes(out_dir: Path, max_bytes: int | None) -> list[dict[str, Any]]:
     """Delete the largest regular files until the total fits; never follow links."""
     if max_bytes is None:
@@ -225,9 +236,10 @@ class _Watchdog(threading.Thread):
 
     daemon = True
 
-    def __init__(self, out_dir: Path, limits: Any, cancel: threading.Event) -> None:
+    def __init__(self, roots: list[Path], limits: Any,
+                 cancel: threading.Event) -> None:
         super().__init__(name="swarmbly-sandbox-watchdog")
-        self.out_dir = Path(out_dir)
+        self.roots = [Path(root) for root in roots]
         self.limits = limits
         self.cancel = cancel
         self._halt = threading.Event()
@@ -249,7 +261,7 @@ class _Watchdog(threading.Thread):
             self._sample()
 
     def _sample(self) -> None:
-        logical, allocated, entries = _out_stats(self.out_dir)
+        logical, allocated, entries = _roots_stats(self.roots)
         self.max_logical = max(self.max_logical, logical)
         self.max_allocated = max(self.max_allocated, allocated)
         self.max_entries = max(self.max_entries, entries)
@@ -329,24 +341,40 @@ def _trap_reason(done: Any, watchdog: _Watchdog, stderr: str,
     return None
 
 
-def _run_guest(script: str, data_dir: Path, out_dir: Path, limits: Any,
-               wasi: Any, cache_dir: Path, platform_guard: str,
+def _run_guest(script: str, data_dir: Path, out_dir: Path, tmp_dir: Path,
+               limits: Any, wasi: Any, cache_dir: Path, platform_guard: str,
                script_sha256: str) -> dict[str, Any]:
     from wasi_python import Grant
 
     cancel = threading.Event()
-    watchdog = _Watchdog(out_dir, limits, cancel)
+    tmp_dir = Path(tmp_dir)
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    watchdog = _Watchdog([out_dir, tmp_dir], limits, cancel)
     watchdog.start()
     started = time.perf_counter()
     done = None
     guest_error: str | None = None
     try:
+        # Recipe 5 scripts commonly open the input by bare file name
+        # (``pd.read_csv("hive.csv")``).  The guest starts at "/", where a
+        # relative read cannot resolve, so the script runs with its working
+        # directory at the read-only /data.  A relative write then lands in
+        # /data and is refused by the read-only grant; /out stays the only
+        # writable place.  The approved script text is not modified: it is
+        # compiled under its own name after the chdir.
+        wrapped = (
+            "import os\n"
+            "os.chdir('/data')\n"
+            "exec(compile(" + repr(script) + ", '<script>', 'exec'), "
+            "{'__name__': '__main__', '__file__': '<script>'})\n")
         done = wasi.run(
-            ["-c", script],
+            ["-c", wrapped],
             root=False,
             grants=[Grant(data_dir, "/data"),
-                    Grant(out_dir, "/out", writable=True)],
-            env={"HOME": "/nonexistent-home"},
+                    Grant(out_dir, "/out", writable=True),
+                    Grant(tmp_dir, "/tmp", writable=True)],
+            env={"HOME": "/nonexistent-home", "TMPDIR": "/tmp",
+                 "TMP": "/tmp", "TEMP": "/tmp"},
             cache_dir=cache_dir,
             deadline_s=limits.deadline_s,
             memory_bytes=limits.memory_bytes,
@@ -381,12 +409,19 @@ def _run_guest(script: str, data_dir: Path, out_dir: Path, limits: Any,
     files, rejected, collection_truncated = _collect(out_dir, max_total)
     trapped = _trap_reason(done, watchdog, stderr, guest_error)
     ok = trapped is None and done is not None and done.exit_code == 0
+    # A failed run may have left a partial file in /out; it is reported as
+    # partial, never as the result of the run.
+    files_partial = trapped is not None
+    if files_partial:
+        for item in files:
+            item["partial"] = True
 
     return {
         "ok": ok,
         "stdout": stdout,
         "stderr": stderr,
         "files": files,
+        "files_partial": files_partial,
         "trapped": trapped,
         "elapsed_s": round(elapsed, 3),
         "script_sha256": script_sha256,
@@ -502,10 +537,16 @@ def main(argv: list[str] | None = None) -> int:
         script_sha256 = hashlib.sha256(script.encode("utf-8")).hexdigest()
         data_dir = job_dir / "data"
         out_dir = job_dir / "out"
+        # The guest's scratch /tmp is per job.  It must not shadow the
+        # worker's own ``tmp_dir``: the metered pre-warm below reads its
+        # ``warm-data`` from there.
+        scratch_dir = job_dir / "tmp"
+        scratch_dir.mkdir(parents=True, exist_ok=True)
     except Exception as exc:
         _write_json(result_file, {
             "ok": False, "stdout": "", "stderr": f"bad job: {type(exc).__name__}: {exc}",
-            "files": [], "trapped": "error", "elapsed_s": 0.0,
+            "files": [], "files_partial": False, "trapped": "error",
+            "elapsed_s": 0.0,
             "script_sha256": "", "platform_guard": status["platform_guard"],
             "exit_code": None, "truncated": [], "fuel_used": None,
             "disk_guard": None, "max_out_bytes_seen": 0,
@@ -558,8 +599,8 @@ def main(argv: list[str] | None = None) -> int:
             # No RLIMIT_FSIZE here: the watchdog is the only disk guard.
             platform_guard = "watchdog"
 
-    result = _run_guest(script, data_dir, out_dir, limits, wasi, cache_dir,
-                        platform_guard, script_sha256)
+    result = _run_guest(script, data_dir, out_dir, scratch_dir, limits, wasi,
+                        cache_dir, platform_guard, script_sha256)
     _write_json(result_file, result)
     return 0
 

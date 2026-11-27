@@ -114,6 +114,37 @@ def relevant(hit: dict[str, Any], terms: list[str],
     return (bool(in_title) and len(in_text) >= need) or len(in_text) >= n
 
 
+def _keep_phrases_whole(words: list[str], all_words: list[str],
+                        phrases: list[str], cap: int = 6) -> None:
+    """Keep a multi-word public name contiguous at its first word's place."""
+    for phrase in phrases:
+        folded = [_fold(w) for w in _term_words(phrase)]
+        if not folded:
+            continue
+        start = next((i for i in range(len(all_words) - len(folded) + 1)
+                      if [_fold(w) for w in all_words[i:i + len(folded)]] == folded),
+                     None)
+        if start is None:
+            continue
+        if start >= cap:
+            # The name is past the six-word cap: keep it whole, in order.
+            for word in all_words[start:start + len(folded)]:
+                if not any(_same_word(word, x) for x in words):
+                    words.append(word)
+            continue
+        first = next((i for i, word in enumerate(words)
+                      if _fold(word) == folded[0]), None)
+        if first is None:
+            continue
+        position = first
+        for wanted in folded[1:]:
+            if position + 1 < len(words) and _fold(words[position + 1]) == wanted:
+                position += 1
+                continue
+            words.insert(position + 1, all_words[start + folded.index(wanted)])
+            position += 1
+
+
 def propose_query_details(question: str, keywords: str = "",
                           glossary: list[tuple[str, str]] | None = None,
                           passages: list[str] | None = None,
@@ -136,6 +167,12 @@ def propose_query_details(question: str, keywords: str = "",
     for term in private_glossary_terms(glossary):
         if term not in private_all:
             private_all.append(term)
+    # A project document that calls a name the user's own ("nuestro punto
+    # privado Roca Tiburcia") makes it private in every form, even when the
+    # question only carries its distinctive word.
+    for term in private_names_from_documents(passages):
+        if term not in private_all:
+            private_all.append(term)
     translated: list[str] = []
     for term, equivalents, is_private in entries:
         if is_private:
@@ -145,23 +182,49 @@ def propose_query_details(question: str, keywords: str = "",
             translated += [e.strip() for e in equivalents.split(",") if e.strip()][:2]
             q = re.sub(re.escape(term.rstrip("s")) + r"\w*", " ", q, flags=re.I)
     public_terms = public_glossary_terms(glossary, question, private=private_all)
+    # The public entity the user asks about is kept even when the six-word cap
+    # would have cut its second word: "Marisma Alta" is one name, not a topic
+    # word that can be dropped.
+    targets = _public_targets(question, public_terms)
     rest = _FIRST_PERSON.sub(" ", q)
     rest = _FILLER.sub(" ", rest)
     rest = re.sub(r"[¿?¡!.,;:()\"]", " ", rest)
     spans = private_spans(question, public_terms=public_terms)
     # private words, codes, figures and format words go before the cap, so
     # they do not take the place of the topic
-    words = [w for w in rest.split() if len(w) > 2 and _public_word(w, spans)][:6]
+    all_words = [w for w in rest.split() if len(w) > 2 and _public_word(w, spans)]
+    words = all_words[:6]
+    # A multi-word public entity is one name: the six-word cap may not keep
+    # "Marisma" and drop "Alta", or leave the second word after other words.
+    phrases = [*public_terms, *(" ".join(t) for t in targets)]
+    _keep_phrases_whole(words, all_words, phrases)
     # The topic, defined from the user's own material: scientific names that
     # appear next to a word of the question in the retrieved passages or notes
     # ("cucujos (cucuyos) son el género Pyrophorus de la familia Elateridae").
     defined: list[str] = []
     anchors = [_fold(w)[:5] for w in words + translated if len(w) >= 4]
+    hidden_names = {_fold(word) for term in private_all for word in _term_words(term)}
+    hidden_names |= {_fold(word) for word in spans}
+    # A capitalised word of the question or of the public target/glossary term
+    # is never a passage-defined genus ("Marisma" ends in -a but is half of
+    # "Marisma Alta"); taking it would split and reorder the entity.
+    protected_names = set(hidden_names)
+    protected_names |= {_fold(w) for term in phrases for w in _term_words(term)}
+    protected_names |= {_fold(w) for run in _capital_runs(_question_entries(question)[1])
+                        for w in run["words"]}
     for text in passages or []:
         for sentence in re.split(r"(?<=[.;!?])\s+", text or ""):
             if any(a in _fold(sentence) for a in anchors):
-                defined += [m for m in _LATIN.findall(sentence) if " " not in m or True]
-    defined = defined[:3]
+                # only a scientific name (a binomial or a family), never the
+                # prose of a private sentence ("Nuestro punto …") and never a
+                # private name's own words ("Tiburcia queda")
+                for name in _binomial_names(sentence):
+                    name_words = _term_words(name)
+                    if any(_VERB.fullmatch(w) or _FILLER.fullmatch(w)
+                           or _fold(w) in protected_names for w in name_words):
+                        continue
+                    defined.append(name)
+    defined = list(dict.fromkeys(defined))[:3]
     known = _fold(" ".join([*words, *translated, *defined]))
     kw = [k.strip() for k in re.split(r"[,;]", keywords or "") if k.strip()]
     kw = [k for k in kw if not _FIRST_PERSON.search(k) and not _FILLER.fullmatch(k)
@@ -171,6 +234,12 @@ def propose_query_details(question: str, keywords: str = "",
         for w in _FILLER.sub(" ", piece).split():
             if len(w) > 2 and not any(_same_word(w, x) for x in out):
                 out.append(w)
+    # A year of the public source may stay ("de 2025") when it is not a figure
+    # from the user's documents; every other figure is still removed.
+    passage_text = _fold(" ".join(str(text or "") for text in passages or []))
+    for year in _public_source_years(question):
+        if year not in passage_text:
+            out.append(year)
     detail = strip_private_details(" ".join(out), question, private=private_all,
                                    public_terms=public_terms)
     # Terms the model offered (or the question defined) and the guard kept out
@@ -457,149 +526,463 @@ def public_glossary_terms(glossary: Any, question: str,
     return out
 
 
-def _private_details(question: str, public_terms: list[str] | None = None
-                     ) -> tuple[set[str], list[list[str]]]:
-    """The question's private words and the multi-word terms they belong to.
+# ---- who a question is about: private names vs the public entity asked about --
+# A capitalised word at the start of a sentence is not automatically a common
+# word: "Tiburcia anilló muchos pájaros" names the user's private ringing site
+# (its full name, "Roca Tiburcia", may be in a document that calls it private,
+# or in no loaded document at all).  At the same time, the entity the user asks
+# to look up must survive: "compara Marisma Alta con su registro público" kept
+# the station but lost it to the old run-wide rule.  The classifier below reads
+# both signals before it marks a word private.
 
-    The words are the same ones the guard has always removed (place cues,
-    possessives, people, codes and capitalised names that are not public).
-    The terms add something the old word-only view lost: when a capitalised
-    private name is found, its whole run is kept ("Rincón Alto" at the very
-    start of a sentence, where the first word was not taken as a name).
-    ``public_terms`` are known public names (glossary equivalents): they are
-    not private and their words are not removed.
+# Words that begin a question without naming anything: interrogatives,
+# imperatives, articles, connectors, months and weekdays, and their English
+# equivalents.  A capitalised word at the start of a sentence in this list is
+# not a probable private name.
+_SENTENCE_STARTERS = frozenset("""
+que qué como cómo cual cuál cuales cuáles cuando cuándo donde dónde quien quién
+quienes quiénes cuanto cuánto cuanta cuánta cuantos cuántos cuantas cuántas
+compara comparar contrasta contrastar busca buscar verifica verificar dime di
+explica explicar describe describir resume resumir redacta redactar escribe
+escribir calcula calcular analiza analizar revisa revisar consulta consultar
+lista listar enumera enumerar muestra mostrar anota anotar registra registrar
+marca marcar apunta apuntar consigna consignar mide medir pesa pesar cuenta
+contar observa observar detecta detectar identifica identificar localiza
+localizar comprueba comprobar examina examinar evalua evalúa estima estimar
+traduce traducir convierte convertir genera generar crea crear abre abrir
+carga cargar ejecuta ejecutar imprime imprimir exporta exportar dibuja dibujar
+grafica graficar dame quiero necesito puedes
+podrias podrías sabes cuentame cuéntame hola buenos buenas
+el la los las un una unos unas al del de en y o pero aunque si no lo le les se todo toda
+todos todas este esta estos estas ese esa esos esas aquel aquella aquellos
+aquellas mi mis nuestro nuestra nuestros nuestras tu tus su sus
+ademas además entonces luego tambien también asimismo finalmente primero
+despues después ahora hoy ayer manana mañana
+enero febrero marzo abril mayo junio julio agosto septiembre setiembre octubre
+noviembre diciembre lunes martes miercoles miércoles jueves viernes sabado
+sábado domingo segun según sobre entre frente respecto versus vs acerca
+what how which when where who why whose compare contrast search find verify
+check tell explain describe summarize summarise list show give calculate
+compute is are was were does do did can could should would the a an my our
+your their this that these those in on of and or but if not all any some
+january february march april may june july august september october november
+december monday tuesday wednesday thursday friday saturday sunday today
+yesterday tomorrow now also then finally first next according about between
+""".split())
+
+# A public lookup marker: a public adjective, or a source noun that names the
+# thing the user asks to consult.  Both are read in the same clause as the
+# capitalised run.
+_PUBLIC_MARK = re.compile(
+    r"^(p[uú]blic[oa]s?|p[uú]blicamente|public|publicly|open)$", re.I)
+_PUBLIC_SOURCE = re.compile(
+    r"^(fuentes?|registros?|red|redes|datos?|monitoreo|portal|repositorios?|"
+    r"base|bases|publicaci[oó]n|publicaciones|bolet[ií]n|anuarios?|"
+    r"sources?|records?|network|networks|database|databases|monitoring|"
+    r"repository|repositories|publication|publications|report|reports)$", re.I)
+_LOOKUP_VERB = re.compile(
+    r"^(compara|comparar|compare|contrasta|contrastar|contrast|busca|buscar|"
+    r"search|verifica|verificar|verify|check|consulta|consultar|consult|"
+    r"revisa|revisar|review|explica|explicar|explain)$", re.I)
+_PRIVATE_CUE = re.compile(
+    r"^(privad[oa]s?|private|propio|propia|propios|propias|own)$", re.I)
+_CONNECTOR = re.compile(
+    r"^(de|del|al|a|en|con|para|por|sobre|from|of|to|in|on|with|for|about|"
+    r"and|y|o|or|el|la|los|las|the|un|una|unos|unas|su|sus|mi|mis|"
+    r"nuestro|nuestra|nuestros|nuestras|tu|tus|seg[uú]n|according)$", re.I)
+
+
+def _is_capitalised(word: str) -> bool:
+    return bool(word) and word[0].isalpha() and word[0].isupper()
+
+
+def _question_entries(question: str) -> tuple[list[dict[str, Any]], list[list[dict[str, Any]]]]:
+    """Words with the clause and sentence they belong to.
+
+    Clauses end at commas, semicolons, colons, brackets and quotes, so a name
+    never crosses one ("mi huerto Roca, Marisma Alta" is two terms, not three
+    words).  Sentinels keep the first word of a sentence recognisable even when
+    the sentence opens with ``¿`` or a quotation mark.
     """
-    tokens = re.findall(r"[\wÁÉÍÓÚÑáéíóúñü'.-]+", question or "")
-    tokens = [t.strip(".'") for t in tokens]
-    tokens = [t for t in tokens if t]
-    out: set[str] = set()
+    raw = re.findall(r"[\wÁÉÍÓÚÑáéíóúñü'’.-]+|[^\w\s]", question or "")
+    entries: list[dict[str, Any]] = []
+    clauses: list[list[dict[str, Any]]] = []
+    current: list[dict[str, Any]] = []
+    sentence_first = True
+    quoted = False
+
+    def close() -> None:
+        nonlocal current
+        if current:
+            clauses.append(current)
+            current = []
+
+    for token in raw:
+        if not token:
+            continue
+        if re.fullmatch(r"[.?!]", token):
+            close()
+            sentence_first = True
+            continue
+        if token in ",;:()[]{}":
+            close()
+            continue
+        if token in "¿¡":
+            sentence_first = True
+            continue
+        if token in "«»\"“”":
+            close()
+            if token in "«“":
+                quoted = True
+            elif token == "»":
+                quoted = False
+            else:                       # a plain double quote toggles
+                quoted = not quoted
+            continue
+        word = token.strip(".'")
+        if not word:
+            continue
+        item = {"word": word, "fold": _fold(word),
+                "sentence_first": sentence_first, "quoted": quoted,
+                "index": len(entries)}
+        entries.append(item)
+        current.append(item)
+        sentence_first = False
+    close()
+    return entries, clauses
+
+
+def _capital_runs(clauses: list[list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Contiguous capitalised runs inside one clause, sentence start included."""
+    runs: list[dict[str, Any]] = []
+    for clause in clauses:
+        i = 0
+        while i < len(clause):
+            word = clause[i]
+            if not _is_capitalised(word["word"]):
+                i += 1
+                continue
+            if word["sentence_first"] and word["fold"] in _SENTENCE_STARTERS:
+                # "Compara", "Qué", "El"…: the first capital is the sentence's
+                # grammar, not a name.  A later capital in the same clause may
+                # still begin one.
+                i += 1
+                continue
+            j = i + 1
+            while j < len(clause) and _is_capitalised(clause[j]["word"]):
+                j += 1
+            runs.append({
+                "clause": clause, "start": i, "end": j,
+                "words": [clause[k]["word"] for k in range(i, j)],
+                "sentence_first": bool(word["sentence_first"]),
+                "quoted": any(clause[k]["quoted"] for k in range(i, j)),
+            })
+            i = j
+    return runs
+
+
+def _is_marker_word(entry: dict[str, Any]) -> bool:
+    return bool(_PUBLIC_MARK.match(entry["word"]) or _PUBLIC_SOURCE.match(entry["word"]))
+
+
+def _marker_run(run: dict[str, Any]) -> bool:
+    return bool(run["words"]) and all(
+        _PUBLIC_MARK.match(w) or _PUBLIC_SOURCE.match(w) or _CONNECTOR.match(w)
+        for w in run["words"])
+
+
+_PUBLIC_YEAR = re.compile(r"^(?:19|20|21)\d{2}$")
+
+
+def _is_public_year(clause: list[dict[str, Any]], index: int) -> bool:
+    """A year that belongs to the public source ("registro público de 2025")."""
+    word = str(clause[index]["word"] if index < len(clause) else "")
+    if not _PUBLIC_YEAR.fullmatch(word):
+        return False
+    prior = clause[max(0, index - 4):index]
+    return any(_is_marker_word(entry) or _PUBLIC_NOUN.match(entry["word"])
+               for entry in prior)
+
+
+def _public_source_years(question: str) -> list[str]:
+    _entries, clauses = _question_entries(question)
+    out: list[str] = []
+    for clause in clauses:
+        for index, entry in enumerate(clause):
+            if _is_public_year(clause, index) and entry["word"] not in out:
+                out.append(entry["word"])
+    return out
+
+
+def _public_targets(question: str,
+                    public_terms: list[str] | None = None) -> list[list[str]]:
+    """The capitalised names the question explicitly asks a public source about.
+
+    Two shapes count: a name after a public marker or source noun ("el dato
+    público de Marisma Alta", "la variedad Lumbre"), and a name the lookup verb
+    introduces when the same clause later names a public source ("compara
+    Marisma Alta con su registro público").  A private signal still wins in
+    :func:`_classify_question`; this function only says what *would* be public.
+    """
+    _entries, clauses = _question_entries(question)
+    runs = _capital_runs(clauses)
+    out: list[list[str]] = []
+    for run in runs:
+        if _marker_run(run):
+            continue
+        clause = run["clause"]
+        before, after = clause[:run["start"]], clause[run["end"]:]
+        public = False
+        # A name after a source noun / public noun is its object ("dato
+        # público de Marisma", "variedad Lumbre", "registro público de A y B").
+        # Private signals still win later, and an explicit private name is
+        # removed by :func:`strip_private_details`.
+        if any(_is_marker_word(e) or _PUBLIC_NOUN.match(e["word"]) for e in before):
+            public = True
+        if not public and any(_LOOKUP_VERB.match(e["word"]) for e in before) \
+                and any(_is_marker_word(e) or _PUBLIC_NOUN.match(e["word"]) for e in after):
+            # "compara Marisma Alta con su registro público"
+            public = True
+        if public:
+            out.append(list(run["words"]))
+    return out
+
+
+def _classify_question(question: str,
+                       public_terms: list[str] | None = None
+                       ) -> tuple[set[str], list[list[str]], list[list[str]]]:
+    """(private words, private terms, public target names) of one question."""
+    entries, clauses = _question_entries(question)
+    runs = _capital_runs(clauses)
+    targets = _public_targets(question, public_terms)
+
+    private_idx: set[int] = set()
     phrases: list[list[str]] = []
 
+    def mark(item: dict[str, Any]) -> None:
+        private_idx.add(item["index"])
+
     def phrase(words: list[str]) -> None:
-        words = [w.strip(".'") for w in words if w and w.strip(".'")]
-        if words:
-            phrases.append(words)
+        clean = [w.strip(".'") for w in words if w and w.strip(".'")]
+        if clean:
+            phrases.append(clean)
 
-    i = 0
-    while i < len(tokens):
-        t = tokens[i]
-        if _PLACE.match(t):
-            out.add(_fold(t))
-            j = i + 1
-            while j < len(tokens) and j <= i + 4 and (
-                    tokens[j][:1].isupper() or any(c.isdigit() for c in tokens[j])
-                    or _PLACE_TAIL.match(tokens[j])
-                    or (_ARTICLE.match(tokens[j]) and j + 1 < len(tokens) and tokens[j + 1][:1].isupper())):
-                if not _ARTICLE.match(tokens[j]):
-                    out.add(_fold(tokens[j]))
-                j += 1
-            phrase(tokens[i:j])
-            i = j
+    # place cues, people introduced by a title, possessive groups and figures
+    for clause in clauses:
+        i = 0
+        while i < len(clause):
+            word = clause[i]
+            if _PLACE.match(word["word"]):
+                mark(word)
+                j = i + 1
+                steps = 0
+                while j < len(clause) and steps < 4 and (
+                        _is_capitalised(clause[j]["word"])
+                        or any(c.isdigit() for c in clause[j]["word"])
+                        or _PLACE_TAIL.match(clause[j]["word"])
+                        or (_ARTICLE.match(clause[j]["word"]) and j + 1 < len(clause)
+                            and _is_capitalised(clause[j + 1]["word"]))):
+                    if not _ARTICLE.match(clause[j]["word"]):
+                        mark(clause[j])
+                    j += 1
+                    steps += 1
+                phrase([clause[k]["word"] for k in range(i, j)])
+                i = j
+                continue
+            if _PERSON_CUE.match(word["word"]):
+                mark(word)
+                j = i + 1
+                names: list[str] = []
+                while j < len(clause) and j <= i + 3 and _is_capitalised(clause[j]["word"]):
+                    mark(clause[j])
+                    names.append(clause[j]["word"])
+                    j += 1
+                phrase([word["word"], *names])
+                i = j
+                continue
+            if _POSSESSIVE.match(word["word"]):
+                j = i + 1
+                group: list[dict[str, Any]] = []
+                capital_mode = j < len(clause) and _is_capitalised(clause[j]["word"])
+                while j < len(clause) and len(group) < 4:
+                    item = clause[j]
+                    w = item["word"]
+                    if _STOP_SCOPE.match(w) or _CONJ.match(w) or _VERB.match(w):
+                        break
+                    if not group:
+                        group.append(item)
+                        j += 1
+                        continue
+                    if capital_mode:
+                        # "mi Roca Tiburcia describe": the name ends where the
+                        # lower-case verb starts; the verb is never swallowed.
+                        if _is_capitalised(w) or _ARTICLE.match(w):
+                            group.append(item)
+                            j += 1
+                            continue
+                        break
+                    if _is_capitalised(w):
+                        group.append(item)
+                        j += 1
+                        capital_mode = True
+                        continue
+                    if (len(group) < 2 or _PUBLIC_NOUN.match(w)
+                            or _PLACE.match(w) or _PRIVATE_CUE.match(w)):
+                        group.append(item)
+                        j += 1
+                        continue
+                    break
+                for item in group:
+                    mark(item)
+                if group:
+                    phrase([item["word"] for item in group])
+                i = max(j, i + 1)
+                continue
+            if any(c.isdigit() for c in word["word"]) \
+                    and not _is_public_year(clause, i):
+                mark(word)
+            i += 1
+
+    target_run_keys = {tuple(_fold(w) for w in target) for target in targets}
+    for run in runs:
+        folded = tuple(_fold(w) for w in run["words"])
+        clause = run["clause"]
+        before, after = clause[:run["start"]], clause[run["end"]:]
+        private_hit = any(clause[k]["index"] in private_idx
+                          for k in range(run["start"], run["end"]))
+        cue_near = any(_PRIVATE_CUE.match(e["word"]) for e in
+                       clause[max(0, run["start"] - 2):run["end"] + 2])
+        para_mi = any(
+            e["fold"] == "mi" and k > 0 and _fold(clause[k - 1]["word"]) == "para"
+            for k, e in enumerate(clause))
+        is_target = folded in target_run_keys
+        # Only a binomial or a family is treated as a scientific name here;
+        # a single capitalised word that merely looks like a genus
+        # ("Tiburcia") must not become public by itself.
+        latin = _is_latin_run(run, _binomial_names(question, include_genera=False))
+        if _marker_run(run):
             continue
-        if _PERSON_CUE.match(t):
-            j = i + 1
-            names: list[str] = []
-            while j < len(tokens) and j <= i + 3 and tokens[j][:1].isupper():
-                out.add(_fold(tokens[j]))
-                names.append(tokens[j])
-                j += 1
-            phrase([t, *names])
-            i = j
-            continue
-        if _POSSESSIVE.match(t):
-            j = i + 1
-            group: list[str] = []
-            while j < len(tokens) and j <= i + 3 and not _STOP_SCOPE.match(tokens[j]):
-                out.add(_fold(tokens[j]))
-                group.append(tokens[j])
-                j += 1
-            phrase(group)
-            i = j
-            continue
-        if any(c.isdigit() for c in t):
-            out.add(_fold(t))
-        i += 1
-    # capitalised names: public only after a public noun (and the names that
-    # follow it) or as a scientific name.  A sentence-initial capital is still
-    # not a name by itself, but when the next capital is private the run is
-    # taken whole: "Rincón Alto" at the start is a name, not "Alto" alone.
+        if private_hit or (cue_near and not _marker_run(run)) or (
+                para_mi and not before):
+            private = True
+        elif run["quoted"] and not is_target:
+            private = True
+        elif is_target or latin:
+            private = False
+        else:
+            private = True
+        if private:
+            phrase(run["words"])
+            for k in range(run["start"], run["end"]):
+                word = clause[k]["word"]
+                if not _ARTICLE.match(word) and not _STOP_SCOPE.match(word):
+                    private_idx.add(clause[k]["index"])
+
+    public_words = _public_term_words(public_terms)
+    out = {_fold(entries[index]["word"]) for index in private_idx
+           if index < len(entries)}
+    out = {word for word in out if word not in public_words}
+    phrases = [words for words in phrases
+               if not all(_fold(word) in public_words or _ARTICLE.fullmatch(word)
+                          or _STOP_SCOPE.fullmatch(word) for word in words)]
+    return out, phrases, targets
+
+
+_DOC_PRIVATE_CUE = re.compile(
+    r"\b(privad[oa]s?|private|propio|propia|propios|propias|own)\b", re.I)
+_DOC_POSSESSIVE = re.compile(
+    r"\b(nuestro|nuestra|nuestros|nuestras|mi|mis|our|my)\b", re.I)
+_DOC_PLACE = re.compile(
+    r"\b(punto|sitio|lugar|zona|area|área|parcela|estaci[oó]n|boya|finca|"
+    r"lote|predio|campo|huerto|plot|field|station|buoy|site)\b", re.I)
+_DOC_FILLER_NAME = re.compile(
+    r"^(punto|sitio|lugar|zona|area|área|dato|datos|punto de muestreo)$", re.I)
+
+
+def _document_run_is_private(run: dict[str, Any], sentence: str) -> bool:
+    """Whether a document's capitalised run is marked as the user's own.
+
+    A strong private cue ("privado", "propio") in the sentence marks it; a
+    possessive ("nuestro", "mi") only when it is near the run and a place noun
+    ("punto", "parcela", "estación"…) is between them, so "mi análisis de
+    Marisma Alta" does not turn a public station private.
+    """
+    if _DOC_PRIVATE_CUE.search(sentence):
+        return True
+    clause = run["clause"]
+    before = " ".join(e["word"] for e in clause[max(0, run["start"] - 5):run["start"]])
+    after = " ".join(e["word"] for e in clause[run["end"]:run["end"] + 5])
+    return bool(_DOC_POSSESSIVE.search(before) or _DOC_POSSESSIVE.search(after)) \
+        and bool(_DOC_PLACE.search(f"{before} {after}"))
+
+
+def private_names_from_documents(passages: list[str] | None) -> list[str]:
+    """Capitalised names a project document marks as the user's own.
+
+    A document sentence with a private cue ("nuestro punto privado Roca
+    Tiburcia", "Roca Tiburcia es nuestra parcela", "el sitio privado Boya
+    Azul") names something that must not enter a public query, even when the
+    question only carries its distinctive word.  Public-source phrases
+    ("registro público") are not names.
+    """
+    out: list[str] = []
+    for text in passages or []:
+        for sentence in re.split(r"(?<=[.;!?])\s+", str(text or "")):
+            _entries, clauses = _question_entries(sentence)
+            for run in _capital_runs(clauses):
+                if not _document_run_is_private(run, sentence):
+                    continue
+                words = list(run["words"])
+                while words and (
+                        _fold(words[0]) in _SENTENCE_STARTERS
+                        or _ARTICLE.match(words[0]) or _POSSESSIVE.match(words[0])
+                        or _PRIVATE_CUE.match(words[0]) or _DOC_FILLER_NAME.match(words[0])):
+                    words = words[1:]
+                if not words or _marker_run({"words": words}):
+                    continue
+                name = " ".join(words)
+                if name not in out:
+                    out.append(name)
+    return out
+
+
+def _is_latin_run(run: dict[str, Any], names: list[str]) -> bool:
+    """Whether a run is a scientific name (a genus with its epithet, a family).
+
+    The epithet is lower case, so the capitalised run is only "Mimus"; the
+    binomial as a whole is what the question uses, and it stays public.
+    """
+    folded = _fold(" ".join(run["words"]))
+    return any(folded == _fold(name) or _fold(name).startswith(folded + " ")
+               for name in names)
+
+
+def _binomial_names(text: str, *, include_genera: bool = True) -> list[str]:
+    """Scientific names a sentence names: binomials, families and genera."""
     from .local_context import binomials
-    latin = {_fold(w) for b in binomials(question or "") for w in b.split()}
-    latin |= {_fold(m) for m in re.findall(r"\b[A-Z][a-z]{3,}(?:idae|inae|aceae|ales)\b", question or "")}
-    raw = re.findall(r"[\wÁÉÍÓÚÑáéíóúñü'.-]+|[.?!¿¡]", question or "")
-    public = False
-    private_idx: set[int] = set()
-    for j, t in enumerate(raw):
-        word = t.strip(".'")
-        if not word or not word[0].isalpha():
-            public = False
-            continue
-        if _PUBLIC_NOUN.match(word):
-            public = True
-            continue
-        if word[:1].isupper():
-            first = j == 0 or raw[j - 1] in (".", "?", "!", "¿", "¡") or raw[j - 1].endswith(".")
-            if not first and not public and _fold(word) not in latin and not _ARTICLE.match(word):
-                private_idx.add(j)
-            continue
-        if not _ARTICLE.match(word):
-            public = False
-    expanded = set(private_idx)
-    for j in sorted(private_idx):
-        k = j - 1
-        steps = 0
-        while k >= 0 and steps < 3:
-            word = raw[k].strip(".'")
-            if not word or not word[0].isalpha():
-                break
-            if word[:1].isupper() and _fold(word) not in latin \
-                    and not _PUBLIC_NOUN.match(word) and not _ARTICLE.match(word):
-                expanded.add(k)
-                k -= 1
-                steps += 1
-                continue
-            if _ARTICLE.match(word) or _STOP_SCOPE.match(word):
-                k -= 1
-                steps += 1
-                continue
-            break
-    group: list[int] = []
-    last = -10
-    for j in sorted(expanded):
-        between = raw[last + 1:j] if group else []
-        split = bool(group) and (j - last > 2 or any(
-            not w or not w[0].isalpha() or _CONJ.match(w.strip(".'"))
-            for w in between))
-        if split:
-            _add_capital_group(raw, group, out, phrase)
-            group = []
-        group.append(j)
-        last = j
-    if group:
-        _add_capital_group(raw, group, out, phrase)
-    if public_terms:
-        public = _public_term_words(public_terms)
-        # a known public name is not private; a private run that merely shares
-        # one common word with it ("Rincón Alto" and "Quilén Alto") stays.
-        out = {word for word in out if word not in public}
-        phrases = [words for words in phrases
-                   if not all(_fold(word) in public
-                              or _ARTICLE.fullmatch(word)
-                              or _STOP_SCOPE.fullmatch(word)
-                              for word in words)]
+    names = list(binomials(text or ""))
+    names += re.findall(r"\b[A-Z][a-z]{3,}(?:idae|inae|aceae|ales)\b", text or "")
+    if include_genera:
+        # A genus is often written alone ("el género Pyrophorus"); the old
+        # ``_LATIN`` accepted it and the passage-defined topic needs it.  It is
+        # not used to decide whether a question's name is private: "Tiburcia"
+        # also ends in -a.
+        names += re.findall(r"\b[A-Z][a-z]{3,}(?:us|um|is|es|a)\b", text or "")
+    return list(dict.fromkeys(names))
+
+
+def _private_details(question: str, public_terms: list[str] | None = None
+                     ) -> tuple[set[str], list[list[str]]]:
+    """The question's private words and the terms they belong to.
+
+    A private name is private in any of its forms: the whole name or one
+    distinctive word, at any position (sentence start included), in any case.
+    The words come from place/people cues, possessives, quoted names, private
+    cues, figures, and every capitalised run that is not the public entity the
+    user asks about.  ``public_terms`` are known public names.
+    """
+    out, phrases, _targets = _classify_question(question, public_terms)
     return out, phrases
-
-
-def _add_capital_group(raw: list[str], group: list[int], out: set[str],
-                       phrase: Callable[[list[str]], None]) -> None:
-    words = [raw[j].strip(".'") for j in group]
-    words = [w for w in words if w]
-    if not words:
-        return
-    phrase(words)
-    for w in words:
-        if not _ARTICLE.match(w) and not _STOP_SCOPE.match(w):
-            out.add(_fold(w))
 
 
 def private_spans(question: str, public_terms: list[str] | None = None) -> set[str]:
@@ -614,6 +997,21 @@ def private_spans(question: str, public_terms: list[str] | None = None) -> set[s
     return _private_details(question, public_terms=public_terms)[0]
 
 
+def _extra_before_explicit(words: list[str],
+                          explicit_folded: list[list[str]]) -> list[str]:
+    """Leading words of a run that are not part of a known private term.
+
+    A sentence-initial imperative ("Anota Roca Tiburcia") is grammar, not part
+    of the name; if the rest of the run is an explicit private term, the extra
+    words are returned so the report never glues the public verb to the term.
+    """
+    folded = [_fold(word) for word in words]
+    for known in explicit_folded:
+        if len(folded) > len(known) and folded[-len(known):] == known:
+            return folded[:len(folded) - len(known)]
+    return []
+
+
 def private_terms(question: str, private: list[str] | None = None,
                   public_terms: list[str] | None = None) -> list[str]:
     """The private *terms* of a question: its capitalised private runs (with
@@ -625,15 +1023,20 @@ def private_terms(question: str, private: list[str] | None = None,
     a public glossary equivalent of the same words.
     """
     _words, phrases = _private_details(question, public_terms=public_terms)
+    explicit = [str(term).strip() for term in private or [] if str(term).strip()]
+    explicit_folded = [[_fold(w) for w in _term_words(term)] for term in explicit]
     out: list[str] = []
     for words in phrases:
         if not any(word[:1].isupper() or any(c.isdigit() for c in word)
                    for word in words):
             continue
+        if _extra_before_explicit(words, explicit_folded):
+            # The explicit term below is the exact private term; the leading
+            # imperative is not part of it and is not reported.
+            continue
         term = " ".join(words)
         if term and term not in out:
             out.append(term)
-    explicit = [str(term).strip() for term in private or [] if str(term).strip()]
     for term in explicit:
         if term not in out:
             out.append(term)
@@ -665,6 +1068,25 @@ def removed_private_terms(question: str, query: str,
                 not _contains_private_phrase(query or "", term):
             if term not in out:
                 out.append(term)
+    # The question may carry only one distinctive word of a name known from a
+    # private glossary entry or document ("Tiburcia" for "Roca Tiburcia"), in
+    # any case.  The fragment is a removed term too; the whole name is not
+    # reported when the question never used it.
+    reported_words = {_fold(word) for term in out for word in _term_words(term)}
+    for term in private_all:
+        if _contains_private_phrase(offered, term):
+            continue
+        for word in _term_words(term):
+            if not is_distinctive(word) or _fold(word) in reported_words:
+                continue
+            match = next((m.group(0) for m in re.finditer(
+                r"[\wÁÉÍÓÚÜÑáéíóúüñ'-]+", question or "")
+                if _fold(m.group(0)) == _fold(word)), "")
+            if not match or not _contains_private_phrase(offered, match) \
+                    or _contains_private_phrase(query or "", match):
+                continue
+            out.append(match)
+            reported_words.add(_fold(match))
     return out
 
 
@@ -690,8 +1112,19 @@ def strip_private_details(query: str, question: str = "",
     documented at ``_PRIVATE_COMMON`` and ``is_distinctive``.
     """
     spans, question_phrases = _private_details(question, public_terms=public_terms)
-    question_terms = [" ".join(words) for words in question_phrases]
     explicit_terms = [str(t).strip() for t in private or [] if str(t).strip()]
+    explicit_folded = [[_fold(w) for w in _term_words(term)] for term in explicit_terms]
+    starter_words: set[str] = set()
+    question_terms: list[str] = []
+    for words in question_phrases:
+        extra = _extra_before_explicit(words, explicit_folded)
+        if extra:
+            # "Anota Roca Tiburcia": the named term is removed by its explicit
+            # entry; the imperative is a public sentence starter, not a term.
+            starter_words.update(extra)
+            continue
+        question_terms.append(" ".join(words))
+    spans = {word for word in spans if word not in starter_words}
     phrases: list[list[str]] = []
     distinctive: set[str] = set()
     owner: dict[str, str] = {}
@@ -775,8 +1208,10 @@ def strip_private_details(query: str, question: str = "",
         if f in distinctive:
             record(index, owner.get(f, token.strip(".,;:()[]{}«»\"'’")))
     kept = [token for index, token in enumerate(tokens) if not removed_at[index]]
+    public_years = {_fold(year) for year in _public_source_years(question)}
     kept = [token for token in kept
-            if _public_word(token, set())
+            if (_token_word(token) in public_years
+                or _public_word(token, set()))
             and not _FILLER.fullmatch(token.strip(".,;:()[]{}«»\"'’"))]
     cleaned = " ".join(kept).strip()
     meaningful = [w for w in kept
@@ -786,6 +1221,31 @@ def strip_private_details(query: str, question: str = "",
     empty = not meaningful
     return {"query": "" if empty else cleaned, "removed": removed,
             "removed_terms": matched, "empty": empty}
+
+
+def matched_private_terms(text: str, private: list[str] | None = None) -> list[str]:
+    """The private terms or distinctive fragments present in ``text``.
+
+    Uses the same whole-term and single-distinctive-word rule as the public
+    query guard, so a list item that says only "Tiburcia" for "Roca Tiburcia"
+    is still recognised as the user's own.
+    """
+    out: list[str] = []
+    for term in private or []:
+        term = str(term or "").strip()
+        if not term:
+            continue
+        found = ""
+        if _contains_private_phrase(text or "", term):
+            found = term
+        else:
+            for word in _term_words(term):
+                if is_distinctive(word) and _contains_private_phrase(text or "", word):
+                    found = word
+                    break
+        if found and found.casefold() not in {item.casefold() for item in out}:
+            out.append(found)
+    return out
 
 
 def contains_private_terms(text: str, private: list[str] | None = None) -> bool:
@@ -810,15 +1270,33 @@ _VERB = re.compile(
     r"puede|pueden|podemos|hace|hacen|hizo|hicimos|dio|dieron|dan|vimos|vi|vio|vieron|"
     r"anot[oó]|anot[eé]|anotamos|cont[oó]|contamos|registr[oó]|registramos|midi[oó]|medimos|"
     r"sali[oó]|salieron|dijo|dicen|qued[oó]|quedaron|obtuvo|obtuvimos|logr[oó]|lleg[oó]|"
-    r"is|are|was|were|be|been|has|have|had|did|does|do|can|could|saw|seen|got|get|counted|"
-    r"recorded|measured|found)$", re.I)
+    r"describe|describir|describa|explica|explicar|contrasta|contrastar|verifica|verificar|"
+    r"compara|comparar|busca|buscar|consulta|consultar|revisa|revisar|muestra|mostrar|"
+    r"indica|indicar|is|are|was|were|be|been|has|have|had|did|does|do|can|could|saw|seen|"
+    r"got|get|counted|recorded|measured|found)$", re.I)
+
+
+_QUERY_STOP = re.compile(
+    r"^(importante[s]?|interesante[s]?|otra|otro|otras|otros|cosa|cosas|algo|"
+    r"realmente|bastante|muy|tan|solo|sólo|entre|sin|"
+    r"privad[oa]s?|private|propio|propia|propios|propias)$", re.I)
 
 
 def _public_word(w: str, spans: set[str]) -> bool:
-    f = _fold(w.strip(".,;:()«»\"'"))
+    raw = w.strip(".,;:()«»\"'").lower()
+    f = _fold(raw)
+    if _PUBLIC_SOURCE.match(f) or raw in {
+            "público", "pública", "públicos", "públicas",
+            "public", "publicly", "open"}:
+        # "registro" also matches the first-person verb "registro"; in a
+        # public-source phrase it is the noun the query needs.  "publica"
+        # without the accent is the verb and stays out.
+        return bool(f) and f not in spans and not any(c.isdigit() for c in f)
     return bool(f) and f not in spans and not any(c.isdigit() for c in f) \
         and not _INSTRUCTION.match(f) and not _VERB.match(f) and not _PERSON_CUE.match(f) \
-        and not _NUMBER_WORD.match(f) and not _ARTICLE.match(f)
+        and not _NUMBER_WORD.match(f) and not _ARTICLE.match(f) \
+        and not _QUERY_STOP.match(f) and not re.fullmatch(r"[a-záéíóúñü]+ó", raw) \
+        and f not in _SENTENCE_STARTERS
 
 
 _NUMBER_WORD = re.compile(

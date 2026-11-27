@@ -47,6 +47,11 @@ MAX_CORPUS_PASSAGES = 5
 MAX_CORPUS_TEXT_CHARS = 1000
 
 
+def _refused_thinking(exc: Exception) -> bool:
+    text = str(exc or "").lower()
+    return "does not support thinking" in text or "thinking is not supported" in text
+
+
 class PromptBackend:
     """Adapts a StreamBackend to the ServingBackend protocol used by the LCE
     WorkerGuard: exposes ``model`` and ``generate(prompt, **kw)``."""
@@ -74,8 +79,19 @@ class PromptBackend:
         if isinstance(think, bool) and getattr(self._stream, "accepts_think", False):
             call["think"] = think
             self.applied_think = think
-        out = self._stream.stream_chat(
-            [{"role": "user", "content": prompt}], **call)
+        try:
+            out = self._stream.stream_chat(
+                [{"role": "user", "content": prompt}], **call)
+        except Exception as exc:
+            # A model that does not support thinking refuses the flag with
+            # HTTP 400.  Retry once without it and record that think was not
+            # used; the task still runs, and the profile says so.
+            if "think" not in call or not _refused_thinking(exc):
+                raise
+            call.pop("think", None)
+            self.applied_think = False
+            out = self._stream.stream_chat(
+                [{"role": "user", "content": prompt}], **call)
         self.last = out
         return out.text
 
@@ -405,7 +421,10 @@ class WorkerService:
         # 3.5, D-018: think travels only where a backend accepts it (below).
         think = constraints.get("think")
         if not isinstance(think, bool):
-            think = True if role == "reasoner" else None
+            # The requester decides from the advertisement.  A reasoner whose
+            # model was not proven to support thinking is run without it; the
+            # role alone never adds a parameter.
+            think = None
         try:
             stream = self.backend_factory()
         except Exception as exc:

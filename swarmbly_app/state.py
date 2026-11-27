@@ -574,8 +574,13 @@ class AppState:
             for term in self.lce.glossary_private_terms(roots=roots):
                 if term not in private:
                     private.append(term)
+            try:
+                passages = self.lce.passages_for_roots(roots=roots)
+            except Exception:
+                passages = []
             detail = web_search.propose_query_details(
-                text or "", glossary=glossary, private=private)
+                text or "", glossary=glossary, private=private,
+                passages=passages)
             query = str(detail.get("query") or "").strip()[:160]
             if not query or web_search.contains_private_terms(query, private):
                 return ""

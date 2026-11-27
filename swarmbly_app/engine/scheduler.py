@@ -33,7 +33,7 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 
 from ..events import EventBus
-from ..node_roles import FALLBACK_ROLES, models_for_role
+from ..node_roles import FALLBACK_ROLES, models_for_role, roles_for
 from ..p2p.messages import verify_signed
 
 MAX_RESULT_CHARS = 64_000
@@ -629,7 +629,16 @@ class Scheduler:
                 # it; a worker that knows it refuses an unadvertised role.
                 constraints["role"] = effective_role
                 if effective_role == "reasoner":
-                    constraints["think"] = True
+                    # think travels only when the chosen worker advertised it;
+                    # a model without the capability is announced without it
+                    # (or not at all), so the role never widens a call.
+                    entry = next((item for item in roles_for(
+                        peer.advertisement, "reasoner")
+                        if model is None or item.get("model") == model), None)
+                    if entry is not None and entry.get("think") is True:
+                        constraints["think"] = True
+                    else:
+                        constraints.pop("think", None)
             elif role_fallback:
                 # The generic worker must not be sent a role it never claimed.
                 constraints.pop("role", None)
@@ -1032,7 +1041,15 @@ async def run_levels(scheduler: Scheduler, order: list[str],
             for finished in done:
                 task_id = running.pop(finished)
                 try:
-                    out.results[task_id] = finished.result()
+                    value = finished.result()
+                    if value is None:
+                        # A step is completed only when something produced its
+                        # output; a bare success with no result is a failure.
+                        state = out.state(task_id)
+                        state.status, state.reason = "failed", "failed"
+                        state.detail = "the step produced no output"
+                        continue
+                    out.results[task_id] = value
                 except asyncio.CancelledError:
                     out.state(task_id).status = "failed"
                     out.state(task_id).reason = "cancelled"

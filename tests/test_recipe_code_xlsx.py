@@ -165,9 +165,10 @@ def test_xlsx_proposal_sends_only_header_and_five_rows_per_sheet(
     assert response.json()["files"] == [{"name": "produccion.xlsx",
                                          "rel": "produccion.xlsx"}]
     prompt = fake.prompts[-1]
-    assert "Columns: hive | apiary | weight" in prompt
-    assert "Columns: site | ph" in prompt
+    assert 'Header row: ["hive", "apiary", "weight"]' in prompt
+    assert 'Header row: ["site", "ph"]' in prompt
     assert "TABLE: Sheet1" in prompt and "TABLE: Sheet2" in prompt
+    assert "|" not in prompt.split("TABLE: Sheet1", 1)[1].split("TABLE: Sheet2", 1)[0]
     for row in range(1, 6):
         assert f"ROW {row}:" in prompt
     assert "ROW 6:" not in prompt
@@ -191,9 +192,10 @@ def test_tsv_proposal_uses_the_same_sample_limit(app_state, tmp_path, monkeypatc
         "files": ["produccion.tsv"]})
     assert response.status_code == 200, response.text
     prompt = fake.prompts[-1]
-    assert "Columns: hive | apiary | weight" in prompt
-    assert "ROW 5:" in prompt and "ROW 6:" not in prompt
-    assert "SENTINEL-TSV-6" not in prompt
+    assert "hive\tapiary\tweight" in prompt
+    assert "delimiter: tab" in prompt and \
+        r'pd.read_csv("/data/produccion.tsv", sep="\t")' in prompt
+    assert "H5" in prompt and "SENTINEL-TSV-6" not in prompt
 
 
 def test_symlinked_xlsx_is_refused(app_state, tmp_path, monkeypatch):

@@ -78,6 +78,7 @@ class RunResult:
     stdout: str
     stderr: str
     files: list[dict[str, Any]]
+    files_partial: bool
     trapped: str | None
     elapsed_s: float
     script_sha256: str
@@ -101,6 +102,7 @@ class RunResult:
             "stdout": self.stdout,
             "stderr": self.stderr,
             "files": [dict(item) for item in self.files],
+            "files_partial": self.files_partial,
             "trapped": self.trapped,
             "elapsed_s": self.elapsed_s,
             "script_sha256": self.script_sha256,
@@ -388,9 +390,14 @@ class SandboxRunner:
         run_dir = self.runs_dir / run_id
         data_dir = run_dir / "data"
         out_dir = run_dir / "out"
+        tmp_dir = run_dir / "tmp"
         try:
             data_dir.mkdir(parents=True, mode=0o700)
             out_dir.mkdir(mode=0o700)
+            # A per-run writable scratch preopened at /tmp: openpyxl/xlsxwriter
+            # and tempfile need one, while /data stays read-only and /out is
+            # still the only collected output.  It is deleted with the run.
+            tmp_dir.mkdir(mode=0o700)
             self._copy_inputs(inputs or [], data_dir)
             (run_dir / "script.py").write_text(script, encoding="utf-8")
             (run_dir / "limits.json").write_text(
@@ -464,9 +471,10 @@ class SandboxRunner:
             if worker is not None:
                 self._retire(worker)
             if keep_this:
-                # Keep only /out: the copied inputs and the script are not
-                # needed once the result is recorded.
+                # Keep only /out: the copied inputs, the scratch directory
+                # and the script are not needed once the result is recorded.
                 shutil.rmtree(data_dir, ignore_errors=True)
+                shutil.rmtree(tmp_dir, ignore_errors=True)
                 for name in ("script.py", "limits.json", "result.json",
                              "metered-warm.json"):
                     try:
@@ -563,6 +571,7 @@ class SandboxRunner:
         if payload is None:
             return RunResult(
                 ok=False, stdout="", stderr=stderr, files=[],
+                files_partial=False,
                 trapped=trapped or "error", elapsed_s=round(elapsed, 3),
                 script_sha256=script_sha256,
                 platform_guard="watchdog" if os.name == "nt" else "rlimit+watchdog",
@@ -572,6 +581,7 @@ class SandboxRunner:
             stdout=str(payload.get("stdout") or ""),
             stderr=str(payload.get("stderr") or ""),
             files=list(payload.get("files") or []),
+            files_partial=bool(payload.get("files_partial")),
             trapped=payload.get("trapped"),
             elapsed_s=round(elapsed, 3),
             script_sha256=script_sha256,
@@ -591,7 +601,8 @@ class SandboxRunner:
     @staticmethod
     def _error_result(script_sha256: str, reason: str) -> RunResult:
         return RunResult(ok=False, stdout="", stderr=reason, files=[],
-                         trapped="error", elapsed_s=0.0, script_sha256=script_sha256,
+                         files_partial=False, trapped="error", elapsed_s=0.0,
+                         script_sha256=script_sha256,
                          platform_guard="watchdog" if os.name == "nt" else "rlimit+watchdog")
 
     def output_dir_for(self, run_id: str) -> Path | None:

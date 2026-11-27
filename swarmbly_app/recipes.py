@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import csv
 import io
+import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -585,20 +586,49 @@ def _lane_for(text: str) -> str:
         return "SENSITIVE"
 
 
-def classify_list_job(job: ListJob, cfg: dict[str, Any]) -> dict[str, Any]:
+def classify_list_job(job: ListJob, cfg: dict[str, Any], *,
+                      private: list[str] | None = None,
+                      glossary: Any = None,
+                      passages: list[str] | None = None) -> dict[str, Any]:
     """Tier and lane over the operation and every item, never the combined
-    text alone: one personal item is enough to make the default local."""
+    text alone: one personal item is enough to make the default local.
+
+    ``private``/``glossary``/``passages`` use the same private-name sources as
+    the research guard: an explicit term, a private glossary entry (including a
+    Markdown table row) or a name a project document marks as the user's own.
+    """
+    from .web_search import (matched_private_terms, private_glossary_terms,
+                             private_names_from_documents)
     privacy_cfg = (cfg or {}).get("privacy") or {}
+    private_all = [str(term).strip() for term in private or [] if str(term).strip()]
+    for term in [*private_glossary_terms(glossary),
+                 *private_names_from_documents(passages)]:
+        if term and term not in private_all:
+            private_all.append(term)
     operation_tier = _tier_for(job.operation, privacy_cfg)
     operation_lane = _lane_for(job.operation)
+    operation_hits = matched_private_terms(job.operation, private_all)
     items: list[dict[str, Any]] = []
     top_tier = operation_tier["tier"]
     top_lane = operation_lane
+    private_hit = bool(operation_hits)
     for n, item in enumerate(job.items, 1):
-        decision = _tier_for(item, privacy_cfg)
-        tier, lane = decision["tier"], _lane_for(item)
-        items.append({"n": n, "tier": tier, "auto_tier": decision["auto_tier"],
-                      "lane": lane})
+        hits = matched_private_terms(item, private_all)
+        if hits:
+            decision = {"tier": "LOCAL", "auto_tier": "LOCAL"}
+            tier, lane = "LOCAL", "SENSITIVE"
+            private_hit = True
+        else:
+            decision = _tier_for(item, privacy_cfg)
+            tier, lane = decision["tier"], _lane_for(item)
+        entry = {"n": n, "tier": tier, "auto_tier": decision["auto_tier"],
+                 "lane": lane}
+        if hits:
+            # The preview says why this item stays here, without echoing the
+            # item's content beyond the private term itself.
+            entry.update({"private": True, "private_terms": hits[:5],
+                          "reason": "private term or document name: local only"})
+        items.append(entry)
         if _TIER_ORDER.get(tier, 2) > _TIER_ORDER.get(top_tier, 2):
             top_tier = tier
         if LANE_ORDER.get(lane, 0) > LANE_ORDER.get(top_lane, 0):
@@ -606,9 +636,19 @@ def classify_list_job(job: ListJob, cfg: dict[str, Any]) -> dict[str, Any]:
     sensitive = top_tier in ("LOCAL", "TRUSTED") or top_lane in ("SENSITIVE", "SANITISABLE")
     flagged = [x for x in items
                if x["auto_tier"] != "GLOBAL" or x["lane"] in ("SENSITIVE", "SANITISABLE")]
-    if operation_tier["auto_tier"] != "GLOBAL" or operation_lane in ("SENSITIVE", "SANITISABLE"):
-        flagged.insert(0, {"n": 0, "tier": operation_tier["auto_tier"], "lane": operation_lane})
-    if top_lane == "SENSITIVE":
+    if operation_hits or operation_tier["auto_tier"] != "GLOBAL" \
+            or operation_lane in ("SENSITIVE", "SANITISABLE"):
+        entry = {"n": 0, "tier": ("LOCAL" if operation_hits
+                                  else operation_tier["auto_tier"]),
+                 "lane": ("SENSITIVE" if operation_hits else operation_lane)}
+        if operation_hits:
+            entry.update({"private": True, "private_terms": operation_hits[:5],
+                          "reason": "private term in the operation: local only"})
+        flagged.insert(0, entry)
+    if private_hit:
+        reason = ("private glossary term or project document name: "
+                  "local execution only")
+    elif top_lane == "SENSITIVE":
         reason = "personal or sensitive content classified SENSITIVE: local execution only"
     elif top_lane == "SANITISABLE":
         reason = ("content classified SANITISABLE: pseudonymisation is not implemented, "
@@ -622,13 +662,18 @@ def classify_list_job(job: ListJob, cfg: dict[str, Any]) -> dict[str, Any]:
     return {"tier": top_tier, "lane": top_lane, "sensitive": sensitive,
             "rationale": operation_tier.get("rationale", ""),
             "operation": {"tier": operation_tier["tier"], "lane": operation_lane},
-            "items_flagged": flagged, "local_reason": reason}
+            "items_flagged": flagged, "local_reason": reason,
+            "private_terms": private_all}
 
 
 def preview_list(job: ListJob, *, cfg: dict[str, Any], nodes_available: int = 0,
-                 nodes: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+                 nodes: list[dict[str, Any]] | None = None,
+                 private: list[str] | None = None,
+                 glossary: Any = None,
+                 passages: list[str] | None = None) -> dict[str, Any]:
     """What would leave, plus the privacy result. Sends nothing."""
-    privacy = classify_list_job(job, cfg)
+    privacy = classify_list_job(job, cfg, private=private, glossary=glossary,
+                                passages=passages)
     duplicates = duplicate_rows(job.items)
     nodes_available = max(0, int(nodes_available or 0))
     if privacy["sensitive"]:
@@ -669,32 +714,58 @@ _NAME = re.compile(r"(?<=[^\W\d_])[\s,;:(«\"']+([A-ZÁÉÍÓÚÑ][\wáéíóú�
 
 
 def propose_query_details(text: str, glossary: list[tuple[str, str]] | None = None,
-                          private: list[str] | None = None) -> dict[str, Any]:
+                          private: list[str] | None = None,
+                          passages: list[str] | None = None) -> dict[str, Any]:
     """The query offered to the user before a research answer, with the private
     terms the guard removed.  Nothing is sent until the user approves the query
     (and may edit it).  The template's own words ("Compara … con lo que dicen
     las fuentes públicas sobre …") are not the topic: the query is what follows
     "sobre", and the names the request gives ("la variedad Kanela")."""
     from .web_search import (is_distinctive, propose_query_details as propose,
+                             private_glossary_terms, private_names_from_documents,
                              public_glossary_terms, removed_private_terms,
-                             strip_private_details)
+                             strip_private_details, _public_targets)
     public = public_glossary_terms(glossary or [], text or "")
+    # The merge below must use the same private sources as the web guard: an
+    # entry marked private in the glossary, or a name a project document marks
+    # as the user's own, is not public just because it follows a lookup verb.
+    merge_private = [str(term).strip() for term in private or [] if str(term).strip()]
+    for term in [*private_glossary_terms(glossary or []),
+                 *private_names_from_documents(passages)]:
+        if term and term not in merge_private:
+            merge_private.append(term)
+    # The entity the request asks a public source about is public even when it
+    # is not in the glossary: it is kept by the merge below, not removed as an
+    # unknown capitalised run.  It is not added to ``public`` (the glossary
+    # equivalents), so a place cue in the same sentence still wins.
+    targets = [" ".join(target) for target in _public_targets(text or "", public)]
     m = _TOPIC.search(text or "")
     if m:
         # only the topic the user wrote for the public sources: the rest of
         # the request is about their documents ("el rendimiento del lote AB2"), and a
         # lot code or a name from it does not belong in a public query
-        detail = propose(m.group(1), "", glossary or [], private=private)
+        detail = propose(m.group(1), "", glossary or [], private=private,
+                         passages=passages)
     else:
-        detail = propose(text or "", "", glossary or [], private=private)
+        detail = propose(text or "", "", glossary or [], private=private,
+                         passages=passages)
         words = {w.lower() for w in detail["query"].split()}
+        target_words = {w.casefold() for name in targets for w in name.split()}
         names = [n for n in _NAME.findall(text or "")
-                 if n.lower() not in words and is_distinctive(n)]
+                 if n.lower() not in words and is_distinctive(n)
+                 and n.casefold() not in target_words]
+        # A target already in the query is not appended again; a target the
+        # translation dropped (the glossary definition replaced it) is added
+        # once, as the whole name.
+        missing_targets = [name for name in targets
+                           if not all(word.casefold() in words
+                                      for word in name.split())]
+        names = list(dict.fromkeys(missing_targets + names))
         # the names go through the same filter as the rest: a plot ("la Parcela
         # Sur"), a person ("la Dra. Ana Pérez") or a code is the user's, not a
         # topic (sealed bank v3.2: a plot name was proposed and, approved, sent)
         merged = strip_private_details(" ".join([detail["query"], *names]),
-                                       text or "", private=private,
+                                       text or "", private=merge_private,
                                        public_terms=public)
         merged["removed"] = list(dict.fromkeys([*detail.get("removed", []),
                                                 *merged.get("removed", [])]))
@@ -703,7 +774,7 @@ def propose_query_details(text: str, glossary: list[tuple[str, str]] | None = No
     # kept out (T9.16): a public glossary name is not one of them, while an
     # explicit private term is even if it looks public.
     detail["removed_terms"] = removed_private_terms(
-        text or "", detail["query"], private=private, glossary=glossary,
+        text or "", detail["query"], private=merge_private, glossary=glossary,
         candidates=" ".join([detail["query"], *[n for n in _NAME.findall(text or "")
                                                 if n.lower() not in
                                                 {w.lower() for w in detail["query"].split()}]]))
@@ -720,10 +791,12 @@ def propose_query_details(text: str, glossary: list[tuple[str, str]] | None = No
 
 
 def propose_query(text: str, glossary: list[tuple[str, str]] | None = None,
-                  private: list[str] | None = None) -> str:
+                  private: list[str] | None = None,
+                  passages: list[str] | None = None) -> str:
     """The query offered to the user before a research answer (see
     :func:`propose_query_details`)."""
-    return propose_query_details(text, glossary, private)["query"]
+    return propose_query_details(text, glossary, private,
+                                 passages=passages)["query"]
 
 
 # ---------------------------------------------------------------------------
@@ -800,28 +873,58 @@ def _clean_rows(rows: list[list[Any]], max_rows: int) -> tuple[list[str], list[l
 
 
 def sample_csv(path: Path | str, max_rows: int = 5) -> dict[str, Any] | None:
-    """Header + first ``max_rows`` data rows of a CSV file (never more)."""
+    """Header + first ``max_rows`` data rows of a CSV/TSV file (never more).
+
+    The sample also carries the first lines exactly as the file has them, and
+    the delimiter, encoding and header-row facts in words.  A prompt that
+    showed cells joined with ``" | "`` made a model read a comma-separated
+    file with ``sep='|'`` (6 of 12 proposals); the raw line cannot be mistaken
+    for another delimiter.
+    """
     path = Path(path)
+    suffix = path.suffix.lower()
     try:
-        with open(path, "r", encoding="utf-8", errors="replace", newline="") as handle:
-            sample = handle.read(8192)
-            try:
-                delimiter = csv.Sniffer().sniff(sample, delimiters=",;\t").delimiter
-            except csv.Error:
-                delimiter = ","
-            handle.seek(0)
-            rows: list[list[str]] = []
-            for row in csv.reader(handle, delimiter=delimiter):
-                rows.append(row)
-                if len(rows) >= max_rows + 1:
-                    break
+        raw = path.read_bytes()[:262_144]
     except OSError as exc:
         raise CodeRecipeError(f"cannot read {path.name}: {exc}") from exc
+    encoding = "utf-8"
+    if raw.startswith(b"\xef\xbb\xbf"):
+        encoding = "utf-8-sig"
+    try:
+        text = raw.decode(encoding)
+    except UnicodeDecodeError:
+        encoding = "latin-1"
+        text = raw.decode(encoding)
+    text = text.lstrip("\ufeff")
+    sample = text[:8192]
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
+        delimiter = dialect.delimiter
+    except csv.Error:
+        delimiter = "\t" if suffix == ".tsv" else ","
+    try:
+        has_header = bool(csv.Sniffer().has_header(sample))
+    except csv.Error:
+        has_header = True
+    try:
+        rows: list[list[str]] = []
+        for row in csv.reader(io.StringIO(text), delimiter=delimiter):
+            rows.append(row)
+            if len(rows) >= max_rows + 1:
+                break
+    except csv.Error as exc:
+        raise CodeRecipeError(f"invalid CSV: {exc}") from exc
     cleaned = _clean_rows(rows, max_rows)
     if cleaned is None:
         return None
     headers, data = cleaned
-    return {"name": path.name, "sheet": "", "headers": headers, "rows": data}
+    raw_lines = [line[:1000] for line in text.splitlines()[:max_rows + 1]]
+    names = {",": "comma", ";": "semicolon", "\t": "tab"}
+    return {"name": path.name, "sheet": "", "headers": headers, "rows": data,
+            "kind": "csv", "format": "TSV" if suffix == ".tsv" else "CSV",
+            "delimiter": delimiter, "delimiter_name": names.get(delimiter, "other"),
+            "encoding": encoding, "has_header": has_header,
+            "raw_lines": raw_lines}
 
 
 def sample_text(path: Path | str, max_lines: int = CODE_SAMPLE_LINES,
@@ -1007,6 +1110,24 @@ def sample_document(path: Path | str, max_rows: int = 5,
     return tables
 
 
+def _code_read_example(name: str, table: dict[str, Any] | None) -> str:
+    """One concrete read line with the exact /data path of a provided file."""
+    path = json.dumps(f"/data/{name}", ensure_ascii=False)
+    table = table or {}
+    if table.get("kind") == "text":
+        return f"open({path}, encoding=\"utf-8\").read()"
+    if table.get("kind") == "csv":
+        delimiter = str(table.get("delimiter") or ",")
+        if delimiter == ",":
+            return f"pd.read_csv({path})"
+        shown = "\t" if delimiter == "\t" else delimiter
+        return f"pd.read_csv({path}, sep={json.dumps(shown)})"
+    sheet = str(table.get("sheet") or "")
+    if sheet:
+        return f"pd.read_excel({path}, sheet_name={json.dumps(sheet, ensure_ascii=False)})"
+    return f"open({path}, \"rb\").read()"
+
+
 def build_code_prompt(question: str, files: list[dict[str, Any]],
                       samples: list[dict[str, Any]],
                       correction: dict[str, Any] | None = None,
@@ -1049,19 +1170,39 @@ def build_code_prompt(question: str, files: list[dict[str, Any]],
     for item in files:
         name = str(item.get("name") or "")
         size = item.get("size_bytes")
+        tables = by_name.get(name, [])
         parts.append(f"- FILE: {name}" + (f" ({size} bytes)" if size is not None else ""))
-        for table in by_name.get(name, []):
+        parts.append(f"  Exact path in the sandbox: /data/{name}")
+        parts.append(f"  Read it with: {_code_read_example(name, tables[0] if tables else None)}")
+        for table in tables:
             if table.get("kind") == "text":
                 parts.append("  TEXT: first lines (the rest of the file is NOT shown)")
+                parts.append(f"  Encoding: {table.get('encoding') or 'utf-8'}")
                 for n, line in enumerate(table.get("lines") or [], 1):
                     parts.append(f"  LINE {n}: {line}")
                 continue
+            if table.get("kind") == "csv":
+                fmt = str(table.get("format") or "CSV")
+                delimiter = str(table.get("delimiter") or ",")
+                shown = "\\t" if delimiter == "\t" else delimiter
+                dname = str(table.get("delimiter_name") or
+                            {"\t": "tab", ",": "comma", ";": "semicolon"}.get(
+                                delimiter, "other"))
+                parts.append(f"  {fmt}: {dname}-separated values "
+                             f"(delimiter: {dname} \"{shown}\"); "
+                             f"encoding: {table.get('encoding') or 'utf-8'}; "
+                             f"header row: {'yes (line 1 has the column names)' if table.get('has_header', True) else 'no (line 1 is data)'}")
+                parts.append("  First lines exactly as in the file:")
+                for line in table.get("raw_lines") or []:
+                    parts.append(f"    {line}")
+                continue
             label = table.get("sheet") or "table"
             parts.append(f"  TABLE: {label}")
-            parts.append("  Columns: " + " | ".join(table.get("headers") or []))
+            parts.append("  Header row: " + json.dumps(
+                table.get("headers") or [], ensure_ascii=False))
             for n, row in enumerate(table.get("rows") or [], 1):
-                parts.append(f"  ROW {n}: " + " | ".join(row))
-        if not by_name.get(name):
+                parts.append(f"  ROW {n}: " + json.dumps(row, ensure_ascii=False))
+        if not tables:
             parts.append("  (no Markdown/CSV table was found; only the file name is shown)")
     if correction:
         parts += ["", f"{previous}: trapped={correction.get('trapped') or 'error'}.",

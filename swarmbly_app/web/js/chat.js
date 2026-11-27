@@ -1665,7 +1665,8 @@ const Chat = (() => {
     const run = m.meta.code_run || {};
     const box = h("div.code-result");
     if (run.files?.length) {
-      box.appendChild(h("p", h("strong", t("chat.codeFilesProduced"))));
+      box.appendChild(h("p", h("strong", t(run.partial_files
+        ? "chat.codeFilesPartial" : "chat.codeFilesProduced"))));
       box.appendChild(h("ul.sources", run.files.map((f) => h("li",
         h("span", ` ${f.name} · ${UI.fmtBytes(f.size)} · `),
         h("code", { title: "sha256" }, (f.sha256 || "").slice(0, 16) + "…"),

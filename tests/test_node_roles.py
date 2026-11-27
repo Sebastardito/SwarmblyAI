@@ -132,8 +132,6 @@ def build_packet(attempt, family=None, model=None):
     [{"role": "large_model", "model": "llama3.1:8b", "params_b": 0}],
     [{"role": "large_model", "model": "llama3.1:8b", "params_b": 20000}],
     [{"role": "large_model", "model": "<bad>", "params_b": 8}],
-    [{"role": "reasoner", "model": "llama3.1:8b", "think": False}],
-    [{"role": "reasoner", "model": "llama3.1:8b"}],
     [{"role": "search", "engines": ["a", "b", "c", "d", "e"]}],
     [{"role": "search", "engines": ["<script>"]}],
     [{"role": "corpus", "name": "x" * 41, "size": "S"}],
@@ -147,6 +145,65 @@ def test_roles_validation_rejects(roles):
     problems = validate_advertisement(
         {"node_id": "x", "models": MODELS, "roles": roles})
     assert problems
+
+
+def test_a_reasoner_without_think_is_valid_and_kept_without_the_flag():
+    roles = [{"role": "reasoner", "model": "llama3.1:8b", "think": False},
+             {"role": "reasoner", "model": "qwen2.5:3b"}]
+    problems, clean = clean_roles(roles, MODELS)
+    assert problems == []
+    assert clean == [{"role": "reasoner", "model": "llama3.1:8b"},
+                     {"role": "reasoner", "model": "qwen2.5:3b"}]
+
+
+def test_thinking_capability_reads_api_show_and_caches(monkeypatch):
+    import swarmbly_app.node_roles as N
+
+    N.reset_thinking_cache()
+    calls = []
+
+    class Response:
+        def __init__(self, data):
+            self.data = data
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return self.data
+
+    class Client:
+        def __init__(self, data):
+            self.data = data
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def post(self, url, json=None):
+            calls.append((url, dict(json or {})))
+            return Response(self.data)
+
+    data = {"capabilities": ["completion", "thinking"]}
+    monkeypatch.setattr("swarmbly_app.test_hosts.httpx_client",
+                        lambda **kw: Client(data))
+    cfg = {"model": {"backend": "ollama", "backend_url": "http://127.0.0.1:9"}}
+    assert N.thinking_capability("qwen2.5:7b", cfg) is True
+    assert N.thinking_capability("qwen2.5:7b", cfg) is True
+    assert len(calls) == 1 and calls[0][0].endswith("/api/show")
+    N.reset_thinking_cache()
+    data = {"capabilities": ["completion"]}
+    assert N.thinking_capability("llama3.1:8b", cfg) is False
+    N.reset_thinking_cache()
+    data = {}
+    assert N.thinking_capability("mystery:1b", cfg) is None
+    # a non-Ollama backend is unknown without a call
+    calls.clear()
+    assert N.thinking_capability("qwen2.5:7b",
+                                 {"model": {"backend": "openai_compat"}}) is None
+    assert calls == []
 
 
 def test_all_four_roles_are_valid_and_normalised():
@@ -193,9 +250,17 @@ def test_at_most_eight_accepted_entries():
 def test_derivation_uses_shared_models_threshold_and_reasoner_list():
     cfg = {"node_roles": {"large_model_min_b": 7.0,
                           "reasoner_models": ["qwen2.5:3b"]}}
-    roles = derive_roles(["llama3.1:8b", "qwen2.5:3b", "tiny:0.5b"], cfg)
+    roles = derive_roles(["llama3.1:8b", "qwen2.5:3b", "tiny:0.5b"], cfg,
+                         thinking=lambda name: True)
     assert {"role": "large_model", "model": "llama3.1:8b", "params_b": 8.0} in roles
     assert {"role": "reasoner", "model": "qwen2.5:3b", "think": True} in roles
+    # A model that does not support thinking, and an unknown capability, are
+    # advertised as a reasoner without the think flag.
+    not_think = derive_roles(["qwen2.5:3b"], cfg, thinking=lambda name: False)
+    assert {"role": "reasoner", "model": "qwen2.5:3b"} in not_think
+    unknown = derive_roles(["qwen2.5:3b"], cfg, thinking=lambda name: None)
+    assert {"role": "reasoner", "model": "qwen2.5:3b"} in unknown
+    assert all(entry.get("think") is not True for entry in not_think + unknown)
     assert all(entry.get("model") != "tiny:0.5b" for entry in roles)
     # A higher threshold and an unmarked model remove both.
     other = derive_roles(["llama3.1:8b", "qwen2.5:3b"],
@@ -247,6 +312,24 @@ def test_local_pool_advertises_its_models_roles(app_state):
     roles = pool.peer.advertisement["roles"]
     assert {"role": "large_model", "model": "llama3.1:8b", "params_b": 8.0} in roles
     assert {"role": "large_model", "model": "qwen2.5:7b", "params_b": 7.0} in roles
+    # The capability is unknown here (no Ollama in the test): the role is
+    # advertised without think rather than claiming a capability.
+    assert {"role": "reasoner", "model": "qwen2.5:7b"} in roles
+
+
+def test_a_capable_reasoner_is_advertised_with_think(app_state, monkeypatch):
+    import swarmbly_app.node_roles as N
+    monkeypatch.setattr(N, "thinking_capability",
+                        lambda model, cfg, **kw: True)
+    app_state.config.update({
+        "swarm": {"worker_enabled": False},
+        "model": {"multi_model": True,
+                  "local_models": ["llama3.1:8b", "qwen2.5:7b"]},
+        "node_roles": {"large_model_min_b": 7.0,
+                       "reasoner_models": ["qwen2.5:7b"]},
+    })
+    app_state.start_p2p()
+    roles = app_state._local_pool().peer.advertisement["roles"]
     assert {"role": "reasoner", "model": "qwen2.5:7b", "think": True} in roles
 
 
@@ -298,6 +381,43 @@ def test_think_is_not_claimed_when_the_backend_cannot_take_it(nodes):
         "peer", task_message(role="reasoner", think=True)))
     assert reply["type"] == "result", reply
     assert "think" not in reply["profile"]
+
+
+class NoThinkingBackend:
+    """Accepts the parameter but refuses it like Ollama does for a model
+    without the thinking capability; the retry without think succeeds."""
+
+    name = "fake"
+    accepts_think = True
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def stream_chat(self, messages, *, model, **kw):
+        from swarmbly_app.inference.base import BackendError
+        self.calls.append({"messages": messages, "model": model, **kw})
+        if "think" in kw:
+            raise BackendError(
+                'Ollama HTTP 400: {"error":"\\"qwen2.5:7b\\" does not '
+                'support thinking"}')
+        return GenerationResult(text="answer without think", model=model,
+                                completion_tokens=3, total_ms=5)
+
+
+def test_a_model_without_thinking_is_retried_once_without_the_flag(nodes):
+    state, _ = nodes("R3", worker=True, models=["qwen2.5:7b"],
+                     roles_cfg={"large_model_min_b": 99,
+                                "reasoner_models": ["qwen2.5:7b"]})
+    backend = NoThinkingBackend()
+    state.backends.resolve = lambda cfg=None: backend  # type: ignore[method-assign]
+    reply = asyncio.run(state.worker.handle(
+        "peer", task_message(role="reasoner", think=True)))
+    assert reply["type"] == "result", reply
+    assert reply["text"] == "answer without think"
+    assert len(backend.calls) == 2
+    assert backend.calls[0].get("think") is True
+    assert "think" not in backend.calls[1]
+    assert reply["profile"]["think"] is False
 
 
 def test_a_role_it_does_not_advertise_is_refused_before_anything_runs(nodes):
@@ -377,6 +497,28 @@ def test_role_placement_ignores_workers_without_the_role(monkeypatch):
     outcomes = scheduler.role_stats.snapshot()
     assert outcomes and outcomes[0]["role"] == "large_model"
     assert outcomes[0]["ok"] == 1 and outcomes[0]["failed"] == 0
+
+
+def test_think_travels_only_when_the_reasoner_advertisement_has_it(monkeypatch):
+    _fake_verify(monkeypatch)
+    capable = _peer("capable", [("llama", "llama3.1:8b")],
+                    [{"role": "reasoner", "model": "llama3.1:8b",
+                      "think": True}])
+    unknown = _peer("unknown", [("qwen", "qwen2.5:7b")],
+                    [{"role": "reasoner", "model": "qwen2.5:7b"}])
+    scheduler = _scheduler([capable], {"capable": "thought"})
+    asyncio.run(scheduler.run_task("t0", build_packet, 100, role="reasoner"))
+    assert scheduler.attempts[0].role == "reasoner"
+    # A single-model peer passes model=None to the builder; the role entry is
+    # still found and think is sent.
+    assert "think" in _last_constraints(scheduler)
+    scheduler2 = _scheduler([unknown], {"unknown": "no think"})
+    asyncio.run(scheduler2.run_task("t0", build_packet, 100, role="reasoner"))
+    assert "think" not in _last_constraints(scheduler2)
+
+
+def _last_constraints(scheduler) -> dict:
+    return scheduler.nodes.sent[-1][1]["constraints"]
 
 
 def test_no_role_worker_falls_back_generically_and_says_so(monkeypatch):
