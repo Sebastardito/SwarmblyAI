@@ -117,7 +117,17 @@ admission, egress, lane/tier or model-size rules. If no worker advertises a
 `large_model`/`reasoner` role the task may run on the best generic worker,
 and the metadata, the attempt and the receipt say «role X unavailable, ran on
 Y»; `search`/`corpus` have no truthful substitute, so the step fails honestly
-and the partial answer names it.
+and the partial answer names it. A `reasoner` advertisement carries
+`think: true` only when the worker's Ollama `/api/show` reports the model's
+`thinking` capability (cached); a model that does not support it, or an
+unknown capability, is advertised without the flag, the requester sends
+`think` only when the chosen advertisement has it, and a worker whose backend
+refuses thinking retries once without it and records `think: false`.
+A step completed by a generic worker or by the local model is marked in
+`steps` with `role_fallback` and `ran_on` (and in `role_fallbacks` /
+`step_fallbacks` in the metadata and the receipt); a step with no output is
+`failed`, its dependants are `blocked`, and the user sees the localised note
+that names them, not the first raw backend error.
 
 **Teams (3.5, D-019).** A **team** is a named, stored plan template: an
 ordered list of steps, each with a name, an instruction template (`{request}`
@@ -152,6 +162,30 @@ keeps its per-item statuses; a failed wave marks its own items `failed` with
 the reason and later waves still run. A user stop cancels the run and stays
 `stopped`, never a partial answer. The requester is the coordinator: if it
 goes away the run ends; there is no plan migration in 3.5.
+
+**Data with code (recipe 5).** The approved script runs in the WebAssembly
+sandbox with its working directory at the read-only `/data`, so a bare or
+`./` relative read of a provided input resolves without changing the script
+text. A fresh writable scratch is preopened at `/tmp` with `TMPDIR` pointing
+there (openpyxl/xlsxwriter need it); it counts against the disk quota, is
+never collected as output and is deleted with the run. `/out` is the only
+collected output, and a relative write elsewhere is refused. The writer's
+prompt shows the first CSV/TSV lines raw with the detected delimiter,
+encoding and header-row fact, names each XLSX sheet with its header, and gives
+one concrete read line with the exact `/data/<name>` path. Files left in
+`/out` by a failed or trapped run are flagged `partial`, not shown as the
+result; a failed script offers a corrected proposal, and nothing runs until
+the user approves it.
+
+**Public proposal and list preview.** The research guard keeps a private name
+private in every form and treats the entity the question asks a public source
+about as a public target. A passage-defined scientific name never takes a
+word of that target or of a public glossary term as a genus, so a multi-word
+entity stays contiguous and in question order; public-source words and its
+year stay unless the year is a figure from the user's documents. A removed
+term is reported once, without a sentence-initial imperative, and the list
+preview uses the same private glossary entries and document names to flag
+items and default to this device with the reason.
 
 **Reciprocity credits (3.5, D-020).** A credit is a **signed, non-transferable
 task receipt**, not money. When the requester accepts a verified result from a
@@ -341,7 +375,17 @@ solo envía una tarea con rol a un worker que lo anuncie, aprende por rol y por
 nodo (`RoleStats`) y desprioriza a quien falló; un rol nunca amplía permisos.
 Sin worker para `large_model`/`reasoner` se puede usar el mejor worker genérico
 y el intento, los metadatos y el recibo dicen «rol X no disponible, ejecutado
-en Y». WP4b añade los ejecutores opt-in (por defecto, apagados):
+en Y». El anuncio `reasoner` lleva `think: true` solo cuando el `/api/show` de
+Ollama del worker informa la capacidad `thinking` del modelo (en caché); un
+modelo que no la soporta, o una capacidad desconocida, se anuncia sin la
+marca, el solicitante envía `think` solo si el anuncio elegido la lleva, y un
+worker cuyo backend rechaza thinking reintenta una vez sin la marca y registra
+`think: false`. Un paso completado por un worker genérico o por el modelo
+local lleva `role_fallback` y `ran_on` en `steps` (y en `role_fallbacks` /
+`step_fallbacks` de los metadatos y el recibo); un paso sin salida queda
+`failed`, sus dependientes `blocked`, y el usuario lee la nota localizada que
+los nombra, no el primer error técnico en inglés. WP4b añade los ejecutores
+opt-in (por defecto, apagados):
 **search** anuncia solo los motores que su configuración puede usar, recibe
 solo una consulta pública de una línea en un paquete sin Γ, predecesores ni
 conversación, exige un círculo de confianza (nunca «mis propios
@@ -359,6 +403,33 @@ solicitante: se etiquetan con el miembro y el círculo reales, no entran en su
 glosario ni memoria, y solo se reenvían a un nodo con `circle_passages`
 encendido o a un servicio de modelos con `privacy.third_party_passages`; si
 no, se ejecutan en local o la tarea falla honestamente.
+
+**Datos con código (receta 5).** El script aprobado se ejecuta en el sandbox
+WebAssembly con su directorio de trabajo en `/data` (solo lectura), así que
+una lectura relativa por nombre o `./` de un archivo de entrada se resuelve
+sin cambiar el texto aprobado. Un directorio temporal escribible nuevo se
+preabre en `/tmp` con `TMPDIR` apuntando allí (openpyxl/xlsxwriter lo
+necesitan); cuenta para la cuota de disco, nunca se recoge como salida y se
+borra con la ejecución. `/out` es la única salida recogida y una escritura
+relativa fuera de él se rechaza. El prompt del escritor muestra las primeras
+líneas CSV/TSV tal cual, con el delimitador detectado, la codificación y si la
+primera línea es cabecera, nombra cada hoja XLSX con su cabecera y da una
+línea concreta de lectura con la ruta exacta `/data/<nombre>`. Los archivos
+que deja una ejecución fallida o atrapada en `/out` se marcan `partial` y no
+se presentan como resultado; un script fallido ofrece una propuesta corregida
+y nada se ejecuta hasta que el usuario la apruebe.
+
+**Consulta pública y vista previa de listas.** El guardián de investigación
+mantiene privado un nombre en todas sus formas y trata la entidad que la
+pregunta consulta en una fuente pública como objetivo público. Un nombre
+científico definido por los pasajes nunca toma como género una palabra de ese
+objetivo ni de un término público del glosario, así que una entidad de dos
+palabras queda contigua y en el orden de la pregunta; las palabras de la
+fuente pública y su año se quedan salvo que el año sea una cifra de los
+documentos del usuario. Un término eliminado se informa una vez, sin un
+imperativo inicial de la frase, y la vista previa de la lista usa las mismas
+entradas privadas del glosario y nombres de documentos para marcar elementos
+y proponer este equipo con la razón.
 
 **Créditos de reciprocidad (3.5, D-020).** Un crédito es un **recibo de tarea
 firmado y no transferible**, no dinero. Cuando el solicitante acepta un

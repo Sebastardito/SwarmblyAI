@@ -341,3 +341,132 @@ def test_a_request_without_a_team_is_complete_as_before(nodes):
     assert outcome["metadata"]["team"] is None
     assert all(step["status"] == "completed"
                for step in outcome["metadata"]["steps"])
+
+
+# -- T11.1: a failed role step is either recorded as a fallback or failed ----
+
+from test_node_roles import make_node as make_role_node  # noqa: E402
+
+
+class _AlwaysFailingBackend(FakeBackend):
+    """The reviewer's model fails every call: nothing ran that step."""
+
+    name = "fake"
+
+    def stream_chat(self, messages, *, model, **kw):
+        from swarmbly_app.inference.base import BackendError
+        self.calls.append({"messages": messages, "model": model})
+        raise BackendError("Ollama HTTP 400: simulated execution failure")
+
+
+def _write_review_team():
+    return team([
+        {"id": "s1", "name": "Write", "role": "large_model",
+         "instruction": "Write about {request}"},
+        {"id": "s2", "name": "Review", "role": "reasoner",
+         "depends_on": ["s1"], "instruction": "Review the draft."},
+    ])
+
+
+def _circle(owner, *members):
+    circle = owner.circles.create_circle("T11 neutral circle")
+    for member in members:
+        add_to_circle(owner, member, circle)
+    return circle
+
+
+def test_a_role_fallback_is_recorded_in_steps_meta_and_receipt(nodes, tmp_path):
+    owner, _ = nodes("fallback-owner", worker=False, models=["owner:1b"],
+                     reply="a local review from this device")
+    writer, _ = nodes("fallback-writer", worker=True, models=["llama3.1:8b"])
+    reviewer, _ = make_role_node(
+        tmp_path, "fallback-reviewer", worker=True, models=["llama3.1:8b"],
+        roles_cfg={"large_model_min_b": 99.0,
+                   "reasoner_models": ["llama3.1:8b"]}, mode="circle")
+    reviewer.backends.resolve = lambda cfg=None: _AlwaysFailingBackend()
+    _circle(owner, writer, reviewer)
+    message = _send(owner, "a neutral request", _write_review_team())
+    meta = message["meta"]
+    steps = {step["name"]: step for step in meta["swarm"]["steps"]}
+    assert steps["Write"]["status"] == "completed"
+    assert steps["Review"]["status"] == "completed"
+    assert steps["Review"]["role_fallback"] is True
+    assert steps["Review"]["ran_on"] == "owner:1b"
+    assert meta["swarm"]["step_fallbacks"][0]["task"] == "t1"
+    assert meta["swarm"]["status"] == "complete"
+    assert any(item.get("task") == "t1" and item.get("kind") == "local"
+               for item in meta["swarm"]["role_fallbacks"])
+    assert any(item.get("task") == "t1" for item in meta["receipt"]["role_fallbacks"])
+    assert "a local review from this device" in message["content"]
+
+
+def test_without_a_fallback_the_step_fails_and_the_note_is_localised(nodes, tmp_path):
+    owner, _ = nodes("nofallback-owner", worker=False, models=["owner:1b"])
+    owner.backends.resolve = lambda cfg=None: (_ for _ in ()).throw(
+        RuntimeError("no local model"))
+    owner.orchestrator = None
+    writer, _ = nodes("nofallback-writer", worker=True, models=["llama3.1:8b"])
+    reviewer, _ = make_role_node(
+        tmp_path, "nofallback-reviewer", worker=True,
+        models=["llama3.1:8b"],
+        roles_cfg={"large_model_min_b": 99.0,
+                   "reasoner_models": ["llama3.1:8b"]}, mode="circle")
+    reviewer.backends.resolve = lambda cfg=None: _AlwaysFailingBackend()
+    _circle(owner, writer, reviewer)
+    message = _send(owner, "a neutral request", _write_review_team())
+    meta = message["meta"]
+    steps = {step["name"]: step for step in meta["swarm"]["steps"]}
+    assert steps["Write"]["status"] == "completed"
+    assert steps["Review"]["status"] == "failed"
+    assert meta["answer_status"] == "partial"
+    assert meta["partial"] is True
+    assert [step["name"] for step in meta["swarm"]["missing_steps"]] == ["Review"]
+    assert "Review" in message["content"]
+    assert "could not be completed" in message["content"]
+    assert "Ollama HTTP" not in message["content"]
+    assert "execution failed" not in message["content"]
+
+
+def test_a_team_with_nothing_completed_fails_with_the_localised_note(nodes, tmp_path):
+    owner, _ = nodes("allfail-owner", worker=False, models=["owner:1b"])
+    owner.backends.resolve = lambda cfg=None: (_ for _ in ()).throw(
+        RuntimeError("no local model"))
+    owner.orchestrator = None
+    reviewer, _ = make_role_node(
+        tmp_path, "allfail-reviewer", worker=True,
+        models=["llama3.1:8b"],
+        roles_cfg={"large_model_min_b": 99.0,
+                   "reasoner_models": ["llama3.1:8b"]}, mode="circle")
+    reviewer.backends.resolve = lambda cfg=None: _AlwaysFailingBackend()
+    _circle(owner, reviewer)
+    template = team([
+        {"id": "s1", "name": "Review", "role": "reasoner",
+         "instruction": "Review {request}"},
+    ])
+    message = _send(owner, "a neutral request", template)
+    meta = message["meta"]
+    assert meta["status"] == "failed"
+    assert meta["swarm"]["status"] == "failed"
+    assert "Review" in meta["error"]
+    assert "could not be completed" in meta["error"]
+    assert "Ollama HTTP" not in meta["error"]
+
+
+def test_a_generic_worker_that_runs_a_reasoner_step_is_recorded(nodes):
+    owner, _ = nodes("generic-owner", worker=False, models=["owner:1b"])
+    writer, _ = nodes("generic-writer", worker=True, models=["llama3.1:8b"],
+                      reply="a generic review answer")
+    _circle(owner, writer)
+    template = team([
+        {"id": "s1", "name": "Review", "role": "reasoner",
+         "instruction": "Review {request}"},
+    ])
+    outcome = owner.get_orchestrator().run(
+        "a neutral request", mode="lan", team=template)
+    assert outcome["status"] == "complete", outcome["metadata"]
+    step = outcome["metadata"]["steps"][0]
+    assert step["status"] == "completed"
+    assert step["role_fallback"] is True
+    assert step["fallback"]["kind"] == "generic"
+    assert step["ran_on"] == writer.identity.node_id[:12]
+    assert outcome["metadata"]["role_fallbacks"][0]["kind"] == "generic"

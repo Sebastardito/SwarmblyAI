@@ -57,6 +57,79 @@ DEFAULT_POLICY = {
 }
 
 
+def _table_cells(line: str) -> list[str]:
+    body = line.strip()
+    if body.startswith("|"):
+        body = body[1:]
+    if body.endswith("|"):
+        body = body[:-1]
+    return [cell.strip() for cell in body.split("|")]
+
+
+def _table_rule(line: str) -> bool:
+    cells = _table_cells(line)
+    return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells)
+
+
+def _table_term(cell: str) -> str:
+    """A table's term without Markdown emphasis or backticks."""
+    return re.sub(r"^[*_`\s]+|[*_`\s]+$", "", str(cell or "")).strip()
+
+
+def _table_private_rows(text: str) -> list[tuple[str, str]]:
+    """Private rows of a Markdown glossary table, read App-side.
+
+    LCE's ``glossary_lines`` keeps (term, second cell) and drops the third, so
+    a row written as ``| Término | Definición | privado |`` looked public.  A
+    row is private when any cell is exactly ``privado``/``private`` (any
+    case), when a ``privado``/``private`` column says ``sí``/``yes``/``true``,
+    or when a cell carries the App's ``privado: sí`` mark.  The header row and
+    the ``|---|---|`` rule are not entries.
+    """
+    from .memory_capture import private_value, split_private_mark
+
+    lines = str(text or "").splitlines()
+    out: list[tuple[str, str]] = []
+    header: list[str] = []
+    for index, line in enumerate(lines):
+        stripped = line.strip()
+        if not stripped.startswith("|") or _table_rule(stripped):
+            continue
+        cells = _table_cells(stripped)
+        is_header = not header and index + 1 < len(lines) \
+            and _table_rule(lines[index + 1].strip())
+        if is_header:
+            header = [re.sub(r"[^\wáéíóúñü]+", "", cell.casefold())
+                      for cell in cells]
+            continue
+        if not any(cells):
+            continue
+        marks = {re.sub(r"[^\wáéíóúñü]+", "", cell.casefold()) for cell in cells}
+        privacy_columns = {i for i, name in enumerate(header)
+                           if name in {"privado", "privada", "private", "privacidad",
+                                       "privacy", "estado", "publico", "público"}}
+        private = bool(marks & {"privado", "privada", "private", "privad"})
+        if not private:
+            for i in privacy_columns:
+                if i < len(cells) and cells[i].strip() and private_value(cells[i]):
+                    private = True
+                    break
+        if not private:
+            for cell in cells:
+                if split_private_mark("|" + cell)[1]:
+                    private = True
+                    break
+        if not private:
+            continue
+        term = _table_term(cells[0]) if cells else ""
+        right = cells[1] if len(cells) > 1 else ""
+        if term and right.casefold() in {"privado", "privada", "private"}:
+            right = ""
+        if term:
+            out.append((term, right))
+    return out
+
+
 class LCEAdapter:
     def __init__(self, dirs: DataDirs):
         self.dirs = dirs
@@ -209,6 +282,35 @@ class LCEAdapter:
         return _with_csv_tables(all_roots, self.index.retrieve(all_roots, query, k=k,
                                                                expansion=expansion, embed=embed))
 
+    def passages_for_roots(self, extra_dirs: list[str] | tuple[str, ...] = (),
+                           roots: list[Path] | None = None, *,
+                           max_docs: int = 50, max_passages: int = 200) -> list[str]:
+        """The text of the project's documents, bounded, for local guards.
+
+        Used only to read a name the documents themselves call private; the
+        texts stay on this computer and are never part of a proposal or a
+        packet.
+        """
+        out: list[str] = []
+        try:
+            sources = self.list_sources(extra_dirs, roots)
+        except Exception:
+            return out
+        for source in sources[:max_docs]:
+            if source.get("glossary") or not source.get("doc_id"):
+                continue
+            try:
+                spans = self.document_spans(str(source["doc_id"]), extra_dirs, roots)
+            except Exception:
+                continue
+            for span in spans:
+                text = str(span.get("text") or "").strip()
+                if text:
+                    out.append(text)
+                    if len(out) >= max_passages:
+                        return out
+        return out
+
     def document_spans(self, doc_id: str, extra_dirs: list[str] | tuple[str, ...] = (),
                        roots: list[Path] | None = None) -> list[dict[str, Any]]:
         """Every paragraph of one document (by content hash), in order, each
@@ -271,6 +373,11 @@ class LCEAdapter:
                 for term, right in _passages.glossary_lines(text):
                     if term not in out and split_private_mark(right)[1]:
                         out.append(term)
+                # LCE drops the third cell of a Markdown table; a row marked
+                # there (| Término | Definición | privado |) is read here.
+                for term, _right in _table_private_rows(text):
+                    if term not in out:
+                        out.append(term)
         return out
 
     # a shorter name for callers that only ask "which terms are private?"
@@ -284,13 +391,15 @@ class LCEAdapter:
         if not private:
             return entries
         from .memory_capture import split_private_mark
+        from .web_search import _fold as fold_term
+        private_folded = {fold_term(term).strip() for term in private}
         out: list[tuple[str, str]] = []
         for term, right in entries:
             clean, marked = split_private_mark(right)
             # The mark travels in the entry's existing two-field shape: every
             # caller keeps working, and the proposal can read it App-side even
             # though LCE itself dropped it.
-            if term in private or marked:
+            if fold_term(term).strip() in private_folded or marked:
                 out.append((term, f"{clean} | privado" if clean else "privado"))
             else:
                 out.append((term, right))

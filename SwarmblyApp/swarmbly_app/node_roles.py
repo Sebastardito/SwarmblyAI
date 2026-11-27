@@ -28,7 +28,8 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any
+import time
+from typing import Any, Callable
 
 # The complete set fixed now, so WP4b can add executors without a wire change.
 NODE_ROLES = ("large_model", "reasoner", "search", "corpus")
@@ -125,10 +126,13 @@ def clean_roles(value: Any, models: Any = ()) -> tuple[list[str], list[dict]]:
                 clean.append({"role": "large_model", "model": model,
                               "params_b": float(params)})
             else:
-                if item.get("think") is not True:
-                    problems.append("reasoner needs think: true")
-                    continue
-                clean.append({"role": "reasoner", "model": model, "think": True})
+                # A reasoner whose backend is known not to support thinking
+                # (or whose capability is unknown) is advertised without the
+                # flag; the requester sends ``think`` only when it is true.
+                entry = {"role": "reasoner", "model": model}
+                if item.get("think") is True:
+                    entry["think"] = True
+                clean.append(entry)
         elif role == "search":
             engines = item.get("engines")
             if not isinstance(engines, list) or len(engines) > MAX_SEARCH_ENGINES:
@@ -282,9 +286,61 @@ def configured_corpus_share(cfg: dict[str, Any]) -> dict[str, Any] | None:
             "display_name": str(share.get("display_name") or "").strip()}
 
 
+_THINK_CACHE: dict[tuple[str, str], tuple[float, bool | None]] = {}
+_THINK_TTL_S = 300.0
+_THINK_UNKNOWN_TTL_S = 60.0
+_DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
+
+
+def thinking_capability(model: str, cfg: dict[str, Any], *,
+                        timeout: float = 2.0) -> bool | None:
+    """Whether Ollama reports the model's ``thinking`` capability.
+
+    Read from ``POST /api/show`` (``capabilities`` contains ``"thinking"``),
+    cached per (URL, model).  ``None`` means the backend is not Ollama, the
+    call failed, or the response does not say: an unknown capability must
+    never be announced as ``think: true``.
+    """
+    model_cfg = cfg.get("model") or {}
+    backend = str(model_cfg.get("backend") or "auto")
+    if backend not in ("auto", "ollama"):
+        return None
+    url = str(model_cfg.get("backend_url") or "").strip().rstrip("/") or _DEFAULT_OLLAMA_URL
+    key = (url, str(model or ""))
+    now = time.monotonic()
+    cached = _THINK_CACHE.get(key)
+    if cached is not None:
+        ttl = _THINK_TTL_S if cached[1] is not None else _THINK_UNKNOWN_TTL_S
+        if now - cached[0] < ttl:
+            return cached[1]
+    result: bool | None = None
+    try:
+        from . import test_hosts
+        with test_hosts.httpx_client(timeout=timeout) as client:
+            response = client.post(f"{url}/api/show",
+                                   json={"model": model, "name": model})
+            response.raise_for_status()
+            data = response.json()
+        capabilities = data.get("capabilities")
+        if isinstance(capabilities, list):
+            result = "thinking" in {str(item).strip().lower()
+                                    for item in capabilities}
+    except Exception:
+        result = None
+    _THINK_CACHE[key] = (now, result)
+    return result
+
+
+def reset_thinking_cache() -> None:
+    """For tests: forget the cached ``/api/show`` answers."""
+    _THINK_CACHE.clear()
+
+
 def derive_roles(models: list[str], cfg: dict[str, Any], *,
                  announce: bool = True,
-                 corpus_share: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+                 corpus_share: dict[str, Any] | None = None,
+                 thinking: Callable[[str], bool | None] | None = None
+                 ) -> list[dict[str, Any]]:
     """The roles a node may advertise for ``models`` (large_model, reasoner,
     search, corpus).
 
@@ -312,9 +368,15 @@ def derive_roles(models: list[str], cfg: dict[str, Any], *,
         if size is not None and size >= threshold:
             roles.append({"role": "large_model", "model": name,
                           "params_b": float(size)})
+    check_thinking = thinking or (lambda name: thinking_capability(name, cfg))
     for name in offered:
         if name in marked:
-            roles.append({"role": "reasoner", "model": name, "think": True})
+            entry: dict[str, Any] = {"role": "reasoner", "model": name}
+            # Never widen a role: ``think: true`` only for a model Ollama
+            # reports as supporting thinking; unknown stays without the flag.
+            if check_thinking(name) is True:
+                entry["think"] = True
+            roles.append(entry)
     # WP4b: search only with the owner's opt-in, and only for engines this
     # node's configuration can really use.
     if search_enabled(cfg):

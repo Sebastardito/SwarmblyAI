@@ -318,7 +318,7 @@ def test_02_data_is_read_only_and_not_linked(runner: SandboxRunner, tmp_path: Pa
 # --------------------------------------------------------------------------- 3. no writes outside /out
 
 
-def test_03_no_writes_outside_out_and_symlinks_rejected(
+def test_03_no_writes_outside_out_and_scratch_and_symlinks_rejected(
         runner: SandboxRunner, tmp_path: Path) -> None:
     data = tmp_path / "input.csv"
     data.write_text("a\n1\n")
@@ -398,6 +398,9 @@ def test_03_no_writes_outside_out_and_symlinks_rejected(
     allowed = {
         "mkdir /out/sub",
         "write /out/ok.txt",
+        # A per-run scratch is writable at /tmp; it is never collected as
+        # output and is removed with the run.
+        "write /tmp/pwned.txt",
         "symlink rel ../../etc",
         "symlink nested ../../etc",
     }
@@ -733,6 +736,101 @@ def test_09_functional_pandas_and_openpyxl(runner: SandboxRunner,
     assert {"result.csv", "xlsx.json"} <= set(files)
     assert files["result.csv"]["size"] > 0 and files["xlsx.json"]["size"] > 0
     assert len(files["result.csv"]["sha256"]) == 64
+
+
+def test_relative_reads_resolve_in_data_and_relative_writes_are_refused(
+        runner: SandboxRunner, tmp_path: Path) -> None:
+    """Recipe 5 writes bare names (`pd.read_csv("hive.csv")`): the guest's
+    working directory is the read-only /data, so a relative read resolves and
+    a relative write is refused (only /out is writable)."""
+    source = tmp_path / "hive.csv"
+    source.write_text("hive,apiary,weight\nh1,a1,10\nh2,a2,20\n",
+                      encoding="utf-8")
+    script = textwrap.dedent(
+        """
+        import os
+        import pandas as pd
+
+        print("CWD=" + os.getcwd())
+        df = pd.read_csv("hive.csv")
+        print("ROWS=" + str(len(df)))
+        print("HEAD=" + open("./hive.csv", encoding="utf-8").readline().strip())
+        try:
+            open("escape.txt", "w", encoding="utf-8").write("no")
+        except OSError:
+            print("RELATIVE_WRITE_REFUSED")
+        else:
+            print("RELATIVE_WRITE_SUCCEEDED")
+        with open("/out/ok.txt", "w", encoding="utf-8") as handle:
+            handle.write("ok")
+        """
+    )
+    result = runner.run(script, [source], Limits(deadline_s=60), "pytest")
+    assert result.ok, result.stderr
+    assert "CWD=/data" in result.stdout
+    assert "ROWS=2" in result.stdout
+    assert "HEAD=hive,apiary,weight" in result.stdout
+    assert "RELATIVE_WRITE_REFUSED" in result.stdout
+    assert "RELATIVE_WRITE_SUCCEEDED" not in result.stdout
+    assert [item["name"] for item in result.files] == ["ok.txt"]
+
+
+def test_writable_scratch_tmp_serves_xlsx_and_is_never_output(
+        runner: SandboxRunner, tmp_path: Path) -> None:
+    """openpyxl/xlsxwriter stage through tempfile: /tmp is writable per run,
+    /data stays read-only, and nothing in /tmp is collected as output."""
+    source = tmp_path / "input.csv"
+    source.write_text("hive,apiary\nh1,a1\n", encoding="utf-8")
+    script = textwrap.dedent(
+        """
+        import os
+        import tempfile
+        from openpyxl import Workbook
+
+        print("TMPDIR=" + os.environ.get("TMPDIR", ""))
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as handle:
+            handle.write("scratch")
+            scratch = handle.name
+        print("SCRATCH=" + os.path.relpath(scratch, "/tmp"))
+        open("/tmp/left-after-run.txt", "w", encoding="utf-8").write("left")
+        wb = Workbook()
+        wb.active["A1"] = "ok"
+        wb.save("/out/book.xlsx")
+        with open("/out/ok.txt", "w", encoding="utf-8") as handle:
+            handle.write("ok")
+        """
+    )
+    result = runner.run(script, [source], Limits(deadline_s=60), "pytest")
+    assert result.ok, result.stderr
+    assert "TMPDIR=/tmp" in result.stdout
+    assert "SCRATCH=" in result.stdout
+    assert {item["name"] for item in result.files} == {"book.xlsx", "ok.txt"}
+    assert not any("left-after-run" in item["name"] for item in result.files)
+    # A scratch file of one run is gone before the next run starts.
+    later = runner.run("open('/tmp/left-after-run.txt')", [], Limits(deadline_s=30),
+                       "pytest")
+    assert later.ok is False and later.trapped == "error"
+
+
+def test_scratch_writes_count_against_the_disk_quota(runner: SandboxRunner) -> None:
+    result = runner.run(
+        "open('/tmp/huge.bin', 'wb').write(b'x' * 20000)", [],
+        Limits(deadline_s=30, max_out_bytes=1000), "pytest")
+    assert result.ok is False
+    assert result.trapped == "disk"
+    assert result.max_out_bytes_seen > 1000
+    assert result.files == []
+
+
+def test_a_failed_run_reports_partial_files_not_a_result(
+        runner: SandboxRunner) -> None:
+    result = runner.run(
+        "open('/out/partial.txt', 'w').write('partial'); raise SystemExit(3)", [],
+        Limits(deadline_s=30), "pytest")
+    assert result.ok is False and result.trapped == "error"
+    assert result.files_partial is True
+    assert [item["name"] for item in result.files] == ["partial.txt"]
+    assert result.files[0]["partial"] is True
 
 
 def test_09b_shared_cache_has_no_user_data(sandbox_root: Path,

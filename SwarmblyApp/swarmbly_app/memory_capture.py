@@ -354,7 +354,8 @@ def _fold(value: Any) -> str:
 # value may also say so ("sí", "yes", "true") or not ("no", "false").
 _PRIVATE_KEYS = frozenset({"privado", "privada", "private", "privad@"})
 _TRUE_WORDS = frozenset({"", "si", "sí", "yes", "true", "y", "s", "1",
-                         "verdadero", "verdadera", "x"})
+                         "verdadero", "verdadera", "x",
+                         "privado", "privada", "private", "privad@"})
 _FALSE_WORDS = frozenset({"no", "false", "n", "0", "falso", "falsa",
                           "publico", "público", "public", "pública"})
 

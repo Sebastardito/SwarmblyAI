@@ -1132,7 +1132,8 @@ class ChatService:
                     except Exception:
                         pairs_now = []
                 request.receipt_ctx["web_offer"] = web_search.propose_query_details(
-                    user_text, expansion.keywords if expansion else "", pairs_now)
+                    user_text, expansion.keywords if expansion else "", pairs_now,
+                    passages=[str(s.get("text") or "") for s in sources])
             proposals = None
             if capture and not request.memory_saved:
                 exp_model2 = ((cfg.get("lce") or {}).get("expansion_model")
@@ -1256,7 +1257,8 @@ class ChatService:
                     if web_found is None and request.receipt_ctx.get("web_offer") is None:
                         # "the sources do not say" comes with a way to look further
                         request.receipt_ctx["web_offer"] = web_search.propose_query_details(
-                            user_text, expansion.keywords if expansion else "")
+                            user_text, expansion.keywords if expansion else "",
+                            passages=[str(s.get("text") or "") for s in sources])
                 blocks.insert(0, block)
             if request.memory_saved and not request.memory_saved.get("error"):
                 blocks.append(_MEMORY_DONE.get(_lang(user_text), _MEMORY_DONE["en"]).format(
@@ -2374,10 +2376,18 @@ class ChatService:
         cfg = self._code_cfg()
         destination = proposal.get("model_destination") or {"clase": egress.LOCAL, "host": ""}
 
-        previews = self._code_previews(run_id, files) if run_id else []
+        # A failed run may have left a partial file; never show its content as
+        # the result of the run.
+        previews = self._code_previews(run_id, files) if run_id and not trapped else []
         lines: list[str] = []
         if trapped:
             lines.append(f"**{'El script no terminó' if es else 'The script did not finish'}** — {reason}")
+            if int(proposal.get("corrections") or 0) < int(cfg["max_corrections"] or 0):
+                lines.append(
+                    "Puedes pedir un script corregido con el botón «Corregir script»; "
+                    "no se ejecuta nada hasta que lo apruebes." if es else
+                    "You can ask for a corrected script with the «Correct script» "
+                    "button; nothing runs until you approve it.")
         else:
             lines.append(f"**{'Calculado por el script' if es else 'Computed by the script'}** "
                          f"({'no por el modelo' if es else 'not by the model'}).")
@@ -2407,11 +2417,17 @@ class ChatService:
         lines.append(self._code_clip(stderr, 4000, lang) if stderr else
                      ("(vacío)" if es else "(empty)"))
         lines.append("```")
-        lines += ["", f"### {'Archivos producidos' if es else 'Files produced'}"]
+        partial = bool(trapped)
+        heading = (("Archivos parciales; la ejecución falló" if es else
+                    "Partial files; the run failed") if partial else
+                   ("Archivos producidos" if es else "Files produced"))
+        lines += ["", f"### {heading}"]
         if files:
             for item in files:
                 size = int(item.get("size") or 0)
-                lines.append(f"- `{item.get('name')}` — {size} B — sha256 `{item.get('sha256')}`")
+                suffix = (" — parcial" if es else " — partial") if partial else ""
+                lines.append(f"- `{item.get('name')}` — {size} B — sha256 "
+                             f"`{item.get('sha256')}`{suffix}")
         else:
             lines.append("- " + ("Ninguno." if es else "None."))
         if previews:
@@ -2428,12 +2444,14 @@ class ChatService:
 
         sha = str(data.get("script_sha256") or proposal["script_sha256"])
         files_meta = []
+        files_partial = bool(trapped or data.get("files_partial"))
         for item in files:
             name = str(item.get("name") or "")
             files_meta.append({
                 "name": name,
                 "size": int(item.get("size") or 0),
                 "sha256": str(item.get("sha256") or ""),
+                "partial": bool(files_partial or item.get("partial")),
                 "url": (f"/api/recipes/code/runs/{run_id}/files/{quote(name, safe='/')}"
                         if run_id else ""),
             })
@@ -2455,6 +2473,7 @@ class ChatService:
                 "trapped": trapped,
                 "elapsed_s": float(data.get("elapsed_s") or 0.0),
                 "approved_by": "user",
+                "files_partial": files_partial,
                 "corrections": int(proposal.get("corrections") or 0),
                 "model": writer_model,
                 "backend": writer_backend,
@@ -2467,6 +2486,7 @@ class ChatService:
                 "file_refs": [str(item.get("rel")) for item in proposal.get("files") or []],
                 "question": proposal["question"],
                 "files": files_meta,
+                "partial_files": files_partial,
                 "max_corrections": cfg["max_corrections"],
                 "stdout_chars": len(stdout),
                 "stderr_chars": len(stderr),
@@ -3139,14 +3159,16 @@ class ChatService:
         answer_status = status or str(metadata.get("status") or "complete")
         if answer_status == "failed":
             # Nothing usable completed: an honest failure, not a partial answer.
+            # The user reads the localised note that names every missing step,
+            # not the first raw English backend error.
             missing = list(metadata.get("missing_steps") or [])
-            detail = ""
-            for step in missing:
-                detail = str(step.get("detail") or step.get("reason") or "").strip()
-                if detail:
-                    break
-            reason = (" ".join(detail.split())[:240]
-                      or "no step could be completed")
+            reason = str(metadata.get("partial_note") or "").strip()
+            if not reason and missing:
+                from .engine.orchestrator import _missing_note
+                reason = _missing_note(request.lang or "en", missing)
+            if not reason:
+                reason = ("no step could be completed" if request.lang != "es"
+                          else "no se pudo completar ningún paso")
             return self._fail(request, reason, stages=stages, swarm=metadata)
         truncated = metadata.get("truncated_tasks") or []
         note = (f"output reached its token budget in {len(truncated)} task(s); the "
@@ -3339,6 +3361,12 @@ class ChatService:
                 consent=consent, passages=ctx.get("passages") or [],
                 fragments=fragments, extra_sends=extra_sends, model_destination=dest,
                 ignore_ledger_fragments=bool(distributed))
+            if distributed and distributed.get("role_fallbacks"):
+                # D-018: a step that ran on a generic worker or on this
+                # device's model is in the receipt too, with where it ran.
+                meta["receipt"]["role_fallbacks"] = [
+                    dict(item) for item in distributed["role_fallbacks"]
+                    if isinstance(item, dict)]
             if ctx.get("skill"):
                 # 3.4: which skill's body the model saw, by name and content hash
                 meta["receipt"]["skill"] = dict(ctx["skill"])

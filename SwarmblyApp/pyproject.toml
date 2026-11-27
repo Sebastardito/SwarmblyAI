@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swarmbly-app"
-version = "0.8.0"
+version = "0.8.1"
 description = "Swarmbly App — integrated decentralized AI client and network dashboard for SwarmblyAI + SwarmblyLCE. Fragments the problem, not the model."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -49,7 +49,7 @@ tools = ["mcp==2.3.0"]
 # Pinned to the umbrella release tag: the App and the runtime are released
 # together (D-014).
 agent = [
-  "swarmbly-agent @ git+https://github.com/Sebastardito/SwarmblyAI.git@v3.5.0#subdirectory=SwarmblyCore/agent",
+  "swarmbly-agent @ git+https://github.com/Sebastardito/SwarmblyAI.git@v3.5.1#subdirectory=SwarmblyCore/agent",
 ]
 # Recipe 5 sandbox (D-010). Exact pins, deliberately not ranges: wasi-python
 # 0.1.5 is young and only its named public API is promised. Upgrades require a

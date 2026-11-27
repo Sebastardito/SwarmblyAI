@@ -206,8 +206,14 @@ Limitations are documented, never hidden. *[Español](#español) below.*
     and the free memory at start. Until the cache is ready, recipe 5 is
     unavailable with the reason (preparing, not prepared, failed or too little
     free memory) and the answer continues without it: the one-time compile
-    never happens inside a request. A cache recorded by another `wasi-python`
-    or Python version is stale and is prepared again.
+    never happens inside a request. Inside a run, the guest's working
+    directory is the read-only `/data` (a bare input name resolves there), a
+    fresh writable scratch is preopened at `/tmp` (deleted with the run and
+    counted against the disk quota), and `/out` is the only collected output;
+    there is no network, no process and no other host path. A file left in
+    `/out` by a failed or trapped run is partial, not a result. A cache
+    recorded by another `wasi-python` or Python version is stale and is
+    prepared again.
     The measurement stays local and is the only compile data in the export.
 38. **The doctor export is allow-listed, not redacted.** It contains versions,
     OS/architecture, Python, CPU/RAM/GPU class, installed extras, Ollama
@@ -395,7 +401,13 @@ consult.
     memoria libre al iniciar. Hasta que la caché está lista, la
     receta 5 no está disponible con la razón (preparando, sin preparar, falló
     o poca memoria libre) y la respuesta sigue sin ella: la compilación nunca
-    ocurre dentro de una solicitud. Una caché de otra versión de
+    ocurre dentro de una solicitud. Dentro de una ejecución, el directorio de
+    trabajo del invitado es `/data` (solo lectura; allí se resuelve un nombre
+    de archivo simple), un directorio temporal escribible nuevo se preabre en
+    `/tmp` (se borra con la ejecución y cuenta para la cuota de disco) y
+    `/out` es la única salida recogida; no hay red, ni procesos, ni otra ruta
+    del equipo. Un archivo que deja una ejecución fallida o atrapada en
+    `/out` es parcial, no un resultado. Una caché de otra versión de
     `wasi-python` o de Python se considera desactualizada.
     38. La exportación de diagnóstico es una lista blanca, no un texto
     redactado: contiene versiones, sistema y arquitectura, Python, clase de

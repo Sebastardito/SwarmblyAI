@@ -353,6 +353,7 @@
   "codeDownload": "Download",
   "codeCorrect": "Propose a corrected script",
   "codeFilesProduced": "Files produced",
+  "codeFilesPartial": "Partial files; the run failed",
   "codeRanChip": "Script ran: {t} s",
   "codeTrappedChip": "Script stopped",
   "codeChipTitle": "Approved script sha256 {sha}…",

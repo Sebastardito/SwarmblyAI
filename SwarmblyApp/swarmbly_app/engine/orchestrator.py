@@ -585,6 +585,7 @@ class Orchestrator:
         resolved: dict[str, dict[str, Any]] = {}
         local_fallbacks: list[str] = []
         local_role_fallbacks: list[dict[str, Any]] = []
+        step_provenance: dict[str, dict[str, Any]] = {}
         local_rejected: list[str] = []
         tie_breaks: list[dict[str, Any]] = []
         # Tasks whose result is corpus material: their text may only be
@@ -648,17 +649,35 @@ class Orchestrator:
                 # node made one section fail and the request with it).
                 fallback, ok = await local_rescue(task_id, build, check, str(exc),
                                                   passages=requires_passages)
-                if fallback is not None and requested_role:
-                    local_role_fallbacks.append(
-                        {"task": task_id, "role": requested_role,
-                         "node": self.local_model or "local model",
-                         "reason": "no role worker answered"})
+                if fallback is not None:
+                    ran_on = self.local_model or "local model"
+                    step_provenance[task_id] = {
+                        "kind": "local", "role": requested_role,
+                        "ran_on": ran_on, "node": ran_on,
+                        "reason": "no role worker answered"}
+                    if requested_role:
+                        local_role_fallbacks.append(
+                            {"task": task_id, "role": requested_role,
+                             "node": ran_on, "kind": "local",
+                             "ran_on": ran_on,
+                             "reason": "no role worker answered"})
                 if fallback is None:
                     raise
                 if not ok:
                     fallback.telemetry = dict(fallback.telemetry or {}, degraded=True)
                 replicas = [fallback]
                 local_fallbacks.append(task_id)
+            # A generic worker may have answered a role task when no worker
+            # advertised the role: the scheduler recorded it on the attempt.
+            generic = next((a for a in scheduler.attempts
+                            if a.task_id == task_id and a.role_fallback
+                            and a.status in ("accepted", "degraded")), None)
+            if generic is not None and task_id not in step_provenance:
+                step_provenance[task_id] = {
+                    "kind": "generic", "role": generic.role,
+                    "ran_on": generic.node_id[:12],
+                    "node": generic.node_id[:12],
+                    "reason": generic.note or "no role worker answered"}
             if check is not None and replicas and all(
                     (r.telemetry or {}).get("degraded") for r in replicas) and not (
                     task_id in local_fallbacks):
@@ -671,6 +690,17 @@ class Orchestrator:
                 if fallback is not None and ok:
                     replicas = [fallback]
                     local_fallbacks.append(task_id)
+                    ran_on = self.local_model or "local model"
+                    step_provenance[task_id] = {
+                        "kind": "local", "role": requested_role,
+                        "ran_on": ran_on, "node": ran_on,
+                        "reason": "all replicas rejected"}
+                    if requested_role:
+                        local_role_fallbacks.append(
+                            {"task": task_id, "role": requested_role,
+                             "node": ran_on, "kind": "local",
+                             "ran_on": ran_on,
+                             "reason": "all replicas rejected"})
             if path == "enumerated" and tie_break and len(replicas) == 2 and not any(
                     (r.telemetry or {}).get("degraded") for r in replicas):
                 items = _item_texts(plan_by_id[task_id].instruction)
@@ -759,12 +789,25 @@ class Orchestrator:
         for task_id in order:
             state = outcome.state(task_id)
             task = plan_by_id[task_id]
-            steps_meta.append({
+            step_meta = {
                 "step": task_id,
                 "name": team_labels.get(task_id) or _task_label(task),
                 "role": str((task_roles or {}).get(task_id)
                             or getattr(task, "role", "") or ""),
-                **state.to_dict()})
+                **state.to_dict()}
+            provenance = step_provenance.get(task_id)
+            if provenance:
+                # The step ran on a fallback; the answer may be complete, but
+                # the metadata never pretends the role worker answered it.
+                step_meta.update({
+                    "role_fallback": True,
+                    "ran_on": provenance.get("ran_on", ""),
+                    "fallback": dict(provenance),
+                })
+                if state.status == "completed" and not step_meta.get("detail"):
+                    step_meta["detail"] = (f"ran on {provenance.get('ran_on', '')} "
+                                           f"(role unavailable)")
+            steps_meta.append(step_meta)
         completed_steps = [s for s in steps_meta if s["status"] == "completed"]
         missing_steps = [s for s in steps_meta if s["status"] != "completed"]
         if not completed_steps:
@@ -778,7 +821,9 @@ class Orchestrator:
         accepted = [a for a in scheduler.attempts if a.status in ("accepted", "degraded")]
         failed = [a for a in scheduler.attempts if a.status == "failed"]
         role_fallbacks = [
-            {"task": a["task"], "role": a["role"], "node": a["node"]}
+            {"task": a["task"], "role": a["role"], "node": a["node"],
+             "kind": "generic", "ran_on": a["node"],
+             "reason": a.get("note") or "no role worker answered"}
             for a in attempts if a.get("role_fallback")] + local_role_fallbacks
         role_failed = [
             {"task": a.task_id, "role": a.role, "node": a.node_id[:12],
@@ -936,6 +981,8 @@ class Orchestrator:
             # 3.5, D-018: requested roles, honest substitutions and what this
             # requester observed per (node, role). Never the peer's own claim.
             "role_fallbacks": role_fallbacks,
+            "step_fallbacks": [dict(step_provenance[t], task=t)
+                               for t in order if t in step_provenance],
             "role_failed": role_failed,
             "role_outcomes": (scheduler.role_stats.snapshot()
                               if any(a.get("role") for a in attempts) else []),

@@ -171,7 +171,9 @@ def test_prompt_carries_only_the_sample_and_never_the_sentinel(tmp_path: Path):
     sample = sample_csv(csv_path)
     prompt = build_code_prompt("average weight per apiary", [{"name": "table.csv"}],
                                [sample])
-    assert "hive | apiary | weight" in prompt
+    assert "hive,apiary,weight" in prompt
+    assert 'delimiter: comma ","' in prompt and "header row: yes" in prompt
+    assert 'pd.read_csv("/data/table.csv")' in prompt
     assert "ROW-5" in prompt and "ROW-6" not in prompt
     assert prompt.count("ROW-") == 5
 
@@ -201,7 +203,8 @@ def test_proposal_uses_a_fake_model_and_never_runs(app_state, tmp_path, monkeypa
     assert proposal["corrections"] == 0 and proposal["corrections_left"] == 2
     assert called == [], "propose must not invoke the broker or issue a token"
     prompt = fake.prompts[-1]
-    assert "hive | apiary | weight" in prompt
+    assert "hive,apiary,weight" in prompt
+    assert 'pd.read_csv("/data/hive.csv")' in prompt
     assert "SENTINEL-APIARY" not in prompt
     assert "hive-5" in prompt and "hive-6" not in prompt
     messages = client.get(f"/api/conversations/{proposal['conversation_id']}/messages").json()
@@ -359,7 +362,8 @@ def test_successful_run_meta_receipt_and_safe_download(app_state, tmp_path, monk
     message = approved.json()["assistant_message"]
     code = message["meta"]["code"]
     assert set(code) == {"script_sha256", "files_in", "trapped", "elapsed_s",
-                         "approved_by", "corrections", "model", "backend"}
+                         "approved_by", "corrections", "model", "backend",
+                         "files_partial"}
     assert code["approved_by"] == "user" and code["trapped"] is None
     assert code["model"] == "fake-model:1b"
     assert code["backend"]
@@ -502,6 +506,81 @@ def test_recipe5_script_reads_the_text_and_the_spreadsheet(
         message = approved.json()["assistant_message"]
         assert message["meta"]["code"]["trapped"] is None
         assert "42" in message["content"] and "8" in message["content"]
+    finally:
+        if app_state.chat._code_runner is not None:
+            app_state.chat._code_runner.close()
+
+
+@pytest.mark.sandbox
+@pytest.mark.skipif(not available()[0], reason="the [sandbox] extra is not installed")
+def test_recipe5_bare_file_name_reads_the_provided_input(
+        app_state, tmp_path, monkeypatch):
+    """The model wrote `pd.read_csv('hive.csv')`; the sandbox's working
+    directory is /data, so the approved script text runs unchanged."""
+    project, _ = _project(app_state, tmp_path)
+    fake = ScriptBackend(
+        "```python\n"
+        "import pandas as pd\n"
+        "df = pd.read_csv('hive.csv')\n"
+        "print('ROWS', len(df))\n"
+        "try:\n"
+        "    open('not-allowed.txt', 'w').write('x')\n"
+        "except OSError:\n"
+        "    print('RELATIVE_WRITE_REFUSED')\n"
+        "with open('/out/summary.txt', 'w') as fh:\n"
+        "    fh.write(str(len(df)))\n"
+        "```")
+    app_state.backends.resolve = lambda config=None: fake  # type: ignore[method-assign]
+    prepare_guest_for_test(app_state)
+    client = make_client(app_state)
+    proposal = client.post("/api/recipes/code/propose", json={
+        "project_id": project.id, "question": "how many hives",
+        "files": ["hive.csv"]}).json()
+    try:
+        approved = client.post("/api/recipes/code/approve",
+                               json={"proposal_id": proposal["proposal_id"]})
+        assert approved.status_code == 200, approved.text
+        message = approved.json()["assistant_message"]
+        assert message["meta"]["code"]["trapped"] is None
+        assert "ROWS 8" in message["content"]
+        assert "RELATIVE_WRITE_REFUSED" in message["content"]
+        assert [item["name"] for item in message["meta"]["code_run"]["files"]] == \
+            ["summary.txt"]
+    finally:
+        if app_state.chat._code_runner is not None:
+            app_state.chat._code_runner.close()
+
+
+@pytest.mark.sandbox
+@pytest.mark.skipif(not available()[0], reason="the [sandbox] extra is not installed")
+def test_a_failed_script_reports_partial_files_and_not_a_result(
+        app_state, tmp_path, monkeypatch):
+    project, _ = _project(app_state, tmp_path)
+    fake = ScriptBackend(
+        "```python\n"
+        "with open('/out/partial.csv', 'w') as fh:\n"
+        "    fh.write('partial')\n"
+        "raise RuntimeError('stopped after writing')\n"
+        "```")
+    app_state.backends.resolve = lambda config=None: fake  # type: ignore[method-assign]
+    prepare_guest_for_test(app_state)
+    client = make_client(app_state)
+    proposal = client.post("/api/recipes/code/propose", json={
+        "project_id": project.id, "question": "write then fail",
+        "files": ["hive.csv"]}).json()
+    try:
+        approved = client.post("/api/recipes/code/approve",
+                               json={"proposal_id": proposal["proposal_id"]})
+        assert approved.status_code == 200, approved.text
+        message = approved.json()["assistant_message"]
+        assert message["meta"]["code"]["trapped"] == "error"
+        assert message["meta"]["code"]["files_partial"] is True
+        assert message["meta"]["code_run"]["partial_files"] is True
+        assert message["meta"]["code_run"]["files"][0]["partial"] is True
+        assert "partial.csv" in message["content"]
+        assert "Partial files" in message["content"]
+        assert "partial.csv" not in message["content"].split("File contents", 1)[0] \
+            or "File contents" not in message["content"]
     finally:
         if app_state.chat._code_runner is not None:
             app_state.chat._code_runner.close()

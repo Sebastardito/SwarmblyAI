@@ -112,6 +112,30 @@ def test_personal_items_default_to_local_even_with_nodes():
     assert preview["privacy"]["items_flagged"]
 
 
+def test_private_glossary_term_flags_items_and_defaults_local():
+    job = _job(["Tiburcia anilló 12 aves", "Marisma Alta, 2025"], where="swarm")
+    preview = preview_list(
+        job, cfg={"privacy": {"tier": "GLOBAL"}, "swarm": {}},
+        nodes_available=2,
+        glossary=[("Roca Tiburcia", "Sitio privado de anillamiento | privado")])
+    assert preview["privacy"]["sensitive"] is True
+    assert preview["default_where"] == "local"
+    assert preview["local_only_reason"]
+    assert [item["n"] for item in preview["privacy"]["items_flagged"]] == [1]
+    assert preview["privacy"]["items_flagged"][0]["private"] is True
+
+
+def test_a_name_a_project_document_marks_private_flags_the_item():
+    job = _job(["Tiburcia registró 12 aves", "Marisma Alta, 2025"], where="swarm")
+    preview = preview_list(
+        job, cfg={"privacy": {"tier": "GLOBAL"}, "swarm": {}},
+        nodes_available=2,
+        passages=["Nuestro punto privado Roca Tiburcia queda en la quebrada."])
+    assert preview["privacy"]["sensitive"] is True
+    assert preview["default_where"] == "local"
+    assert [item["n"] for item in preview["privacy"]["items_flagged"]] == [1]
+
+
 def test_list_prompt_is_an_enumerated_batch():
     prompt = build_list_prompt("Give the IUCN status of this species", ["a", "b", "c"])
     assert "1. a" in prompt and "3. c" in prompt
@@ -601,3 +625,41 @@ def test_an_item_without_a_relevant_passage_gets_the_old_prompt(app_state, tmp_p
     assert "lotes.csv" not in prompt and "| lote |" not in prompt
     assert msg["meta"]["list"]["documents_used"] is False
     assert msg["meta"]["list"]["documents_available"] is False
+
+
+def test_api_preview_flags_a_private_glossary_term(app_state, tmp_path):
+    from test_api_lce import make_client
+
+    project = app_state.projects.create("Aves", parent=tmp_path / "p")
+    (project.memory / "glosario.md").write_text(
+        "| Término | Definición | Estado |\n"
+        "|---|---|---|\n"
+        "| Roca Tiburcia | Sitio privado de anillamiento | privado |\n"
+        "| Marisma Alta | Estación pública de conteo | público |\n",
+        encoding="utf-8")
+    client = make_client(app_state)
+    body = client.post("/api/recipes/list/preview", json={
+        "project_id": project.id,
+        "items": ["Tiburcia anilló 12 aves", "Marisma Alta, 2025"],
+        "operation": "Give the status of this item"}).json()
+    assert body["privacy"]["sensitive"] is True
+    assert body["default_where"] == "local"
+    assert "private" in body["local_only_reason"].lower()
+    assert [item["n"] for item in body["privacy"]["items_flagged"]] == [1]
+
+
+def test_api_preview_flags_a_name_from_a_project_document(app_state, tmp_path):
+    from test_api_lce import make_client
+
+    project = app_state.projects.create("Aves", parent=tmp_path / "p")
+    (project.sources / "nota.md").write_text(
+        "Nuestro punto privado Roca Tiburcia queda en la quebrada.\n",
+        encoding="utf-8")
+    client = make_client(app_state)
+    body = client.post("/api/recipes/list/preview", json={
+        "project_id": project.id,
+        "items": ["Tiburcia anilló 12 aves", "Marisma Alta, 2025"],
+        "operation": "Give the status of this item"}).json()
+    assert body["privacy"]["sensitive"] is True
+    assert body["default_where"] == "local"
+    assert [item["n"] for item in body["privacy"]["items_flagged"]] == [1]

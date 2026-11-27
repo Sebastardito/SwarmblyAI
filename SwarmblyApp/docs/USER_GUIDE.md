@@ -98,7 +98,10 @@ is saved otherwise. The glossary (`term = synonyms, translations`) widens
 later searches: any one of the equivalents finds the term. Add `| privado`
 (or `| private`) to an entry, or tick *Private: never used in public
 searches* when you save it, to keep its term and equivalents out of public
-queries; local answers still use it.
+queries; local answers still use it. A Markdown glossary table works too:
+`| term | definition | privado |`, or any row with `privado`/`private` in a
+status column (and `sí`/`yes` under a column headed `privado`), is a private
+entry; `público`/`public` rows stay public equivalents.
 
 **Searching online.** Swarmbly never sends your question to a search engine
 on its own. If you ask for online or recent references, the answer says no
@@ -354,6 +357,9 @@ naming each missing step and why; a step that depended on it is marked
 whole failed wave marks only its items failed and later waves still run. If
 you press **Stop**, the answer is *stopped*, not partial. The requester is the
 coordinator: if it goes away the run ends; there is no plan migration.
+The list preview also treats as private an item with a private glossary term
+(including a Markdown table row) or a name a project document marks as your
+own: it flags the item and proposes this device, with the reason.
 
 ## 5. Memory
 
@@ -421,7 +427,15 @@ compile may take minutes and slow the computer or swap, so close other apps
 first. That override is never automatic, the plain button keeps the floor, and
 the state and doctor export record that it was forced. The command line has
 the same explicit flag, `--prepare-sandbox --force`; the umbrella installer
-never passes it by itself.
+never passes it by itself. When recipe 5 runs, the approved script's working
+directory is the read-only `/data`, so a bare file name such as
+`pd.read_csv("hive.csv")` reads the file you provided without changing the
+script. A fresh writable `/tmp` is provided for libraries such as openpyxl or
+xlsxwriter that stage a file while saving; it is deleted with the run and its
+bytes count against the disk limit. `/out` is the only folder whose files are
+reported, and a relative write outside it is refused. If the script fails
+after writing something to `/out`, those files are marked partial and are not
+shown as the result.
 The measured compile time and peak memory stay local and appear in the doctor
 export. The same step is available in **Settings → System**.
 
@@ -633,7 +647,11 @@ y los estados por paso están en *Explorar el procesamiento*. En una lista
 (receta 4) cada elemento conserva su estado; una ola fallida marca solo sus
 elementos como fallidos y las olas siguientes siguen. **Detener** deja
 *stopped*, no una respuesta parcial. El solicitante es el coordinador: si
-desaparece, la ejecución termina; no hay migración de plan en 3.5.
+desaparece, la ejecución termina; no hay migración de plan en 3.5. La vista
+previa de la lista también trata como privado un elemento con un término
+privado del glosario (incluida una fila de tabla Markdown) o un nombre que un
+documento del proyecto marca como tuyo: marca el elemento y propone este
+equipo, con la razón.
 
 **Memory.** C0 activa; C1 recupera pasajes de tus fuentes para las
 respuestas hechas en este equipo; C2–C4 en fases posteriores.
@@ -657,7 +675,11 @@ proyecto y por qué un archivo no dio nada. Si pides recordar algo en medio
 de un mensaje, o defines o corriges un término, aparece una propuesta de
 memoria y glosario bajo la respuesta: la editas y la confirmas con *Guardar
 en memoria*; una entrada marcada *Privado* (o `| privado`) no se usa en
-búsquedas públicas, aunque las respuestas locales sí la usan. Para buscar en
+búsquedas públicas, aunque las respuestas locales sí la usan. También vale una
+tabla Markdown: `| término | definición | privado |`, o cualquier fila con
+`privado`/`private` en una columna de estado (y `sí` bajo una columna
+`privado`), es privada; las filas `público`/`public` siguen siendo
+equivalentes públicos. Para buscar en
 internet, la respuesta ofrece *Buscar en línea*
 con el texto exacto que se enviaría a PubMed y Wikipedia; lo revisas y lo
 apruebas. Una etiqueta que no corresponde a ninguna fuente se marca como
@@ -696,7 +718,15 @@ primero. Esa anulación nunca es automática, el botón normal mantiene el
 mínimo, y el estado y la exportación de diagnóstico registran que se forzó.
 La línea de comandos tiene la misma opción explícita,
 `--prepare-sandbox --force`; el instalador para todo el proyecto nunca la pasa
-por sí solo.
+por sí solo. Cuando corre la receta 5, el directorio de trabajo del script
+aprobado es `/data` (solo lectura), así que un nombre de archivo simple como
+`pd.read_csv("hive.csv")` lee el archivo que elegiste sin cambiar el script. Se
+ofrece un `/tmp` escribible nuevo para bibliotecas como openpyxl o xlsxwriter
+que preparan un archivo al guardar; se borra con la ejecución y sus bytes
+cuentan para el límite de disco. `/out` es la única carpeta cuyos archivos se
+informan, y una escritura relativa fuera de ella se rechaza. Si el script falla
+después de escribir algo en `/out`, esos archivos se marcan como parciales y
+no se presentan como resultado.
 El tiempo y el pico de memoria medidos se quedan
 en este equipo y aparecen en la exportación de diagnóstico; el mismo paso está
 en **Ajustes → Sistema**.
