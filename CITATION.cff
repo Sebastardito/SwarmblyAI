@@ -4,10 +4,9 @@
 # This repository is the umbrella of Swarmbly AI: SwarmblyCore (in-tree),
 # SwarmblyLCE and SwarmblyApp (mirrors). Each component has its own DOI,
 # listed under `identifiers`; cite the component you used and, for the design
-# argument, the whitepaper (`preferred-citation`). Until the DOI of
-# distribution 3.5.1 is minted, the top-level `doi` is that of 3.5.0;
-# earlier distributions are listed under `identifiers` (3.0.1's version DOI
-# is added when known).
+# argument, the whitepaper (`preferred-citation`). The top-level `doi` is that
+# of distribution 3.5.1; earlier distributions are listed under `identifiers`
+# (3.0.1's version DOI is added when known).
 # ---------------------------------------------------------------------------
 
 cff-version: 1.2.0
@@ -33,7 +32,7 @@ abstract: >-
 version: "3.5.1"
 date-released: 2026-11-27
 license: AGPL-3.0-or-later
-doi: "10.5281/zenodo.24431442"   # 3.5.0, until the 3.5.1 record is minted
+doi: "10.5281/zenodo.24617542"   # 3.5.1 (Zenodo, GitHub integration)
 
 authors:
   - given-names: "Sebastián A."
@@ -46,6 +45,9 @@ repository-code: "https://github.com/Sebastardito/SwarmblyAI"
 url: "https://github.com/Sebastardito/SwarmblyAI"
 
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.24617542"
+    description: "Swarmbly AI 3.5.1, integrated distribution (this version)"
   - type: doi
     value: "10.5281/zenodo.24431442"
     description: "Swarmbly AI 3.5.0, integrated distribution (previous version)"
@@ -80,8 +82,11 @@ identifiers:
     value: "10.5281/zenodo.24070622"
     description: "SwarmblyApp 0.4.0 (earlier version)"
   - type: doi
+    value: "10.5281/zenodo.24617539"
+    description: "SwarmblyApp 0.8.1 (the version in this distribution)"
+  - type: doi
     value: "10.5281/zenodo.24431441"
-    description: "SwarmblyApp 0.8.0 (previous version; 0.8.1, the version in this distribution, gets its DOI after the release)"
+    description: "SwarmblyApp 0.8.0 (previous version)"
   - type: doi
     value: "10.5281/zenodo.24412215"
     description: "SwarmblyApp 0.7.0 (earlier version)"
